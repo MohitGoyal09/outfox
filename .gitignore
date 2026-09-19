@@ -3,6 +3,7 @@
 
 # node / next.js
 node_modules/
+.pnpm-store/
 .next/
 out/
 .vercel/
