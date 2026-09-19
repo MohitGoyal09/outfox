@@ -1,5 +1,6 @@
 import { internalMutation, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { MAX_BRANDS_PER_RUN } from "./pipeline/plan";
 
 const terminalStatus = v.union(
   v.literal("complete"),
@@ -23,28 +24,6 @@ const createRunArgs = {
 export const createRun = mutation({
   args: createRunArgs,
   handler: async (ctx, args) => {
-    return await ctx.db.insert("runs", {
-      cohortKey: args.cohortKey,
-      brandIds: args.brandIds,
-      mode: args.mode,
-      status: "running",
-      requestedAt: new Date().toISOString(),
-      requestCount: 0,
-    });
-  },
-});
-
-export const internalCreateRun = internalMutation({
-  args: createRunArgs,
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("runs", {
-      cohortKey: args.cohortKey,
-      brandIds: args.brandIds,
-      mode: args.mode,
-      status: "running",
-      requestedAt: new Date().toISOString(),
-      requestCount: 0,
-    });
   },
 });
 
