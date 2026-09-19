@@ -122,33 +122,3 @@ export async function answerFromStoredClaims(
     mode: "llm",
   };
 }
-
-export const answerQuestion = action({
-  args: {
-    question: v.string(),
-    brandIds: v.array(v.id("brands")),
-    runId: v.optional(v.id("runs")),
-    latestRequested: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args): Promise<AnswerQuestionResult> => {
-    if (args.brandIds.length > MAX_BRANDS_PER_RUN) {
-      throw new ConvexError(
-        `Too many brands: ${args.brandIds.length}, limit is ${MAX_BRANDS_PER_RUN}`,
-      );
-    }
-    if (args.question.trim() === "") {
-      throw new ConvexError("question must be non empty");
-    }
-    if (args.latestRequested === true) {
-      return {
-        available: true,
-        needsRefresh: true,
-        answer: "",
-        citations: [],
-        mode: "empty",
-        message: REFRESH_ONLY_MESSAGE,
-      };
-    }
-    return await answerFromStoredClaims(args.question, views);
-  },
-});
