@@ -22,7 +22,7 @@ import {
 
 const MAX_STEPS = 6;
 
-const MODEL_FAST = process.env.MODEL_FAST ?? "gemini-2.5-flash";
+const RECENT_TURNS = 6;
 
 const SYSTEM_PROMPT =
   "You are the Drishti brand agent. Answer only from stored brand signals " +
@@ -63,6 +63,9 @@ function planStepsOf(output: unknown): { steps: PlanStep[]; goal?: string } | nu
     });
   }
 }
+
+type AnswerMode = "llm" | "template";
+type ClassifierKind = "typesafe" | "fallback" | "unknown";
 
 function resolveModel() {
   const gatewayKey = process.env.AI_GATEWAY_API_KEY;

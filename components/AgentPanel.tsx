@@ -125,6 +125,41 @@ function chatEventsOf(messages: { parts?: unknown }[]): {
   return { toolStatuses, plans, usages };
 }
 
+type AnswerProvenance = {
+  mode: "llm" | "template";
+  classifier: "typesafe" | "fallback" | "unknown";
+};
+
+function answerProvenanceOf(messages: { parts?: unknown }[]): AnswerProvenance | null {
+  let latest: AnswerProvenance | null = null;
+  for (const message of messages) {
+    const parts = (message as { parts?: unknown[] }).parts ?? [];
+    for (const raw of parts) {
+      const part = raw as Record<string, unknown>;
+      if (part["type"] !== "data-answer-meta") continue;
+      const data = part["data"];
+      if (typeof data !== "object" || data === null) continue;
+      const record = data as Record<string, unknown>;
+      const mode = record["mode"];
+      const classifier = record["classifier"];
+      latest = {
+        mode: mode === "template" ? "template" : "llm",
+        classifier:
+          classifier === "typesafe" || classifier === "fallback"
+            ? classifier
+            : "unknown",
+      };
+    }
+  }
+  return latest;
+}
+
+const CLASSIFIER_LABEL: Record<AnswerProvenance["classifier"], string> = {
+  typesafe: "TypeSafe",
+  fallback: "keyword fallback",
+  unknown: "unknown",
+};
+
 export function AgentPanel({
   brandIds,
   cohortKey,
@@ -162,6 +197,10 @@ export function AgentPanel({
       (messages as unknown as { parts?: unknown }[]).flatMap((m) =>
         sourceUrlsOf(m),
       ),
+    [messages],
+  );
+  const provenance = useMemo(
+    () => answerProvenanceOf(messages as unknown as { parts?: unknown }[]),
     [messages],
   );
 
@@ -390,6 +429,21 @@ export function AgentPanel({
                 ? ` · ${latestUsage.credits} credits`
                 : ""}
               .
+            </p>
+          ) : null}
+          {provenance ? (
+            <p className="text-xs text-muted-foreground">
+              Answer:{" "}
+              {provenance.mode === "llm" ? "model" : "raw claims"} · classifier:{" "}
+              {CLASSIFIER_LABEL[provenance.classifier]}
+            </p>
+          ) : null}
+          {provenance?.mode === "template" ? (
+            <p
+              role="status"
+              className="rounded-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground"
+            >
+              Model unavailable, showing raw claims.
             </p>
           ) : null}
           {busy ? (
