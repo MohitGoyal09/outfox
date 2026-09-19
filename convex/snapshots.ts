@@ -46,6 +46,15 @@ export const insertSnapshot = internalMutation({
   },
 });
 
+export const setClaimIdsInternal = internalMutation({
+  args: {
+    snapshotId: v.id("snapshots"),
+    claimIds: v.array(v.id("claims")),
+  },
+  handler: async (ctx, args) => {
+  },
+});
+
 export const byRun = query({
   args: { runId: v.id("runs") },
   handler: async (ctx, args) => {

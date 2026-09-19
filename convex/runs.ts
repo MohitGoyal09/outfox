@@ -22,7 +22,7 @@ const createRunArgs = {
 };
 
 export const createRun = mutation({
-  args: createRunArgs,
+  args: { ...createRunArgs, refreshAuthorized: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
   },
 });
@@ -34,6 +34,16 @@ export const closeRun = mutation({
     if (run === null) {
       throw new Error(`Run not found: ${args.runId}`);
     }
+  },
+});
+
+export const internalRecordUsage = internalMutation({
+  args: {
+    runId: v.id("runs"),
+    requestCount: v.number(),
+    creditCount: v.optional(v.number()),
+  },
+  handler: async (ctx, args) => {
   },
 });
 
