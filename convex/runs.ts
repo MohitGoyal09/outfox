@@ -54,7 +54,7 @@ export const latestForCohort = query({
       .query("runs")
       .withIndex("by_cohort", (q) => q.eq("cohortKey", args.cohortKey))
       .collect();
-    runs.sort((a, b) => (a.requestedAt < b.requestedAt ? 1 : -1));
+    return pickLatestRun(runs);
   },
 });
 

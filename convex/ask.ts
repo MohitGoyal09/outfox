@@ -5,7 +5,7 @@ import { api } from "./_generated/api";
 import { v, ConvexError } from "convex/values";
 import { validateBriefSentences } from "./pipeline/guardrail";
 import type { BriefSentence } from "./pipeline/guardrail";
-import { callLLM } from "./lib/llmClient";
+import { callLLM, hasLLMKey } from "./lib/llmClient";
 import type { CallLLMResult } from "./lib/llmClient";
 import type { Doc, Id } from "./_generated/dataModel";
 import { MAX_BRANDS_PER_RUN, MAX_CONCURRENCY } from "./pipeline/plan";
@@ -71,11 +71,24 @@ function isSentenceRecord(value: unknown): value is BriefSentence {
   );
 }
 
+function hasGatewayKey(): boolean {
+  return hasLLMKey();
+}
+
 export async function answerFromStoredClaims(
   question: string,
   claims: AskClaimView[],
   llmFn: LLMFn = callLLM,
 ): Promise<AnswerQuestionResult> {
+  if (llmFn === callLLM && hasGatewayKey() === false) {
+    return {
+      available: false,
+      answer: "",
+      citations: [],
+      mode: "error",
+      message: GATEWAY_MESSAGE,
+    };
+  }
   let raw: CallLLMResult;
   try {
     raw = await llmFn({
