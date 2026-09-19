@@ -8,7 +8,12 @@ import {
   tool,
   toUIMessageStream,
 } from "ai";
-import type { ModelMessage, UIMessage } from "ai";
+import type {
+  LanguageModel,
+  LanguageModelUsage,
+  ModelMessage,
+  UIMessage,
+} from "ai";
 import { createGateway } from "@ai-sdk/gateway";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { ConvexHttpClient } from "convex/browser";
@@ -19,6 +24,12 @@ import {
   type ChatToolName,
   type PlanStep,
 } from "@/lib/chatEvents";
+import {
+  aliasForTask,
+  checkLLMBudget,
+  defaultBudgetForTask,
+  estimateCostUsd,
+} from "@/convex/lib/modelRouter";
 
 const MAX_STEPS = 6;
 
@@ -67,10 +78,21 @@ function planStepsOf(output: unknown): { steps: PlanStep[]; goal?: string } | nu
 type AnswerMode = "llm" | "template";
 type ClassifierKind = "typesafe" | "fallback" | "unknown";
 
-function resolveModel() {
+type LLMProvider = "gateway" | "google";
+
+function resolveModel(): { model: LanguageModel; provider: LLMProvider } | null {
   const gatewayKey = process.env.AI_GATEWAY_API_KEY;
+  if (gatewayKey !== undefined && gatewayKey.trim() !== "") {
+    return { model: gateway(`google/${MODEL_FAST}`), provider: "gateway" };
+  }
   const geminiKey =
     process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
+  if (geminiKey !== undefined && geminiKey.trim() !== "") {
+    return {
+      model: createGoogleGenerativeAI({ apiKey: geminiKey })(MODEL_FAST),
+      provider: "google",
+    };
+  }
   return null;
 }
 

@@ -74,13 +74,23 @@ export const closeStaleRunsPublic = mutation({
   },
 });
 
-export const internalRecordUsage = internalMutation({
+export const internalRecordLlmTotals = internalMutation({
   args: {
     runId: v.id("runs"),
-    requestCount: v.number(),
-    creditCount: v.optional(v.number()),
+    llmRequestCount: v.number(),
+    llmTokenCount: v.number(),
+    llmCostUsd: v.number(),
   },
   handler: async (ctx, args) => {
+    const run = await ctx.db.get(args.runId);
+    if (run === null) {
+      throw new Error(`Run not found: ${args.runId}`);
+    }
+    await ctx.db.patch(args.runId, {
+      llmRequestCount: args.llmRequestCount,
+      llmTokenCount: args.llmTokenCount,
+      llmCostUsd: args.llmCostUsd,
+    });
   },
 });
 

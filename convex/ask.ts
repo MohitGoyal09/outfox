@@ -6,7 +6,8 @@ import { v, ConvexError } from "convex/values";
 import { validateBriefSentences } from "./pipeline/guardrail";
 import type { BriefSentence } from "./pipeline/guardrail";
 import { callLLM, hasLLMKey } from "./lib/llmClient";
-import type { CallLLMResult } from "./lib/llmClient";
+import type { CallLLMResult, CallLLMUsage } from "./lib/llmClient";
+import { callLLMTracked, defaultBudgetForTask } from "./lib/modelRouter";
 import type { Doc, Id } from "./_generated/dataModel";
 import { MAX_BRANDS_PER_RUN, MAX_CONCURRENCY } from "./pipeline/plan";
 
@@ -37,7 +38,12 @@ export type AnswerQuestionResult = {
   mode: "llm" | "empty" | "error" | "invalid";
   message?: string;
   error?: string;
+  usage?: CallLLMUsage[];
 };
+
+type LLMOutcome =
+  | { ok: true; text: string; usage?: CallLLMUsage }
+  | { ok: false; error: string; usage?: CallLLMUsage };
 
 const GATEWAY_MESSAGE = "Ask needs an LLM gateway key";
 
@@ -73,65 +79,4 @@ function isSentenceRecord(value: unknown): value is BriefSentence {
 
 function hasGatewayKey(): boolean {
   return hasLLMKey();
-}
-
-export async function answerFromStoredClaims(
-  question: string,
-  claims: AskClaimView[],
-  llmFn: LLMFn = callLLM,
-): Promise<AnswerQuestionResult> {
-  if (llmFn === callLLM && hasGatewayKey() === false) {
-    return {
-      available: false,
-      answer: "",
-      citations: [],
-      mode: "error",
-      message: GATEWAY_MESSAGE,
-    };
-  }
-  let raw: CallLLMResult;
-  try {
-    raw = await llmFn({
-      system: ASK_SYSTEM,
-      prompt: buildAskPrompt(question, claims),
-      modelAlias: "fast",
-      json: true,
-    });
-  } catch (error) {
-    return {
-      available: true,
-      answer: "",
-      citations: [],
-      mode: "error",
-      error: error instanceof Error ? error.message : "LLM request failed",
-    };
-  }
-  if (raw.ok !== true) {
-    return {
-      available: true,
-      answer: "",
-      citations: [],
-      mode: "error",
-      error: raw.error,
-    };
-  }
-  const parsed = parseAskSentences(raw.text);
-  if (parsed === null || parsed.length === 0) {
-    return {
-      available: true,
-      answer: "",
-      citations: [],
-      mode: "invalid",
-      error: "Model output was not valid cited JSON",
-    };
-  }
-  const allowed = new Set(claims.map((c) => c.id));
-  const texts: Record<string, string> = {};
-  for (const claim of claims) texts[claim.id] = claim.text;
-  return {
-    available: true,
-    answer: checked.valid.map((s) => s.text).join(" "),
-    citations: [...new Set(checked.valid.flatMap((s) => s.citedClaimIds))],
-    mode: "llm",
-  };
 }
