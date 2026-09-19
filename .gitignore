@@ -1,0 +1,20 @@
+# local tooling, not part of the project
+.gstack/
+
+# node / next.js
+node_modules/
+.next/
+out/
+.vercel/
+
+# env secrets
+.env
+.env.local
+.env*.local
+
+# convex local dev state
+.convex/
+
+# misc
+.DS_Store
+*.log
