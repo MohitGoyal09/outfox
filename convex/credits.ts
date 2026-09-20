@@ -9,13 +9,3 @@ export const listReconcilableRows = internalQuery({
     const limit = Math.max(1, Math.floor(args.limit));
   },
 });
-
-export const patchRowCost = internalMutation({
-  args: { rowId: v.id("llmUsage"), costUsd: v.number() },
-  handler: async (ctx, args) => {
-    await ctx.db.patch(args.rowId, {
-      costUsd: args.costUsd,
-      costSource: "provider",
-    });
-  },
-});

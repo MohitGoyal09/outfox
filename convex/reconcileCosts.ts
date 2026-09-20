@@ -7,19 +7,31 @@ import { createGateway } from "@ai-sdk/gateway";
 
 export const DEFAULT_RECONCILE_LIMIT = 25;
 
+export type CostBasis = "upstream_inference" | "total";
+
+export type GatewayGenerationCost = {
+  totalCost?: number;
+  upstreamInferenceCost?: number;
+};
+
 export type GatewayCostLookup = (
   generationId: string,
-) => Promise<number | undefined>;
+) => Promise<GatewayGenerationCost | undefined>;
+
+export type ResolvedReconciledCost = {
+  costUsd: number;
+  costBasis: CostBasis;
+};
+
+export function resolveReconciledCost(
+  info: GatewayGenerationCost | undefined,
+): ResolvedReconciledCost | undefined {
+  const upstream = info?.upstreamInferenceCost;
+  const total = info?.totalCost;
+}
 
 export function createGatewayCostLookup(apiKey: string): GatewayCostLookup {
   const gateway = createGateway({ apiKey });
-  return async (generationId: string) => {
-    const info = await gateway.getGenerationInfo({ id: generationId });
-    const total = (info as { totalCost?: unknown } | undefined)?.totalCost;
-    return typeof total === "number" && Number.isFinite(total) && total >= 0
-      ? total
-      : undefined;
-  };
 }
 
 let lookupFactory: (apiKey: string) => GatewayCostLookup =
@@ -29,6 +41,6 @@ export const reconcileExactCosts = internalAction({
   args: { runId: v.optional(v.id("runs")), limit: v.optional(v.number()) },
   handler: async (ctx, args) => {
     let reconciled = 0;
-    return { reconciled, skipped, reason: null };
+    const skippedReasons: string[] = [];
   },
 });
