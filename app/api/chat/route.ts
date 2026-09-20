@@ -16,6 +16,7 @@ import type {
 } from "ai";
 import { createGateway } from "@ai-sdk/gateway";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
+import { createOpenRouter } from "@openrouter/ai-sdk-provider";
 import { ConvexHttpClient } from "convex/browser";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -30,6 +31,7 @@ import {
   defaultBudgetForTask,
   estimateCostUsd,
 } from "@/convex/lib/modelRouter";
+import { activeProvider, toOpenRouterModelId } from "@/convex/lib/llmClient";
 
 const MAX_STEPS = 6;
 
@@ -78,24 +80,139 @@ function planStepsOf(output: unknown): { steps: PlanStep[]; goal?: string } | nu
 type AnswerMode = "llm" | "template";
 type ClassifierKind = "typesafe" | "fallback" | "unknown";
 
-type LLMProvider = "gateway" | "google";
+type LLMProvider = "gateway" | "openrouter" | "google";
+
+function asRecord(value: unknown): Record<string, unknown> | undefined {
+  return typeof value === "object" && value !== null && !Array.isArray(value)
+    ? (value as Record<string, unknown>)
+    : undefined;
+}
+
+function positiveNumber(value: unknown): number | undefined {
+  return typeof value === "number" && Number.isFinite(value) && value > 0
+    ? value
+    : undefined;
+}
+
+function openRouterCostFrom(
+  providerMetadata: unknown,
+  responseBody: unknown,
+): number | undefined {
+}
 
 function resolveModel(): { model: LanguageModel; provider: LLMProvider } | null {
-  const gatewayKey = process.env.AI_GATEWAY_API_KEY;
-  if (gatewayKey !== undefined && gatewayKey.trim() !== "") {
+  const active = activeProvider();
+  if (active === "gateway") {
+    const gatewayKey = process.env.AI_GATEWAY_API_KEY;
     return { model: gateway(`google/${MODEL_FAST}`), provider: "gateway" };
   }
-  const geminiKey =
-    process.env.GEMINI_API_KEY ?? process.env.GOOGLE_GENERATIVE_AI_API_KEY;
-  if (geminiKey !== undefined && geminiKey.trim() !== "") {
-    return {
-      model: createGoogleGenerativeAI({ apiKey: geminiKey })(MODEL_FAST),
-      provider: "google",
-    };
+  if (active === "openrouter") {
+    const openRouterKey = process.env.OPENROUTER_API_KEY;
+    const openrouter = createOpenRouter({ apiKey: openRouterKey });
+  }
+  if (active === "google") {
+    if (geminiKey === undefined || geminiKey.trim() === "") return null;
   }
   return null;
 }
 
 function convexClient(): ConvexHttpClient | null {
   if (url === undefined || url.trim() === "") return null;
+}
+
+export async function POST(req: Request): Promise<Response> {
+  let body: ChatRequestBody;
+
+  const rawBrandIds = Array.isArray(body.brandIds) ? body.brandIds : [];
+  if (rawBrandIds.length > MAX_BRANDS_PER_RUN) {
+    return Response.json(
+      { error: `Too many brands: limit is ${MAX_BRANDS_PER_RUN}` },
+      { status: 400 },
+    );
+  }
+  const brandIds = rawBrandIds;
+  const allowed = new Set(brandIds);
+  const threadKey = [...brandIds].sort().join(":");
+  const history = Array.isArray(body.history) ? body.history : [];
+  if (hasMessage === false && hasMessages === false) {
+    return Response.json(
+      { error: "Provide message or messages" },
+      { status: 400 },
+    );
+  }
+
+  const convex = convexClient();
+  if (convex === null) {
+    return Response.json({ error: "Convex URL is not configured" }, { status: 500 });
+  }
+
+  let resolvedModel: { model: LanguageModel; provider: LLMProvider } | null;
+  if (resolvedModel === null) {
+    return Response.json(
+      {
+        error:
+          "No model key configured (AI_GATEWAY_API_KEY, OPENROUTER_API_KEY, or GEMINI_API_KEY)",
+      },
+      { status: 503 },
+    );
+  }
+  const { model, provider } = resolvedModel;
+
+  let used = { requests: 0, tokens: 0 };
+
+  let modelMessages: ModelMessage[] | undefined;
+
+  let storedPrior: ModelMessage[] = [];
+  try {
+    const recent = await convex.query(api.messages.listRecent, {
+      threadKey,
+      limit: RECENT_TURNS,
+    });
+    const clientCount = Array.isArray(body.messages) ? body.messages.length : 0;
+  } catch {
+    storedPrior = [];
+  }
+
+  const storedContext = storedPrior.map(
+    (message) =>
+      `${message.role}: ${
+        typeof message.content === "string" ? message.content : ""
+      }`,
+  );
+  const prompt =
+    hasMessages === true
+      ? undefined
+      : [
+          `Question: ${clip((body.message as string).trim(), 2000)}`,
+          scopedBrands,
+          contextLines.length > 0
+            ? `Recent context: ${clip(contextLines.slice(-RECENT_TURNS).join(" | "), 600)}`
+            : "",
+        ]
+          .filter((line) => line !== "")
+          .join("\n");
+  const persistedCitations: string[] = [];
+  let pendingLedgerWrite: Promise<void> | undefined;
+
+  function filterScope(inputIds: string[]): { ids: string[]; dropped: number } {
+    const ids = inputIds.filter(
+      (id) => typeof id === "string" && BRAND_ID_RE.test(id) && allowed.has(id),
+    );
+  }
+
+  type DurableEventKind =
+    | "plan"
+    | "step"
+    | "tool_call"
+    | "answer"
+    | "warning"
+    | "error";
+  type DurableEventStatus =
+    | "pending"
+    | "running"
+    | "complete"
+    | "failed"
+    | "skipped";
+
+  return createUIMessageStreamResponse({ stream });
 }
