@@ -74,6 +74,10 @@ export default function ComparePage({
     api.claims.byRun,
     run?._id ? { runId: run._id } : "skip",
   );
+  const llmUsage = useQuery(
+    api.llmUsage.usageForRun,
+    run?._id ? { runId: run._id } : "skip",
+  );
 
   const [confirmingRefresh, setConfirmingRefresh] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -255,6 +259,21 @@ export default function ComparePage({
       <UsageMeter
         requestCount={run?.requestCount}
         creditCount={run?.creditCount}
+        creditsReported={run?.creditsReported}
+        searchesLeftBefore={run?.searchesLeftBefore}
+        searchesLeftAfter={run?.searchesLeftAfter}
+        llmRequestCount={run?.llmRequestCount}
+        llmTokenCount={run?.llmTokenCount}
+        exactCostUsd={
+          llmUsage !== undefined && llmUsage.exactCostUsd > 0
+            ? llmUsage.exactCostUsd
+            : undefined
+        }
+        estimatedCostUsd={
+          llmUsage !== undefined && llmUsage.estimatedCostUsd > 0
+            ? llmUsage.estimatedCostUsd
+            : undefined
+        }
         loading={run === undefined}
       />
 
