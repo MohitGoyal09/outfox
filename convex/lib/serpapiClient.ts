@@ -4,7 +4,7 @@ import { getJson } from "serpapi";
 
 export type SerpApiSuccess = {
   ok: true;
-  data: any;
+  data: unknown;
   latencyMs: number;
   credits?: number;
 };
@@ -58,7 +58,7 @@ export function toEngineStatus(result: SerpApiResult): EngineStatus {
  * network or API error. Missing key fails fast with no network call.
  */
 export async function serpapiFetch(
-  params: Record<string, any>,
+  params: Record<string, unknown>,
 ): Promise<SerpApiResult> {
   const started = Date.now();
   try {

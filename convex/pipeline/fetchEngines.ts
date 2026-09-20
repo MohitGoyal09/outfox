@@ -185,8 +185,8 @@ export type EngineFetchOk = {
   status: "ok";
   engine: string;
   runId: string;
-  data: any;
-  queryParams: Record<string, any>;
+  data: unknown;
+  queryParams: Record<string, unknown>;
 };
 
 export type EngineFetchFailed = {
@@ -194,7 +194,7 @@ export type EngineFetchFailed = {
   engine: string;
   runId: string;
   errorMessage: string;
-  queryParams: Record<string, any>;
+  queryParams: Record<string, unknown>;
 };
 
 export type EngineFetchUnavailable = {
@@ -202,7 +202,7 @@ export type EngineFetchUnavailable = {
   engine: string;
   runId: string;
   errorMessage: string;
-  queryParams: Record<string, any>;
+  queryParams: Record<string, unknown>;
 };
 
 export type EngineFetchResult =
