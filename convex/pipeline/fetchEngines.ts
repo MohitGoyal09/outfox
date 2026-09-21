@@ -153,13 +153,14 @@ export function buildYoutubeVideoParams(videoId: string) {
 export function buildTrendsChunkParams(
   chunk: FetchBrand[],
   index: number,
+  scope?: { geo?: string; date?: string },
 ): Record<string, unknown> {
   void index;
   return {
     engine: "google_trends",
     q: chunk.map((brand) => truncateQuery(brand.name)).join(","),
-    geo: TRENDS_GEO,
-    date: TRENDS_DATE_RANGE,
+    geo: scope?.geo ?? TRENDS_GEO,
+    date: scope?.date ?? TRENDS_DATE_RANGE,
     data_type: "TIMESERIES",
     cat: TRENDS_CATEGORY_ANCHOR,
   };
@@ -502,12 +503,61 @@ function chunkBrands(brands: FetchBrand[], size: number): FetchBrand[][] {
   return chunks;
 }
 
-function readTimeline(data: unknown): unknown[] {
+export type TrendsTimelineValue = {
+  query: string;
+  extracted_value: number;
+};
+
+export type TrendsTimelinePoint = {
+  date: string;
+  timestamp?: number;
+  values: TrendsTimelineValue[];
+};
+
+/** Keep a bounded chart-safe copy without merging values across chunks. */
+export function normalizeTrendsTimeline(
+  timeline: unknown,
+  maxPoints = 400,
+): TrendsTimelinePoint[] {
+  if (!Array.isArray(timeline) || !Number.isInteger(maxPoints) || maxPoints < 1) {
+    return [];
+  }
+  const out: TrendsTimelinePoint[] = [];
+  for (const item of timeline.slice(0, maxPoints)) {
+    if (typeof item !== "object" || item === null) continue;
+    const entry = item as Record<string, unknown>;
+    const date = typeof entry.date === "string" ? entry.date.trim() : "";
+    if (date === "" || !Array.isArray(entry.values)) continue;
+    const values: TrendsTimelineValue[] = [];
+    for (const candidate of entry.values) {
+      if (typeof candidate !== "object" || candidate === null) continue;
+      const row = candidate as Record<string, unknown>;
+      const query = typeof row.query === "string" ? row.query.trim() : "";
+      const raw = row.extracted_value ?? row.value;
+      const extracted =
+        typeof raw === "number" ? raw : typeof raw === "string" ? Number(raw) : NaN;
+      if (query === "" || !Number.isFinite(extracted)) continue;
+      values.push({
+        query,
+        extracted_value: Math.max(0, Math.min(100, extracted)),
+      });
+    }
+    if (values.length === 0) continue;
+    const timestamp =
+      typeof entry.timestamp === "number" && Number.isFinite(entry.timestamp)
+        ? entry.timestamp
+        : undefined;
+    out.push({ date, ...(timestamp === undefined ? {} : { timestamp }), values });
+  }
+  return out;
+}
+
+function readTimeline(data: unknown): TrendsTimelinePoint[] {
   if (typeof data !== "object" || data === null) return [];
   const interest = (data as Record<string, unknown>)["interest_over_time"];
   if (typeof interest !== "object" || interest === null) return [];
   const timeline = (interest as Record<string, unknown>)["timeline_data"];
-  return Array.isArray(timeline) ? timeline : [];
+  return normalizeTrendsTimeline(timeline);
 }
 
 /**
@@ -525,6 +575,7 @@ export async function fetchGoogleTrends(
   brands: FetchBrand[],
   runId: Id<"runs">,
   fetchFn: SerpapiFetchFn = serpapiFetch,
+  scope?: { geo?: string; date?: string },
 ): Promise<TrendsFetchResult> {
   if (brands.length === 0) {
     return { snapshots: [], chunkKeys: [], latencyMs: 0 };
@@ -540,7 +591,7 @@ export async function fetchGoogleTrends(
         brandId: brand._id,
         engine: "google_trends" as const,
         queryParams: {},
-        region: "IN",
+        region: scope?.geo ?? TRENDS_GEO,
         fetchedAt,
         status: "failed" as const,
         errorMessage: budget.error,
@@ -563,6 +614,7 @@ export async function fetchGoogleTrends(
     const apiParams: Record<string, unknown> = buildTrendsChunkParams(
       chunk,
       index,
+      scope,
     );
     const queryParams: Record<string, unknown> = {
       ...apiParams,
@@ -584,7 +636,7 @@ export async function fetchGoogleTrends(
           brandId: brand._id,
           engine: "google_trends",
           queryParams,
-          region: "IN",
+          region: scope?.geo ?? TRENDS_GEO,
           fetchedAt,
           status: "failed",
           errorMessage: result.error,
@@ -595,20 +647,26 @@ export async function fetchGoogleTrends(
     }
 
     const timeline = readTimeline(result.data);
+    const period =
+      timeline.length > 0
+        ? `${timeline[0]?.date}..${timeline[timeline.length - 1]?.date}`
+        : undefined;
     for (const brand of chunk) {
       snapshots.push({
         runId,
         brandId: brand._id,
         engine: "google_trends",
         queryParams,
-        region: "IN",
+        region: scope?.geo ?? TRENDS_GEO,
         fetchedAt,
         status: "ok",
+        ...(period === undefined ? {} : { period }),
         rawResponse: {
           timeline_data: timeline,
           brands: chunk.map((entry) => entry.name),
           chunkKey,
           anchor: TRENDS_CATEGORY_ANCHOR,
+          valueScale: "within_chunk_relative_0_100",
         },
         claimIds: [],
       });

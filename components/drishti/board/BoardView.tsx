@@ -18,6 +18,7 @@ import { useAllRuns } from "../cohorts/useAllRuns";
 import { BrandLeaderboard } from "./BrandLeaderboard";
 import { EmergingMoves } from "./EmergingMoves";
 import { EngineCoverage } from "./EngineCoverage";
+import { BoardMixChart } from "./BoardMixChart";
 import {
   BOARD_HONESTY_LINE,
   coverageGaps,
@@ -178,9 +179,19 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
       {current && claims !== undefined ? (
         <div className="grid gap-3 sm:grid-cols-3" aria-label="Board summary">
-          <Card className="border-border/80 bg-card shadow-none"><CardContent className="p-4"><p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">Brands in view</p><p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{brandIds.length}</p><p className="mt-1 text-xs text-fg-secondary">Rivals in the selected run</p></CardContent></Card>
-          <Card className="border-border/80 bg-card shadow-none"><CardContent className="p-4"><p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">Claims held</p><p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{claims.length}</p><p className="mt-1 text-xs text-fg-secondary">Stored evidence, not performance</p></CardContent></Card>
-          <Card className="border-border/80 bg-card shadow-none"><CardContent className="p-4"><p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">Engine checks</p><p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{coverage.reduce((total, brand) => total + brand.cells.filter((cell) => cell.status === "ok").length, 0)}</p><p className="mt-1 text-xs text-fg-secondary">Successful snapshots in this run</p></CardContent></Card>
+          {[
+            ["Brands in view", brandIds.length, "Rivals in the selected run"],
+            ["Claims held", claims.length, "Stored evidence, not performance"],
+            ["Engine coverage", `${coverage.reduce((total, brand) => total + brand.cells.filter((cell) => cell.status === "ok").length, 0)}/${coverage.reduce((total, brand) => total + brand.cells.length, 0)}`, "Successful checks in this run"],
+          ].map(([label, value, detail]) => (
+            <Card key={String(label)} className="border-border/80 bg-card shadow-none">
+              <CardContent className="p-4">
+                <p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">{label}</p>
+                <p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{value}</p>
+                <p className="mt-1 text-xs text-fg-secondary">{detail}</p>
+              </CardContent>
+            </Card>
+          ))}
         </div>
       ) : null}
 
@@ -200,14 +211,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       ) : (
         <>
           <div className="grid gap-4 lg:grid-cols-2">
-            <DistributionPanel
-              items={hookItems}
-              kind="hook"
-              title="Top hooks across the cohort"
-              loading={claims === undefined}
-              summaryLabel={claims !== undefined ? `${claims.length} claims` : undefined}
-              previousLabel={previous ? `vs run of ${formatStamp(previous.requestedAt)}` : undefined}
-            />
+            <BoardMixChart items={hookItems} />
             <DistributionPanel
               items={funnelItems}
               kind="funnel"

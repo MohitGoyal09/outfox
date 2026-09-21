@@ -4,6 +4,13 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { VALUE_CLASS } from "@/components/drishti";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  ChartContainer,
+  ChartTooltip,
+  ChartTooltipContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 export function CrossBrandChart({
   brands,
@@ -44,28 +51,20 @@ export function CrossBrandChart({
   }
   return (
     <Card aria-label="Cross brand claim counts" className={cn("border-border/80 bg-card shadow-none", className)}>
-      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Claims per brand</CardTitle></CardHeader>
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Claims per brand</CardTitle><p className="text-xs text-muted-foreground">Stored evidence by rival</p></CardHeader>
       <CardContent className="p-5">
-      <ul className="mt-3 space-y-3">
-        {counts.map((row) => (
-          <li key={row.id}>
-            <div className="flex items-baseline justify-between text-sm">
-              <span className="font-medium text-[var(--text-primary)]">{row.name}</span>
-              <span className={cn(VALUE_CLASS, "text-[var(--text-secondary)]")}>{row.count}</span>
-            </div>
-            <div
-              className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--bg-inset)]"
-              role="img"
-              aria-label={`${row.name} has ${row.count} claims`}
-            >
-              <div
-                className="h-full rounded-full bg-[var(--accent)]"
-                style={{ width: `${Math.round((row.count / max) * 100)}%` }}
-              />
-            </div>
-          </li>
-        ))}
-      </ul>
+      <ChartContainer config={{ claims: { label: "Claims", color: "#0f766e" } } satisfies ChartConfig} className="h-[220px] w-full aspect-auto">
+        <BarChart data={counts} margin={{ top: 8, right: 8, left: -12, bottom: 0 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" />
+          <XAxis dataKey="name" tickLine={false} axisLine={false} tickMargin={10} tick={{ fontSize: 11 }} />
+          <YAxis allowDecimals={false} domain={[0, Math.max(1, max)]} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+          <ChartTooltip cursor={{ fill: "hsl(var(--muted) / .5)" }} content={<ChartTooltipContent />} />
+          <Bar dataKey="count" name="Claims" fill="var(--color-claims)" radius={[5, 5, 0, 0]} maxBarSize={46} />
+        </BarChart>
+      </ChartContainer>
+      <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
+        {counts.map((row) => <span key={row.id} className={cn(VALUE_CLASS, "tabular-nums")}>{row.name}: {row.count}</span>)}
+      </div>
       </CardContent>
     </Card>
   );

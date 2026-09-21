@@ -119,7 +119,7 @@ export function ComparisonMatrix({
       <div className="mt-2 overflow-x-auto border border-[var(--border)]">
         <table className="w-full min-w-[480px] text-sm">
           <thead>
-            <tr className="border-b border-[var(--border)] text-left">
+            <tr className="border-b border-[var(--border)] bg-muted/20 text-left">
               <th className={cn("px-3 py-2 font-medium", LABEL_CLASS, "text-[var(--text-tertiary)]")}>
                 Type
               </th>
@@ -135,8 +135,8 @@ export function ComparisonMatrix({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row} className="border-t border-[var(--border)]">
-                <td className="px-3 py-2 text-[var(--text-secondary)]">{row}</td>
+              <tr key={row} className="border-t border-[var(--border)] transition-colors hover:bg-muted/20">
+                <td className="px-3 py-2 font-medium text-[var(--text-secondary)]">{row.replaceAll("_", " ")}</td>
                 {brands.map((b) => (
                   <td key={b.id} className={cn("px-3 py-2", VALUE_CLASS, "text-[var(--text-primary)]")}>
                     {dist[row]?.[b.id] ?? 0}
@@ -152,7 +152,7 @@ export function ComparisonMatrix({
 
   return (
     <Card aria-label="Comparison matrix" className={cn("border-border/80 bg-card shadow-none", className)}>
-      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Comparison matrix</CardTitle></CardHeader>
+      <CardHeader className="border-b border-border/70 bg-muted/20 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Comparison matrix</CardTitle><p className="text-xs text-muted-foreground">Creative mix across the selected brands</p></CardHeader>
       <CardContent className="space-y-6 p-5">
       {table("Hook type distribution", HOOK_TYPES, hookDist)}
       {table("Funnel stage distribution", FUNNEL_STAGES, funnelDist)}

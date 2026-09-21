@@ -42,6 +42,9 @@ function RunsHistory() {
   const names = brandNameMap(brands);
   const freshest = runs.length > 0 ? runs[0].requestedAt : null;
   const loading = !runsLoaded || brands === undefined;
+  const completeCount = complete?.length ?? 0;
+  const partialCount = partial?.length ?? 0;
+  const failedCount = failed?.length ?? 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -63,6 +66,24 @@ function RunsHistory() {
           {freshest === null ? null : <span className={cn(VALUE_CLASS, "text-[11px]")}>fresh {formatRunDateTime(freshest)}</span>}
         </div>
       </header>
+
+      {!loading ? (
+        <section aria-label="Run overview" className="grid gap-3 sm:grid-cols-3">
+          {[
+            ["Total runs", runs.length, "all recorded comparisons"],
+            ["Complete", completeCount, "full engine coverage"],
+            ["Needs review", partialCount + failedCount, `${partialCount} partial, ${failedCount} failed`],
+          ].map(([label, value, note]) => (
+            <Card key={String(label)} className="border-border/80 bg-card shadow-none">
+              <CardContent className="p-4">
+                <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted-foreground">{label}</p>
+                <p className="mt-2 font-mono text-2xl font-semibold tabular-nums text-foreground">{value}</p>
+                <p className="mt-1 text-xs text-muted-foreground">{note}</p>
+              </CardContent>
+            </Card>
+          ))}
+        </section>
+      ) : null}
 
       {loading ? (
         <SkeletonRows count={4} variant="row" height={96} />
