@@ -1,14 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useRef, useState } from "react";
+import type { ChangeEvent, KeyboardEvent } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowUp, ArrowUpRight, CircleAlert, Loader2, Plus, X } from "lucide-react";
+import { useQuery } from "convex/react";
+import { ArrowUpRight, CircleAlert, Plus, ShieldCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import {
+  PromptInput,
+  PromptInputBody,
+  PromptInputButton,
+  PromptInputFooter,
+  PromptInputSubmit,
+  PromptInputTextarea,
+  PromptInputTools,
+} from "@/components/ai-elements/prompt-input";
+import {
+  MAX_ASK_BRANDS,
+  askHref,
   askScopeFromPath,
   isLongAnswer,
+  mergeAskBrandIds,
   type AskScope,
 } from "@/components/drishti/ask/ask-model";
+import {
+  BrandMentionMenu,
+  filterMentionBrands,
+  mentionOptionId,
+  type MentionBrand,
+} from "@/components/drishti/ask/BrandMentionMenu";
 import { useAskSubmit } from "@/components/drishti/ask/useAsk";
 import { VALUE_CLASS, iconProps } from "@/components/drishti/tokens";
 
@@ -19,12 +41,7 @@ type Preview = {
 };
 
 const NO_SCOPE: AskScope = { cohortKey: null, brandIds: [], runId: null };
-
-function askHref(scope: AskScope): string {
-  return scope.cohortKey !== null
-    ? `/ask?cohort=${encodeURIComponent(scope.cohortKey)}`
-    : "/ask";
-}
+const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 
 export function DockedAsk() {
   const pathname = usePathname();
@@ -34,6 +51,29 @@ export function DockedAsk() {
   const [focused, setFocused] = useState(false);
   const [preview, setPreview] = useState<Preview | null>(null);
   const { ask, asking, error, clearError } = useAskSubmit();
+  const trackedBrands = useQuery(api.brands.listBrands);
+
+  const [mentionedBrandIds, setMentionedBrandIds] = useState<Id<"brands">[]>([]);
+  const [mentionSource, setMentionSource] = useState<"typed" | "plus" | null>(null);
+  const [mentionToken, setMentionToken] = useState("");
+  const [highlightedIndex, setHighlightedIndex] = useState(0);
+  const [mentionNotice, setMentionNotice] = useState<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+
+  const mentionBrands: MentionBrand[] = useMemo(
+    () => (trackedBrands ?? []).map((brand) => ({ id: brand._id, name: brand.name })),
+    [trackedBrands],
+  );
+  const visibleMentionBrands = useMemo(
+    () => filterMentionBrands(mentionBrands, mentionToken),
+    [mentionBrands, mentionToken],
+  );
+  const mentionMenuOpen = mentionSource !== null;
+  const safeHighlightedIndex = Math.min(
+    highlightedIndex,
+    Math.max(visibleMentionBrands.length - 1, 0),
+  );
+  const listboxId = "docked-ask-mentions";
 
   const scopeCount = scope.brandIds.length;
   const canSend = value.trim().length > 0 && !asking;
@@ -44,18 +84,120 @@ export function DockedAsk() {
     setScope(askScopeFromPath(window.location.pathname, window.location.search));
   }
 
+  function closeMentionMenu() {
+    setMentionSource(null);
+    setMentionToken("");
+    setHighlightedIndex(0);
+  }
+
+  function addMention(brand: MentionBrand) {
+    if (mentionedBrandIds.includes(brand.id)) return;
+    const { overflowed } = mergeAskBrandIds(scope.brandIds, [...mentionedBrandIds, brand.id]);
+    if (overflowed) {
+      setMentionNotice(
+        `Only ${MAX_ASK_BRANDS} brands can be in context at once. Remove one before adding ${brand.name}.`,
+      );
+      return;
+    }
+    setMentionNotice(null);
+    setMentionedBrandIds((prev) => [...prev, brand.id]);
+  }
+
+  function selectMentionBrand(brand: MentionBrand) {
+    if (mentionSource === "typed") {
+      const input = inputRef.current;
+      const cursor = input?.selectionStart ?? value.length;
+      const before = value.slice(0, cursor);
+      const match = MENTION_TOKEN_RE.exec(before);
+      if (match !== null) {
+        const insertion = `@${brand.name} `;
+        const nextValue = value.slice(0, match.index) + insertion + value.slice(cursor);
+        const nextCursor = match.index + insertion.length;
+        setValue(nextValue);
+        requestAnimationFrame(() => {
+          input?.setSelectionRange(nextCursor, nextCursor);
+        });
+      }
+    }
+    addMention(brand);
+    closeMentionMenu();
+    inputRef.current?.focus();
+  }
+
+  function handleValueChange(event: ChangeEvent<HTMLTextAreaElement>) {
+    const nextValue = event.target.value;
+    setValue(nextValue);
+    const cursor = event.target.selectionStart ?? nextValue.length;
+    const match = MENTION_TOKEN_RE.exec(nextValue.slice(0, cursor));
+    if (match !== null) {
+      setMentionSource("typed");
+      setMentionToken(match[1]);
+      setHighlightedIndex(0);
+    } else if (mentionSource === "typed") {
+      closeMentionMenu();
+    }
+  }
+
+  function handleInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+    if (!mentionMenuOpen) return;
+    if (event.key === "ArrowDown") {
+      event.preventDefault();
+      if (visibleMentionBrands.length === 0) return;
+      setHighlightedIndex((index) => (index + 1) % visibleMentionBrands.length);
+      return;
+    }
+    if (event.key === "ArrowUp") {
+      event.preventDefault();
+      if (visibleMentionBrands.length === 0) return;
+      setHighlightedIndex(
+        (index) => (index - 1 + visibleMentionBrands.length) % visibleMentionBrands.length,
+      );
+      return;
+    }
+    if (event.key === "Enter" || event.key === "Tab") {
+      const brand = visibleMentionBrands[safeHighlightedIndex];
+      if (brand === undefined) return;
+      event.preventDefault();
+      selectMentionBrand(brand);
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      closeMentionMenu();
+      inputRef.current?.focus();
+    }
+  }
+
+  function togglePlusMenu() {
+    if (mentionSource === "plus") {
+      closeMentionMenu();
+      return;
+    }
+    setMentionSource("plus");
+    setMentionToken("");
+    setHighlightedIndex(0);
+    inputRef.current?.focus();
+  }
+
   async function submit() {
     const question = value.trim();
     if (question === "" || asking) return;
-    const current = askScopeFromPath(
+    const pathScope = askScopeFromPath(
       window.location.pathname,
       window.location.search,
     );
+    const { merged, overflowed } = mergeAskBrandIds(pathScope.brandIds, mentionedBrandIds);
+    if (overflowed) {
+      setMentionNotice(`Only ${MAX_ASK_BRANDS} brands can be in context at once.`);
+    }
+    const current: AskScope = { ...pathScope, brandIds: merged };
     setPreview(null);
     clearError();
     const exchange = await ask(question, current);
     if (exchange === null) return;
     setValue("");
+    setMentionedBrandIds([]);
+    closeMentionMenu();
     const result = exchange.result;
     const href = askHref(current);
     if (result.available === false) {
@@ -69,11 +211,14 @@ export function DockedAsk() {
       return;
     }
     if (result.mode === "empty") {
+      const refreshFailed = result.liveRefresh?.error !== undefined;
       setPreview({
         tone: "warn",
-        text:
-          result.message ??
-          "No stored claims cover these brands yet. Run a refresh, then ask again.",
+        text: refreshFailed
+          ? `A live refresh ran automatically and failed: ${result.liveRefresh?.error}`
+          : result.liveRefresh?.attempted === true
+            ? "A live refresh ran automatically and found nothing new for these brands."
+            : (result.message ?? "No stored claims cover these brands yet."),
         href: null,
       });
       return;
@@ -104,6 +249,7 @@ export function DockedAsk() {
   const blockTone = error !== null ? "danger" : preview?.tone ?? "neutral";
   const blockText = error ?? preview?.text ?? null;
   const blockHref = error !== null ? null : (preview?.href ?? null);
+  const activeOption = visibleMentionBrands[safeHighlightedIndex];
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
@@ -191,65 +337,87 @@ export function DockedAsk() {
             </p>
           ) : null}
 
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              void submit();
-            }}
-            onFocus={() => {
-              setFocused(true);
-              refreshScope();
-            }}
-            onBlur={() => setFocused(false)}
-            className="flex items-center gap-1.5 rounded-full border border-border-strong bg-white p-1.5 shadow-[0_12px_32px_rgba(16,24,40,0.14)] transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_16px_38px_rgba(16,24,40,0.18)]"
-          >
-            <button
-              type="button"
-              aria-label="Choose brands for context"
-              onClick={() => router.push("/brands")}
-              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-fg-secondary transition-colors duration-150 ease-out hover:bg-bg-inset hover:text-fg"
-            >
-              <Plus aria-hidden className="size-4" />
-            </button>
-            <label htmlFor="docked-ask" className="sr-only">
-              Ask about these rivals
-            </label>
-            <input
-              id="docked-ask"
-              name="ask"
-              type="text"
-              value={value}
-              onChange={(event) => setValue(event.target.value)}
-              autoComplete="off"
-              disabled={asking}
-              aria-invalid={error !== null ? true : undefined}
-              placeholder="Ask about your rivals, or type @ to reference a brand."
-              className="h-10 min-w-0 flex-1 bg-transparent px-1 text-[14px] text-fg outline-none placeholder:text-fg-placeholder disabled:cursor-not-allowed disabled:text-fg-tertiary aria-invalid:text-[var(--danger)]"
-            />
-            <button
-              type="submit"
-              disabled={!canSend}
-              aria-label="Send"
-              aria-busy={asking || undefined}
+          {mentionNotice !== null ? (
+            <p
+              role="status"
               className={cn(
-                "inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink",
-                canSend &&
-                  "transition-colors duration-150 ease-out hover:bg-accent-strong active:translate-y-[0.5px]",
-                "disabled:cursor-not-allowed disabled:bg-bg-raised disabled:text-fg-tertiary",
+                VALUE_CLASS,
+                "ml-auto w-full max-w-2xl px-1 text-right text-[10.5px] text-[var(--danger)]",
               )}
             >
-              {asking ? (
-                <Loader2
-                  {...iconProps}
-                  size={16}
-                  aria-hidden="true"
-                  className="size-4 animate-spin motion-reduce:animate-none"
+              {mentionNotice}
+            </p>
+          ) : null}
+
+          <div className="relative">
+            {mentionMenuOpen ? (
+              <BrandMentionMenu
+                id={listboxId}
+                brands={visibleMentionBrands}
+                highlightedIndex={safeHighlightedIndex}
+                onSelect={selectMentionBrand}
+              />
+            ) : null}
+            <PromptInput
+              onSubmit={() => {
+                void submit();
+              }}
+              onFocus={() => {
+                setFocused(true);
+                refreshScope();
+              }}
+              onBlur={() => setFocused(false)}
+              className="rounded-[10px] border border-border-strong bg-white shadow-[0_12px_32px_rgba(16,24,40,0.14)] transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_16px_38px_rgba(16,24,40,0.18)]"
+            >
+              <PromptInputBody>
+                <label htmlFor="docked-ask" className="sr-only">
+                  Ask about these rivals
+                </label>
+                <PromptInputTextarea
+                  id="docked-ask"
+                  name="ask"
+                  ref={inputRef}
+                  value={value}
+                  onChange={handleValueChange}
+                  onKeyDown={handleInputKeyDown}
+                  autoComplete="off"
+                  disabled={asking}
+                  aria-invalid={error !== null ? true : undefined}
+                  role="combobox"
+                  aria-autocomplete="list"
+                  aria-expanded={mentionMenuOpen}
+                  aria-controls={mentionMenuOpen ? listboxId : undefined}
+                  aria-activedescendant={
+                    mentionMenuOpen && activeOption !== undefined
+                      ? mentionOptionId(listboxId, activeOption.id)
+                      : undefined
+                  }
+                  placeholder="Ask about your rivals, or type @ to reference a brand."
+                  className="min-h-10 bg-transparent text-[14px] text-fg placeholder:text-fg-placeholder aria-invalid:text-[var(--danger)]"
                 />
-              ) : (
-                <ArrowUp {...iconProps} size={16} aria-hidden="true" className="size-4" />
-              )}
-            </button>
-          </form>
+              </PromptInputBody>
+              <PromptInputFooter>
+                <PromptInputTools>
+                  <PromptInputButton
+                    aria-label="Add a brand to this question"
+                    aria-pressed={mentionSource === "plus"}
+                    onClick={togglePlusMenu}
+                  >
+                    <Plus aria-hidden className="size-4" />
+                  </PromptInputButton>
+                  <span className="hidden items-center gap-1.5 text-xs text-fg-tertiary sm:flex">
+                    <ShieldCheck className="size-3.5 text-ok" /> Answers cite stored claims only
+                  </span>
+                </PromptInputTools>
+                <PromptInputSubmit
+                  status={asking ? "submitted" : undefined}
+                  disabled={!canSend}
+                  aria-label="Send"
+                  className="rounded-full bg-accent text-accent-ink hover:bg-accent-strong disabled:bg-bg-inset disabled:text-fg-tertiary"
+                />
+              </PromptInputFooter>
+            </PromptInput>
+          </div>
         </div>
       </div>
     </div>

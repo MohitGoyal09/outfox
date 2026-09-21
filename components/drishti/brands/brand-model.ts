@@ -14,18 +14,10 @@ export const FETCH_ENGINES = [
   "youtube",
   "youtube_video",
   "google_trends",
+  "google_news",
 ] as const;
 
 export type FetchEngine = (typeof FETCH_ENGINES)[number];
-
-export const ENGINE_LABEL: Record<string, string> = {
-  google: "Google Search",
-  google_ads_transparency_center: "Ads Transparency",
-  youtube: "YouTube Search",
-  youtube_video: "YouTube Video",
-  google_trends: "Google Trends",
-  llm_tag: "Content tag",
-};
 
 export function isFetchEngine(value: string): value is FetchEngine {
   return (FETCH_ENGINES as readonly string[]).includes(value);
@@ -49,6 +41,10 @@ export function tagBearingClaims(claims: ClaimDoc[]): ClaimDoc[] {
 
 export function signalClaims(claims: ClaimDoc[]): ClaimDoc[] {
   return claims.filter(isSignalClaim);
+}
+
+export function isContentClaim(claim: ClaimDoc): boolean {
+  return claim.metric === undefined || !claim.metric.endsWith("_count");
 }
 
 export function claimsForRun(claims: ClaimDoc[], runId: string): ClaimDoc[] {
@@ -150,16 +146,10 @@ function distributionFromCounts(
   return items;
 }
 
-export function funnelDistribution(
-  claims: ClaimDoc[],
-  previous: ClaimDoc[] | null = null,
-): DistributionItem[] {
-  return distributionFromCounts(
-    countValues(tagBearingClaims(claims), (claim) => claim.funnelStage),
-    previous === null
-      ? null
-      : countValues(tagBearingClaims(previous), (claim) => claim.funnelStage),
-  );
+const NOT_APPLICABLE = "not_applicable";
+
+function realValue(value: string | undefined): string | undefined {
+  return value === NOT_APPLICABLE ? undefined : value;
 }
 
 
@@ -266,4 +256,122 @@ export function runHistoryRows(
       run,
     };
   });
+}
+
+export function runHasRealTagForEngines(
+  claims: ClaimDoc[],
+  runId: string,
+  engines: readonly string[],
+): boolean {
+  return tagsForEngineSubset(claims, runId, engines).some(
+    (claim) => realValue(claim.hookType) !== undefined,
+  );
+}
+
+export function mostRecentTaggedRunForEngines(
+  claims: ClaimDoc[],
+  runsDesc: RunDoc[],
+  engines: readonly string[],
+): RunDoc | null {
+  for (const run of runsDesc) {
+    if (runHasRealTagForEngines(claims, String(run._id), engines)) return run;
+  }
+  return null;
+}
+
+
+export type YoutubeVideoGroup = {
+  videoId: string;
+  evidenceUrl: string;
+  title: string | null;
+  description: string | null;
+  publishedDate: string | null;
+  viewCount: number | null;
+  likeCount: number | null;
+  claims: ClaimDoc[];
+};
+
+export function youtubeVideoIdOf(claim: Pick<ClaimDoc, "sourceQuery" | "evidenceUrl">): string {
+  const fromQuery = claim.sourceQuery.match(/youtube_video\s+(\S+)/)?.[1];
+}
+
+function numberValue(claim: ClaimDoc | undefined): number | null {
+  return typeof claim?.value === "number" ? claim.value : null;
+}
+
+export function groupYoutubeVideoClaims(claims: ClaimDoc[]): YoutubeVideoGroup[] {
+  const byUrl = new Map<string, ClaimDoc[]>();
+  return [...byUrl.entries()]
+    .map(([evidenceUrl, groupClaims]) => {
+      const find = (metric: string) =>
+        groupClaims.find((claim) => claim.metric === metric);
+    })
+    .sort(
+      (a, b) =>
+        b.claims.length - a.claims.length || a.videoId.localeCompare(b.videoId),
+    );
+}
+
+type RecordLike = Record<string, unknown>;
+
+function asRecord(value: unknown): RecordLike | null {
+  return typeof value === "object" && value !== null
+    ? (value as RecordLike)
+    : null;
+}
+
+export function findYoutubeRawVideo(
+  rawResponse: unknown,
+  videoId: string,
+): unknown {
+  const videos = Array.isArray(root?.videos) ? root.videos : [];
+  for (const entry of videos) {
+    if (record !== null && record.videoId === videoId) {
+      return record.data ?? null;
+    }
+  }
+  return null;
+}
+
+export type YoutubeRawVideoInfo = {
+  thumbnailUrl: string | null;
+  channelName: string | null;
+  channelThumbnailUrl: string | null;
+  subscribers: string | number | null;
+};
+
+export function readYoutubeRawVideo(raw: unknown): YoutubeRawVideoInfo {
+  const root = asRecord(raw);
+  const channel = asRecord(root?.channel);
+  const channelThumbnailUrl =
+    typeof channel?.thumbnail === "string" ? channel.thumbnail : null;
+  const subscribersRaw = channel?.subscribers;
+  const subscribers =
+    typeof subscribersRaw === "string" || typeof subscribersRaw === "number"
+      ? subscribersRaw
+      : null;
+  return { thumbnailUrl, channelName, channelThumbnailUrl, subscribers };
+}
+
+
+export function findGoogleNewsRawItem(
+  rawResponse: unknown,
+  evidenceUrl: string,
+): unknown {
+  const items = Array.isArray(root?.news_results) ? root.news_results : [];
+  for (const entry of items) {
+  }
+  return null;
+}
+
+export type GoogleNewsRawItem = {
+  thumbnailUrl: string | null;
+  publisherName: string | null;
+};
+
+export function readGoogleNewsRawItem(raw: unknown): GoogleNewsRawItem {
+  const record = asRecord(raw);
+  const source = asRecord(record?.source);
+  const thumbnailUrl = typeof record?.thumbnail === "string" ? record.thumbnail : null;
+  const publisherName = typeof source?.name === "string" ? source.name : null;
 }

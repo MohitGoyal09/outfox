@@ -1,3 +1,4 @@
+import { Newspaper } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PlatformLogo({
@@ -7,6 +8,10 @@ export function PlatformLogo({
   engine: string;
   className?: string;
 }) {
+  if (engine === "google_news") {
+    return <Newspaper aria-hidden className={cn("shrink-0", className)} />;
+  }
+
   if (engine === "youtube" || engine === "youtube_video") {
     return (
       <svg aria-hidden viewBox="0 0 256 180" className={cn("shrink-0", className)}>

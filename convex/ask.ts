@@ -1,6 +1,7 @@
 "use node";
 
 import { action } from "./_generated/server";
+import type { ActionCtx } from "./_generated/server";
 import { api } from "./_generated/api";
 import { v, ConvexError } from "convex/values";
 import { validateBriefSentences } from "./pipeline/guardrail";
@@ -32,13 +33,13 @@ export type AskClaimView = {
 
 export type AnswerQuestionResult = {
   available: boolean;
-  needsRefresh?: boolean;
   answer: string;
   citations: string[];
   mode: "llm" | "empty" | "error" | "invalid";
   message?: string;
   error?: string;
   usage?: CallLLMUsage[];
+  liveRefresh?: { attempted: true; runId?: string; brandCount: number; error?: string };
 };
 
 type LLMOutcome =
@@ -55,9 +56,7 @@ const ASK_SYSTEM =
   "Never invent facts, numbers, or sources. " +
   "When the claims cannot answer, say so plainly and cite the closest claim.";
 
-const REFRESH_ONLY_MESSAGE =
-  "Latest data was requested, so this question needs a fresh run first. " +
-  "Confirm refresh, then ask again once the new run lands.";
+const EMPTY_MESSAGE = "No stored claims cover these brands yet.";
 
 function clip(text: string, max: number): string {
 }
@@ -80,3 +79,49 @@ function isSentenceRecord(value: unknown): value is BriefSentence {
 function hasGatewayKey(): boolean {
   return hasLLMKey();
 }
+
+async function fetchClaimViews(
+  ctx: ActionCtx,
+  args: { brandIds: Id<"brands">[]; runId?: Id<"runs"> },
+): Promise<AskClaimView[]> {
+}
+
+export const answerQuestion = action({
+  args: {
+    question: v.string(),
+    brandIds: v.array(v.id("brands")),
+    runId: v.optional(v.id("runs")),
+    latestRequested: v.optional(v.boolean()),
+  },
+  handler: async (ctx, args): Promise<AnswerQuestionResult> => {
+    if (args.brandIds.length > MAX_BRANDS_PER_RUN) {
+      throw new ConvexError(
+        `Too many brands: ${args.brandIds.length}, limit is ${MAX_BRANDS_PER_RUN}`,
+      );
+    }
+    const question = clip(args.question, 2000);
+    if (question.trim() === "") {
+      throw new ConvexError("question must be non empty");
+    }
+
+    let firstResult: AnswerQuestionResult | undefined;
+    let needsLiveRun = args.latestRequested === true;
+
+    let liveRefresh: NonNullable<AnswerQuestionResult["liveRefresh"]>;
+    try {
+      const runResult = await ctx.runAction(api.pipeline.runComparison.runComparison, {
+        brandIds: args.brandIds,
+        mode: "live",
+        refreshAuthorized: true,
+      });
+      liveRefresh = {
+        attempted: true,
+        runId: String(runResult.runId),
+        brandCount: args.brandIds.length,
+      };
+      const freshViews = await fetchClaimViews(ctx, readArgs);
+    } catch (error) {
+      return { ...fallback, liveRefresh };
+    }
+  },
+});

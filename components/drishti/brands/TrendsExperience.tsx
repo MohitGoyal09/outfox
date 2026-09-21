@@ -3,12 +3,14 @@
 import { useMemo, useState } from "react";
 import { useAction } from "convex/react";
 import { useRouter } from "next/navigation";
-import { CartesianGrid, Legend, Line, LineChart, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 import { CalendarDays, Globe2, Info, Loader2, Map as MapIcon, TrendingUp } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import { cn } from "@/lib/utils";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
+import { LABEL_CLASS } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
 import type { ClaimDoc, SnapshotDoc } from "./brand-model";
 import { PlatformLogo } from "./PlatformLogo";
@@ -55,8 +57,47 @@ function ScopeControl({ icon: Icon, label, value, children, onChange }: { icon: 
   return <label className="flex min-w-[130px] items-center gap-2 rounded-lg border border-border bg-background px-3 py-2 text-xs text-muted-foreground"><Icon className="size-3.5 shrink-0" /><span className="sr-only">{label}</span><select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="min-w-0 flex-1 appearance-none bg-transparent font-medium text-foreground outline-none">{children}</select></label>;
 }
 
-function EmptyTrend({ brandName, message }: { brandName: string; message?: string }) {
-  return <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-border bg-muted/20 px-6 text-center"><div><PlatformLogo engine="google_trends" className="mx-auto size-7" /><p className="mt-4 text-sm font-medium">No timeline stored for {brandName}</p><p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">{message ?? "Run a Google Trends refresh to store dated interest points. The average score alone cannot produce a chart."}</p></div></div>;
+function EmptyTrend({
+  brandName,
+  message,
+  onRefresh,
+  refreshing,
+  hideAction = false,
+}: {
+  brandName: string;
+  message?: string;
+  onRefresh: () => void;
+  refreshing: boolean;
+  hideAction?: boolean;
+}) {
+  return (
+    <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-border bg-muted/20 px-6 text-center">
+      <div>
+        <PlatformLogo engine="google_trends" className="mx-auto size-7" />
+        <p className="mt-4 text-sm font-medium">No timeline stored for {brandName}</p>
+        <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">
+          {message ??
+            "Run a Google Trends refresh to store dated interest points. The average score alone cannot produce a chart."}
+        </p>
+        {hideAction ? null : (
+          <Button
+            variant="outline"
+            size="sm"
+            className="mt-4 gap-2 rounded-lg"
+            disabled={refreshing}
+            onClick={onRefresh}
+          >
+            {refreshing ? (
+              <Loader2 className="size-3.5 animate-spin" />
+            ) : (
+              <TrendingUp className="size-3.5" />
+            )}
+            Run refresh
+          </Button>
+        )}
+      </div>
+    </div>
+  );
 }
 
 function chartRows(points: TrendPoint[], brandName: string) {
@@ -102,9 +143,59 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
   }
   return <section className="space-y-4" aria-label="Google Trends intelligence">
     <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><PlatformLogo engine="google_trends" className="size-4" /><h2 className="text-base font-semibold">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest stored Google Trends run{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className="gap-2 rounded-lg" onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" />Refresh scope</Button></div>
-    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" />Stored data is filtered locally. Refresh fetches the selected scope.</span></div>
+    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" />Date range filters the stored chart locally. Geography applies to your next refresh, not the chart shown now.</span></div>
     {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Run a live brand refresh?</p><p className="mt-1 text-xs text-muted-foreground">This runs every evidence engine, including Google Trends for {region} and {range}, and uses SerpApi credits.</p>{error ? <p role="alert" className="mt-2 text-xs text-red-600">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Run refresh</Button></div></div> : null}
-    {filtered.length < 2 ? <EmptyTrend brandName={brandName} /> : <div className="overflow-hidden rounded-xl border border-border bg-card"><div className="grid border-b border-border sm:grid-cols-[1fr_auto]"><div className="px-5 py-4"><p className="text-xs font-medium text-muted-foreground">{rows.names.length > 1 ? "Within-chunk comparison" : "Brand interest"}</p><p className="mt-1 text-xs text-muted-foreground">Google Trends scores are relative within this query chunk, not search volume.</p></div><div className="grid grid-cols-2 border-t border-border sm:border-l sm:border-t-0"><div className="px-4 py-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Average</p><p className="mt-1 font-mono text-lg font-semibold">{avg ?? "n/a"}</p></div><div className="border-l border-border px-4 py-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Peak</p><p className="mt-1 font-mono text-lg font-semibold">{peak?.interest ?? "n/a"}</p></div></div></div><div className="px-3 pb-4 pt-6 sm:px-5"><ChartContainer config={config} className="h-[340px] w-full aspect-auto"><LineChart accessibilityLayer data={rows.data} margin={{ left: -12, right: 12, top: 8 }}><CartesianGrid vertical={false} strokeDasharray="3 3" /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} minTickGap={36} /><YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={38} /><ChartTooltip content={<ChartTooltipContent indicator="line" />} /><Legend verticalAlign="top" align="right" height={28} wrapperStyle={{ fontSize: 11 }} />{rows.names.map((name) => <Line key={name} dataKey={rows.keyOf(name)} name={name} type="monotone" connectNulls stroke={`var(--color-${rows.keyOf(name)})`} strokeWidth={name === target ? 2.5 : 1.8} dot={false} activeDot={{ r: 4 }} />)}</LineChart></ChartContainer></div></div>}
+    {filtered.length < 2 ? (
+      <EmptyTrend
+        brandName={brandName}
+        onRefresh={() => setConfirming(true)}
+        refreshing={refreshing}
+        hideAction={confirming}
+      />
+    ) : (
+      <div className="overflow-hidden rounded-xl border border-border bg-card">
+        <div className="grid border-b border-border sm:grid-cols-[1fr_auto]">
+          <div className="px-5 py-4">
+            <p className={cn(LABEL_CLASS, "text-muted-foreground")}>
+              {rows.names.length > 1 ? "Within-chunk comparison" : "Brand interest"}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">Google Trends scores are relative within this query chunk, not search volume.</p>
+          </div>
+          <div className="grid grid-cols-2 border-t border-border sm:border-l sm:border-t-0">
+            <div className="px-4 py-3">
+              <p className={cn(LABEL_CLASS, "text-muted-foreground")}>Average</p>
+              <p className="mt-1 font-mono text-lg font-semibold tabular-nums">{avg ?? "n/a"}</p>
+            </div>
+            <div className="border-l border-border px-4 py-3">
+              <p className={cn(LABEL_CLASS, "text-muted-foreground")}>Peak</p>
+              <p className="mt-1 font-mono text-lg font-semibold tabular-nums">{peak?.interest ?? "n/a"}</p>
+            </div>
+          </div>
+        </div>
+        <div className="px-3 pb-4 pt-6 sm:px-5">
+          <ChartContainer config={config} className="h-[340px] w-full aspect-auto">
+            <BarChart accessibilityLayer data={rows.data} margin={{ left: -12, right: 12, top: 8 }}>
+              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} minTickGap={36} />
+              <YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={38} />
+              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+              <Legend verticalAlign="top" align="right" height={28} wrapperStyle={{ fontSize: 11 }} />
+              {rows.names.map((name) => (
+                <Bar
+                  key={name}
+                  dataKey={rows.keyOf(name)}
+                  name={name}
+                  fill={`var(--color-${rows.keyOf(name)})`}
+                  radius={[3, 3, 0, 0]}
+                  fillOpacity={name === target ? 1 : 0.55}
+                  maxBarSize={rows.names.length > 1 ? 14 : 22}
+                />
+              ))}
+            </BarChart>
+          </ChartContainer>
+        </div>
+      </div>
+    )}
     <div className="rounded-lg border border-border bg-muted/30 px-4 py-3 text-xs leading-5 text-muted-foreground"><MapIcon className="mr-1 inline size-3.5" />The chart shows stored {snapshot?.region ?? "IN"} data. Comparison lines appear only when Google returned the same dated query chunk.</div>
     {claims.length > 0 ? <p className="text-[11px] text-muted-foreground">{claims.filter((claim) => claim.metric === "google_trends_avg_interest").length} stored trend claims support this view.</p> : null}
   </section>;

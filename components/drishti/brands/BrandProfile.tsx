@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BarChart3, Bookmark, CalendarDays, CheckCircle2, ChevronDown, Clock3, ExternalLink, Filter, Globe2, History, Languages, Search, SlidersHorizontal, Tag, Timer, Video } from "lucide-react";
-import { useMemo, useState, type ReactNode } from "react";
+import { ArrowLeft, ArrowUpRight, BarChart3, Bookmark, CheckCircle2, Clock3, ExternalLink, Filter, Globe2, History, Link2, Tag } from "lucide-react";
+import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
@@ -17,58 +17,91 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { EmptyState } from "../EmptyState";
 import { useAllRuns } from "../cohorts/useAllRuns";
 import { formatStamp } from "../cohorts/cohorts-model";
-import { engineCoverage, engineLabel, FETCH_ENGINES, signalClaims, tagBearingClaims, trendPoints, type ClaimDoc, type EngineCoverageRow } from "./brand-model";
+import { HOOK_TYPES, FUNNEL_STAGES } from "../tokens";
+import {
+  engineCoverage,
+  engineLabel,
+  FETCH_ENGINES,
+  findYoutubeRawVideo,
+  funnelDistribution,
+  groupYoutubeVideoClaims,
+  hookDistribution,
+  isContentClaim,
+  mostRecentTaggedRun,
+  previousRunFor,
+  readYoutubeRawVideo,
+  runHasRealTag,
+  runHistoryRows,
+  signalClaims,
+  tagBearingClaims,
+  trendPoints,
+  type ClaimDoc,
+  type EngineCoverageRow,
+  type RunHistoryRow,
+} from "./brand-model";
 import { BrandMark } from "./BrandMark";
 import { PlatformLogo } from "./PlatformLogo";
+import { EvidenceCard, sourceAccent } from "./EvidenceCard";
+import { FilterSelect, FunnelPanel, HookChart, SummaryPanel } from "./EvidencePanels";
+import { shortDate } from "./format";
 import { DestinationsPanel } from "./DestinationsPanel";
 import { TrendsExperience } from "./TrendsExperience";
+import { SearchExperience } from "./SearchExperience";
+import { YouTubeExperience } from "./YouTubeExperience";
+import { YouTubeVideoCard } from "./YouTubeVideoCard";
 
 export type BrandProfileProps = { brandId: Id<"brands">; className?: string };
 
-const tabs = [["overview", "Overview"], ["search", "Search"], ["ads", "Ads presence"], ["youtube", "YouTube"], ["trends", "Trends"], ["destinations", "Destinations"], ["evidence", "Evidence"], ["history", "History"]] as const;
-const sourceAccent: Record<string, string> = { google: "#0f766e", google_ads_transparency_center: "#d97706", youtube: "#dc2626", youtube_video: "#dc2626", google_trends: "#2563eb" };
+const tabs = [["overview", "Overview"], ["search", "Search"], ["youtube", "YouTube"], ["trends", "Trends"], ["destinations", "Destinations"], ["history", "History"]] as const;
+const EVIDENCE_PAGE_SIZE = 24;
+const TABLE_PAGE_SIZE = 40;
 
-function PlatformMark({ engine, className }: { engine: string; className?: string }) {
-  return <PlatformLogo engine={engine} className={className} />;
+function tagsForClaim(tags: ClaimDoc[], claim: ClaimDoc): ClaimDoc[] {
+  return tags.filter(
+    (tag) =>
+      String(tag._id) === String(claim._id) ||
+      (tag.taggedClaimId !== undefined && String(tag.taggedClaimId) === String(claim._id)),
+  );
 }
 
-function shortDate(value: string | undefined | null) { return value ? formatStamp(value).split(" · ")[0] : "Not yet"; }
 function statusBadge(status: string) { const good = status === "ok" || status === "complete" || status === "ready"; return <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good && "border-emerald-200 bg-emerald-50 text-emerald-700")}>{good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}{status}</Badge>; }
-function FilterButton({ icon: Icon, label }: { icon: typeof CalendarDays; label: string }) { return <Button variant="outline" size="sm" className="h-9 justify-between gap-3 rounded-lg border-border bg-background px-3 text-xs font-normal text-muted-foreground hover:bg-muted"><span className="flex items-center gap-2"><Icon className="size-3.5" />{label}</span><ChevronDown className="size-3" /></Button>; }
 
 function ClaimsTable({ claims, empty = "No stored evidence for this context yet." }: { claims: ClaimDoc[]; empty?: string }) {
+  const [limit, setLimit] = useState(TABLE_PAGE_SIZE);
+  const [order, setOrder] = useState<"newest" | "oldest">("newest");
   if (claims.length === 0) return <div className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">{empty}</div>;
-  return <div className="overflow-hidden rounded-xl border border-border"><Table><TableHeader><TableRow><TableHead>Signal</TableHead><TableHead>Finding</TableHead><TableHead>Captured</TableHead><TableHead className="text-right">Source</TableHead></TableRow></TableHeader><TableBody>{claims.slice(0, 40).map((claim) => <TableRow key={String(claim._id)}><TableCell className="max-w-[190px] truncate font-medium">{claim.metric ?? "Signal"}</TableCell><TableCell className="max-w-[420px] whitespace-normal text-muted-foreground">{claim.text}</TableCell><TableCell className="whitespace-nowrap font-mono text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</TableCell><TableCell className="text-right"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-xs text-accent hover:underline"><ExternalLink className="size-3" />{engineLabel(claim.sourceEngine)}</a></TableCell></TableRow>)}</TableBody></Table></div>;
+  const sorted = [...claims].sort((a, b) => order === "newest" ? (a.fetchedAt < b.fetchedAt ? 1 : -1) : (a.fetchedAt > b.fetchedAt ? 1 : -1));
+  const visible = sorted.slice(0, limit);
+  return <div className="space-y-2">
+    <div className="flex items-center justify-end"><Button variant="outline" size="sm" className="h-7 rounded-md px-2 text-[11px]" onClick={() => setOrder((current) => current === "newest" ? "oldest" : "newest")}>{order === "newest" ? "Newest first" : "Oldest first"}</Button></div>
+    <div className="overflow-hidden rounded-xl border border-border"><Table><TableHeader><TableRow><TableHead>Signal</TableHead><TableHead>Finding</TableHead><TableHead>Captured</TableHead><TableHead className="text-right">Source</TableHead></TableRow></TableHeader><TableBody>{visible.map((claim) => <TableRow key={String(claim._id)}><TableCell className="max-w-[190px] truncate font-medium">{claim.metric ?? "Signal"}</TableCell><TableCell className="max-w-[420px] whitespace-normal text-muted-foreground">{claim.text}</TableCell><TableCell className="whitespace-nowrap font-mono text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</TableCell><TableCell className="text-right"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-xs text-accent hover:underline"><ExternalLink className="size-3" />{engineLabel(claim.sourceEngine)}</a></TableCell></TableRow>)}</TableBody></Table></div>
+    {sorted.length > limit ? <div className="flex justify-center"><Button variant="outline" size="sm" onClick={() => setLimit((current) => current + TABLE_PAGE_SIZE)}>Show more</Button></div> : null}
+  </div>;
 }
 
-function Coverage({ rows }: { rows: EngineCoverageRow[] }) { return <div className="flex flex-wrap items-center gap-2 text-xs"><span className="mr-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Coverage</span>{rows.map((row) => <span key={row.engine} title={row.reason ?? row.status} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground"><PlatformMark engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : row.status === "failed" ? "bg-red-500" : "bg-muted-foreground/30")} />{row.label}</span>)}</div>; }
-function SummaryPanel({ title, children, className }: { title: string; children: ReactNode; className?: string }) { return <Card className={cn("min-h-[206px] rounded-xl border-border bg-card py-0 shadow-none", className)}><CardHeader className="border-b border-border/70 px-4 py-3"><CardTitle className="text-[13px] font-semibold tracking-[-0.01em]">{title}</CardTitle></CardHeader><CardContent className="px-4 py-4">{children}</CardContent></Card>; }
+function Coverage({ rows }: { rows: EngineCoverageRow[] }) { return <div className="flex flex-wrap items-center gap-2 text-xs"><span className="mr-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Coverage</span>{rows.map((row) => <span key={row.engine} title={row.reason ?? row.status} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground"><PlatformLogo engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : row.status === "failed" ? "bg-red-500" : "bg-muted-foreground/30")} />{row.label}</span>)}</div>; }
 
-function EvidenceCard({ claim }: { claim: ClaimDoc }) {
-  const source = engineLabel(claim.sourceEngine).replace(" Search", "");
-  const accent = sourceAccent[claim.sourceEngine] ?? "#0f766e";
-  const icon = <PlatformMark engine={claim.sourceEngine} className="size-4" />;
-  return <article className="group flex min-h-[230px] flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-accent/50 hover:bg-accent/[0.02]"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-2"><span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-[11px] font-semibold" style={{ color: accent }}>{icon}</span><div className="min-w-0"><p className="truncate text-xs font-semibold">{source}</p><p className="mt-0.5 text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</p></div></div><div className="flex items-center gap-1 text-muted-foreground"><button type="button" aria-label="Save evidence" className="rounded-md p-1 hover:bg-muted"><Bookmark className="size-3.5" /></button><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" aria-label="Open evidence" className="rounded-md p-1 hover:bg-muted"><ExternalLink className="size-3.5" /></a></div></div><div className="mt-4 flex-1"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent">{claim.text}</a>{claim.metric ? <p className="mt-2 font-mono text-[11px] text-muted-foreground">{claim.metric}{claim.value !== undefined ? ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}</p> : null}</div><div className="mt-4 flex items-center gap-2 border-t border-border/70 pt-3"><Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{claim.hookType?.replaceAll("_", " ") ?? "Signal"}</Badge><Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{claim.confidence ?? "Stored"}</Badge><Button asChild variant="outline" size="sm" className="ml-auto h-7 rounded-md px-2 text-[11px]"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button></div></article>;
-}
+function EvidenceMix({ claims }: { claims: ClaimDoc[] }) { const rows = useMemo(() => FETCH_ENGINES.map((engine) => ({ engine, label: engineLabel(engine).replace("Google ", ""), count: claims.filter((claim) => claim.sourceEngine === engine).length })).filter((row) => row.count > 0), [claims]); const total = rows.reduce((sum, row) => sum + row.count, 0); return <div className="space-y-3">{rows.length ? rows.map((row) => <div key={row.engine} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformLogo engine={row.engine} className="size-3.5" />{row.label}</span><span className="font-mono text-muted-foreground">{row.count}</span><span className="font-mono text-[11px] text-emerald-600">{total ? `${Math.round(row.count / total * 100)}%` : "—"}</span></div>) : <p className="text-sm text-muted-foreground">No evidence mix for this run yet.</p>}<div className="flex h-2 overflow-hidden rounded-full bg-muted">{rows.map((row) => <span key={row.engine} style={{ width: `${total ? row.count / total * 100 : 0}%`, backgroundColor: sourceAccent[row.engine] ?? "#0f766e" }} />)}</div></div>; }
 
-function EvidenceMix({ claims }: { claims: ClaimDoc[] }) { const rows = useMemo(() => FETCH_ENGINES.map((engine) => ({ engine, label: engineLabel(engine).replace("Google ", ""), count: claims.filter((claim) => claim.sourceEngine === engine).length })).filter((row) => row.count > 0), [claims]); const total = rows.reduce((sum, row) => sum + row.count, 0); return <div className="space-y-3">{rows.length ? rows.map((row) => <div key={row.engine} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformMark engine={row.engine} className="size-3.5" />{row.label}</span><span className="font-mono text-muted-foreground">{row.count}</span><span className="font-mono text-[11px] text-emerald-600">{total ? `${Math.round(row.count / total * 100)}%` : "—"}</span></div>) : <p className="text-sm text-muted-foreground">No evidence mix for this run yet.</p>}<div className="flex h-2 overflow-hidden rounded-full bg-muted">{rows.map((row) => <span key={row.engine} style={{ width: `${total ? row.count / total * 100 : 0}%`, backgroundColor: sourceAccent[row.engine] ?? "#0f766e" }} />)}</div></div>; }
-function HookChart({ claims }: { claims: ClaimDoc[] }) {
-  const colors = ["#0f766e", "#34a853", "#4285f4", "#fbbc05", "#ea4335", "#64748b"];
-  const rows = Object.entries(claims.reduce<Record<string, number>>((map, claim) => { const hook = claim.hookType ?? "not_applicable"; map[hook] = (map[hook] ?? 0) + 1; return map; }, {})).sort(([, a], [, b]) => b - a).slice(0, 6);
-  const total = rows.reduce((sum, [, count]) => sum + count, 0);
-  const segments = rows.map(([, count], index) => { const start = rows.slice(0, index).reduce((sum, [, value]) => sum + value, 0); const end = start + count; return `${colors[index]} ${total ? start / total * 100 : 0}% ${total ? end / total * 100 : 0}%`; });
-  return rows.length ? <div className="grid grid-cols-[92px_1fr] items-center gap-4"><div className="relative size-[92px] rounded-full" style={{ background: `conic-gradient(${segments.join(",")})` }}><div className="absolute inset-[19px] grid place-items-center rounded-full bg-card text-center"><span className="text-lg font-semibold leading-none">{total}</span><span className="text-[9px] text-muted-foreground">evidence</span></div></div><div className="space-y-2">{rows.map(([hook, count], index) => <div key={hook} className="grid grid-cols-[1fr_auto] items-center gap-2 text-[11px]"><span className="flex min-w-0 items-center gap-2 capitalize"><span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: colors[index] }} /><span className="truncate">{hook.replaceAll("_", " ")}</span></span><span className="font-mono text-muted-foreground">{count}</span></div>)}</div></div> : <p className="text-sm text-muted-foreground">No hook tags in this run.</p>;
-}
-function FunnelPanel({ claims }: { claims: ClaimDoc[] }) {
-  const stages = [["unaware", "Awareness"], ["problem_aware", "Problem aware"], ["solution_aware", "Solution aware"], ["product_aware", "Product aware"], ["most_aware", "Most aware"]] as const;
-  const colors = ["#0f766e", "#2aa198", "#67c9bc", "#f2c94c", "#f59e0b"];
-  const rows = stages.map(([stage, label]) => ({ label, count: claims.filter((claim) => claim.funnelStage === stage).length }));
-  const total = rows.reduce((sum, row) => sum + row.count, 0);
-  return total ? <div className="space-y-1.5">{rows.map((row, index) => <div key={row.label} className="grid grid-cols-[92px_1fr_auto] items-center gap-2 text-[11px]"><span className="flex h-6 items-center justify-center text-[10px] font-medium text-white" style={{ backgroundColor: colors[index], clipPath: `polygon(${index * 6}% 0, ${100 - index * 6}% 0, ${94 - index * 6}% 100%, ${6 + index * 6}% 100%)` }}>{row.count}</span><span className="truncate">{index + 1}. {row.label}</span><span className="font-mono text-muted-foreground">{Math.round(row.count / total * 100)}%</span></div>)}</div> : <p className="text-sm text-muted-foreground">Funnel tags will appear after an enriched run.</p>;
+function ShareButton() {
+  const [copied, setCopied] = useState(false);
+  async function copyLink() {
+    try {
+      await navigator.clipboard.writeText(window.location.href);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    } catch {
+    }
+  }
+  return <Button variant="outline" size="sm" className="h-8 gap-1.5" title="Copy link to this page" onClick={() => void copyLink()}><Link2 className="size-3.5" />{copied ? "Copied" : "Copy link"}</Button>;
 }
 
 export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const [tab, setTab] = useState("overview");
+  const [engineFilter, setEngineFilter] = useState("all");
+  const [hookFilter, setHookFilter] = useState("all");
+  const [funnelFilter, setFunnelFilter] = useState("all");
+  const [overviewLimit, setOverviewLimit] = useState(EVIDENCE_PAGE_SIZE);
   const brand = useQuery(api.brands.getBrand, { brandId });
   const claims = useQuery(api.claims.byBrand, { brandId });
   const { runs, isLoading: runsLoading } = useAllRuns();
@@ -76,29 +109,58 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const snapshots = useQuery(api.snapshots.byRun, latestRun ? { runId: latestRun._id } : "skip");
   const latestClaims = useMemo(() => claims && latestRun ? claims.filter((claim) => String(claim.runId) === String(latestRun._id)) : [], [claims, latestRun]);
   const signals = signalClaims(latestClaims);
-  const coverage = useMemo(() => engineCoverage(snapshots ?? [], String(brandId)), [snapshots, brandId]);
-  const tags = tagBearingClaims(signals);
-  const history = runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+  const coverage = useMemo(() => engineCoverage(snapshots ?? [], String(brandId)).filter((row) => row.engine !== "google_ads_transparency_center"), [snapshots, brandId]);
+  const tags = tagBearingClaims(latestClaims);
+  const history = useMemo(() => runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)), [runs, brandId]);
+
+  const hasLatestTags = runHasRealTag(latestClaims, latestRun ? String(latestRun._id) : "");
+  const fallbackRun = !hasLatestTags ? mostRecentTaggedRun(claims ?? [], history) : null;
+  const hookFunnelRunId = fallbackRun ? String(fallbackRun._id) : (latestRun ? String(latestRun._id) : null);
+  const hookFunnelClaims = fallbackRun ? (claims ?? []).filter((claim) => String(claim.runId) === hookFunnelRunId) : latestClaims;
+  const hookFunnelPreviousRunId = hookFunnelRunId ? previousRunFor(claims ?? [], hookFunnelRunId) : null;
+  const hookFunnelPreviousClaims = hookFunnelPreviousRunId ? (claims ?? []).filter((claim) => String(claim.runId) === hookFunnelPreviousRunId) : null;
+  const hookItems = hookDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
+  const funnelItems = funnelDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
+  const fallbackLabel = fallbackRun ? <p className="mt-1 font-mono text-[10px] text-muted-foreground">from the run on {formatStamp(fallbackRun.requestedAt)}</p> : undefined;
+
+  const historyRows = useMemo(() => {
+    const rows = runHistoryRows(runs, claims ?? []);
+    const seen = new Set(rows.map((row) => row.runId));
+    const missing: RunHistoryRow[] = history.filter((run) => !seen.has(String(run._id))).map((run) => ({ runId: String(run._id), requestedAt: run.requestedAt, completedAt: run.completedAt ?? null, status: run.status, claimCount: 0, engines: [], topHook: null, topFunnel: null, requestCount: run.requestCount ?? null, llmTokenCount: run.llmTokenCount ?? null, llmCostUsd: run.llmCostUsd ?? null, run }));
+    return [...rows, ...missing].sort((a, b) => (a.requestedAt < b.requestedAt ? 1 : -1));
+  }, [runs, claims, history]);
+  const filteredSignals = signals.filter(isContentClaim).filter((claim) => {
+    if (engineFilter !== "all" && claim.sourceEngine !== engineFilter) return false;
+    if (hookFilter === "all" && funnelFilter === "all") return true;
+    const claimTags = tagsForClaim(tags, claim);
+    return (
+      (hookFilter === "all" || claimTags.some((tag) => tag.hookType === hookFilter)) &&
+      (funnelFilter === "all" || claimTags.some((tag) => tag.funnelStage === funnelFilter))
+    );
+  });
   const isLoading = brand === undefined || claims === undefined || runsLoading || (latestRun !== null && snapshots === undefined);
   if (brand === null) return <EmptyState bounded title="This brand no longer exists." description="The profile address is valid, but the tracked brand was not found. Return to Brands and choose another profile." action={<Button asChild variant="outline"><Link href="/brands">Back to brands</Link></Button>} />;
-  if (isLoading && brand === undefined) return <div className="flex flex-col gap-6"><Skeleton className="h-36 rounded-2xl" /><Skeleton className="h-12 rounded-xl" /><Skeleton className="h-64 rounded-2xl" /></div>;
-  if (!brand) return null;
-  const byEngine = (engine: string) => latestClaims.filter((claim) => claim.sourceEngine === engine);
+  if (brand === undefined) return <div className="flex flex-col gap-6"><Skeleton className="h-36 rounded-2xl" /><Skeleton className="h-12 rounded-xl" /><Skeleton className="h-64 rounded-2xl" /></div>;
   const trends = trendPoints(claims ?? []);
   const latestTrendSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google_trends" && String(snapshot.brandId) === String(brandId));
+  const latestYoutubeVideoSnapshot = snapshots?.find((snapshot) => snapshot.engine === "youtube_video" && String(snapshot.brandId) === String(brandId));
+  const latestGoogleNewsSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google_news" && String(snapshot.brandId) === String(brandId));
+  const overviewVideoGroups = groupYoutubeVideoClaims(filteredSignals);
+  const overviewNonVideoSignals = filteredSignals.filter((claim) => claim.sourceEngine !== "youtube_video");
+  const overviewCardCount = overviewVideoGroups.length + overviewNonVideoSignals.length;
   return <div className={cn("flex min-w-0 flex-col gap-0", className)}>
     <div className="mb-3 flex items-center justify-between"><Link href="/brands" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" />All brands</Link><span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Brand intelligence</span></div>
-    <header className="border-b border-border pb-5"><div className="flex flex-wrap items-start justify-between gap-5"><div className="flex min-w-0 items-center gap-3"><BrandMark name={brand.name} domain={brand.domain} className="size-14" /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h1 className="truncate text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{brand.name}</h1>{statusBadge(brand.profileStatus)}</div><p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><span>{brand.vertical}</span><span>•</span><span className="inline-flex items-center gap-1"><Globe2 className="size-3.5" />{brand.domain}</span><span>•</span><span>Last updated {shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}</span></p></div></div><div className="flex items-center gap-2"><Button variant="outline" size="sm" className="h-8 gap-1.5"><Bookmark className="size-3.5" />Track</Button>{latestRun ? <Button asChild size="sm" className="h-8 gap-1.5"><Link href={`/runs/${latestRun._id}`}>Latest run <ArrowUpRight className="size-3.5" /></Link></Button> : null}</div></div><div className="mt-4 flex flex-wrap items-center gap-2"><Badge variant="outline" className="h-7 rounded-full border-accent/25 bg-accent/[0.06] px-2.5 text-accent"><BarChart3 className="mr-1.5 size-3.5" />{signals.length} evidence signals</Badge><Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground"><Tag className="mr-1.5 size-3.5" />{tags.length} tagged findings</Badge><Coverage rows={coverage} /></div></header>
+    <header className="border-b border-border pb-5"><div className="flex flex-wrap items-start justify-between gap-5"><div className="flex min-w-0 items-center gap-3"><BrandMark name={brand.name} domain={brand.domain} className="size-14" /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h1 className="truncate text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{brand.name}</h1>{statusBadge(brand.profileStatus)}</div><p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><span>{brand.vertical}</span><span>•</span><span className="inline-flex items-center gap-1"><Globe2 className="size-3.5" />{brand.domain}</span><span>•</span><span>Last updated {shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}</span></p></div></div><div className="flex items-center gap-2"><Button variant="outline" size="sm" className="h-8 gap-1.5"><Bookmark className="size-3.5" />Track</Button><ShareButton />{latestRun ? <Button asChild size="sm" className="h-8 gap-1.5"><Link href={`/runs/${latestRun._id}`}>Latest run <ArrowUpRight className="size-3.5" /></Link></Button> : null}</div></div><div className="mt-4 flex flex-wrap items-center gap-2"><Badge variant="outline" className="h-7 rounded-full border-accent/25 bg-accent/[0.06] px-2.5 text-accent"><BarChart3 className="mr-1.5 size-3.5" />{signals.length} evidence signals</Badge><Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground"><Tag className="mr-1.5 size-3.5" />{tags.length} tagged findings</Badge><Coverage rows={coverage} /></div></header>
     <Tabs value={tab} onValueChange={setTab} className="gap-0"><div className="overflow-x-auto border-b border-border"><TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">{tabs.map(([value, label]) => <TabsTrigger key={value} value={value} className="h-12 rounded-none px-3 text-xs data-[state=active]:font-semibold data-[state=active]:text-accent after:bg-accent">{label}</TabsTrigger>)}</TabsList></div>
-      {tab === "overview" ? <div className="border-b border-border py-3"><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="icon-sm" aria-label="Tune filters" className="size-9 rounded-lg"><SlidersHorizontal className="size-3.5" /></Button><FilterButton icon={CalendarDays} label="Latest run" /><FilterButton icon={BarChart3} label="All engines" /><FilterButton icon={Video} label="All formats" /><FilterButton icon={Tag} label="All hooks" /><FilterButton icon={Filter} label="All funnel stages" /><FilterButton icon={Languages} label="All languages" /><FilterButton icon={Timer} label="Freshness: Any" /><span className="ml-auto hidden sm:inline-flex"><FilterButton icon={History} label="Most recent" /></span></div></div> : null}
-      <TabsContent value="overview" className="mt-0 space-y-5 py-5"><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><SummaryPanel title="Evidence mix"><EvidenceMix claims={signals} /></SummaryPanel><SummaryPanel title="Engine coverage"><div className="space-y-2.5">{coverage.map((row) => <div key={row.engine} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformMark engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : "bg-muted-foreground/30")} />{row.label}</span><span className="font-mono text-muted-foreground">{row.status === "ok" ? byEngine(row.engine).length : row.status}</span></div>)}</div></SummaryPanel><SummaryPanel title="Top hooks"><HookChart claims={tags} /></SummaryPanel><SummaryPanel title="Funnel stage"><FunnelPanel claims={tags} /></SummaryPanel></div><div><div className="mb-3 flex items-end justify-between gap-3"><h2 className="text-base font-semibold tracking-[-0.02em]">{signals.length.toLocaleString()} pieces of evidence</h2><span className="text-xs text-muted-foreground">Stored claims from {shortDate(latestRun?.requestedAt)}</span></div>{signals.length ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{signals.slice(0, 24).map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />)}</div> : <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">No signal claims have been stored for the latest run.</div>}</div></TabsContent>
-      <TabsContent value="search" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Search className="size-4 text-accent" />Search presence</CardTitle></CardHeader><CardContent><ClaimsTable claims={byEngine("google")} empty="Google Search did not return stored claims for this run." /></CardContent></Card></TabsContent>
-      <TabsContent value="ads" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="text-base">Ads Transparency</CardTitle></CardHeader><CardContent><ClaimsTable claims={byEngine("google_ads_transparency_center")} empty="Ads Transparency is unavailable or did not return evidence for this run. This is not a zero." /></CardContent></Card></TabsContent>
-      <TabsContent value="youtube" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Video className="size-4 text-red-500" />YouTube signals</CardTitle></CardHeader><CardContent><ClaimsTable claims={[...byEngine("youtube"), ...byEngine("youtube_video")]} empty="No YouTube evidence was stored for this run." /></CardContent></Card></TabsContent>
+      {tab === "overview" ? <div className="border-b border-border py-3"><div className="flex flex-wrap items-center gap-2"><FilterSelect icon={BarChart3} label="All engines" value={engineFilter} onChange={setEngineFilter} options={FETCH_ENGINES.map((engine) => ({ value: engine, label: engineLabel(engine) }))} /><FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hook.replaceAll("_", " ") }))} /><FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stage.replaceAll("_", " ") }))} /></div></div> : null}
+      {isLoading ? <div className="space-y-4 py-5"><Skeleton className="h-10 w-full rounded-lg" /><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /></div><Skeleton className="h-64 rounded-2xl" /></div> : <>
+      <TabsContent value="overview" className="mt-0 space-y-5 py-5"><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><SummaryPanel title="Evidence mix"><EvidenceMix claims={signals} /></SummaryPanel><SummaryPanel title="Engine coverage"><div className="space-y-2.5">{coverage.map((row) => <div key={row.engine} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformLogo engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : "bg-muted-foreground/30")} />{row.label}</span><span className="font-mono text-muted-foreground">{row.status === "ok" ? latestClaims.filter((claim) => claim.sourceEngine === row.engine).length : row.status}</span></div>)}</div></SummaryPanel><SummaryPanel title="Top hooks" subtitle={fallbackLabel}><HookChart items={hookItems} /></SummaryPanel><SummaryPanel title="Funnel stage" subtitle={fallbackLabel}><FunnelPanel items={funnelItems} /></SummaryPanel></div><div><div className="mb-3 flex items-end justify-between gap-3"><h2 className="text-base font-semibold tracking-[-0.02em]">{filteredSignals.length.toLocaleString()} pieces of evidence</h2><span className="text-xs text-muted-foreground">Stored claims from {shortDate(latestRun?.requestedAt)}</span></div>{filteredSignals.length ? <><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{overviewVideoGroups.slice(0, overviewLimit).map((group) => <YouTubeVideoCard key={group.evidenceUrl} group={group} raw={readYoutubeRawVideo(findYoutubeRawVideo(latestYoutubeVideoSnapshot?.rawResponse, group.videoId))} />)}{overviewNonVideoSignals.slice(0, Math.max(0, overviewLimit - overviewVideoGroups.length)).map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />)}</div>{overviewCardCount > overviewLimit ? <div className="mt-4 flex justify-center"><Button variant="outline" size="sm" onClick={() => setOverviewLimit((limit) => limit + EVIDENCE_PAGE_SIZE)}>Load more</Button></div> : null}</> : <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">{signals.length === 0 ? "No signal claims have been stored for the latest run." : "No stored evidence matches these filters."}</div>}</div></TabsContent>
+      <TabsContent value="search" className="mt-0 py-5"><SearchExperience claims={claims ?? []} runsDesc={history} latestRunId={latestRun ? String(latestRun._id) : null} newsSnapshot={latestGoogleNewsSnapshot} /></TabsContent>
+      <TabsContent value="youtube" className="mt-0 py-5"><YouTubeExperience claims={claims ?? []} runsDesc={history} latestRunId={latestRun ? String(latestRun._id) : null} snapshot={latestYoutubeVideoSnapshot} /></TabsContent>
       <TabsContent value="trends" className="mt-0 space-y-4 py-5"><TrendsExperience snapshot={latestTrendSnapshot} claims={claims ?? []} brandId={brandId} brandName={brand.name} latestRunAt={latestRun?.requestedAt} /><Card className="shadow-none"><CardHeader><CardTitle className="text-sm">Stored trend evidence</CardTitle></CardHeader><CardContent><ClaimsTable claims={trends.map((point) => (claims ?? []).find((claim) => String(claim._id) === point.id)).filter((claim): claim is ClaimDoc => Boolean(claim))} empty="No relative interest values are stored yet." /></CardContent></Card></TabsContent>
       <TabsContent value="destinations" className="mt-0 py-5"><DestinationsPanel claims={latestClaims} /></TabsContent>
-      <TabsContent value="evidence" className="mt-5"><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{signals.length ? signals.map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />) : <div className="col-span-full"><ClaimsTable claims={signals} /></div>}</div></TabsContent>
-      <TabsContent value="history" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4 text-accent" />Run history</CardTitle></CardHeader><CardContent><div className="overflow-hidden rounded-xl border border-border"><Table><TableHeader><TableRow><TableHead>Requested</TableHead><TableHead>Status</TableHead><TableHead>Brands</TableHead><TableHead className="text-right">Run ID</TableHead></TableRow></TableHeader><TableBody>{history.length ? history.map((run) => <TableRow key={String(run._id)}><TableCell className="font-mono text-xs">{formatStamp(run.requestedAt)}</TableCell><TableCell>{statusBadge(run.status)}</TableCell><TableCell className="text-xs text-muted-foreground">{run.brandIds.length} in cohort</TableCell><TableCell className="text-right font-mono text-[10px] text-muted-foreground">{String(run._id).slice(-8)}</TableCell></TableRow>) : <TableRow><TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No runs stored for this brand yet.</TableCell></TableRow>}</TableBody></Table></div></CardContent></Card></TabsContent>
+      <TabsContent value="history" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4 text-accent" />Run history</CardTitle></CardHeader><CardContent>{historyRows.length ? <div className="space-y-2">{historyRows.map((row) => <div key={row.runId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4"><div className="min-w-0 space-y-1.5"><div className="flex items-center gap-2"><span className="font-mono text-xs text-muted-foreground">{formatStamp(row.requestedAt)}</span>{statusBadge(row.status)}</div><div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span>{row.claimCount} claims</span><span>{row.topHook ? `Top hook: ${row.topHook.replaceAll("_", " ")}` : "No hook tags"}</span><span>{row.topFunnel ? `Top funnel: ${row.topFunnel.replaceAll("_", " ")}` : "No funnel tags"}</span>{row.llmTokenCount !== null || row.llmCostUsd !== null ? <span className="font-mono">{row.llmTokenCount !== null ? `${row.llmTokenCount.toLocaleString()} tokens` : ""}{row.llmTokenCount !== null && row.llmCostUsd !== null ? " · " : ""}{row.llmCostUsd !== null ? `$${row.llmCostUsd.toFixed(2)}` : ""}</span> : null}</div></div><Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 font-mono text-[11px] text-accent hover:underline">{row.runId.slice(-8)} <ArrowUpRight className="size-3" /></Link></div>)}</div> : <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">No runs stored for this brand yet.</div>}</CardContent></Card></TabsContent>
+      </>}
     </Tabs>
   </div>;
 }

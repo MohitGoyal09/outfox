@@ -1,6 +1,17 @@
 import { internalMutation, query } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requireUserId } from "./lib/auth";
+import { MAX_BRANDS_PER_RUN } from "./pipeline/plan";
+
+const sourceEngine = v.union(
+  v.literal("google"),
+  v.literal("google_ads_transparency_center"),
+  v.literal("youtube"),
+  v.literal("youtube_video"),
+  v.literal("google_trends"),
+  v.literal("google_news"),
+  v.literal("llm_tag"),
+);
 
 const funnelStage = v.union(
   v.literal("unaware"),

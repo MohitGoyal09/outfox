@@ -1,0 +1,66 @@
+"use client";
+
+import { ArrowUpRight, Play } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PlatformLogo } from "./PlatformLogo";
+import { tagBearingClaims, type YoutubeRawVideoInfo, type YoutubeVideoGroup } from "./brand-model";
+
+function compactCount(value: number): string {
+  return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
+}
+
+export function YouTubeVideoCard({
+  group,
+  raw,
+}: {
+  group: YoutubeVideoGroup;
+  raw: YoutubeRawVideoInfo | null;
+}) {
+  const hasThumbnail = Boolean(raw?.thumbnailUrl);
+  const tag = tagBearingClaims(group.claims)[0] ?? null;
+  return (
+    <article className="flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-accent/50 hover:bg-accent/[0.02]">
+      <div className="relative aspect-video w-full shrink-0 bg-muted">
+        {hasThumbnail ? (
+          <img src={raw!.thumbnailUrl!} alt="" loading="lazy" className="size-full object-cover" />
+        ) : (
+          <div className="grid size-full place-items-center"><PlatformLogo engine="youtube_video" className="size-9" /></div>
+        )}
+        {group.viewCount !== null ? (
+          <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-black/75 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white tabular-nums">
+            <Play className="size-2.5 fill-white" />
+            {compactCount(group.viewCount)}
+          </span>
+        ) : null}
+      </div>
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        {group.title ? (
+          <a href={group.evidenceUrl} target="_blank" rel="noreferrer noopener" className="line-clamp-2 text-[13px] font-semibold leading-5 text-foreground hover:text-accent">{group.title}</a>
+        ) : (
+          <span className="text-[13px] font-semibold text-muted-foreground">Untitled video</span>
+        )}
+        {raw?.channelName ? (
+          <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
+            {raw.channelThumbnailUrl ? (
+              <img src={raw.channelThumbnailUrl} alt="" className="size-4 shrink-0 rounded-full object-cover" />
+            ) : null}
+            <span className="truncate">{raw.channelName}</span>
+            {raw.subscribers !== null ? (
+              <span className="font-mono tabular-nums">
+                · {typeof raw.subscribers === "number" ? `${raw.subscribers.toLocaleString()} subscribers` : raw.subscribers}
+              </span>
+            ) : null}
+          </div>
+        ) : null}
+        {group.publishedDate ? <p className="text-[11px] text-muted-foreground">Published {group.publishedDate}</p> : null}
+        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+          <Badge variant="outline" className="h-6 max-w-[140px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{tag?.hookType?.replaceAll("_", " ") ?? "Signal"}</Badge>
+          <Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{tag?.confidence ?? "Stored"}</Badge>
+          {group.likeCount !== null ? <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">{group.likeCount.toLocaleString()} likes</span> : null}
+        </div>
+        <Button asChild variant="outline" size="sm" className="mt-auto h-7 w-full justify-center rounded-md text-[11px]"><a href={group.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button>
+      </div>
+    </article>
+  );
+}

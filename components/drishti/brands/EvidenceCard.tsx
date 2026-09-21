@@ -1,0 +1,75 @@
+"use client";
+
+import { ArrowUpRight, Bookmark, ExternalLink } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { PlatformLogo } from "./PlatformLogo";
+import { engineLabel, type ClaimDoc } from "./brand-model";
+import { shortDate } from "./format";
+
+export const sourceAccent: Record<string, string> = {
+  google: "#0f766e",
+  google_ads_transparency_center: "#d97706",
+  youtube: "#dc2626",
+  youtube_video: "#dc2626",
+  google_trends: "#2563eb",
+  google_news: "#7c3aed",
+};
+
+type LaneStyle = { topBorder: boolean; iconClass: string; titleClass: string; largeStat: boolean };
+
+const LANE_STYLE: Record<string, LaneStyle> = {
+  google: { topBorder: true, iconClass: "size-4", titleClass: "hover:underline", largeStat: false },
+  google_ads_transparency_center: { topBorder: true, iconClass: "size-4", titleClass: "", largeStat: false },
+  youtube: { topBorder: true, iconClass: "size-5", titleClass: "", largeStat: false },
+  youtube_video: { topBorder: true, iconClass: "size-5", titleClass: "", largeStat: false },
+  google_trends: { topBorder: false, iconClass: "size-4", titleClass: "", largeStat: true },
+  google_news: { topBorder: true, iconClass: "size-4", titleClass: "", largeStat: false },
+};
+
+export function EvidenceCard({ claim }: { claim: ClaimDoc }) {
+  const source = engineLabel(claim.sourceEngine).replace(" Search", "");
+  const accent = sourceAccent[claim.sourceEngine] ?? "#0f766e";
+  const lane = LANE_STYLE[claim.sourceEngine] ?? LANE_STYLE.google;
+  const cardBg = claim.sourceEngine === "google_trends" ? "bg-blue-50/40" : "bg-card";
+  return (
+    <article
+      className={cn(
+        "group flex min-h-[230px] flex-col rounded-xl border border-border p-4 transition-colors hover:border-accent/50 hover:bg-accent/[0.02]",
+        cardBg,
+        lane.topBorder && "border-t-2",
+      )}
+      style={lane.topBorder ? { borderTopColor: accent } : undefined}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="flex min-w-0 items-center gap-2">
+          <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-[11px] font-semibold" style={{ color: accent }}>
+            <PlatformLogo engine={claim.sourceEngine} className={lane.iconClass} />
+          </span>
+          <div className="min-w-0">
+            <p className="truncate text-xs font-semibold">{source}</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</p>
+          </div>
+        </div>
+        <div className="flex items-center gap-1 text-muted-foreground">
+          <button type="button" aria-label="Save evidence" className="rounded-md p-1 hover:bg-muted"><Bookmark className="size-3.5" /></button>
+          <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" aria-label="Open evidence" className="rounded-md p-1 hover:bg-muted"><ExternalLink className="size-3.5" /></a>
+        </div>
+      </div>
+      <div className="mt-4 flex-1">
+        <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{claim.text}</a>
+        {lane.largeStat && claim.value !== undefined ? (
+          <div className="mt-2 flex items-baseline gap-1.5"><span className="text-2xl font-bold tabular-nums text-foreground">{String(claim.value)}</span><span className="text-[10px] text-muted-foreground">relative interest{claim.unit ? ` (${claim.unit})` : ""}</span></div>
+        ) : claim.metric ? (
+          <p className="mt-2 font-mono text-[11px] text-muted-foreground">{claim.metric}{claim.value !== undefined ? ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}</p>
+        ) : null}
+      </div>
+      <div className="mt-4 flex items-center gap-2 border-t border-border/70 pt-3">
+        <Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{claim.hookType?.replaceAll("_", " ") ?? "Signal"}</Badge>
+        <Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{claim.confidence ?? "Stored"}</Badge>
+        <Button asChild variant="outline" size="sm" className="ml-auto h-7 rounded-md px-2 text-[11px]"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button>
+      </div>
+    </article>
+  );
+}

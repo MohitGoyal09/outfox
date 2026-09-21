@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AskView } from "@/components/drishti/ask/AskView";
+import type { Id } from "@/convex/_generated/dataModel";
 
 export const metadata: Metadata = {
   title: "Ask",
@@ -14,6 +15,14 @@ function firstString(value: string | string[] | undefined): string | null {
   return null;
 }
 
+function brandIdsFromParam(value: string | null): Id<"brands">[] {
+  if (value === null) return [];
+  return value
+    .split(",")
+    .map((part) => part.trim())
+    .filter((part) => part !== "") as Id<"brands">[];
+}
+
 export default async function AskPage({
   searchParams,
 }: {
@@ -24,6 +33,7 @@ export default async function AskPage({
     <AskView
       cohortKey={firstString(params.cohort)}
       initialQuestion={firstString(params.q)}
+      initialBrandIds={brandIdsFromParam(firstString(params.brands))}
     />
   );
 }

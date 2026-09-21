@@ -27,18 +27,6 @@ export function brandIdsFromCohortKey(
   return parts as Id<"brands">[];
 }
 
-export function askScopeFromPath(pathname: string, search: string): AskScope {
-  const query = search.startsWith("?") ? search.slice(1) : search;
-  const params = new URLSearchParams(query);
-  const raw = params.get("cohort") ?? params.get("brands");
-  if (raw !== null && raw.trim() !== "") {
-    const brandIds = brandIdsFromCohortKey(key);
-    if (brandIds.length > 0) return { cohortKey: key, brandIds, runId: null };
-  }
-  const match = pathname.match(/\/compare\/([^/?#]+)/);
-  return { cohortKey: null, brandIds: [], runId: null };
-}
-
 export function askScopeLabel(
   scope: AskScope,
   brandNames: Record<string, string>,
@@ -68,6 +56,19 @@ export function buildToolTrace(
     reasoning:
       "The ask path reads stored claims only. It never fetches from an engine.",
   });
+
+  if (result.liveRefresh?.attempted === true) {
+    const refresh = result.liveRefresh;
+    steps.push({
+      id: "ran_live_refresh",
+      label: "ran_live_refresh",
+      value: `${refresh.brandCount} brand${refresh.brandCount === 1 ? "" : "s"}`,
+      tone: failed ? "danger" : "ok",
+      reasoning: failed
+        ? `This call fetched live data from SerpApi and used real SerpApi credits, then failed: ${refresh.error}`
+        : `This call fetched live data from SerpApi and used real SerpApi credits (run ${refresh.runId ?? "unknown"}).`,
+    });
+  }
 
   const usage = result.usage ?? [];
 

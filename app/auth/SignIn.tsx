@@ -30,8 +30,8 @@ export function SignIn() {
   }
 
   return (
-    <main className="min-h-dvh bg-bg px-4 py-6 text-fg sm:px-8 sm:py-10">
-      <div className="mx-auto grid min-h-[calc(100dvh-3rem)] max-w-5xl overflow-hidden rounded-xl border border-border bg-bg-raised lg:grid-cols-[1.05fr_0.95fr]">
+    <main className="flex min-h-dvh items-center justify-center bg-bg px-4 py-6 text-fg sm:px-8 sm:py-10">
+      <div className="mx-auto grid max-w-5xl overflow-hidden rounded-xl border border-border bg-bg-raised lg:min-h-[600px] lg:grid-cols-[1.05fr_0.95fr]">
         <section className="hidden flex-col justify-between bg-sidebar p-10 text-sidebar-foreground lg:flex">
           <div>
             <div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-md bg-sidebar-primary text-lg font-semibold text-sidebar-primary-foreground">D</span><div><p className="font-semibold tracking-tight">Drishti</p><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/55">Evidence atlas</p></div></div>

@@ -11,6 +11,16 @@ const funnelStage = v.union(
   v.literal("not_applicable"),
 );
 
+const sourceEngine = v.union(
+  v.literal("google"),
+  v.literal("google_ads_transparency_center"),
+  v.literal("youtube"),
+  v.literal("youtube_video"),
+  v.literal("google_trends"),
+  v.literal("google_news"),
+  v.literal("llm_tag"),
+);
+
 const snapshotStatus = v.union(
   v.literal("ok"),
   v.literal("failed"),

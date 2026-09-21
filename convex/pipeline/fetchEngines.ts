@@ -124,6 +124,15 @@ export function buildGoogleSearchParams(brand: { name: string }) {
   };
 }
 
+export function buildGoogleNewsParams(brand: { name: string }) {
+  return {
+    engine: "google_news",
+    q: truncateQuery(brand.name),
+    gl: "in",
+    hl: "en",
+  };
+}
+
 export function buildAdsTransparencyParams(advertiserId: string) {
   return {
     engine: "google_ads_transparency_center",
@@ -228,6 +237,28 @@ export async function fetchGoogleSearch(
   return {
     status: "failed",
     engine: "google",
+    runId,
+    errorMessage: result.error,
+    queryParams,
+  };
+}
+
+/**
+ * Google News adapter, one brand per call. Mirrors fetchGoogleSearch exactly.
+ */
+export async function fetchGoogleNews(
+  brand: { name: string },
+  runId: string,
+  fetchFn: SerpapiFetchFn = serpapiFetch,
+): Promise<EngineFetchResult> {
+  const queryParams = buildGoogleNewsParams(brand);
+  const result = await fetchFn(queryParams);
+  if (result.ok) {
+    return { status: "ok", engine: "google_news", runId, data: result.data, queryParams };
+  }
+  return {
+    status: "failed",
+    engine: "google_news",
     runId,
     errorMessage: result.error,
     queryParams,
