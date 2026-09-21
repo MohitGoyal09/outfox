@@ -3,127 +3,350 @@
 
 @custom-variant dark (&:is(.dark *));
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-sans);
-  --font-mono: var(--font-geist-mono);
-  --font-heading: var(--font-sans);
-  --color-sidebar-ring: var(--sidebar-ring);
-  --color-sidebar-border: var(--sidebar-border);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar: var(--sidebar);
-  --color-chart-5: var(--chart-5);
-  --color-chart-4: var(--chart-4);
-  --color-chart-3: var(--chart-3);
-  --color-chart-2: var(--chart-2);
-  --color-chart-1: var(--chart-1);
-  --color-ring: var(--ring);
-  --color-input: var(--input);
-  --color-border: var(--border);
-  --color-destructive: var(--destructive);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-accent: var(--accent);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-muted: var(--muted);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-secondary: var(--secondary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-primary: var(--primary);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-popover: var(--popover);
-  --color-card-foreground: var(--card-foreground);
-  --color-card: var(--card);
-  --radius-sm: calc(var(--radius) * 0.6);
-  --radius-md: calc(var(--radius) * 0.8);
-  --radius-lg: var(--radius);
-  --radius-xl: calc(var(--radius) * 1.4);
-  --radius-2xl: calc(var(--radius) * 1.8);
-  --radius-3xl: calc(var(--radius) * 2.2);
-  --radius-4xl: calc(var(--radius) * 2.6);
-}
-
+/* ------------------------------------------------------------------ *
+ * Signal Trace — raw tokens (DESIGN.md). This is the source of truth.
+ * ------------------------------------------------------------------ */
 :root {
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
+  /* ground + neutrals */
+  --bg: #0a0a0f;
+  --bg-inset: #0e0e13;
+  --bg-raised: #131319;
+  --bg-raised-2: #191922;
+  --border: #24242f;
+  --border-strong: #35353f;
+  --text-primary: #eeeef2;
+  --text-secondary: #9797a3;
+  --text-tertiary: #64646f;
+
+  /* Placeholder neutral. `--text-tertiary` measures 3.30:1 on `--bg-inset`,
+     below the 4.5:1 floor the design asks placeholders to clear. This lightened
+     step measures 4.67:1 and is used for placeholders only; `--text-tertiary`
+     stays for disabled text, which is exempt from the floor. */
+  --text-placeholder: #7c7c88;
+
+  /* identity accent — Signal Amber */
+  --accent: #e2a339;
+  --accent-strong: #f0b552;
+  --accent-ink: #1a1204;
+  --accent-dim: rgba(226, 163, 57, 0.22);
+  --accent-selection: rgba(226, 163, 57, 0.28);
+
+  /* status — Drishti engine + run state */
+  --ok: #4ade80;
+  --warn: #fbbf24;
+  --weak: #fb923c;
+  --danger: #f87171;
+
+  /* hookType — 9 discrete values, fixed categorical scale */
+  --hook-discount-offer: #f2a63b;
+  --hook-social-proof: #34d399;
+  --hook-founder-story: #a78bfa;
+  --hook-problem-solution: #38bdf8;
+  --hook-product-feature: #2dd4bf;
+  --hook-urgency-scarcity: #fb7185;
+  --hook-education-explainer: #60a5fa;
+  --hook-visual-cold-open: #f472b6;
+  --hook-not-applicable: #6b7280;
+
+  /* funnelStage — 5 ordered steps, single-hue ramp, plus neutral null */
+  --funnel-unaware: #3b6b8f;
+  --funnel-problem-aware: #4a90b8;
+  --funnel-solution-aware: #5cb3d9;
+  --funnel-product-aware: #7dd3fc;
+  --funnel-most-aware: #a5e4ff;
+  --funnel-not-applicable: #4b5563;
+
+  /* prose measure */
+  --measure-prose: 68ch;
+
+  /* elevation — declared once per element, never border under a wide shadow.
+     The three permitted shadows: row hover lift, drawer, toast. */
+  --shadow-lift: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-drawer: 0 18px 40px -12px rgba(0, 0, 0, 0.55);
+  --shadow-toast: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
 }
 
-.dark {
-  --background: oklch(0.145 0 0);
-  --foreground: oklch(0.985 0 0);
-  --card: oklch(0.205 0 0);
-  --card-foreground: oklch(0.985 0 0);
-  --popover: oklch(0.205 0 0);
-  --popover-foreground: oklch(0.985 0 0);
-  --primary: oklch(0.922 0 0);
-  --primary-foreground: oklch(0.205 0 0);
-  --secondary: oklch(0.269 0 0);
-  --secondary-foreground: oklch(0.985 0 0);
-  --muted: oklch(0.269 0 0);
-  --muted-foreground: oklch(0.708 0 0);
-  --accent: oklch(0.269 0 0);
-  --accent-foreground: oklch(0.985 0 0);
-  --destructive: oklch(0.704 0.191 22.216);
-  --border: oklch(1 0 0 / 10%);
-  --input: oklch(1 0 0 / 15%);
-  --ring: oklch(0.556 0 0);
-  --chart-1: oklch(0.87 0 0);
-  --chart-2: oklch(0.556 0 0);
-  --chart-3: oklch(0.439 0 0);
-  --chart-4: oklch(0.371 0 0);
-  --chart-5: oklch(0.269 0 0);
-  --sidebar: oklch(0.205 0 0);
-  --sidebar-foreground: oklch(0.985 0 0);
-  --sidebar-primary: oklch(0.488 0.243 264.376);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.269 0 0);
-  --sidebar-accent-foreground: oklch(0.985 0 0);
-  --sidebar-border: oklch(1 0 0 / 10%);
-  --sidebar-ring: oklch(0.556 0 0);
+/* ------------------------------------------------------------------ *
+ * Signal Trace — Tailwind theme surface (utilities).
+ * `inline` so the utility carries `var(--token)` and tracks next/font
+ * variables set on <html> by app/layout.tsx.
+ * ------------------------------------------------------------------ */
+@theme inline {
+  /* Two-Voice Rule: read = Fraunces / Inter, measured = JetBrains Mono. */
+  --font-sans: var(--font-inter);
+  --font-mono: var(--font-jetbrains);
+  --font-display: var(--font-fraunces);
+  --font-heading: var(--font-fraunces);
+
+  /* ground */
+  --color-bg: var(--bg);
+  --color-bg-inset: var(--bg-inset);
+  --color-bg-raised: var(--bg-raised);
+  --color-bg-raised-2: var(--bg-raised-2);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+
+  /* text */
+  --color-fg: var(--text-primary);
+  --color-fg-secondary: var(--text-secondary);
+  --color-fg-tertiary: var(--text-tertiary);
+  --color-fg-placeholder: var(--text-placeholder);
+
+  /* accent */
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-accent-ink: var(--accent-ink);
+
+  /* status */
+  --color-ok: var(--ok);
+  --color-warn: var(--warn);
+  --color-weak: var(--weak);
+  --color-danger: var(--danger);
+
+  /* hook scale → bg-hook-*, text-hook-*, border-hook-* */
+  --color-hook-discount-offer: var(--hook-discount-offer);
+  --color-hook-social-proof: var(--hook-social-proof);
+  --color-hook-founder-story: var(--hook-founder-story);
+  --color-hook-problem-solution: var(--hook-problem-solution);
+  --color-hook-product-feature: var(--hook-product-feature);
+  --color-hook-urgency-scarcity: var(--hook-urgency-scarcity);
+  --color-hook-education-explainer: var(--hook-education-explainer);
+  --color-hook-visual-cold-open: var(--hook-visual-cold-open);
+  --color-hook-not-applicable: var(--hook-not-applicable);
+
+  /* funnel ramp → bg-funnel-*, text-funnel-* */
+  --color-funnel-unaware: var(--funnel-unaware);
+  --color-funnel-problem-aware: var(--funnel-problem-aware);
+  --color-funnel-solution-aware: var(--funnel-solution-aware);
+  --color-funnel-product-aware: var(--funnel-product-aware);
+  --color-funnel-most-aware: var(--funnel-most-aware);
+  --color-funnel-not-applicable: var(--funnel-not-applicable);
+
+  /* radii — controls/chips 5px, cards/rows 10px, rails/containers 14px.
+     Literal values (not `var(--radius-sm)`) so the theme key never references
+     itself; @theme emits these into :root, so `var(--radius-sm)` still works. */
+  --radius-sm: 5px;
+  --radius-md: 10px;
+  --radius-lg: 14px;
+  --radius-xl: 18px;
+
+  /* ---- legacy shadcn aliases (components/ui/*) -------------------
+     The old neutral-grey theme is gone; these names now resolve to
+     Signal Trace values so existing surfaces keep working while the
+     primitive wave replaces them. `--color-accent` intentionally
+     carries the Signal Amber identity accent, not shadcn's neutral
+     hover surface. ---------------- */
+  --color-background: var(--bg);
+  --color-foreground: var(--text-primary);
+  --color-card: var(--bg-raised);
+  --color-card-foreground: var(--text-primary);
+  --color-popover: var(--bg-raised-2);
+  --color-popover-foreground: var(--text-primary);
+  --color-primary: var(--accent);
+  --color-primary-foreground: var(--accent-ink);
+  --color-secondary: var(--bg-raised-2);
+  --color-secondary-foreground: var(--text-primary);
+  --color-muted: var(--bg-inset);
+  --color-muted-foreground: var(--text-secondary);
+  --color-accent-foreground: var(--accent-ink);
+  --color-destructive: var(--danger);
+  --color-destructive-foreground: var(--text-primary);
+  --color-input: var(--border-strong);
+  --color-ring: var(--accent);
 }
 
+/* ------------------------------------------------------------------ *
+ * Base — ground, browser surfaces, disabled controls, numerics.
+ * ------------------------------------------------------------------ */
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--border);
   }
-  body {
-    @apply bg-background text-foreground;
-  }
+
   html {
-    @apply font-sans;
+    font-family: var(--font-sans);
+    font-size: 16px;
+    color-scheme: dark;
+    -webkit-text-size-adjust: 100%;
+    caret-color: var(--accent);
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    font-size: 0.875rem;
+    line-height: 1.5;
+    font-feature-settings: "cv05" 1, "ss01" 1;
+  }
+
+  ::selection {
+    background-color: var(--accent-selection);
+    color: var(--text-primary);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  a {
+    text-underline-offset: 3px;
+  }
+
+  ::placeholder {
+    color: var(--text-placeholder);
+    opacity: 1;
+  }
+
+  :disabled,
+  [aria-disabled="true"] {
+    color: var(--text-tertiary);
+    cursor: not-allowed;
+  }
+
+  /* Disabled controls take no hover shift. */
+  :disabled:hover,
+  [aria-disabled="true"]:hover {
+    transform: none;
+    background-color: inherit;
+  }
+
+  /* Number and date inputs: mono, tabular, no spinners. */
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  input[type="datetime-local"] {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  input[type="number"]::-webkit-outer-spin-button,
+  input[type="number"]::-webkit-inner-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+
+  input[type="number"] {
+    -moz-appearance: textfield;
+    appearance: textfield;
+  }
+
+  /* Overlay scrim: --bg at 70% + blur, never plain black. */
+  ::backdrop {
+    background-color: color-mix(in srgb, var(--bg) 70%, transparent);
+    backdrop-filter: blur(6px);
+  }
+
+  /* Scrollbars — page and inner panes. */
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-strong) var(--bg-inset);
+  }
+
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background-color: var(--bg-inset);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background-color: var(--border-strong);
+    border: 2px solid var(--bg-inset);
+    border-radius: 999px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background-color: var(--text-tertiary);
+  }
+
+  ::-webkit-scrollbar-corner {
+    background-color: var(--bg-inset);
+  }
+}
+
+/* ------------------------------------------------------------------ *
+ * Type scale — roles from DESIGN.md, sizes tightened to the 1.125–1.2
+ * product-UI step ratio; `display` keeps its page-title size.
+ * label 10.5 · caption 12 · body 14 · headline 16 · title 19.2 · display 28
+ * ------------------------------------------------------------------ */
+@utility type-display {
+  font-family: var(--font-display);
+  font-size: 1.75rem;
+  font-weight: 600;
+  line-height: 1.24;
+  letter-spacing: -0.01em;
+  font-optical-sizing: auto;
+}
+
+@utility type-title {
+  font-family: var(--font-display);
+  font-size: 1.2rem;
+  font-weight: 600;
+  line-height: 1.28;
+  letter-spacing: -0.01em;
+  font-optical-sizing: auto;
+}
+
+@utility type-headline {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  line-height: 1.32;
+  font-optical-sizing: auto;
+}
+
+@utility type-body {
+  font-family: var(--font-sans);
+  font-size: 0.875rem;
+  font-weight: 400;
+  line-height: 1.5;
+}
+
+@utility type-caption {
+  font-family: var(--font-sans);
+  font-size: 0.75rem;
+  font-weight: 400;
+  line-height: 1.45;
+}
+
+@utility type-label {
+  font-family: var(--font-mono);
+  font-size: 0.65625rem;
+  font-weight: 650;
+  line-height: 1.2;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  font-variant-numeric: tabular-nums;
+}
+
+/* Measured value: mono + tabular. Never prose. */
+@utility num {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+}
+
+/* Prose measure, 65–75ch. Data may run denser. */
+@utility measure-prose {
+  max-width: var(--measure-prose);
+}
+
+/* ------------------------------------------------------------------ *
+ * Reduced motion — disables every transition and animation.
+ * ------------------------------------------------------------------ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    transition-delay: 0ms !important;
+    scroll-behavior: auto !important;
   }
 }
