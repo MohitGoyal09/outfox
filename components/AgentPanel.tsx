@@ -208,7 +208,7 @@ export function AgentPanel({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -254,15 +254,15 @@ export function AgentPanel({
     <section
       aria-label="Agent"
       className={cn(
-        "flex min-h-[420px] flex-col rounded-lg border border-border bg-card",
+        "flex min-h-[420px] flex-col border-t border-[var(--border)]",
         className,
       )}
     >
-      <header className="border-b border-border p-4">
-        <h2 className="text-base font-semibold text-card-foreground">
+      <header className="border-b border-[var(--border)] py-5">
+        <h2 className="type-title text-[var(--text-primary)]">
           Agent
         </h2>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="mt-1 max-w-[68ch] text-sm text-[var(--text-secondary)]">
           Streams from /api/chat. Tool calls appear below as started then
           finished. Refresh needs your approval.
         </p>
@@ -385,9 +385,9 @@ export function AgentPanel({
           {toolStatuses.length > 0 ? (
             <div
               aria-label="Live tool events"
-              className="rounded-md border border-border bg-background p-3 text-sm"
+              className="border border-[var(--border)] bg-[var(--bg-inset)] p-3 text-sm"
             >
-              <p className="font-medium text-foreground">Live tool events</p>
+              <p className="font-medium text-[var(--text-primary)]">Live tool events</p>
               <ul className="mt-2 space-y-1 text-muted-foreground">
                 {toolStatuses.map((event, index) => (
                   <li key={`${event.tool}-${index}`}>
@@ -423,7 +423,7 @@ export function AgentPanel({
             />
           ) : null}
           {latestUsage ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[var(--text-secondary)]">
               Usage: {latestUsage.requests} requests
               {latestUsage.credits !== undefined
                 ? ` · ${latestUsage.credits} credits`
@@ -432,7 +432,7 @@ export function AgentPanel({
             </p>
           ) : null}
           {provenance ? (
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[var(--text-secondary)]">
               Answer:{" "}
               {provenance.mode === "llm" ? "model" : "raw claims"} · classifier:{" "}
               {CLASSIFIER_LABEL[provenance.classifier]}
@@ -441,7 +441,7 @@ export function AgentPanel({
           {provenance?.mode === "template" ? (
             <p
               role="status"
-              className="rounded-md border border-border bg-background px-2 py-1 text-xs text-muted-foreground"
+              className="border border-[var(--border)] bg-[var(--bg-inset)] px-2 py-1 text-xs text-[var(--text-secondary)]"
             >
               Model unavailable, showing raw claims.
             </p>
@@ -468,7 +468,7 @@ export function AgentPanel({
         <ConversationScrollButton />
       </Conversation>
       {sourceUrls.length > 0 ? (
-        <div className="border-t border-border p-4">
+        <div className="border-t border-[var(--border)] py-4">
           <Sources>
             <SourcesTrigger count={sourceUrls.length}>
               {`Used ${sourceUrls.length} sources`}
@@ -485,21 +485,21 @@ export function AgentPanel({
           </Sources>
         </div>
       ) : allToolSteps.length > 0 ? (
-        <div className="border-t border-border p-4">
-          <p className="text-xs text-muted-foreground">
+        <div className="border-t border-[var(--border)] py-4">
+          <p className="text-xs text-[var(--text-secondary)]">
             {allToolSteps
               .map((s) => `${s.capability}: ${s.status}`)
               .join(" · ")}
           </p>
         </div>
       ) : null}
-      <div className="border-t border-border p-4">
+      <div className="border-t border-[var(--border)] py-4">
         <PromptInput onSubmit={(message) => void submit(message.text)}>
           <PromptInputTextarea
             placeholder="Ask the agent about these brands"
           />
           <div className="flex items-center justify-between gap-2 p-2">
-            <p className="text-xs text-muted-foreground">
+            <p className="text-xs text-[var(--text-secondary)]">
               Refresh stays locked until you accept.
             </p>
             <div className="flex gap-2">

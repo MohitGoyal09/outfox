@@ -3,7 +3,7 @@ import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { MAX_BRANDS_PER_RUN } from "./pipeline/plan";
-import { assertDemoWriteAllowed } from "./lib/demoGuard";
+import { requireUserId } from "./lib/auth";
 
 const terminalStatus = v.union(
   v.literal("complete"),
@@ -27,7 +27,17 @@ const createRunArgs = {
 export const createRun = mutation({
   args: { ...createRunArgs, refreshAuthorized: v.optional(v.boolean()) },
   handler: async (ctx, args) => {
-    assertDemoWriteAllowed();
+    const ownerId = await requireUserId(ctx);
+    const brands = await Promise.all(args.brandIds.map((id) => ctx.db.get(id)));
+    return await ctx.db.insert("runs", {
+      ownerId,
+      cohortKey: args.cohortKey,
+      brandIds: args.brandIds,
+      mode: args.mode,
+      status: "running",
+      requestedAt: new Date().toISOString(),
+      requestCount: 0,
+    });
   },
 });
 
@@ -50,27 +60,10 @@ type CloseStaleRunsArgs = {
   limit?: number;
 };
 
-async function closeStaleRunsHandler(
-  ctx: MutationCtx,
-  args: CloseStaleRunsArgs,
-): Promise<{ closed: number }> {
-  const olderThanMs = args.olderThanMs ?? DEFAULT_STALE_RUN_MS;
-  const limit = Math.max(0, Math.floor(args.limit ?? DEFAULT_STALE_RUN_LIMIT));
-  const stale = running
-    .filter((run) => run.requestedAt < cutoff)
-    .sort((a, b) => (a.requestedAt < b.requestedAt ? -1 : 1))
-    .slice(0, limit);
-  const minutes = Math.max(1, Math.round(olderThanMs / 60000));
-  for (const run of stale) {
-    await patchRunClosed(ctx, run._id, "failed", errorMessage);
-  }
-}
-
 export const closeStaleRunsPublic = mutation({
   args: closeStaleRunsArgs,
   handler: async (ctx, args) => {
-    assertDemoWriteAllowed();
-    return await closeStaleRunsHandler(ctx, args);
+    const ownerId = await requireUserId(ctx);
   },
 });
 
@@ -94,24 +87,33 @@ export const internalRecordLlmTotals = internalMutation({
   },
 });
 
+export const getRun = query({
+  args: { runId: v.id("runs") },
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    const run = await ctx.db.get(args.runId);
+  },
+});
+
 export const latestForCohort = query({
   args: { cohortKey: v.string() },
   handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
     const runs = await ctx.db
       .query("runs")
-      .withIndex("by_cohort", (q) => q.eq("cohortKey", args.cohortKey))
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
       .collect();
-    return pickLatestRun(runs);
   },
 });
 
 export const listByStatus = query({
   args: { status: queryableStatus },
   handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
     return await ctx.db
       .query("runs")
-      .withIndex("by_status", (q) => q.eq("status", args.status))
+      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
       .order("desc")
-      .collect();
+      .collect().then((runs) => runs.filter((run) => run.status === args.status));
   },
 });

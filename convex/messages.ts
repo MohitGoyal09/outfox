@@ -2,12 +2,13 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { v } from "convex/values";
-import { assertDemoWriteAllowed } from "./lib/demoGuard";
+import { requireUserId } from "./lib/auth";
 
 const MAX_TEXT_LENGTH = 4000;
 const MAX_RECENT = 50;
 
 type AppendTurnArgs = {
+  ownerId?: Id<"users">;
   threadKey: string;
   role: "user" | "assistant";
   text: string;
@@ -23,14 +24,19 @@ export const appendTurn = internalMutation({
 export const appendTurnPublic = mutation({
   args: appendTurnArgs,
   handler: async (ctx, args) => {
-    assertDemoWriteAllowed();
-    return await appendTurnHandler(ctx, args);
+    const ownerId = await requireUserId(ctx);
+    if (args.runId !== undefined) {
+      const run = await ctx.db.get(args.runId);
+      if (run?.ownerId !== ownerId) throw new Error("Run not found");
+    }
+    return await appendTurnHandler(ctx, { ...args, ownerId });
   },
 });
 
 export const listRecent = query({
   args: { threadKey: v.string(), limit: v.number() },
   handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
     if (cap === 0) {
       return [];
     }
@@ -41,7 +47,7 @@ export const listRecent = query({
       )
       .order("desc")
       .take(cap);
-    return rows.reverse().map((row) => ({
+    return rows.filter((row) => row.ownerId === ownerId).reverse().map((row) => ({
       role: row.role,
       text: row.text,
       citations: row.citations,

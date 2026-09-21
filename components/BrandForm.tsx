@@ -63,14 +63,14 @@ export function BrandForm({ className }: { className?: string }) {
     <section
       aria-label="Add a brand"
       className={cn(
-        "rounded-lg border border-border bg-card p-4",
+        "border-t border-[var(--border)] py-5",
         className,
       )}
     >
-      <h2 className="text-base font-semibold text-card-foreground">
+      <h2 className="type-title text-[var(--text-primary)]">
         Add a brand
       </h2>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="mt-1 text-sm text-[var(--text-secondary)]">
         Manual create stores the profile as pending until it is hydrated.
       </p>
       <form onSubmit={onSubmit} className="mt-4 grid gap-3">

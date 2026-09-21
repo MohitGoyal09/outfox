@@ -111,7 +111,7 @@ export function SegmentedNav({
         aria-busy={loading || undefined}
         aria-disabled={disabled || undefined}
         onKeyDown={handleKeyDown}
-        className="inline-flex max-w-full items-center gap-1 rounded-full bg-[var(--bg-inset,#0e0e13)] p-[3px]"
+        className="inline-flex max-w-full items-center gap-1 rounded-md bg-[var(--bg-inset,#f1f3f0)] p-[3px]"
       >
         {loading
           ? Array.from({ length: Math.max(3, items.length) }, (_, index) => (
@@ -143,7 +143,7 @@ export function SegmentedNav({
                   data-state={state.active ? "active" : "default"}
                   onClick={() => onChange(item.id)}
                   className={cn(
-                    "inline-flex h-7 items-center gap-1.5 rounded-full px-3 text-[12.5px] font-medium whitespace-nowrap",
+                    "inline-flex h-7 items-center gap-1.5 rounded-sm px-3 text-[12.5px] font-medium whitespace-nowrap",
                     "max-[899px]:min-h-11",
                     state.active
                       ? SEGMENTED_ACTIVE_CLASS

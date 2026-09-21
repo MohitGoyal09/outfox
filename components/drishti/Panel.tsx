@@ -60,11 +60,11 @@ export function Panel({
       aria-label={ariaLabel}
       role={ariaLabel ? "group" : undefined}
       className={cn(
-        "rounded-[10px] border border-[var(--border,#24242f)]",
-        inset ? "bg-[var(--bg-inset,#0e0e13)]" : "bg-[var(--bg-raised,#131319)]",
+        "rounded-md border border-[var(--border,#e4e7ec)]",
+        inset ? "bg-[var(--bg-inset,#f1f3f0)]" : "bg-[var(--bg-raised,#ffffff)]",
         interactive &&
           cn(
-            "hover:border-[var(--border-strong,#35353f)] hover:bg-[var(--bg-raised-2,#191922)] focus-within:border-[var(--border-strong,#35353f)]",
+            "hover:border-[var(--border-strong,#cbd2dc)] hover:bg-[var(--bg-raised-2,#f8fafc)] focus-within:border-[var(--border-strong,#cbd2dc)]",
             STATE_TRANSITION_CLASS,
           ),
         padded && "p-4",

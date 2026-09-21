@@ -1,7 +1,11 @@
-import { action, internalMutation } from "../_generated/server";
+"use node";
+
+import { action } from "../_generated/server";
 import { api, internal } from "../_generated/api";
 import { v, ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
+import { fetchGoogleSearch } from "./fetchEngines";
+import { requireUserId } from "../lib/auth";
 
 export type ProfileStatus = Doc<"brands">["profileStatus"];
 
@@ -34,6 +38,15 @@ export function normalizeBrandName(name: string): string {
   return name.trim().replace(/\s+/g, " ");
 }
 
+export function normalizeBrandDomain(domain: string): string {
+  return domain
+    .trim()
+    .toLowerCase()
+    .replace(/^https?:\/\//, "")
+    .replace(/^www\./, "")
+    .replace(/\/$/, "");
+}
+
 export function buildCohortKey(brandIds: string[]): string {
   return [...brandIds].sort().join(":");
 }
@@ -48,32 +61,6 @@ function toCandidate(brand: Doc<"brands">): BrandCandidate {
   };
 }
 
-export const insertBrandProfileInternal = internalMutation({
-  args: {
-    name: v.string(),
-    domain: v.string(),
-    vertical: v.string(),
-    aliases: v.array(v.string()),
-    profileStatus: v.union(
-      v.literal("pending"),
-      v.literal("ready"),
-      v.literal("needs_confirmation"),
-    ),
-    adsTransparencyAdvertiserId: v.optional(v.string()),
-  },
-  handler: async (ctx, args): Promise<Id<"brands">> => {
-    return await ctx.db.insert("brands", {
-      name: args.name,
-      domain: args.domain,
-      vertical: args.vertical,
-      aliases: args.aliases,
-      profileStatus: args.profileStatus,
-      adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
-      createdAt: new Date().toISOString(),
-    });
-  },
-});
-
 export const createBrandProfile = action({
   args: {
     name: v.string(),
@@ -83,7 +70,8 @@ export const createBrandProfile = action({
     adsTransparencyAdvertiserId: v.optional(v.string()),
   },
   handler: async (ctx, args): Promise<CreateBrandProfileResult> => {
-    const domain = args.domain.trim();
+    const ownerId = await requireUserId(ctx);
+    const domain = normalizeBrandDomain(args.domain);
     const vertical = args.vertical.trim();
 
     if (name === "" || domain === "" || vertical === "") {
@@ -93,28 +81,6 @@ export const createBrandProfile = action({
       throw new ConvexError("domain must contain '.' (e.g. example.in)");
     }
 
-    const exact = (await ctx.runQuery(api.brands.getByName, {
-      name,
-    })) as Doc<"brands"> | null;
-
-    if (exact !== null) {
-      if (exact.domain.toLowerCase() !== domain.toLowerCase()) {
-        await ctx.runMutation(internal.pipeline.brandProfile.markNeedsConfirmationInternal, {
-          brandId: exact._id,
-        });
-        return {
-          brandId: exact._id,
-          status: "needs_confirmation",
-          needsConfirmation: true,
-          candidates: [toCandidate({ ...exact, profileStatus: "needs_confirmation" })],
-        };
-      }
-      return {
-        brandId: exact._id,
-        status: exact.profileStatus,
-        needsConfirmation: exact.profileStatus === "needs_confirmation",
-      };
-    }
     const lowered = name.toLowerCase();
     const candidates = all
       .filter((brand) => {
@@ -123,18 +89,45 @@ export const createBrandProfile = action({
       .map(toCandidate);
 
     if (candidates.length > 0) {
-      const brandId = (await ctx.runMutation(
-        internal.pipeline.brandProfile.insertBrandProfileInternal,
-        {
-          name,
-          domain,
-          vertical,
-          aliases,
-          profileStatus: "needs_confirmation",
-          adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
-        },
-      )) as Id<"brands">;
     }
-    return { brandId, status: "ready", needsConfirmation: false };
+
+    const brandId = (await ctx.runMutation(
+      internal.pipeline.brandProfileDb.insertBrandProfileInternal,
+      {
+        ownerId,
+        name,
+        domain,
+        vertical,
+        aliases,
+        profileStatus: "pending",
+        adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
+      },
+    )) as Id<"brands">;
+    const profile = await fetchGoogleSearch({ name }, `brand-profile:${String(brandId)}`);
+    if (profile.status === "ok") {
+    await ctx.runMutation(internal.pipeline.brandProfileDb.markReadyInternal, {
+      brandId,
+      lastRefreshedAt,
+      ownerId,
+      });
+      return { brandId, status: "ready", needsConfirmation: false };
+    }
+  },
+});
+
+export const refreshBrandProfile = action({
+  args: { brandId: v.id("brands") },
+  handler: async (ctx, args): Promise<RefreshBrandProfileResult> => {
+    const ownerId = await requireUserId(ctx);
+    const brand = (await ctx.runQuery(api.brands.getBrand, {
+      brandId: args.brandId,
+    })) as Doc<"brands"> | null;
+    if (brand === null) {
+      throw new ConvexError("brand not found");
+    }
+    if (profile.status !== "ok") {
+      throw new ConvexError(`brand profile refresh failed: ${profile.errorMessage}`);
+    }
+    return { brandId: args.brandId, lastRefreshedAt };
   },
 });

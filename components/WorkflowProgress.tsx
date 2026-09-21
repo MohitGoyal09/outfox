@@ -1,8 +1,8 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
+import { Chip } from "@/components/drishti";
 
 export type WorkflowStepState =
   | "pending"
@@ -44,7 +44,7 @@ export function WorkflowProgress({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -56,16 +56,16 @@ export function WorkflowProgress({
     <section
       aria-label={title}
       className={cn(
-        "rounded-lg border border-border bg-card p-4",
+        "border-t border-[var(--border)] py-5",
         className,
       )}
     >
-      <h3 className="text-sm font-semibold text-card-foreground">{title}</h3>
+      <h3 className="type-title text-[var(--text-primary)]">{title}</h3>
       <ul className="mt-3 space-y-2">
         {steps.map((step) => (
           <li
             key={step.id}
-            className="flex items-start gap-2 rounded-md border border-border bg-background px-3 py-2 text-sm"
+            className="flex items-start gap-3 border-b border-[var(--border)] py-3 text-sm last:border-b-0"
           >
             <span className="mt-0.5 shrink-0" aria-hidden="true">
               {step.status === "running" ? (
@@ -80,21 +80,15 @@ export function WorkflowProgress({
             </span>
             <span className="min-w-0 flex-1">
               <span className="flex flex-wrap items-center gap-2">
-                <span className="font-medium text-foreground">{step.id}</span>
+                <span className="font-medium text-[var(--text-primary)]">{step.id}</span>
                 {step.capability ? (
-                  <Badge variant="secondary">{step.capability}</Badge>
+                  <Chip dot={false} label={step.capability} />
                 ) : null}
-                <Badge
-                  variant={
-                    step.status === "failed" ? "destructive" : "outline"
-                  }
-                >
-                  {step.status === "running"
+                <Chip tone={step.status === "failed" ? "danger" : step.status === "complete" ? "ok" : step.status === "running" ? "warn" : "neutral"} label={step.status === "running"
                     ? "started"
                     : step.status === "complete"
                       ? "finished"
-                      : step.status}
-                </Badge>
+                      : step.status} />
               </span>
               {step.error ? (
                 <span className="mt-1 block text-xs text-destructive">

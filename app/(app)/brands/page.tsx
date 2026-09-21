@@ -16,10 +16,11 @@ import { cn } from "@/lib/utils";
 
 export default function BrandsPage() {
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="type-display text-[var(--text-primary,#eeeef2)]">Brands</h1>
-        <p className="max-w-[68ch] text-[14px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+    <div className="flex flex-col gap-7">
+      <header className="flex flex-col gap-1 border-b border-border pb-5">
+        <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Research index</p>
+        <h1 className="type-display text-fg">Brands</h1>
+        <p className="max-w-[68ch] type-body text-fg-secondary">
           A brand is a rival you track. Its profile collects every run that
           fetched it, so the drift between runs stays legible.
         </p>
@@ -49,7 +50,7 @@ function BrandsBody() {
     <div className="grid gap-8 min-[900px]:grid-cols-[minmax(0,1fr)_400px] min-[900px]:items-start">
       <section className="flex min-w-0 flex-col gap-4">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="text-[1.05rem] font-medium leading-[1.32] text-[var(--text-primary,#eeeef2)]">
+          <h2 className="type-title text-fg">
             Tracked brands
           </h2>
           <span className="flex flex-wrap items-center gap-x-3 gap-y-1">

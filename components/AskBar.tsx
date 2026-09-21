@@ -9,6 +9,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { LABEL_CLASS } from "@/components/drishti";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useAction } from "convex/react";
@@ -64,7 +65,7 @@ export function AskBar({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+        "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -77,11 +78,14 @@ export function AskBar({
     <section
       aria-label="Ask about these brands"
       className={cn(
-        "rounded-lg border border-border bg-card p-4",
+        "border-t border-[var(--border)] py-5",
         className,
       )}
     >
-      <h2 className="text-base font-semibold text-card-foreground">Ask</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="type-title text-[var(--text-primary)]">Ask</h2>
+        <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>stored evidence</span>
+      </div>
       <PromptInput
         onSubmit={(message) => {
           void ask(message.text);
@@ -109,7 +113,7 @@ export function AskBar({
             {error}
           </p>
         ) : result && result.available === false ? (
-          <div className="rounded-md border border-border bg-background p-3 text-sm">
+          <div className="border border-[var(--border)] bg-[var(--bg-inset)] p-3 text-sm">
             <p className="font-medium text-foreground">
               Ask is unavailable
             </p>
@@ -119,7 +123,7 @@ export function AskBar({
             </p>
           </div>
         ) : result && result.mode === "empty" ? (
-          <div className="rounded-md border border-border bg-background p-3 text-sm text-muted-foreground">
+          <div className="border border-[var(--border)] bg-[var(--bg-inset)] p-3 text-sm text-[var(--text-secondary)]">
             {result.message ??
               result.answer ??
               "No stored claims cover these brands yet."}
@@ -134,7 +138,7 @@ export function AskBar({
             {result.error ?? result.message ?? "Ask failed."}
           </p>
         ) : result && result.answer !== "" ? (
-          <div className="rounded-md border border-border bg-background p-3 text-sm">
+          <div className="border border-[var(--border)] bg-[var(--bg-inset)] p-3 text-sm">
             <MessageResponse>{result.answer}</MessageResponse>
             {result.citations.length > 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">

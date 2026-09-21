@@ -107,7 +107,7 @@ export function DockedAsk() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
-      <div className="pointer-events-auto mx-auto w-full max-w-[1440px] px-4 pb-4 sm:px-6">
+      <div className="pointer-events-auto mx-auto w-full max-w-[1440px] px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
         <div className="flex flex-col gap-2">
           {blockText !== null ? (
             <div
@@ -201,7 +201,7 @@ export function DockedAsk() {
               refreshScope();
             }}
             onBlur={() => setFocused(false)}
-            className="flex items-center gap-2 rounded-lg border border-border-strong bg-bg-raised-2 p-2 focus-within:border-accent"
+            className="flex items-center gap-2 rounded-md border border-border-strong bg-bg-raised p-2 focus-within:border-accent"
           >
             <label htmlFor="docked-ask" className="sr-only">
               Ask about these rivals

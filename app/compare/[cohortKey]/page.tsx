@@ -153,7 +153,7 @@ export default function ComparePage({
 
   if (cohortKey === "") {
     return (
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl px-6 py-8">
         <p className="text-sm text-muted-foreground">
           No cohort key in the URL.
         </p>
@@ -166,7 +166,7 @@ export default function ComparePage({
 
   if (cohortError !== null) {
     return (
-      <main className="mx-auto w-full max-w-6xl px-6 py-10">
+      <main className="mx-auto w-full max-w-6xl px-6 py-8">
         <p role="alert" className="rounded-lg border border-destructive/40 bg-card p-4 text-sm text-destructive">
           Invalid cohort key: {cohortError}
         </p>
@@ -178,17 +178,17 @@ export default function ComparePage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-6 px-6 py-10">
+    <main className="mx-auto w-full max-w-6xl space-y-8 px-6 py-8">
       <header className="flex flex-wrap items-start justify-between gap-4">
         <div>
           <Link href="/" className="text-sm text-primary underline-offset-4 hover:underline">
             Back to cohorts
           </Link>
-          <h1 className="mt-2 text-3xl font-semibold tracking-tight">
-            Cohort compare
+            <h1 className="type-display mt-2 text-[var(--text-primary)]">
+            Evidence comparison
           </h1>
           <p className="mt-1 break-all text-sm text-muted-foreground">
-            {cohortKey} · {mode === "live" ? "live refresh requested" : "cached view"}
+            {cohortKey} · {mode === "live" ? "live refresh requested" : "cached evidence"}
           </p>
         </div>
         <div className="flex flex-wrap gap-2">

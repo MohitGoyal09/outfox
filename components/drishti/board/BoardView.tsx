@@ -134,32 +134,33 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex flex-col gap-2">
-        <h1 className="type-display text-[var(--text-primary,#eeeef2)]">
+      <header className="flex flex-col gap-1 border-b border-border pb-5">
+        <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Cross-brand evidence</p>
+        <h1 className="type-display text-fg">
           Signal board
         </h1>
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
-          <span>{cohortTitle}</span>
+          <span className="font-medium text-fg">{cohortTitle}</span>
           {current !== null ? (
             <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
               run of {formatStamp(current.requestedAt)} · {current.status}
             </span>
           ) : null}
         </p>
-        <p className="max-w-[68ch] text-[13px] leading-[1.55] text-[var(--text-secondary,#9797a3)]">
+        <p className="max-w-[68ch] type-body text-fg-secondary">
           {BOARD_HONESTY_LINE}
         </p>
       </header>
 
       {singleBrand ? (
-        <p className="max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+        <p className="max-w-[68ch] type-caption text-fg-secondary">
           This cohort holds one rival. A pooled board compares two or more, so
           the mix below describes that rival alone.
         </p>
       ) : null}
 
       {isPartial ? (
-        <p className="max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+        <p className="max-w-[68ch] type-caption text-fg-secondary">
           {current?.status === "partial" ? "This run is partial. " : ""}
           {gaps.length === 1
             ? "1 engine check did not return; it is named per rival below."

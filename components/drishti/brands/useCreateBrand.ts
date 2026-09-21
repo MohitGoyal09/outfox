@@ -2,7 +2,7 @@
 
 
 import { useCallback, useState } from "react";
-import { useAction, useMutation } from "convex/react";
+import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { BrandCreatePath, BrandFormValues } from "./BrandForm";
 
@@ -20,8 +20,7 @@ export type UseCreateBrand = {
 };
 
 export function useCreateBrand(): UseCreateBrand {
-  const createBrand = useMutation(api.brands.createBrand);
-  const createBrandViaAgent = useAction(api.agent.createBrand);
+  const createBrandProfile = useAction(api.pipeline.brandProfile.createBrandProfile);
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
@@ -33,6 +32,7 @@ export function useCreateBrand(): UseCreateBrand {
 
   const submit = useCallback(
     async (values: BrandFormValues, path: BrandCreatePath): Promise<boolean> => {
+      void path;
       setError(null);
       setSuccess(null);
       setIsSaving(true);
@@ -46,17 +46,11 @@ export function useCreateBrand(): UseCreateBrand {
             ? { adsTransparencyAdvertiserId: values.adsTransparencyAdvertiserId }
             : {}),
         };
-        if (path === "shared") {
-          const result = await createBrandViaAgent(args);
-          setSuccess(
-            `Stored "${values.name}" through the shared path as ${result.status}.`,
-          );
-        } else {
-          await createBrand(args);
-          setSuccess(
-            `Stored "${values.name}" through the manual path as pending.`,
-          );
-        }
+        const result = await createBrandProfile(args);
+        const outcome = result.needsConfirmation
+          ? "needs confirmation"
+          : result.status;
+        setSuccess(`Stored "${values.name}" as ${outcome}.`);
         return true;
       } catch (caught) {
         setError(
@@ -69,7 +63,7 @@ export function useCreateBrand(): UseCreateBrand {
         setIsSaving(false);
       }
     },
-    [createBrand, createBrandViaAgent],
+    [createBrandProfile],
   );
 
   return { submit, isSaving, error, success, reset };

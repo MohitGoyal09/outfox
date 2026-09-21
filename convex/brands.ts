@@ -1,5 +1,6 @@
 import { mutation, query, internalMutation } from "./_generated/server";
 import { v } from "convex/values";
+import { requireUserId } from "./lib/auth";
 
 const profileStatus = v.union(
   v.literal("pending"),
@@ -15,53 +16,42 @@ const createBrandArgs = {
   adsTransparencyAdvertiserId: v.optional(v.string()),
 };
 
-export const listBrands = query({
-  args: {},
-  handler: async (ctx) => {
-    brands.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
-    return brands;
-  },
-});
+function normalizeDomain(domain: string): string {
+  return domain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
+}
 
-export const getBrand = query({
-  args: { brandId: v.id("brands") },
+export const createBrand = mutation({
+  args: createBrandArgs,
   handler: async (ctx, args) => {
-    return await ctx.db.get(args.brandId);
-  },
-});
-
-export const getByName = query({
-  args: { name: v.string() },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("brands")
-      .withIndex("by_name", (q) => q.eq("name", args.name))
-      .unique();
-  },
-});
-
-export const updateBrandStatus = mutation({
-  args: {
-    brandId: v.id("brands"),
-    profileStatus,
-    lastRefreshedAt: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    const patch: {
-      profileStatus: "pending" | "ready" | "needs_confirmation";
-      lastRefreshedAt?: string;
-    } = { profileStatus: args.profileStatus };
-    return args.brandId;
+    const ownerId = await requireUserId(ctx);
+    const vertical = args.vertical.trim();
+    return await ctx.db.insert("brands", {
+      ownerId,
+      name,
+      domain,
+      vertical,
+      aliases: args.aliases,
+      profileStatus: "pending",
+      adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
+      createdAt: new Date().toISOString(),
+    });
   },
 });
 
 export const createBrandInternal = internalMutation({
-  args: createBrandArgs,
+  args: { ...createBrandArgs, ownerId: v.id("users") },
   handler: async (ctx, args) => {
+    const vertical = args.vertical.trim();
+    const existing = (await ctx.db.query("brands").withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId)).collect()).find(
+      (brand) =>
+        brand.name.toLowerCase() === name.toLowerCase() &&
+        normalizeDomain(brand.domain) === domain,
+    );
     return await ctx.db.insert("brands", {
-      name: args.name,
-      domain: args.domain,
-      vertical: args.vertical,
+      ownerId: args.ownerId,
+      name,
+      domain,
+      vertical,
       aliases: args.aliases,
       profileStatus: "pending",
       adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,

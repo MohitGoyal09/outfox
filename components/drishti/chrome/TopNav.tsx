@@ -78,7 +78,7 @@ export function TopNav({ trailing }: { trailing?: ReactNode }) {
               {active ? (
                 <span
                   aria-hidden
-                  className="absolute inset-x-1.5 bottom-[3px] h-0.5 bg-accent"
+                  className="absolute inset-x-1.5 bottom-0 h-0.5 bg-accent"
                 />
               ) : null}
             </Link>

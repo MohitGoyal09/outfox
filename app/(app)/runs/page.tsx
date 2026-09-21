@@ -43,14 +43,14 @@ function RunsHistory() {
   const loading = !runsLoaded || brands === undefined;
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-8">
       <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
         <div>
-          <h1 className="type-display text-[var(--text-primary,#eeeef2)]">Runs</h1>
+          <p className="type-label text-[var(--accent)]">Evidence history</p>
+          <h1 className="type-display mt-1 text-[var(--text-primary)]">Runs</h1>
           <p className="type-body measure-prose mt-1.5 text-[var(--text-secondary,#9797a3)]">
-            A run compares every rival in a cohort at one moment. Open one to see
-            what changed since the last comparison, the rival mixes, and every
-            claim behind them.
+            Each run is a time-stamped evidence snapshot. Open one to inspect
+            coverage, changes, costs, and the claims behind them.
           </p>
         </div>
         {freshest === null ? null : (

@@ -23,10 +23,11 @@ import { cn } from "@/lib/utils";
 
 export default function CohortsPage() {
   return (
-    <div className="flex flex-col gap-8">
-      <header className="flex flex-col gap-2">
-        <h1 className="type-display text-[var(--text-primary,#eeeef2)]">Cohorts</h1>
-        <p className="max-w-[68ch] text-[14px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+    <div className="flex flex-col gap-7">
+      <header className="flex flex-col gap-1 border-b border-border pb-5">
+        <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Comparative research</p>
+        <h1 className="type-display text-fg">Cohorts</h1>
+        <p className="max-w-[68ch] type-body text-fg-secondary">
           A cohort is the set of rivals one run compares. Every run belongs to
           one cohort, and every claim belongs to one run.
         </p>
@@ -88,7 +89,7 @@ function CohortsBody() {
     <div className="grid gap-8 min-[900px]:grid-cols-[minmax(0,1fr)_400px] min-[900px]:items-start">
       <section className="flex min-w-0 flex-col gap-4">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <h2 className="text-[1.05rem] font-medium leading-[1.32] text-[var(--text-primary,#eeeef2)]">
+          <h2 className="type-title text-fg">
             Your cohorts
           </h2>
           {summary !== null ? (

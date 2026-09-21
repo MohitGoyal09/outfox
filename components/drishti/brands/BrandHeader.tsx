@@ -28,10 +28,10 @@ export function BrandHeader({
 }: BrandHeaderProps) {
   const aliases = brand.aliases.filter((alias) => alias.trim() !== "");
   return (
-    <header className={cn("flex flex-col gap-4", className)}>
+    <header className={cn("flex flex-col gap-4 border-b border-border pb-5", className)}>
       <Link
         href="/brands"
-        className="inline-flex w-fit items-center gap-1.5 rounded-[3px] text-[13px] text-[var(--text-secondary,#9797a3)] hover:text-[var(--text-primary,#eeeef2)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)]"
+        className="inline-flex w-fit items-center gap-1.5 rounded-[3px] text-[13px] text-fg-secondary hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <ArrowLeft {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
         All brands
@@ -39,14 +39,14 @@ export function BrandHeader({
 
       <div className="flex flex-wrap items-start justify-between gap-x-8 gap-y-4">
         <div className="min-w-0">
-          <h1 className="type-title text-[var(--text-primary,#eeeef2)]">
+          <h1 className="type-display text-fg">
             {brand.name}
           </h1>
           <p className="mt-1.5 flex flex-wrap items-center gap-x-4 gap-y-1">
-            <span className={cn(VALUE_CLASS, "text-[12.5px] text-[var(--text-secondary,#9797a3)]")}>
+            <span className={cn(VALUE_CLASS, "text-[12.5px] text-fg-secondary")}>
               {brand.domain}
             </span>
-            <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+            <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
               {brand.vertical}
             </span>
           </p>
@@ -67,11 +67,11 @@ export function BrandHeader({
       </div>
 
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-        <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
           aliases
         </span>
         {aliases.length === 0 ? (
-          <span className="text-[13px] text-[var(--text-tertiary,#64646f)]">
+          <span className="text-[13px] text-fg-tertiary">
             none recorded
           </span>
         ) : (

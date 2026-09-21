@@ -4,38 +4,38 @@
 @custom-variant dark (&:is(.dark *));
 
 /* ------------------------------------------------------------------ *
- * Signal Trace — raw tokens (DESIGN.md). This is the source of truth.
+ * Evidence Atlas — raw tokens (DESIGN.md). This is the source of truth.
  * ------------------------------------------------------------------ */
 :root {
   /* ground + neutrals */
-  --bg: #0a0a0f;
-  --bg-inset: #0e0e13;
-  --bg-raised: #131319;
-  --bg-raised-2: #191922;
-  --border: #24242f;
-  --border-strong: #35353f;
-  --text-primary: #eeeef2;
-  --text-secondary: #9797a3;
-  --text-tertiary: #64646f;
+  --bg: #f6f7f4;
+  --bg-inset: #f1f3f0;
+  --bg-raised: #ffffff;
+  --bg-raised-2: #f8fafc;
+  --border: #e4e7ec;
+  --border-strong: #cbd2dc;
+  --text-primary: #17191d;
+  --text-secondary: #667085;
+  --text-tertiary: #98a2b3;
 
   /* Placeholder neutral. `--text-tertiary` measures 3.30:1 on `--bg-inset`,
      below the 4.5:1 floor the design asks placeholders to clear. This lightened
      step measures 4.67:1 and is used for placeholders only; `--text-tertiary`
      stays for disabled text, which is exempt from the floor. */
-  --text-placeholder: #7c7c88;
+  --text-placeholder: #667085;
 
   /* identity accent — Signal Amber */
-  --accent: #e2a339;
-  --accent-strong: #f0b552;
-  --accent-ink: #1a1204;
-  --accent-dim: rgba(226, 163, 57, 0.22);
-  --accent-selection: rgba(226, 163, 57, 0.28);
+  --accent: #4f46e5;
+  --accent-strong: #4338ca;
+  --accent-ink: #ffffff;
+  --accent-dim: rgba(79, 70, 229, 0.16);
+  --accent-selection: rgba(79, 70, 229, 0.16);
 
   /* status — Drishti engine + run state */
-  --ok: #4ade80;
-  --warn: #fbbf24;
-  --weak: #fb923c;
-  --danger: #f87171;
+  --ok: #059669;
+  --warn: #b45309;
+  --weak: #b45309;
+  --danger: #dc2626;
 
   /* hookType — 9 discrete values, fixed categorical scale */
   --hook-discount-offer: #f2a63b;
@@ -61,22 +61,22 @@
 
   /* elevation — declared once per element, never border under a wide shadow.
      The three permitted shadows: row hover lift, drawer, toast. */
-  --shadow-lift: 0 1px 2px rgba(0, 0, 0, 0.4);
-  --shadow-drawer: 0 18px 40px -12px rgba(0, 0, 0, 0.55);
-  --shadow-toast: 0 10px 24px -8px rgba(0, 0, 0, 0.5);
+  --shadow-lift: 0 1px 2px rgba(16, 24, 40, 0.06);
+  --shadow-drawer: 0 18px 40px -12px rgba(16, 24, 40, 0.16);
+  --shadow-toast: 0 10px 24px -8px rgba(16, 24, 40, 0.14);
 }
 
 /* ------------------------------------------------------------------ *
- * Signal Trace — Tailwind theme surface (utilities).
+ * Evidence Atlas — Tailwind theme surface (utilities).
  * `inline` so the utility carries `var(--token)` and tracks next/font
  * variables set on <html> by app/layout.tsx.
  * ------------------------------------------------------------------ */
 @theme inline {
-  /* Two-Voice Rule: read = Fraunces / Inter, measured = JetBrains Mono. */
+  /* Two-Voice Rule: read = Inter, measured = JetBrains Mono. */
   --font-sans: var(--font-inter);
   --font-mono: var(--font-jetbrains);
-  --font-display: var(--font-fraunces);
-  --font-heading: var(--font-fraunces);
+  --font-display: var(--font-inter);
+  --font-heading: var(--font-inter);
 
   /* ground */
   --color-bg: var(--bg);
@@ -125,14 +125,14 @@
   /* radii — controls/chips 5px, cards/rows 10px, rails/containers 14px.
      Literal values (not `var(--radius-sm)`) so the theme key never references
      itself; @theme emits these into :root, so `var(--radius-sm)` still works. */
-  --radius-sm: 5px;
-  --radius-md: 10px;
-  --radius-lg: 14px;
-  --radius-xl: 18px;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 10px;
+  --radius-xl: 12px;
 
   /* ---- legacy shadcn aliases (components/ui/*) -------------------
      The old neutral-grey theme is gone; these names now resolve to
-     Signal Trace values so existing surfaces keep working while the
+     Evidence Atlas values so existing surfaces keep working while the
      primitive wave replaces them. `--color-accent` intentionally
      carries the Signal Amber identity accent, not shadcn's neutral
      hover surface. ---------------- */
@@ -166,7 +166,7 @@
   html {
     font-family: var(--font-sans);
     font-size: 16px;
-    color-scheme: dark;
+    color-scheme: light;
     -webkit-text-size-adjust: 100%;
     caret-color: var(--accent);
   }

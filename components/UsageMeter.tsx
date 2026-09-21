@@ -4,7 +4,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 
 function formatUsd(value: number): string {
-  if (!Number.isFinite(value)) return "$0.00";
+  if (!Number.isFinite(value)) return "not reported";
   const decimals = Math.abs(value) > 0 && Math.abs(value) < 1 ? 4 : 2;
   return `$${value.toFixed(decimals)}`;
 }
@@ -40,7 +40,7 @@ export function UsageMeter({
     return (
       <div
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -52,7 +52,7 @@ export function UsageMeter({
     return (
       <div
         className={cn(
-          "rounded-lg border border-destructive/40 bg-card p-4 text-sm text-destructive",
+          "border-t border-[var(--danger)] py-5 text-sm text-[var(--danger)]",
           className,
         )}
       >
@@ -64,7 +64,7 @@ export function UsageMeter({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -86,7 +86,13 @@ export function UsageMeter({
           : "Not reported by the provider";
 
   const cost =
-    exactCostUsd !== undefined
+      exactCostUsd !== undefined && estimatedCostUsd !== undefined
+      ? {
+          amount: formatUsd(exactCostUsd + estimatedCostUsd),
+          badge: "exact + est.",
+          note: "Part billed by the provider, part estimated from list prices.",
+        }
+      : exactCostUsd !== undefined
       ? {
           amount: formatUsd(exactCostUsd),
           badge: "exact",
@@ -104,23 +110,23 @@ export function UsageMeter({
     <section
       aria-label="Usage"
       className={cn(
-        "rounded-lg border border-border bg-card p-4",
+        "border-t border-[var(--border)] py-5",
         className,
       )}
     >
-      <h3 className="text-sm font-semibold text-card-foreground">
+      <h3 className="type-title text-[var(--text-primary)]">
         Run usage
       </h3>
       <dl className="mt-2 flex flex-wrap gap-6 text-sm">
         <div>
-          <dt className="text-muted-foreground">SerpApi requests</dt>
-          <dd className="text-xl font-semibold text-foreground">
+          <dt className="text-[var(--text-tertiary)]">SerpApi requests</dt>
+          <dd className="text-xl font-semibold text-[var(--text-primary)]">
             {requestCount}
           </dd>
         </div>
         <div>
-          <dt className="text-muted-foreground">Credits this run</dt>
-          <dd className="text-xl font-semibold text-foreground">
+          <dt className="text-[var(--text-tertiary)]">Credits this run</dt>
+          <dd className="text-xl font-semibold text-[var(--text-primary)]">
             {creditValue}
           </dd>
           {creditsReported === false ? (

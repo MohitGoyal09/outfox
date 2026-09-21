@@ -10,11 +10,11 @@ export const TONES: readonly Tone[] = [
 ];
 
 export const TONE_COLOR: Record<Tone, string> = {
-  ok: "var(--ok, #4ade80)",
-  warn: "var(--warn, #fbbf24)",
-  weak: "var(--weak, #fb923c)",
-  danger: "var(--danger, #f87171)",
-  neutral: "var(--text-tertiary, #64646f)",
+  ok: "var(--ok, #059669)",
+  warn: "var(--warn, #b45309)",
+  weak: "var(--weak, #b45309)",
+  danger: "var(--danger, #dc2626)",
+  neutral: "var(--text-tertiary, #667085)",
 };
 
 
@@ -260,7 +260,7 @@ export const LABEL_CLASS =
 export const VALUE_CLASS = "font-mono tabular-nums";
 
 export const FOCUS_RING_CLASS =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)] focus-visible:ring-[3px] focus-visible:ring-[rgba(226,163,57,0.22)]";
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#4f46e5)] focus-visible:ring-[3px] focus-visible:ring-[rgba(79,70,229,0.18)]";
 
 export const PRESS_CLASS = "active:translate-y-[0.5px]";
 
@@ -268,10 +268,10 @@ export const STATE_TRANSITION_CLASS =
   "motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-out";
 
 export const FOCUS_MARK_CLASS =
-  "bg-[var(--bg-raised-2,#191922)] ring-1 ring-[var(--accent,#e2a339)]";
+  "bg-[var(--bg-raised-2,#f8fafc)] ring-1 ring-[var(--accent,#4f46e5)]";
 
 export const DISPLAY_FONT_STACK =
-  "var(--font-display, Fraunces, ui-serif, Georgia, serif)";
+  "var(--font-sans, Inter, ui-sans-serif, system-ui, sans-serif)";
 
 const EMPTY_COPY_BANS: readonly string[] = [
   "",

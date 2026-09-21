@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { useMemo } from "react";
 
 import { api } from "@/convex/_generated/api";
+import { cn } from "@/lib/utils";
 
 import { AttentionPanel } from "./AttentionPanel";
 import { ClaimsOfTheDay } from "./ClaimsOfTheDay";
@@ -21,6 +22,7 @@ import {
   type BrandNameById,
   type ClaimLike,
 } from "./digest";
+import { VALUE_CLASS } from "../tokens";
 
 export function OverviewSurface() {
   return (
@@ -67,7 +69,7 @@ function OverviewBody() {
 
   const claims: ClaimLike[] = useMemo(
     () =>
-      (claimsQuery ?? []).map((claim) => ({
+      (claimsQuery ?? []).map((claim: NonNullable<typeof claimsQuery>[number]) => ({
         id: String(claim._id),
         text: claim.text,
         brandId: String(claim.brandId),
@@ -131,7 +133,29 @@ function OverviewBody() {
 
   return (
     <div className="flex flex-col gap-5">
-      <h1 className="sr-only">Overview</h1>
+      <header className="flex flex-col gap-1 border-b border-border pb-5">
+        <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">
+          Evidence atlas
+        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <div>
+            <h1 className="type-display text-fg">Overview</h1>
+            <p className="mt-1 max-w-[62ch] type-body text-fg-secondary">
+              A compact read of the latest stored evidence across your tracked brands.
+            </p>
+          </div>
+          <div className="flex items-center gap-4 text-right">
+            <div>
+              <span className="block type-caption text-fg-tertiary">tracked</span>
+              <span className={cn(VALUE_CLASS, "text-fg")}>{brandsQuery?.length ?? "—"}</span>
+            </div>
+            <div>
+              <span className="block type-caption text-fg-tertiary">latest run</span>
+              <span className={cn(VALUE_CLASS, "text-fg")}>{run?.status ?? "—"}</span>
+            </div>
+          </div>
+        </div>
+      </header>
 
       <SinceLastRun
         brandsLoading={brandsLoading}

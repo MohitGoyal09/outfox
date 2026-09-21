@@ -1,5 +1,6 @@
 import { internalMutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { requireUserId } from "./lib/auth";
 
 const snapshotStatus = v.union(
   v.literal("ok"),
@@ -7,44 +8,24 @@ const snapshotStatus = v.union(
   v.literal("unavailable"),
 );
 
-export const insertSnapshot = internalMutation({
-  args: {
-    runId: v.id("runs"),
-    brandId: v.id("brands"),
-    engine: sourceEngine,
-    queryParams: v.any(),
-    region: v.string(),
-    fetchedAt: v.string(),
-    status: snapshotStatus,
-    claimIds: v.array(v.id("claims")),
-    errorMessage: v.optional(v.string()),
-    period: v.optional(v.string()),
-    rawResponse: v.optional(v.any()),
-    rawResponseHash: v.optional(v.string()),
-  },
-  handler: async (ctx, args) => {
-    return await ctx.db.insert("snapshots", {
-      runId: args.runId,
-      brandId: args.brandId,
-      engine: args.engine,
-      queryParams: args.queryParams,
-      region: args.region,
-      fetchedAt: args.fetchedAt,
-      status: args.status,
-      claimIds: args.claimIds,
-      ...(args.errorMessage !== undefined
-        ? { errorMessage: args.errorMessage }
-        : {}),
-      ...(args.period !== undefined ? { period: args.period } : {}),
-      ...(args.rawResponse !== undefined
-        ? { rawResponse: args.rawResponse }
-        : {}),
-      ...(args.rawResponseHash !== undefined
-        ? { rawResponseHash: args.rawResponseHash }
-        : {}),
-    });
-  },
-});
+const MAX_TEXT = 600;
+
+function payloadHash(value: unknown): string {
+  let hash = 2166136261;
+  for (let i = 0; i < text.length; i += 1) {
+    hash = Math.imul(hash, 16777619);
+  }
+  return (hash >>> 0).toString(16).padStart(8, "0");
+}
+
+function boundPayload(value: unknown, depth = 0): unknown {
+  if (value === null || typeof value === "number" || typeof value === "boolean") return value;
+  if (depth >= MAX_DEPTH) return { truncated: true };
+  if (Array.isArray(value)) return value.slice(0, MAX_ITEMS).map((item) => boundPayload(item, depth + 1));
+  if (typeof value === "object") {
+    return out;
+  }
+}
 
 export const setClaimIdsInternal = internalMutation({
   args: {
@@ -55,19 +36,10 @@ export const setClaimIdsInternal = internalMutation({
   },
 });
 
-export const byRun = query({
-  args: { runId: v.id("runs") },
-  handler: async (ctx, args) => {
-    return await ctx.db
-      .query("snapshots")
-      .withIndex("by_run", (q) => q.eq("runId", args.runId))
-      .collect();
-  },
-});
-
 export const latestByEngine = query({
   args: { brandId: v.id("brands"), engine: sourceEngine },
   handler: async (ctx, args) => {
-    return snapshots[0] ?? null;
+    const ownerId = await requireUserId(ctx);
+    if (brand?.ownerId !== ownerId) throw new Error("Brand not found");
   },
 });

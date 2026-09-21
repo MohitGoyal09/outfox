@@ -2,6 +2,7 @@
 
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { LABEL_CLASS, VALUE_CLASS } from "@/components/drishti";
 
 export type MatrixClaim = {
   brandId: string;
@@ -68,7 +69,7 @@ export function ComparisonMatrix({
     return (
       <div
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -80,7 +81,7 @@ export function ComparisonMatrix({
     return (
       <div
         className={cn(
-          "rounded-lg border border-destructive/40 bg-card p-4 text-sm text-destructive",
+          "border-t border-[var(--danger)] py-5 text-sm text-[var(--danger)]",
           className,
         )}
       >
@@ -92,7 +93,7 @@ export function ComparisonMatrix({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -105,7 +106,7 @@ export function ComparisonMatrix({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -133,18 +134,18 @@ export function ComparisonMatrix({
     dist: Record<string, Record<string, number>>,
   ) => (
     <div>
-      <h3 className="text-sm font-semibold text-card-foreground">{title}</h3>
-      <div className="mt-2 overflow-x-auto rounded-md border border-border">
+      <h3 className="type-headline text-[var(--text-primary)]">{title}</h3>
+      <div className="mt-2 overflow-x-auto border border-[var(--border)]">
         <table className="w-full min-w-[480px] text-sm">
           <thead>
-            <tr className="bg-muted/60 text-left">
-              <th className="px-3 py-2 font-medium text-muted-foreground">
+            <tr className="border-b border-[var(--border)] text-left">
+              <th className={cn("px-3 py-2 font-medium", LABEL_CLASS, "text-[var(--text-tertiary)]")}>
                 Type
               </th>
               {brands.map((b) => (
                 <th
                   key={b.id}
-                  className="px-3 py-2 font-medium text-muted-foreground"
+                  className={cn("px-3 py-2 font-medium", LABEL_CLASS, "text-[var(--text-tertiary)]")}
                 >
                   {b.name}
                 </th>
@@ -153,10 +154,10 @@ export function ComparisonMatrix({
           </thead>
           <tbody>
             {rows.map((row) => (
-              <tr key={row} className="border-t border-border">
-                <td className="px-3 py-2 text-foreground">{row}</td>
+              <tr key={row} className="border-t border-[var(--border)]">
+                <td className="px-3 py-2 text-[var(--text-secondary)]">{row}</td>
                 {brands.map((b) => (
-                  <td key={b.id} className="px-3 py-2 text-foreground">
+                  <td key={b.id} className={cn("px-3 py-2", VALUE_CLASS, "text-[var(--text-primary)]")}>
                     {dist[row]?.[b.id] ?? 0}
                   </td>
                 ))}
@@ -172,11 +173,11 @@ export function ComparisonMatrix({
     <section
       aria-label="Comparison matrix"
       className={cn(
-        "space-y-6 rounded-lg border border-border bg-card p-4",
+        "space-y-6 border-t border-[var(--border)] py-5",
         className,
       )}
     >
-      <h2 className="text-base font-semibold text-card-foreground">
+      <h2 className="type-title text-[var(--text-primary)]">
         Comparison matrix
       </h2>
       {table("Hook type distribution", HOOK_TYPES, hookDist)}

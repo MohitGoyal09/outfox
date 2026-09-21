@@ -96,23 +96,23 @@ export function CohortList({
   return (
     <ul
       aria-label="Cohorts"
-      className={cn("flex flex-col gap-3", className)}
+      className={cn("divide-y divide-border border-y border-border", className)}
     >
       {cohorts.map((cohort) => {
         const names = cohortBrandNames(cohort, nameById);
         const href = `/compare/${encodeURIComponent(cohort.cohortKey)}`;
         return (
-          <Panel as="li" key={cohort.cohortKey} padded className="flex flex-col gap-3">
+          <Panel as="li" key={cohort.cohortKey} padded className="flex flex-col gap-3 rounded-none border-0 border-b border-border bg-bg-raised px-3 py-4 last:border-b-0 hover:bg-bg-raised-2">
             <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
               <div className="min-w-0">
-                <h3 className="truncate text-[15px] font-medium text-[var(--text-primary,#eeeef2)]">
+                <h3 className="truncate text-[15px] font-medium text-fg">
                   {names.length === 0 ? "Unnamed rivals" : names.join(" · ")}
                 </h3>
                 <p className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1">
-                  <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-tertiary,#64646f)]")}>
+                    <span className={cn(VALUE_CLASS, "text-[11.5px] text-fg-tertiary")}>
                     {cohort.runCount} {cohort.runCount === 1 ? "run" : "runs"}
                   </span>
-                  <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+                    <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
                     {cohortBoundText(cohort.rivalCount, MAX_RIVALS_PER_COHORT)}
                   </span>
                 </p>
@@ -133,7 +133,7 @@ export function CohortList({
             <div className="flex flex-wrap items-center gap-2">
               <Link
                 href={href}
-                className="inline-flex h-8 items-center gap-2 rounded-[5px] bg-[var(--accent,#e2a339)] px-3 text-[13px] font-medium text-[var(--accent-ink,#1a1204)] shadow-[inset_0_1px_0_rgba(255,255,255,0.18)] hover:bg-[var(--accent-strong,#f0b552)] active:translate-y-[0.5px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)]"
+                className="inline-flex h-8 items-center gap-2 rounded-md bg-accent px-3 text-[13px] font-medium text-accent-ink hover:bg-accent-strong active:translate-y-[0.5px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
                 Open cohort
               </Link>

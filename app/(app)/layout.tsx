@@ -2,8 +2,8 @@ import type { ReactNode } from "react";
 
 import { DockedAsk } from "@/components/drishti/chrome/DockedAsk";
 import { Masthead } from "@/components/drishti/chrome/Masthead";
+import { Sidebar } from "@/components/drishti/chrome/Sidebar";
 import { StatReadout } from "@/components/drishti/chrome/StatReadout";
-import { TopNav } from "@/components/drishti/chrome/TopNav";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
   return (
@@ -16,18 +16,23 @@ export default function AppLayout({ children }: { children: ReactNode }) {
       </a>
 
       <header className="sticky top-0 z-30 border-b border-border bg-bg">
-        <div className="mx-auto flex w-full max-w-[1440px] flex-col px-4 sm:px-6">
-          <Masthead />
-          <TopNav trailing={<StatReadout />} />
+        <div className="mx-auto flex w-full max-w-[1440px] items-center gap-4 px-4 sm:px-6">
+          <div className="min-w-0 flex-1">
+            <Masthead />
+          </div>
+          <StatReadout className="hidden shrink-0 sm:block" />
         </div>
       </header>
 
-      <main
-        id="main"
-        className="mx-auto w-full max-w-[1440px] flex-1 px-4 pb-32 pt-6 sm:px-6"
-      >
-        {children}
-      </main>
+      <div className="mx-auto flex w-full max-w-[1440px] flex-1">
+        <Sidebar />
+        <main
+          id="main"
+          className="min-w-0 flex-1 px-4 pb-[calc(10rem+env(safe-area-inset-bottom))] pt-6 sm:px-6 sm:pb-32"
+        >
+          {children}
+        </main>
+      </div>
 
       <DockedAsk />
     </div>

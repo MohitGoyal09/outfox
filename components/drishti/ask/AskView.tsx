@@ -114,11 +114,12 @@ export function AskView({
     <div className="flex flex-col gap-8">
       <header
         className={cn(
-          "flex flex-col gap-4",
+          "flex flex-col gap-4 border-b border-[var(--border)] pb-8",
           hasTranscript ? "items-start" : "items-center pt-12 text-center sm:pt-20",
         )}
       >
-        <h1 className="type-display text-balance text-[var(--text-primary,#eeeef2)]">
+        <p className="type-label text-[var(--accent)]">Grounded research</p>
+        <h1 className="type-display text-balance text-[var(--text-primary)]">
           Ask about your rivals
         </h1>
         <p
@@ -137,7 +138,7 @@ export function AskView({
           }}
           className="w-full max-w-2xl"
         >
-          <div className="flex items-center gap-2 rounded-[10px] border border-[var(--border-strong,#35353f)] bg-[var(--bg-inset,#0e0e13)] p-1.5 focus-within:border-[var(--accent,#e2a339)]">
+          <div className="flex items-center gap-2 rounded-[8px] border border-[var(--border-strong)] bg-[var(--bg-raised)] p-1.5 shadow-[0_1px_2px_rgba(16,24,40,0.05)] focus-within:border-[var(--accent)]">
             <label htmlFor="ask-question" className="sr-only">
               Ask a question about the rivals in view
             </label>

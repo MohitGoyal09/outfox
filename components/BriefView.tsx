@@ -6,6 +6,7 @@ import { Sources, SourcesContent, SourcesTrigger } from "@/components/ai-element
 import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { LABEL_CLASS } from "@/components/drishti";
 import { useState } from "react";
 
 export type BriefClaimRef = EvidenceClaim & {
@@ -34,7 +35,7 @@ export function BriefView({
     return (
       <div
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -46,7 +47,7 @@ export function BriefView({
     return (
       <div
         className={cn(
-          "rounded-lg border border-destructive/40 bg-card p-4 text-sm text-destructive",
+          "border-t border-[var(--danger)] py-5 text-sm text-[var(--danger)]",
           className,
         )}
       >
@@ -58,7 +59,7 @@ export function BriefView({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -71,11 +72,14 @@ export function BriefView({
     <section
       aria-label="Brief"
       className={cn(
-        "rounded-lg border border-border bg-card p-4",
+        "border-t border-[var(--border)] py-5",
         className,
       )}
     >
-      <h2 className="text-base font-semibold text-card-foreground">Brief</h2>
+      <div className="flex items-baseline justify-between gap-3">
+        <h2 className="type-title text-[var(--text-primary)]">Brief</h2>
+        <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>cited response</span>
+      </div>
       <div className="mt-2 text-sm">
         <MessageResponse>{briefText}</MessageResponse>
       </div>

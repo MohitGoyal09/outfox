@@ -6,7 +6,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Chip } from "../Chip";
 import { EmptyState } from "../EmptyState";
-import { Panel } from "../Panel";
 import { SkeletonRows } from "../Skeleton";
 import { LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
 import { FreshnessStamp } from "../cohorts/FreshnessStamp";
@@ -49,25 +48,25 @@ export function BrandList({
   }
 
   return (
-    <ul aria-label="Tracked brands" className={cn("flex flex-col gap-3", className)}>
+    <ul aria-label="Tracked brands" className={cn("divide-y divide-border border-y border-border", className)}>
       {brands.map((brand) => (
-        <Panel as="li" key={String(brand._id)} padded>
+        <li key={String(brand._id)} className="group bg-bg-raised transition-colors hover:bg-bg-raised-2">
           <Link
             href={`/brands/${brand._id}`}
-            className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2 rounded-[5px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)]"
+            className="flex min-h-16 flex-wrap items-center justify-between gap-x-6 gap-y-2 px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
           >
             <span className="flex min-w-0 flex-col gap-1">
-              <span className="truncate text-[15px] font-medium text-[var(--text-primary,#eeeef2)]">
+              <span className="truncate text-[15px] font-medium text-fg">
                 {brand.name}
               </span>
               <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-secondary,#9797a3)]")}>
+                <span className={cn(VALUE_CLASS, "text-[11.5px] text-fg-secondary")}>
                   {brand.domain}
                 </span>
-                <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+                <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
                   {brand.vertical}
                 </span>
-                <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
+                <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
                   added {formatStamp(brand.createdAt)}
                 </span>
               </span>
@@ -83,7 +82,7 @@ export function BrandList({
               />
             </span>
           </Link>
-        </Panel>
+        </li>
       ))}
     </ul>
   );

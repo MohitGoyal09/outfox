@@ -2,6 +2,7 @@
 
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { VALUE_CLASS } from "@/components/drishti";
 
 export function CrossBrandChart({
   brands,
@@ -18,7 +19,7 @@ export function CrossBrandChart({
     return (
       <div
         className={cn(
-          "flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -30,7 +31,7 @@ export function CrossBrandChart({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -47,7 +48,7 @@ export function CrossBrandChart({
     return (
       <div
         className={cn(
-          "rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground",
+          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
           className,
         )}
       >
@@ -59,27 +60,27 @@ export function CrossBrandChart({
     <section
       aria-label="Cross brand claim counts"
       className={cn(
-        "rounded-lg border border-border bg-card p-4",
+        "border-t border-[var(--border)] py-5",
         className,
       )}
     >
-      <h3 className="text-sm font-semibold text-card-foreground">
+      <h3 className="type-title text-[var(--text-primary)]">
         Claims per brand
       </h3>
       <ul className="mt-3 space-y-3">
         {counts.map((row) => (
           <li key={row.id}>
             <div className="flex items-baseline justify-between text-sm">
-              <span className="font-medium text-foreground">{row.name}</span>
-              <span className="text-muted-foreground">{row.count}</span>
+              <span className="font-medium text-[var(--text-primary)]">{row.name}</span>
+              <span className={cn(VALUE_CLASS, "text-[var(--text-secondary)]")}>{row.count}</span>
             </div>
             <div
-              className="mt-1 h-2.5 overflow-hidden rounded-full bg-muted"
+              className="mt-1 h-2 overflow-hidden rounded-full bg-[var(--bg-inset)]"
               role="img"
               aria-label={`${row.name} has ${row.count} claims`}
             >
               <div
-                className="h-full rounded-full bg-primary"
+                className="h-full rounded-full bg-[var(--accent)]"
                 style={{ width: `${Math.round((row.count / max) * 100)}%` }}
               />
             </div>
