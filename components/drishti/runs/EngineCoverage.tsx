@@ -6,7 +6,6 @@ import {
   Button,
   EmptyState,
   LABEL_CLASS,
-  Panel,
   Skeleton,
   SkeletonRegion,
   TONE_COLOR,
@@ -14,6 +13,7 @@ import {
   iconProps,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ENGINE_STATUS_WORD, engineCellTone } from "./labels";
 import type { BrandRef, EngineCell, EngineRow } from "./types";
 
@@ -66,7 +66,8 @@ export function EngineCoverage({
 }: EngineCoverageProps) {
   if (loading) {
     return (
-      <Panel interactive={false} className={cn("p-4", className)} ariaLabel="Engine coverage">
+      <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="Engine coverage">
+        <CardContent className="p-5">
         <SkeletonRegion label="Loading engine coverage">
           <Skeleton variant="text" width={124} height={13} />
           <div className="mt-4 flex flex-col gap-3">
@@ -80,13 +81,15 @@ export function EngineCoverage({
             ))}
           </div>
         </SkeletonRegion>
-      </Panel>
+        </CardContent>
+      </Card>
     );
   }
 
   if (error !== null) {
     return (
-      <Panel interactive={false} className={cn("p-4", className)} ariaLabel="Engine coverage">
+      <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="Engine coverage">
+        <CardContent className="p-5">
         <div
           role="alert"
           className="flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-[var(--danger,#f87171)]"
@@ -103,15 +106,15 @@ export function EngineCoverage({
             </Button>
           ) : null}
         </div>
-      </Panel>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <Panel interactive={false} className={cn("p-4", className)} ariaLabel="Engine coverage">
-      <h3 className="text-[13px] font-medium text-[var(--text-primary,#eeeef2)]">
-        Engine coverage
-      </h3>
+    <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="Engine coverage">
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Engine coverage</CardTitle></CardHeader>
+      <CardContent className="p-5">
 
       {rows.length === 0 || brands.length === 0 ? (
         <div className="mt-3">
@@ -202,6 +205,7 @@ export function EngineCoverage({
           </ul>
         </>
       )}
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

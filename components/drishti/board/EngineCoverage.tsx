@@ -1,18 +1,17 @@
 import { PlugZap } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Chip } from "../Chip";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
-import { Panel } from "../Panel";
 import { Skeleton } from "../Skeleton";
-import { VALUE_CLASS, iconProps, type Tone } from "../tokens";
-import { coverageGaps, type BrandCoverage, type EngineStatus } from "./board-model";
-
-const STATUS_TONE: Record<EngineStatus, Tone> = {
-  ok: "ok",
-  failed: "danger",
-  unavailable: "weak",
-  absent: "neutral",
-};
+import { VALUE_CLASS, iconProps } from "../tokens";
+import {
+  DATA_ENGINES,
+  coverageGaps,
+  engineLabel,
+  type BrandCoverage,
+} from "./board-model";
 
 export function EngineCoverage({
   coverage,
@@ -27,26 +26,21 @@ export function EngineCoverage({
   const checks = coverage.reduce((total, brand) => total + brand.cells.length, 0);
 
   return (
-    <Panel
-      as="section"
-      interactive={false}
-      className={cn("p-4", className)}
-      ariaLabel="Engine coverage"
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-[13px] font-medium text-[var(--text-primary,#eeeef2)]">
-          Engine coverage
-        </h2>
+    <Card className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Engine coverage</CardTitle>
+            <CardDescription className="mt-1">Which engines returned data for each rival. A gap is named, never counted as zero.</CardDescription>
+          </div>
         {loading ? null : (
-          <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
+          <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
             {checks - gaps.length}/{checks} engine checks returned
-          </span>
+          </Badge>
         )}
-      </div>
-      <p className="mt-1 max-w-[68ch] text-[12.5px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
-        Which engines returned data for which rival. A gap is named with its
-        reason and is never counted as a zero.
-      </p>
+        </div>
+      </CardHeader>
+      <CardContent className="px-0 py-0">
 
       {loading ? (
         <div className="mt-3 flex flex-col gap-3">
@@ -68,26 +62,10 @@ export function EngineCoverage({
           />
         </div>
       ) : (
-        <ul className="mt-3 flex flex-col gap-3">
-          {coverage.map((brand) => (
-            <li key={brand.brandId} className="flex flex-col gap-1.5">
-              <span className="break-words text-[13px] leading-[1.4] text-[var(--text-primary,#eeeef2)]">
-                {brand.brandName}
-              </span>
-              <ul className="flex flex-wrap items-center gap-1.5">
-                {brand.cells.map((cell) => (
-                  <li key={cell.engine}>
-                    <Chip
-                      label={`${cell.label} ${cell.status}`}
-                      tone={STATUS_TONE[cell.status]}
-                      title={cell.reason ?? undefined}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </li>
-          ))}
-        </ul>
+        <Table>
+          <TableHeader><TableRow className="hover:bg-transparent"><TableHead className="pl-5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Brand</TableHead>{DATA_ENGINES.map((engine) => <TableHead key={engine} className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">{engineLabel(engine)}</TableHead>)}</TableRow></TableHeader>
+          <TableBody>{coverage.map((brand) => <TableRow key={brand.brandId}><TableCell className="whitespace-normal pl-5 font-medium text-foreground">{brand.brandName}</TableCell>{brand.cells.map((cell) => <TableCell key={cell.engine} className="text-right"><Badge variant="outline" title={cell.reason ?? undefined} className={cn("font-normal", cell.status === "ok" ? "border-emerald-600/30 bg-emerald-500/10 text-emerald-700" : cell.status === "absent" ? "text-muted-foreground" : "border-amber-600/30 bg-amber-500/10 text-amber-700")}>{cell.status}</Badge></TableCell>)}</TableRow>)}</TableBody>
+        </Table>
       )}
 
       {gaps.length > 0 ? (
@@ -97,6 +75,7 @@ export function EngineCoverage({
             : `${gaps.length} engine checks did not return. Each is named above.`}
         </p>
       ) : null}
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

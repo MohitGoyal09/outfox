@@ -47,6 +47,7 @@ import { cn } from "@/lib/utils";
 
 const MIX_GRID =
   "grid grid-cols-1 gap-4 min-[900px]:grid-cols-[repeat(auto-fit,minmax(300px,1fr))]";
+const RUN_ID_RE = /^[a-z0-9]{32}$/;
 
 function RunViewSkeleton() {
   return (
@@ -474,6 +475,17 @@ function RunView({ runId }: { runId: string }) {
 export default function RunPage({ params }: { params: Promise<{ runId: string }> }) {
   const { runId: rawRunId } = use(params);
   const runId = decodeURIComponent(rawRunId ?? "");
+
+  if (!RUN_ID_RE.test(runId)) {
+    return (
+      <RunUnavailable
+        detail={runId}
+        title="This run address is not valid."
+        description="Open Run history and select a stored run instead of editing the address directly."
+      />
+    );
+  }
+
   return (
     <RunErrorBoundary subject="this run">
       <RunView key={runId} runId={runId} />

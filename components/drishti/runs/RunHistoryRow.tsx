@@ -6,12 +6,13 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import {
   Chip,
-  Panel,
   Skeleton,
   TONE_COLOR,
   VALUE_CLASS,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
+import { Card, CardFooter } from "@/components/ui/card";
+import { ArrowUpRight, ChevronRight } from "lucide-react";
 import {
   COST_PROVENANCE_LABEL,
   RUN_STATUS_TONE,
@@ -46,10 +47,11 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
         : `${formatUsd(usage.costUsd)} ${COST_PROVENANCE_LABEL[provenance]}`;
 
   return (
-    <Panel as="li" className="p-0">
+    <li>
+      <Card className="group overflow-hidden border-border/80 bg-card py-0 shadow-none transition-colors hover:border-accent/50 hover:bg-accent/[0.025]">
       <Link
         href={`/runs/${encodeURIComponent(String(run._id))}`}
-        className="block rounded-[10px] p-4"
+        className="block p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
       >
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
           <div className="min-w-0">
@@ -62,16 +64,17 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
               >
                 {formatRunDate(run.requestedAt)}
               </span>
-              <span className="text-[13.5px] font-medium text-[var(--text-primary,#eeeef2)]">
+              <span className="text-[15px] font-semibold tracking-[-0.02em] text-foreground">
                 {cohortLabel(run.brandIds, names)}
               </span>
+              <ArrowUpRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <span
                 className={cn(
                   VALUE_CLASS,
-                  "text-[12px] text-[var(--text-secondary,#9797a3)]",
+                    "text-[11px] text-muted-foreground",
                 )}
               >
                 {formatCount(run.requestCount)} {run.requestCount === 1 ? "search" : "searches"}
@@ -82,7 +85,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
               <span
                 className={cn(
                   VALUE_CLASS,
-                  "text-[12px] text-[var(--text-secondary,#9797a3)]",
+                    "text-[11px] text-muted-foreground",
                 )}
               >
                 {run.llmRequestCount === undefined
@@ -98,7 +101,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
                 <span
                   className={cn(
                     VALUE_CLASS,
-                    "text-[12px]",
+                    "text-[11px]",
                     provenance === "exact" || provenance === "mixed"
                       ? "text-[var(--ok,#4ade80)]"
                       : provenance === "estimated"
@@ -136,7 +139,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
                       <span
                         className={cn(
                           VALUE_CLASS,
-                          "text-[12px] text-[var(--text-secondary,#9797a3)]",
+                          "text-[11px] text-muted-foreground",
                         )}
                       >
                         {gap.label} {gap.status === "failed" ? "failed" : gap.status === "missing" ? "not recorded" : "unavailable"}
@@ -148,9 +151,14 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
             </div>
           </div>
 
-          <Chip tone={RUN_STATUS_TONE[status]} label={status} />
+          <Chip tone={RUN_STATUS_TONE[status]} label={status} className="rounded-full" />
         </div>
       </Link>
-    </Panel>
+      <CardFooter className="flex items-center justify-between border-t border-border/70 bg-muted/30 px-5 py-2.5 text-[10px] text-muted-foreground">
+        <span className="uppercase tracking-[0.15em]">Open run details</span>
+        <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
+      </CardFooter>
+      </Card>
+    </li>
   );
 }

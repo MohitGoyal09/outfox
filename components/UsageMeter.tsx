@@ -2,6 +2,7 @@
 
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 function formatUsd(value: number): string {
   if (!Number.isFinite(value)) return "not reported";
@@ -38,36 +39,21 @@ export function UsageMeter({
 }) {
   if (loading) {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         <Spinner className="size-4" /> Loading usage.
       </div>
     );
   }
   if (error) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--danger)] py-5 text-sm text-[var(--danger)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-destructive/30 bg-card p-5 text-sm text-destructive", className)}>
         Usage failed to load: {error}
       </div>
     );
   }
   if (requestCount === undefined) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No run yet, so no usage to show. Load a cached run or refresh to see
         SerpApi counts.
       </div>
@@ -107,17 +93,9 @@ export function UsageMeter({
         : null;
 
   return (
-    <section
-      aria-label="Usage"
-      className={cn(
-        "border-t border-[var(--border)] py-5",
-        className,
-      )}
-    >
-      <h3 className="type-title text-[var(--text-primary)]">
-        Run usage
-      </h3>
-      <dl className="mt-2 flex flex-wrap gap-6 text-sm">
+    <Card aria-label="Usage" className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Run usage</CardTitle></CardHeader>
+      <CardContent><dl className="flex flex-wrap gap-8 p-5 text-sm">
         <div>
           <dt className="text-[var(--text-tertiary)]">SerpApi requests</dt>
           <dd className="text-xl font-semibold text-[var(--text-primary)]">
@@ -181,7 +159,7 @@ export function UsageMeter({
             </p>
           </div>
         ) : null}
-      </dl>
-    </section>
+      </dl></CardContent>
+    </Card>
   );
 }

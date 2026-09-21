@@ -24,18 +24,28 @@
      stays for disabled text, which is exempt from the floor. */
   --text-placeholder: #667085;
 
-  /* identity accent — Signal Amber */
-  --accent: #4f46e5;
-  --accent-strong: #4338ca;
+  /* identity accent — Signal Teal. Used sparingly for actions and evidence. */
+  --accent: #0f766e;
+  --accent-strong: #115e59;
   --accent-ink: #ffffff;
-  --accent-dim: rgba(79, 70, 229, 0.16);
-  --accent-selection: rgba(79, 70, 229, 0.16);
+  --accent-dim: rgba(15, 118, 110, 0.14);
+  --accent-selection: rgba(15, 118, 110, 0.16);
 
   /* status — Drishti engine + run state */
   --ok: #059669;
   --warn: #b45309;
   --weak: #b45309;
   --danger: #dc2626;
+
+  /* shell — deep ink contrast against the warm evidence canvas */
+  --sidebar: #11141a;
+  --sidebar-foreground: #f7f8fa;
+  --sidebar-primary: #5eead4;
+  --sidebar-primary-foreground: #0f2424;
+  --sidebar-accent: #1d222c;
+  --sidebar-accent-foreground: #ffffff;
+  --sidebar-border: #2a303b;
+  --sidebar-ring: #5eead4;
 
   /* hookType — 9 discrete values, fixed categorical scale */
   --hook-discount-offer: #f2a63b;
@@ -73,10 +83,10 @@
  * ------------------------------------------------------------------ */
 @theme inline {
   /* Two-Voice Rule: read = Inter, measured = JetBrains Mono. */
-  --font-sans: var(--font-inter);
-  --font-mono: var(--font-jetbrains);
-  --font-display: var(--font-inter);
-  --font-heading: var(--font-inter);
+  --font-sans: var(--font-instrument);
+  --font-mono: var(--font-geist-mono);
+  --font-display: var(--font-instrument);
+  --font-heading: var(--font-instrument);
 
   /* ground */
   --color-bg: var(--bg);
@@ -134,7 +144,7 @@
      The old neutral-grey theme is gone; these names now resolve to
      Evidence Atlas values so existing surfaces keep working while the
      primitive wave replaces them. `--color-accent` intentionally
-     carries the Signal Amber identity accent, not shadcn's neutral
+     carries the Signal Teal identity accent, not shadcn's neutral
      hover surface. ---------------- */
   --color-background: var(--bg);
   --color-foreground: var(--text-primary);
@@ -153,6 +163,15 @@
   --color-destructive-foreground: var(--text-primary);
   --color-input: var(--border-strong);
   --color-ring: var(--accent);
+
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
 }
 
 /* ------------------------------------------------------------------ *
@@ -213,6 +232,29 @@
     background-color: inherit;
   }
 
+  button,
+  [role="button"] {
+    transition-property: transform, background-color, border-color, color, opacity;
+    transition-duration: 160ms;
+    transition-timing-function: cubic-bezier(0.23, 1, 0.32, 1);
+  }
+
+  button:not(:disabled):active,
+  [role="button"]:not([aria-disabled="true"]):active {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      scroll-behavior: auto !important;
+      transition-duration: 0.01ms !important;
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+    }
+  }
+
   /* Number and date inputs: mono, tabular, no spinners. */
   input[type="number"],
   input[type="date"],
@@ -266,6 +308,24 @@
 
   ::-webkit-scrollbar-corner {
     background-color: var(--bg-inset);
+  }
+}
+
+/* Keep the desktop icon rail genuinely icon-only. The shadcn utility variant
+ * handles this in normal builds; these attribute guards also cover nested
+ * group scopes so labels can never bleed into the 56px rail. */
+@layer components {
+  [data-collapsible="icon"] [data-sidebar="menu-button"] > span:last-child,
+  [data-collapsible="icon"] [data-sidebar="group-label"],
+  [data-collapsible="icon"] [data-sidebar="group-action"],
+  [data-collapsible="icon"] [data-sidebar="menu-badge"] {
+    display: none;
+  }
+
+  [data-collapsible="icon"] [data-sidebar="menu-button"] {
+    justify-content: center;
+    gap: 0;
+    padding-inline: 0;
   }
 }
 

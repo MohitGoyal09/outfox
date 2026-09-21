@@ -1,13 +1,15 @@
 "use client";
 
 import { AgentPanel } from "@/components/AgentPanel";
-import { AskBar } from "@/components/AskBar";
 import { BriefView, type BriefClaimRef } from "@/components/BriefView";
 import { ComparisonMatrix } from "@/components/ComparisonMatrix";
 import { CrossBrandChart } from "@/components/CrossBrandChart";
 import { UsageMeter } from "@/components/UsageMeter";
 import { WorkflowProgress } from "@/components/WorkflowProgress";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 import { Spinner } from "@/components/ui/spinner";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -15,6 +17,7 @@ import { useAction, useQuery } from "convex/react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import { use, useMemo, useState } from "react";
+import { AlertTriangle, ArrowLeft, RefreshCw } from "lucide-react";
 
 const BRAND_ID_RE = /^[a-z0-9_]+$/i;
 const MAX_BRANDS = 6;
@@ -154,12 +157,11 @@ export default function ComparePage({
   if (cohortKey === "") {
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
-        <p className="text-sm text-muted-foreground">
-          No cohort key in the URL.
-        </p>
+        <Card className="border-dashed shadow-none"><CardContent className="p-8"><p className="text-sm text-muted-foreground">No cohort key in the URL.</p>
         <Link href="/" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
           Back to cohorts
         </Link>
+        </CardContent></Card>
       </main>
     );
   }
@@ -167,9 +169,7 @@ export default function ComparePage({
   if (cohortError !== null) {
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-card p-4 text-sm text-destructive">
-          Invalid cohort key: {cohortError}
-        </p>
+        <Alert variant="destructive"><AlertTriangle className="size-4" /><AlertTitle>Invalid cohort</AlertTitle><AlertDescription>{cohortError}</AlertDescription></Alert>
         <Link href="/" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
           Back to cohorts
         </Link>
@@ -178,29 +178,25 @@ export default function ComparePage({
   }
 
   return (
-    <main className="mx-auto w-full max-w-6xl space-y-8 px-6 py-8">
-      <header className="flex flex-wrap items-start justify-between gap-4">
+    <main className="mx-auto w-full max-w-7xl space-y-7 px-4 py-6 sm:px-6 lg:px-8">
+      <header className="flex flex-col gap-5 border-b border-border/70 pb-7 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <Link href="/" className="text-sm text-primary underline-offset-4 hover:underline">
-            Back to cohorts
+          <Link href="/cohorts" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground underline-offset-4 hover:text-foreground hover:underline">
+            <ArrowLeft className="size-3.5" /> Back to cohorts
           </Link>
-            <h1 className="type-display mt-2 text-[var(--text-primary)]">
-            Evidence comparison
-          </h1>
-          <p className="mt-1 break-all text-sm text-muted-foreground">
-            {cohortKey} · {mode === "live" ? "live refresh requested" : "cached evidence"}
-          </p>
+          <div className="mt-3 flex flex-wrap items-center gap-3"><h1 className="text-3xl font-semibold tracking-[-0.045em] text-foreground sm:text-4xl">Evidence comparison</h1><Badge variant="outline" className="rounded-full font-mono text-[10px] uppercase tracking-[0.12em]">{mode === "live" ? "live" : "cached"}</Badge></div>
+          <p className="mt-2 max-w-[70ch] break-all text-sm text-muted-foreground">{cohortKey}</p>
         </div>
         <div className="flex flex-wrap gap-2">
           {confirmingRefresh ? (
             <>
-              <Button disabled={refreshing} onClick={() => void confirmRefresh()}>
+              <Button disabled={refreshing} onClick={() => void confirmRefresh()} className="gap-2">
                 {refreshing ? (
                   <>
                     <Spinner className="size-4" /> Refreshing
                   </>
                 ) : (
-                  "Confirm refresh"
+                  <><RefreshCw className="size-4" /> Confirm refresh</>
                 )}
               </Button>
               <Button
@@ -219,41 +215,30 @@ export default function ComparePage({
               }}
               disabled={brandIds.length === 0}
             >
-              Run live refresh
+              <RefreshCw className="size-4" /> Run live refresh
             </Button>
           )}
         </div>
       </header>
 
-      {refreshError ? (
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-card p-4 text-sm text-destructive">
-          {refreshError}
-        </p>
-      ) : null}
+      {refreshError ? <Alert variant="destructive"><AlertTriangle className="size-4" /><AlertTitle>Refresh failed</AlertTitle><AlertDescription>{refreshError}</AlertDescription></Alert> : null}
       {refreshDone ? (
-        <p className="rounded-lg border border-border bg-card p-4 text-sm text-foreground">
-          {refreshDone}
-        </p>
+        <Alert className="border-emerald-500/30 bg-emerald-500/[0.04]"><AlertTitle>Refresh complete</AlertTitle><AlertDescription>{refreshDone}</AlertDescription></Alert>
       ) : null}
 
       {run === undefined || brands === undefined ? (
-        <p className="flex items-center gap-2 rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+        <Card className="shadow-none"><CardContent className="flex items-center gap-2 p-6 text-sm text-muted-foreground">
           <Spinner className="size-4" /> Loading cohort.
-        </p>
+        </CardContent></Card>
       ) : run === null ? (
-        <p className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
+        <Card className="border-dashed shadow-none"><CardContent className="p-6 text-sm text-muted-foreground">
           No run for this cohort yet. Confirm a live refresh above, or go
           back and load a cohort that already ran.
-        </p>
+        </CardContent></Card>
       ) : run.status === "failed" ? (
-        <p role="alert" className="rounded-lg border border-destructive/40 bg-card p-4 text-sm text-destructive">
-          Latest run failed{run.errorMessage ? `: ${run.errorMessage}` : "."} Refresh again to retry.
-        </p>
+        <Alert variant="destructive"><AlertTriangle className="size-4" /><AlertTitle>Latest run failed</AlertTitle><AlertDescription>Latest run failed{run.errorMessage ? `: ${run.errorMessage}` : "."} Refresh again to retry.</AlertDescription></Alert>
       ) : run.status === "partial" ? (
-        <p className="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
-          Latest run is partial: some engines did not return. Results below
-          cover what was stored.
-        </p>
+        <Alert><AlertTriangle className="size-4 text-warn" /><AlertTitle>Partial coverage</AlertTitle><AlertDescription>Latest run is partial: some engines did not return. Results below cover what was stored.</AlertDescription></Alert>
       ) : null}
 
       <UsageMeter
@@ -302,11 +287,6 @@ export default function ComparePage({
         briefText={brief?.briefText}
         claims={briefClaims}
         loading={brief === undefined || claims === undefined}
-      />
-
-      <AskBar
-        brandIds={brandIds}
-        {...(run?._id ? { runId: run._id } : {})}
       />
 
       <AgentPanel brandIds={brandIdStrings} cohortKey={cohortKey} />

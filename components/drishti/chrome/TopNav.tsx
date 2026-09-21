@@ -1,6 +1,7 @@
 "use client";
 
-import { BarChart3, History, LayoutDashboard, Tag, Users } from "lucide-react";
+import { BarChart3, History, MessageSquare, Tag, Users } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useRef, useState, type ReactNode } from "react";
@@ -10,16 +11,16 @@ import { cn } from "@/lib/utils";
 type NavItem = {
   href: string;
   label: string;
-  icon: typeof LayoutDashboard;
+  icon: LucideIcon;
   exact?: boolean;
 };
 
-const NAV: NavItem[] = [
-  { href: "/", label: "Overview", icon: LayoutDashboard, exact: true },
+export const NAV: NavItem[] = [
+  { href: "/brands", label: "Brands", icon: Tag },
   { href: "/cohorts", label: "Cohorts", icon: Users },
   { href: "/runs", label: "Runs", icon: History },
-  { href: "/brands", label: "Brands", icon: Tag },
   { href: "/board", label: "Signal board", icon: BarChart3 },
+  { href: "/ask", label: "Ask Drishti", icon: MessageSquare },
 ];
 
 export function TopNav({ trailing }: { trailing?: ReactNode }) {
@@ -69,7 +70,7 @@ export function TopNav({ trailing }: { trailing?: ReactNode }) {
               href={item.href}
               aria-current={active ? "page" : undefined}
               className={cn(
-                "relative flex h-12 shrink-0 items-center gap-2 px-2 text-sm font-medium text-fg-secondary transition-colors duration-150 ease-out hover:text-fg active:translate-y-[0.5px] sm:px-3",
+                "relative flex h-11 shrink-0 items-center gap-2 px-2 text-[13px] font-medium text-fg-secondary transition-colors duration-150 ease-out hover:text-fg active:translate-y-[0.5px] sm:px-3",
                 active && "text-accent hover:text-accent-strong",
               )}
             >

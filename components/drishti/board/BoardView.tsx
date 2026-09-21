@@ -6,6 +6,8 @@ import { useQuery } from "convex/react";
 import { BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 import { buttonClasses } from "../Button";
 import { DistributionPanel } from "../DistributionPanel";
 import { EmptyState } from "../EmptyState";
@@ -135,10 +137,13 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   return (
     <div className="flex flex-col gap-5">
       <header className="flex flex-col gap-1 border-b border-border pb-5">
-        <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Cross-brand evidence</p>
-        <h1 className="type-display text-fg">
-          Signal board
-        </h1>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Cross-brand evidence</p>
+            <h1 className="type-display text-fg">Signal board</h1>
+          </div>
+          {current ? <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{current.status} · {formatStamp(current.requestedAt)}</Badge> : null}
+        </div>
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
           <span className="font-medium text-fg">{cohortTitle}</span>
           {current !== null ? (
@@ -169,6 +174,14 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
               : "Some engines did not return for this run."}{" "}
           A gap is never counted as a zero.
         </p>
+      ) : null}
+
+      {current && claims !== undefined ? (
+        <div className="grid gap-3 sm:grid-cols-3" aria-label="Board summary">
+          <Card className="border-border/80 bg-card shadow-none"><CardContent className="p-4"><p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">Brands in view</p><p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{brandIds.length}</p><p className="mt-1 text-xs text-fg-secondary">Rivals in the selected run</p></CardContent></Card>
+          <Card className="border-border/80 bg-card shadow-none"><CardContent className="p-4"><p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">Claims held</p><p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{claims.length}</p><p className="mt-1 text-xs text-fg-secondary">Stored evidence, not performance</p></CardContent></Card>
+          <Card className="border-border/80 bg-card shadow-none"><CardContent className="p-4"><p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">Engine checks</p><p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{coverage.reduce((total, brand) => total + brand.cells.filter((cell) => cell.status === "ok").length, 0)}</p><p className="mt-1 text-xs text-fg-secondary">Successful snapshots in this run</p></CardContent></Card>
+        </div>
       ) : null}
 
       {runsLoading ? (

@@ -1,10 +1,24 @@
 import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Chip } from "../Chip";
+import { Badge } from "@/components/ui/badge";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
-import { Panel } from "../Panel";
 import { SkeletonRows } from "../Skeleton";
-import { LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
+import { VALUE_CLASS, iconProps } from "../tokens";
 import { LEADERBOARD_RULE_LINE, type BrandLeader } from "./board-model";
 
 export function BrandLeaderboard({
@@ -19,25 +33,19 @@ export function BrandLeaderboard({
   className?: string;
 }) {
   return (
-    <Panel
-      as="section"
-      interactive={false}
-      className={cn("p-4", className)}
-      ariaLabel="Brand leaderboard"
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-[13px] font-medium text-[var(--text-primary,#eeeef2)]">
-          Brand leaderboard
-        </h2>
-        {loading ? null : (
-          <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
-            {rows.length} brands · {totalClaims} claims
-          </span>
-        )}
-      </div>
-      <p className="mt-1 max-w-[68ch] text-[12.5px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
-        {LEADERBOARD_RULE_LINE}
-      </p>
+    <Card className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Brand leaderboard</CardTitle>
+            <CardDescription className="mt-1">{LEADERBOARD_RULE_LINE}</CardDescription>
+          </div>
+          {loading ? null : (
+            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{rows.length} brands · {totalClaims} claims</Badge>
+          )}
+        </div>
+      </CardHeader>
+      <CardContent className="px-0 py-0">
 
       {loading ? (
         <div className="mt-3">
@@ -54,74 +62,14 @@ export function BrandLeaderboard({
           />
         </div>
       ) : (
-        <ul className="mt-3 flex flex-col">
-          <li className="hidden items-center gap-x-3 border-b border-[var(--border,#24242f)] pb-1.5 sm:flex">
-            <span className={cn(LABEL_CLASS, "w-6 text-[var(--text-tertiary,#64646f)]")}>
-              rank
-            </span>
-            <span className={cn(LABEL_CLASS, "min-w-0 flex-1 text-[var(--text-tertiary,#64646f)]")}>
-              brand
-            </span>
-            <span className={cn(LABEL_CLASS, "w-16 text-right text-[var(--text-tertiary,#64646f)]")}>
-              claims
-            </span>
-            <span className={cn(LABEL_CLASS, "w-20 text-right text-[var(--text-tertiary,#64646f)]")}>
-              engines
-            </span>
-            <span className={cn(LABEL_CLASS, "w-40 text-right text-[var(--text-tertiary,#64646f)]")}>
-              top hook
-            </span>
-          </li>
-          {rows.map((row) => (
-            <li
-              key={row.brandId}
-              className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2"
-            >
-              <span
-                className={cn(
-                  VALUE_CLASS,
-                  "w-6 text-[12.5px] text-[var(--text-tertiary,#64646f)]",
-                )}
-              >
-                {row.rank}
-              </span>
-              <span className="min-w-0 flex-1 break-words text-[13.5px] leading-[1.4] text-[var(--text-primary,#eeeef2)]">
-                {row.brandName}
-              </span>
-              <span
-                className={cn(
-                  VALUE_CLASS,
-                  "w-16 text-right text-[12.5px] text-[var(--text-primary,#eeeef2)]",
-                )}
-              >
-                {row.claimCount}
-              </span>
-              <span
-                className={cn(
-                  VALUE_CLASS,
-                  "w-20 text-right text-[12.5px] text-[var(--text-secondary,#9797a3)]",
-                )}
-              >
-                {row.engineCount}
-              </span>
-              <span className="w-full text-right sm:w-40">
-                {row.topHook === null ? (
-                  <span className="text-[12.5px] leading-[1.45] text-[var(--text-tertiary,#64646f)]">
-                    no hook tagged
-                  </span>
-                ) : (
-                  <Chip
-                    label={`${row.topHook} ${row.topHookCount}`}
-                    value={row.topHook}
-                    scale="hook"
-                    title={`Most common hook for ${row.brandName}`}
-                  />
-                )}
-              </span>
-            </li>
-          ))}
-        </ul>
+        <div className="mt-3">
+          <Table>
+            <TableHeader><TableRow className="hover:bg-transparent"><TableHead className="w-16 pl-5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Rank</TableHead><TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Brand</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Claims</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Engines</TableHead><TableHead className="hidden pr-5 text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground md:table-cell">Leading hook</TableHead></TableRow></TableHeader>
+            <TableBody>{rows.map((row) => <TableRow key={row.brandId}><TableCell className={cn(VALUE_CLASS, "pl-5 text-muted-foreground")}>{String(row.rank).padStart(2, "0")}</TableCell><TableCell className="max-w-[18rem] whitespace-normal font-medium text-foreground">{row.brandName}</TableCell><TableCell className={cn(VALUE_CLASS, "text-right text-foreground")}>{row.claimCount}</TableCell><TableCell className={cn(VALUE_CLASS, "text-right text-muted-foreground")}>{row.engineCount}</TableCell><TableCell className="hidden pr-5 text-right md:table-cell">{row.topHook ? <Badge variant="secondary" className="font-normal">{row.topHook} · {row.topHookCount}</Badge> : <span className="text-muted-foreground">Not tagged</span>}</TableCell></TableRow>)}</TableBody>
+          </Table>
+        </div>
       )}
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

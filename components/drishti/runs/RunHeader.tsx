@@ -6,7 +6,6 @@ import type { ReactNode } from "react";
 import {
   Chip,
   LABEL_CLASS,
-  Panel,
   Skeleton,
   SkeletonRegion,
   TONE_COLOR,
@@ -14,6 +13,7 @@ import {
   iconProps,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 import { RUN_STATUS_TONE, engineCellTone, formatRunDateTime } from "./labels";
 import { UsageMeter } from "./UsageMeter";
 import type { EngineGap, RunStatus } from "./types";
@@ -53,14 +53,16 @@ export function RunHeader({
 }: RunHeaderProps) {
   if (loading) {
     return (
-      <Panel interactive={false} className="p-5">
+      <Card className="border-border/80 bg-card shadow-none">
+        <CardContent className="p-6">
         <SkeletonRegion label="Loading the run">
           <div className="flex flex-col gap-3">
             <Skeleton variant="text" width="38%" height={26} />
             <Skeleton variant="text" width="60%" height={12} />
           </div>
         </SkeletonRegion>
-      </Panel>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -92,11 +94,12 @@ export function RunHeader({
     );
 
   return (
-    <Panel interactive={false} className="p-5">
+    <Card className="border-border/80 bg-card shadow-none">
+      <CardContent className="p-6">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="type-display text-balance text-[var(--text-primary,#eeeef2)]">
+              <h1 className="text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">
               {cohortName}
             </h1>
             <span
@@ -142,6 +145,7 @@ export function RunHeader({
           {action}
         </div>
       </div>
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

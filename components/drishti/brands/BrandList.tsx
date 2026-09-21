@@ -1,20 +1,21 @@
 "use client";
 
-
-import { Tag } from "lucide-react";
 import Link from "next/link";
+import { ArrowUpRight, CircleCheck, Clock3, Search, SlidersHorizontal } from "lucide-react";
+import { useMemo, useState } from "react";
+import { useQuery } from "convex/react";
+
+import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import { Chip } from "../Chip";
-import { EmptyState } from "../EmptyState";
-import { SkeletonRows } from "../Skeleton";
-import { LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
-import { FreshnessStamp } from "../cohorts/FreshnessStamp";
-import {
-  formatStamp,
-  profileStatusLabel,
-  profileStatusTone,
-  type BrandDoc,
-} from "../cohorts/cohorts-model";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Skeleton } from "@/components/ui/skeleton";
+import type { BrandDoc } from "./brand-model";
+import { formatStamp, profileStatusLabel } from "../cohorts/cohorts-model";
+import { engineLabel, FETCH_ENGINES } from "./brand-model";
+import { BrandMark } from "./BrandMark";
 
 export type BrandListProps = {
   brands: BrandDoc[];
@@ -23,67 +24,37 @@ export type BrandListProps = {
   className?: string;
 };
 
-export function BrandList({
-  brands,
-  isLoading = false,
-  emptyAction,
-  className,
-}: BrandListProps) {
-  if (isLoading) {
-    return <SkeletonRows count={5} variant="block" height={64} className={className} />;
-  }
-
-  if (brands.length === 0) {
-    return (
-      <div className={className}>
-        <EmptyState
-          bounded
-          icon={<Tag {...iconProps} size={16} />}
-          title="No brands tracked yet."
-          description="A brand is a rival you compare against. Track one below and it becomes available to every cohort."
-          action={emptyAction}
-        />
-      </div>
-    );
-  }
+function BrandRow({ brand }: { brand: BrandDoc }) {
+  const claims = useQuery(api.claims.byBrand, { brandId: brand._id });
+  const runs = useQuery(api.runs.listByStatus, { status: "complete" });
+  const latestRun = runs?.find((run) => run.brandIds.some((id) => String(id) === String(brand._id)));
+  const claimCount = claims?.filter((claim) => claim.sourceEngine !== "llm_tag").length;
 
   return (
-    <ul aria-label="Tracked brands" className={cn("divide-y divide-border border-y border-border", className)}>
-      {brands.map((brand) => (
-        <li key={String(brand._id)} className="group bg-bg-raised transition-colors hover:bg-bg-raised-2">
-          <Link
-            href={`/brands/${brand._id}`}
-            className="flex min-h-16 flex-wrap items-center justify-between gap-x-6 gap-y-2 px-3 py-3 focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-accent"
-          >
-            <span className="flex min-w-0 flex-col gap-1">
-              <span className="truncate text-[15px] font-medium text-fg">
-                {brand.name}
-              </span>
-              <span className="flex flex-wrap items-center gap-x-3 gap-y-1">
-                <span className={cn(VALUE_CLASS, "text-[11.5px] text-fg-secondary")}>
-                  {brand.domain}
-                </span>
-                <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
-                  {brand.vertical}
-                </span>
-                <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
-                  added {formatStamp(brand.createdAt)}
-                </span>
-              </span>
-            </span>
-            <span className="flex flex-wrap items-center gap-2">
-              <Chip
-                label={profileStatusLabel(brand.profileStatus)}
-                tone={profileStatusTone(brand.profileStatus)}
-              />
-              <FreshnessStamp
-                at={brand.lastRefreshedAt}
-                caption="last refreshed"
-              />
-            </span>
-          </Link>
-        </li>
-      ))}
-    </ul>
+    <Card className="group overflow-hidden border-border/80 bg-card py-0 shadow-none transition-colors hover:border-accent/40 hover:bg-accent/[0.025]">
+      <Link href={`/brands/${brand._id}`} className="block focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset">
+        <CardContent className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1.6fr)_minmax(180px,0.9fr)_auto] sm:items-center">
+          <div className="flex min-w-0 items-center gap-3">
+            <BrandMark name={brand.name} domain={brand.domain} className="size-11 rounded-xl" />
+            <div className="min-w-0">
+              <div className="flex items-center gap-2"><h3 className="truncate text-[15px] font-semibold tracking-[-0.015em] text-foreground">{brand.name}</h3><ArrowUpRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" /></div>
+              <p className="mt-1 truncate text-xs text-muted-foreground">{brand.domain} · {brand.vertical}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-xs sm:grid-cols-1"><span className="text-muted-foreground">Evidence <strong className="font-mono font-medium text-foreground">{claimCount ?? "—"}</strong></span><span className="text-muted-foreground">Latest <strong className="font-mono font-medium text-foreground">{latestRun ? formatStamp(latestRun.requestedAt).split(" · ")[0] : "Not run"}</strong></span></div>
+          <div className="flex flex-wrap items-center gap-2 sm:justify-end"><Badge variant={brand.profileStatus === "ready" ? "secondary" : "outline"} className={cn("gap-1.5 rounded-full px-2.5 font-medium", brand.profileStatus === "ready" && "bg-emerald-50 text-emerald-700 hover:bg-emerald-50")}>{brand.profileStatus === "ready" ? <CircleCheck className="size-3" /> : <Clock3 className="size-3" />}{profileStatusLabel(brand.profileStatus)}</Badge><span className="hidden font-mono text-[10px] text-muted-foreground lg:inline">{brand.lastRefreshedAt ? formatStamp(brand.lastRefreshedAt).split(" · ")[0] : "never refreshed"}</span></div>
+        </CardContent>
+      </Link>
+      <div className="flex items-center gap-1 border-t border-border/70 px-5 py-2.5 text-[10px] text-muted-foreground"><span className="mr-2 uppercase tracking-[0.14em]">Coverage</span>{FETCH_ENGINES.map((engine) => <span key={engine} title={engineLabel(engine)} className={cn("size-1.5 rounded-full", latestRun ? "bg-emerald-500" : "bg-muted-foreground/30")} />)}<span className="ml-auto font-mono">{brand.createdAt ? `Added ${formatStamp(brand.createdAt).split(" · ")[0]}` : ""}</span></div>
+    </Card>
   );
+}
+
+export function BrandList({ brands, isLoading = false, emptyAction, className }: BrandListProps) {
+  const [query, setQuery] = useState("");
+  const [filter, setFilter] = useState<"all" | "ready" | "pending">("all");
+  const filtered = useMemo(() => brands.filter((brand) => { const matchesQuery = `${brand.name} ${brand.domain} ${brand.vertical}`.toLowerCase().includes(query.toLowerCase()); const matchesFilter = filter === "all" || (filter === "ready" ? brand.profileStatus === "ready" : brand.profileStatus !== "ready"); return matchesQuery && matchesFilter; }), [brands, filter, query]);
+  if (isLoading) return <div className={cn("grid gap-3", className)}>{[1, 2, 3].map((item) => <Skeleton key={item} className="h-28 rounded-xl" />)}</div>;
+  if (brands.length === 0) return <Card className="border-dashed shadow-none"><CardContent className="flex flex-col items-start gap-3 p-8"><h3 className="font-semibold">No brands tracked yet</h3><p className="max-w-md text-sm text-muted-foreground">Add your first rival to start collecting search, video and trend evidence.</p>{emptyAction}</CardContent></Card>;
+  return <div className={cn("flex flex-col gap-4", className)}><div className="flex flex-col gap-3 sm:flex-row sm:items-center"><div className="relative min-w-0 flex-1"><Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" /><Input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search tracked brands" className="h-10 pl-9" aria-label="Search tracked brands" /></div><div className="flex items-center gap-1 rounded-lg border border-border bg-card p-1"><SlidersHorizontal className="mx-2 size-3.5 text-muted-foreground" />{(["all", "ready", "pending"] as const).map((value) => <Button key={value} type="button" size="sm" variant={filter === value ? "secondary" : "ghost"} className="h-7 rounded-md px-2.5 text-xs capitalize" onClick={() => setFilter(value)}>{value}</Button>)}</div></div><div className="flex items-center justify-between text-xs text-muted-foreground"><span>{filtered.length} of {brands.length} tracked {brands.length === 1 ? "brand" : "brands"}</span><span className="font-mono">Sorted by recently added</span></div>{filtered.length === 0 ? <Card className="border-dashed shadow-none"><CardContent className="p-8 text-sm text-muted-foreground">No tracked brand matches “{query}”.</CardContent></Card> : <div className="grid gap-3">{filtered.map((brand) => <BrandRow key={String(brand._id)} brand={brand} />)}</div>}</div>;
 }

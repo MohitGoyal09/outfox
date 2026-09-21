@@ -8,6 +8,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { LABEL_CLASS } from "@/components/drishti";
 import { useState } from "react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type BriefClaimRef = EvidenceClaim & {
   id: string;
@@ -33,54 +34,31 @@ export function BriefView({
 
   if (loading) {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         <Spinner className="size-4" /> Loading brief.
       </div>
     );
   }
   if (error) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--danger)] py-5 text-sm text-[var(--danger)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-destructive/30 bg-card p-5 text-sm text-destructive", className)}>
         Brief failed to load: {error}
       </div>
     );
   }
   if (!briefText) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No brief for this cohort yet. Load a cached run or refresh to generate
         one.
       </div>
     );
   }
   return (
-    <section
-      aria-label="Brief"
-      className={cn(
-        "border-t border-[var(--border)] py-5",
-        className,
-      )}
-    >
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="type-title text-[var(--text-primary)]">Brief</h2>
+    <Card aria-label="Brief" className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Brief</CardTitle>
         <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>cited response</span>
-      </div>
-      <div className="mt-2 text-sm">
+      </CardHeader><CardContent className="p-5"><div className="text-sm">
         <MessageResponse>{briefText}</MessageResponse>
       </div>
       {claims.length > 0 ? (
@@ -117,6 +95,7 @@ export function BriefView({
         </Sources>
       ) : null}
       <EvidencePanel claim={selected} className="mt-4" />
-    </section>
+      </CardContent>
+    </Card>
   );
 }

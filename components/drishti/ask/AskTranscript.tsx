@@ -32,15 +32,15 @@ function Notice({
     <div
       role={tone === "danger" ? "alert" : "status"}
       className={cn(
-        "rounded-[10px] border bg-[var(--bg-inset,#0e0e13)] p-4",
+        "rounded-lg border bg-bg-inset p-4",
         border,
       )}
     >
-      <p className="text-[13.5px] font-medium leading-[1.4] text-[var(--text-primary,#eeeef2)]">
+      <p className="text-[13.5px] font-medium leading-[1.4] text-fg">
         {title}
       </p>
       {children ? (
-        <div className="mt-1.5 text-[12.5px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+        <div className="mt-1.5 text-[12.5px] leading-[1.5] text-fg-secondary">
           {children}
         </div>
       ) : null}
@@ -137,7 +137,7 @@ function AnswerBlock({
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="max-w-[68ch] text-[14px] leading-[1.55] text-[var(--text-primary,#eeeef2)]">
+      <p className="max-w-[68ch] text-[14px] leading-[1.55] text-fg">
         {result.answer}
       </p>
       {citations.length > 0 ? (
@@ -182,9 +182,9 @@ export function AskTranscript({
 }) {
   const latency = formatLatency(exchange.latencyMs);
   return (
-    <article className="flex flex-col gap-4 border-t border-[var(--border,#24242f)] pt-6">
+    <article className="flex flex-col gap-4 border-t border-border pt-6">
       <header className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="type-headline max-w-[68ch] text-balance text-[var(--text-primary,#eeeef2)]">
+        <h2 className="type-headline max-w-[68ch] text-balance text-fg">
           {exchange.question}
         </h2>
         <span className={cn(VALUE_CLASS, "text-[10.5px] text-[var(--text-tertiary,#64646f)]")}>

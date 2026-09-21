@@ -3,6 +3,7 @@
 import { cn } from "@/lib/utils";
 import { CheckIcon, Loader2Icon, XIcon } from "lucide-react";
 import { Chip } from "@/components/drishti";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type WorkflowStepState =
   | "pending"
@@ -42,26 +43,15 @@ export function WorkflowProgress({
 }) {
   if (steps.length === 0) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No workflow steps yet. Ask the agent something to start a plan.
       </div>
     );
   }
   return (
-    <section
-      aria-label={title}
-      className={cn(
-        "border-t border-[var(--border)] py-5",
-        className,
-      )}
-    >
-      <h3 className="type-title text-[var(--text-primary)]">{title}</h3>
-      <ul className="mt-3 space-y-2">
+    <Card aria-label={title} className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">{title}</CardTitle></CardHeader>
+      <CardContent className="p-5"><ul className="space-y-2">
         {steps.map((step) => (
           <li
             key={step.id}
@@ -98,7 +88,7 @@ export function WorkflowProgress({
             </span>
           </li>
         ))}
-      </ul>
-    </section>
+      </ul></CardContent>
+    </Card>
   );
 }

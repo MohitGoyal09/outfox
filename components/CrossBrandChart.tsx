@@ -3,6 +3,7 @@
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { VALUE_CLASS } from "@/components/drishti";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export function CrossBrandChart({
   brands,
@@ -17,24 +18,14 @@ export function CrossBrandChart({
 }) {
   if (loading || claims === undefined) {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         <Spinner className="size-4" /> Loading chart.
       </div>
     );
   }
   if (brands.length === 0) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No brands to chart yet.
       </div>
     );
@@ -46,27 +37,15 @@ export function CrossBrandChart({
   const max = Math.max(1, ...counts.map((c) => c.count));
   if (counts.every((c) => c.count === 0)) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No stored claims to chart. Refresh the cohort to collect evidence.
       </div>
     );
   }
   return (
-    <section
-      aria-label="Cross brand claim counts"
-      className={cn(
-        "border-t border-[var(--border)] py-5",
-        className,
-      )}
-    >
-      <h3 className="type-title text-[var(--text-primary)]">
-        Claims per brand
-      </h3>
+    <Card aria-label="Cross brand claim counts" className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Claims per brand</CardTitle></CardHeader>
+      <CardContent className="p-5">
       <ul className="mt-3 space-y-3">
         {counts.map((row) => (
           <li key={row.id}>
@@ -87,6 +66,7 @@ export function CrossBrandChart({
           </li>
         ))}
       </ul>
-    </section>
+      </CardContent>
+    </Card>
   );
 }

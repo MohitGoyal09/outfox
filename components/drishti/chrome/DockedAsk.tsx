@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { usePathname, useRouter } from "next/navigation";
-import { ArrowUp, ArrowUpRight, CircleAlert, Loader2, X } from "lucide-react";
+import { ArrowUp, ArrowUpRight, CircleAlert, Loader2, Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   askScopeFromPath,
@@ -107,13 +107,13 @@ export function DockedAsk() {
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
-      <div className="pointer-events-auto mx-auto w-full max-w-[1440px] px-4 pb-[calc(0.75rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-4">
+      <div className="pointer-events-auto mx-auto w-full max-w-3xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-5">
         <div className="flex flex-col gap-2">
           {blockText !== null ? (
             <div
               aria-live="polite"
               className={cn(
-                "ml-auto flex w-full max-w-2xl items-start gap-2 rounded-[10px] border bg-bg-raised-2 p-3 shadow-[var(--shadow-toast)]",
+                "mx-auto flex w-full items-start gap-2 rounded-xl border bg-bg-raised-2 p-3 shadow-[var(--shadow-toast)]",
                 blockTone === "danger"
                   ? "border-[var(--danger)]"
                   : blockTone === "warn"
@@ -201,8 +201,16 @@ export function DockedAsk() {
               refreshScope();
             }}
             onBlur={() => setFocused(false)}
-            className="flex items-center gap-2 rounded-md border border-border-strong bg-bg-raised p-2 focus-within:border-accent"
+            className="flex items-center gap-1.5 rounded-full border border-border-strong bg-white p-1.5 shadow-[0_12px_32px_rgba(16,24,40,0.14)] transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_16px_38px_rgba(16,24,40,0.18)]"
           >
+            <button
+              type="button"
+              aria-label="Choose brands for context"
+              onClick={() => router.push("/brands")}
+              className="inline-flex size-9 shrink-0 items-center justify-center rounded-full text-fg-secondary transition-colors duration-150 ease-out hover:bg-bg-inset hover:text-fg"
+            >
+              <Plus aria-hidden className="size-4" />
+            </button>
             <label htmlFor="docked-ask" className="sr-only">
               Ask about these rivals
             </label>
@@ -216,7 +224,7 @@ export function DockedAsk() {
               disabled={asking}
               aria-invalid={error !== null ? true : undefined}
               placeholder="Ask about your rivals, or type @ to reference a brand."
-              className="h-9 min-w-0 flex-1 rounded-[5px] bg-transparent px-2 text-[15px] text-fg outline-none placeholder:text-fg-placeholder disabled:cursor-not-allowed disabled:text-fg-tertiary aria-invalid:text-[var(--danger)]"
+              className="h-10 min-w-0 flex-1 bg-transparent px-1 text-[14px] text-fg outline-none placeholder:text-fg-placeholder disabled:cursor-not-allowed disabled:text-fg-tertiary aria-invalid:text-[var(--danger)]"
             />
             <button
               type="submit"
@@ -224,7 +232,7 @@ export function DockedAsk() {
               aria-label="Send"
               aria-busy={asking || undefined}
               className={cn(
-                "inline-flex size-8 shrink-0 items-center justify-center rounded-[5px] bg-accent text-accent-ink",
+                "inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink",
                 canSend &&
                   "transition-colors duration-150 ease-out hover:bg-accent-strong active:translate-y-[0.5px]",
                 "disabled:cursor-not-allowed disabled:bg-bg-raised disabled:text-fg-tertiary",

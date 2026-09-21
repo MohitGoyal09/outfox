@@ -18,16 +18,15 @@ import {
   type CohortSummary,
 } from "@/components/drishti/cohorts/cohorts-model";
 import { useCreateBrand } from "@/components/drishti/brands/useCreateBrand";
-import { VALUE_CLASS } from "@/components/drishti/tokens";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
 
 export default function CohortsPage() {
   return (
-    <div className="flex flex-col gap-7">
-      <header className="flex flex-col gap-1 border-b border-border pb-5">
-        <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Comparative research</p>
-        <h1 className="type-display text-fg">Cohorts</h1>
-        <p className="max-w-[68ch] type-body text-fg-secondary">
+    <div className="flex flex-col gap-8">
+      <header className="flex flex-col gap-2 border-b border-border pb-6">
+        <p className="text-xs font-medium uppercase tracking-[0.16em] text-muted-foreground">Comparative research</p>
+        <h1 className="font-heading text-3xl font-medium tracking-[-0.035em] text-foreground sm:text-4xl">Cohorts</h1>
+        <p className="max-w-[68ch] text-sm leading-6 text-muted-foreground">
           A cohort is the set of rivals one run compares. Every run belongs to
           one cohort, and every claim belongs to one run.
         </p>
@@ -93,7 +92,7 @@ function CohortsBody() {
             Your cohorts
           </h2>
           {summary !== null ? (
-            <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-tertiary,#64646f)]")}>
+            <span className="font-mono text-xs tabular-nums text-muted-foreground">
               {summary}
             </span>
           ) : null}
@@ -105,20 +104,20 @@ function CohortsBody() {
           isLoading={isLoading}
           onEdit={onEdit}
           emptyAction={
-            <Link
+            <Button asChild variant="outline" size="sm">
+              <Link
               href="#cohort-composer"
-              className="inline-flex h-8 items-center gap-1.5 rounded-[5px] border border-[var(--border-strong,#35353f)] px-3 text-[13px] text-[var(--text-primary,#eeeef2)] hover:bg-[var(--bg-raised,#131319)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)]"
             >
-              <Users aria-hidden="true" strokeWidth={1.5} className="size-4" />
+              <Users aria-hidden="true" className="size-4" />
               Build a cohort
-            </Link>
+              </Link>
+            </Button>
           }
         />
       </section>
 
       <aside
-        id="cohort-composer"
-        className="min-w-0 min-[900px]:sticky min-[900px]:top-36"
+        className="min-w-0 min-[900px]:sticky min-[900px]:top-24"
       >
         <CohortComposer
           brands={brandList}

@@ -3,6 +3,7 @@
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { LABEL_CLASS, VALUE_CLASS } from "@/components/drishti";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type MatrixClaim = {
   brandId: string;
@@ -67,36 +68,21 @@ export function ComparisonMatrix({
 }) {
   if (loading || claims === undefined) {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         <Spinner className="size-4" /> Loading comparison.
       </div>
     );
   }
   if (error) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--danger)] py-5 text-sm text-[var(--danger)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-destructive/30 bg-card p-5 text-sm text-destructive", className)}>
         Comparison failed to load: {error}
       </div>
     );
   }
   if (brands.length === 0) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No brands in this cohort yet. Add brands on the home page to compare
         them.
       </div>
@@ -104,12 +90,7 @@ export function ComparisonMatrix({
   }
   if (claims.length === 0) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No stored claims for these brands yet. Run a live refresh to collect
         evidence, or load the cached run.
       </div>
@@ -170,18 +151,12 @@ export function ComparisonMatrix({
   );
 
   return (
-    <section
-      aria-label="Comparison matrix"
-      className={cn(
-        "space-y-6 border-t border-[var(--border)] py-5",
-        className,
-      )}
-    >
-      <h2 className="type-title text-[var(--text-primary)]">
-        Comparison matrix
-      </h2>
+    <Card aria-label="Comparison matrix" className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Comparison matrix</CardTitle></CardHeader>
+      <CardContent className="space-y-6 p-5">
       {table("Hook type distribution", HOOK_TYPES, hookDist)}
       {table("Funnel stage distribution", FUNNEL_STAGES, funnelDist)}
-    </section>
+      </CardContent>
+    </Card>
   );
 }

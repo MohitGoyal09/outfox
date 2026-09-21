@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Spinner } from "@/components/ui/spinner";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import { useMutation } from "convex/react";
@@ -60,20 +61,10 @@ export function BrandForm({ className }: { className?: string }) {
   }
 
   return (
-    <section
-      aria-label="Add a brand"
-      className={cn(
-        "border-t border-[var(--border)] py-5",
-        className,
-      )}
-    >
-      <h2 className="type-title text-[var(--text-primary)]">
-        Add a brand
-      </h2>
-      <p className="mt-1 text-sm text-[var(--text-secondary)]">
+    <Card aria-label="Add a brand" className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Add a brand</CardTitle><CardDescription>
         Manual create stores the profile as pending until it is hydrated.
-      </p>
-      <form onSubmit={onSubmit} className="mt-4 grid gap-3">
+      </CardDescription></CardHeader><CardContent><form onSubmit={onSubmit} className="grid gap-3 pt-5">
         <label className="grid gap-1 text-sm">
           <span className="font-medium text-foreground">Name</span>
           <Input
@@ -142,7 +133,7 @@ export function BrandForm({ className }: { className?: string }) {
             "Create brand"
           )}
         </Button>
-      </form>
-    </section>
+      </form></CardContent>
+    </Card>
   );
 }

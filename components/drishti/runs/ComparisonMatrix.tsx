@@ -19,6 +19,7 @@ import {
   iconProps,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FUNNEL_WORD, HOOK_WORD, formatCount } from "./labels";
 import type { BrandMixSummary } from "./derive";
 import type { BrandRef } from "./types";
@@ -136,7 +137,8 @@ export function ComparisonMatrix({
 }: ComparisonMatrixProps) {
   if (loading) {
     return (
-      <Panel interactive={false} className={cn("p-4", className)} ariaLabel="Side by side">
+      <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="Side by side">
+        <CardContent className="p-5">
         <SkeletonRegion label="Loading the comparison">
           <Skeleton variant="text" width={132} height={13} />
           <div className="mt-4 flex flex-col gap-3">
@@ -151,7 +153,8 @@ export function ComparisonMatrix({
             ))}
           </div>
         </SkeletonRegion>
-      </Panel>
+        </CardContent>
+      </Card>
     );
   }
 
@@ -181,10 +184,11 @@ export function ComparisonMatrix({
   const totalClaims = summaries.reduce((sum, summary) => sum + summary.claimCount, 0);
 
   return (
-    <Panel interactive={false} className={cn("p-4", className)} ariaLabel="Side by side">
-      <h3 className="text-[13px] font-medium text-[var(--text-primary,#eeeef2)]">
-        Coverage and counts
-      </h3>
+    <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="Side by side">
+      <CardHeader className="border-b border-border/70 px-5 py-4">
+        <CardTitle className="text-sm font-semibold tracking-[-0.01em]">Coverage and counts</CardTitle>
+      </CardHeader>
+      <CardContent className="p-5">
 
       {brands.length === 0 ? (
         <div className="mt-3">
@@ -338,6 +342,7 @@ export function ComparisonMatrix({
           </ul>
         </>
       )}
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

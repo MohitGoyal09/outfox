@@ -3,6 +3,7 @@
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { ExternalLinkIcon } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 
 export type EvidenceClaim = {
   value?: string | number;
@@ -24,12 +25,7 @@ export function EvidencePanel({
 }) {
   if (loading) {
     return (
-      <div
-        className={cn(
-          "flex items-center gap-2 border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("flex items-center gap-2 rounded-lg border border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         <Spinner className="size-4" />
         Loading evidence.
       </div>
@@ -37,12 +33,7 @@ export function EvidencePanel({
   }
   if (!claim) {
     return (
-      <div
-        className={cn(
-          "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         No evidence selected. Pick a citation chip in the brief to see its
         source.
       </div>
@@ -51,13 +42,9 @@ export function EvidencePanel({
   const href = claim.evidenceUrl;
   const hrefAllowed = /^https?:\/\//i.test(href);
   return (
-    <article
-      className={cn(
-        "border border-[var(--border)] bg-[var(--bg-inset)] p-4",
-        className,
-      )}
-    >
-      <h3 className="type-headline text-[var(--text-primary)]">Evidence</h3>
+    <Card className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Evidence</CardTitle></CardHeader>
+      <CardContent className="p-5">
       <p className="mt-2 text-sm text-[var(--text-primary)]">{claim.text}</p>
       <dl className="mt-3 grid gap-2 text-sm">
         <div className="flex gap-2">
@@ -90,6 +77,7 @@ export function EvidencePanel({
       ) : (
         <p className="mt-3 break-all text-sm text-muted-foreground">{href}</p>
       )}
-    </article>
+      </CardContent>
+    </Card>
   );
 }

@@ -1,190 +1,137 @@
 "use client";
 
-
-import { useMemo, useState } from "react";
-import { Tag } from "lucide-react";
+import Link from "next/link";
+import { ArrowLeft, ArrowUpRight, BarChart3, Bookmark, CalendarDays, CheckCircle2, ChevronDown, Clock3, ExternalLink, Filter, Globe2, History, Languages, Search, SlidersHorizontal, Tag, Timer, Video } from "lucide-react";
+import { useMemo, useState, type ReactNode } from "react";
 import { useQuery } from "convex/react";
+import { Area, AreaChart, CartesianGrid, XAxis, YAxis } from "recharts";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
-
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
-import { Skeleton, SkeletonRows } from "../Skeleton";
-import { SegmentedNav, type SegmentedNavItem } from "../SegmentedNav";
-import { iconProps } from "../tokens";
 import { useAllRuns } from "../cohorts/useAllRuns";
-import { BrandHeader } from "./BrandHeader";
-import { BrandOverview } from "./BrandOverview";
-import { EngineCoverage } from "./EngineCoverage";
-import { HistoryPanel } from "./HistoryPanel";
-import { MixPanel } from "./MixPanel";
-import { SignalsPanel } from "./SignalsPanel";
-import { TrendsPanel } from "./TrendsPanel";
-import {
-  claimsForRun,
-  engineCoverage,
-  latestRunForBrand,
-  previousRunFor,
-  runHistoryRows,
-} from "./brand-model";
+import { formatStamp } from "../cohorts/cohorts-model";
+import { engineCoverage, engineLabel, FETCH_ENGINES, signalClaims, tagBearingClaims, trendPoints, type ClaimDoc, type EngineCoverageRow } from "./brand-model";
+import { BrandMark } from "./BrandMark";
+import { PlatformLogo } from "./PlatformLogo";
 
-const TABS: SegmentedNavItem[] = [
-  { id: "overview", label: "Overview" },
-  { id: "signals", label: "Signals" },
-  { id: "hooks", label: "Hooks" },
-  { id: "funnel", label: "Funnel" },
-  { id: "trends", label: "Trends" },
-  { id: "history", label: "History" },
-];
+export type BrandProfileProps = { brandId: Id<"brands">; className?: string };
 
-export type BrandProfileProps = {
-  brandId: Id<"brands">;
-  className?: string;
-};
+const tabs = [["overview", "Overview"], ["search", "Search"], ["ads", "Ads presence"], ["youtube", "YouTube"], ["trends", "Trends"], ["evidence", "Evidence"], ["history", "History"]] as const;
+const sourceAccent: Record<string, string> = { google: "#0f766e", google_ads_transparency_center: "#d97706", youtube: "#dc2626", youtube_video: "#dc2626", google_trends: "#2563eb" };
+const trendsChartConfig = { interest: { label: "Relative interest", color: "#0f766e" } } satisfies ChartConfig;
+
+function PlatformMark({ engine, className }: { engine: string; className?: string }) {
+  return <PlatformLogo engine={engine} className={className} />;
+}
+
+function shortDate(value: string | undefined | null) { return value ? formatStamp(value).split(" · ")[0] : "Not yet"; }
+function statusBadge(status: string) { const good = status === "ok" || status === "complete" || status === "ready"; return <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good && "border-emerald-200 bg-emerald-50 text-emerald-700")}>{good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}{status}</Badge>; }
+function FilterButton({ icon: Icon, label }: { icon: typeof CalendarDays; label: string }) { return <Button variant="outline" size="sm" className="h-9 justify-between gap-3 rounded-lg border-border bg-background px-3 text-xs font-normal text-muted-foreground hover:bg-muted"><span className="flex items-center gap-2"><Icon className="size-3.5" />{label}</span><ChevronDown className="size-3" /></Button>; }
+
+function ClaimsTable({ claims, empty = "No stored evidence for this context yet." }: { claims: ClaimDoc[]; empty?: string }) {
+  if (claims.length === 0) return <div className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">{empty}</div>;
+  return <div className="overflow-hidden rounded-xl border border-border"><Table><TableHeader><TableRow><TableHead>Signal</TableHead><TableHead>Finding</TableHead><TableHead>Captured</TableHead><TableHead className="text-right">Source</TableHead></TableRow></TableHeader><TableBody>{claims.slice(0, 40).map((claim) => <TableRow key={String(claim._id)}><TableCell className="max-w-[190px] truncate font-medium">{claim.metric ?? "Signal"}</TableCell><TableCell className="max-w-[420px] whitespace-normal text-muted-foreground">{claim.text}</TableCell><TableCell className="whitespace-nowrap font-mono text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</TableCell><TableCell className="text-right"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-xs text-accent hover:underline"><ExternalLink className="size-3" />{engineLabel(claim.sourceEngine)}</a></TableCell></TableRow>)}</TableBody></Table></div>;
+}
+
+function Coverage({ rows }: { rows: EngineCoverageRow[] }) { return <div className="flex flex-wrap items-center gap-2 text-xs"><span className="mr-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Coverage</span>{rows.map((row) => <span key={row.engine} title={row.reason ?? row.status} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground"><PlatformMark engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : row.status === "failed" ? "bg-red-500" : "bg-muted-foreground/30")} />{row.label}</span>)}</div>; }
+function SummaryPanel({ title, children, className }: { title: string; children: ReactNode; className?: string }) { return <Card className={cn("min-h-[206px] rounded-xl border-border bg-card py-0 shadow-none", className)}><CardHeader className="border-b border-border/70 px-4 py-3"><CardTitle className="text-[13px] font-semibold tracking-[-0.01em]">{title}</CardTitle></CardHeader><CardContent className="px-4 py-4">{children}</CardContent></Card>; }
+
+function EvidenceCard({ claim }: { claim: ClaimDoc }) {
+  const source = engineLabel(claim.sourceEngine).replace(" Search", "");
+  const accent = sourceAccent[claim.sourceEngine] ?? "#0f766e";
+  const icon = <PlatformMark engine={claim.sourceEngine} className="size-4" />;
+  return <article className="group flex min-h-[230px] flex-col rounded-xl border border-border bg-card p-4 transition-colors hover:border-accent/50 hover:bg-accent/[0.02]"><div className="flex items-start justify-between gap-3"><div className="flex min-w-0 items-center gap-2"><span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-[11px] font-semibold" style={{ color: accent }}>{icon}</span><div className="min-w-0"><p className="truncate text-xs font-semibold">{source}</p><p className="mt-0.5 text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</p></div></div><div className="flex items-center gap-1 text-muted-foreground"><button type="button" aria-label="Save evidence" className="rounded-md p-1 hover:bg-muted"><Bookmark className="size-3.5" /></button><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" aria-label="Open evidence" className="rounded-md p-1 hover:bg-muted"><ExternalLink className="size-3.5" /></a></div></div><div className="mt-4 flex-1"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent">{claim.text}</a>{claim.metric ? <p className="mt-2 font-mono text-[11px] text-muted-foreground">{claim.metric}{claim.value !== undefined ? ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}</p> : null}</div><div className="mt-4 flex items-center gap-2 border-t border-border/70 pt-3"><Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{claim.hookType?.replaceAll("_", " ") ?? "Signal"}</Badge><Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{claim.confidence ?? "Stored"}</Badge><Button asChild variant="outline" size="sm" className="ml-auto h-7 rounded-md px-2 text-[11px]"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button></div></article>;
+}
+
+function EvidenceMix({ claims }: { claims: ClaimDoc[] }) { const rows = useMemo(() => FETCH_ENGINES.map((engine) => ({ engine, label: engineLabel(engine).replace("Google ", ""), count: claims.filter((claim) => claim.sourceEngine === engine).length })).filter((row) => row.count > 0), [claims]); const total = rows.reduce((sum, row) => sum + row.count, 0); return <div className="space-y-3">{rows.length ? rows.map((row) => <div key={row.engine} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformMark engine={row.engine} className="size-3.5" />{row.label}</span><span className="font-mono text-muted-foreground">{row.count}</span><span className="font-mono text-[11px] text-emerald-600">{total ? `${Math.round(row.count / total * 100)}%` : "—"}</span></div>) : <p className="text-sm text-muted-foreground">No evidence mix for this run yet.</p>}<div className="flex h-2 overflow-hidden rounded-full bg-muted">{rows.map((row) => <span key={row.engine} style={{ width: `${total ? row.count / total * 100 : 0}%`, backgroundColor: sourceAccent[row.engine] ?? "#0f766e" }} />)}</div></div>; }
+function HookChart({ claims }: { claims: ClaimDoc[] }) {
+  const colors = ["#0f766e", "#34a853", "#4285f4", "#fbbc05", "#ea4335", "#64748b"];
+  const rows = Object.entries(claims.reduce<Record<string, number>>((map, claim) => { const hook = claim.hookType ?? "not_applicable"; map[hook] = (map[hook] ?? 0) + 1; return map; }, {})).sort(([, a], [, b]) => b - a).slice(0, 6);
+  const total = rows.reduce((sum, [, count]) => sum + count, 0);
+  const segments = rows.map(([, count], index) => { const start = rows.slice(0, index).reduce((sum, [, value]) => sum + value, 0); const end = start + count; return `${colors[index]} ${total ? start / total * 100 : 0}% ${total ? end / total * 100 : 0}%`; });
+  return rows.length ? <div className="grid grid-cols-[92px_1fr] items-center gap-4"><div className="relative size-[92px] rounded-full" style={{ background: `conic-gradient(${segments.join(",")})` }}><div className="absolute inset-[19px] grid place-items-center rounded-full bg-card text-center"><span className="text-lg font-semibold leading-none">{total}</span><span className="text-[9px] text-muted-foreground">evidence</span></div></div><div className="space-y-2">{rows.map(([hook, count], index) => <div key={hook} className="grid grid-cols-[1fr_auto] items-center gap-2 text-[11px]"><span className="flex min-w-0 items-center gap-2 capitalize"><span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: colors[index] }} /><span className="truncate">{hook.replaceAll("_", " ")}</span></span><span className="font-mono text-muted-foreground">{count}</span></div>)}</div></div> : <p className="text-sm text-muted-foreground">No hook tags in this run.</p>;
+}
+function FunnelPanel({ claims }: { claims: ClaimDoc[] }) {
+  const stages = [["unaware", "Awareness"], ["problem_aware", "Problem aware"], ["solution_aware", "Solution aware"], ["product_aware", "Product aware"], ["most_aware", "Most aware"]] as const;
+  const colors = ["#0f766e", "#2aa198", "#67c9bc", "#f2c94c", "#f59e0b"];
+  const rows = stages.map(([stage, label]) => ({ label, count: claims.filter((claim) => claim.funnelStage === stage).length }));
+  const total = rows.reduce((sum, row) => sum + row.count, 0);
+  return total ? <div className="space-y-1.5">{rows.map((row, index) => <div key={row.label} className="grid grid-cols-[92px_1fr_auto] items-center gap-2 text-[11px]"><span className="flex h-6 items-center justify-center text-[10px] font-medium text-white" style={{ backgroundColor: colors[index], clipPath: `polygon(${index * 6}% 0, ${100 - index * 6}% 0, ${94 - index * 6}% 100%, ${6 + index * 6}% 100%)` }}>{row.count}</span><span className="truncate">{index + 1}. {row.label}</span><span className="font-mono text-muted-foreground">{Math.round(row.count / total * 100)}%</span></div>)}</div> : <p className="text-sm text-muted-foreground">Funnel tags will appear after an enriched run.</p>;
+}
+
+type TrendSeriesPoint = { date: string; interest: number };
+
+function trendSeries(rawResponse: unknown, brandName: string): TrendSeriesPoint[] {
+  if (typeof rawResponse !== "object" || rawResponse === null) return [];
+  const raw = rawResponse as Record<string, unknown>;
+  const timeline = Array.isArray(raw.timeline_data)
+    ? raw.timeline_data
+    : typeof raw.interest_over_time === "object" && raw.interest_over_time !== null && Array.isArray((raw.interest_over_time as Record<string, unknown>).timeline_data)
+      ? (raw.interest_over_time as Record<string, unknown>).timeline_data as unknown[]
+      : [];
+  const target = brandName.trim().toLowerCase();
+  return timeline.flatMap((entry): TrendSeriesPoint[] => {
+    if (typeof entry !== "object" || entry === null) return [];
+    const row = entry as Record<string, unknown>;
+    if (typeof row.date !== "string" || !Array.isArray(row.values)) return [];
+    const values = row.values.filter((value): value is Record<string, unknown> => typeof value === "object" && value !== null);
+    const exact = values.find((value) => typeof value.query === "string" && value.query.trim().toLowerCase() === target);
+    const match = exact ?? values.find((value) => typeof value.query === "string" && value.query.trim().toLowerCase().includes(target));
+    return match && typeof match.extracted_value === "number" ? [{ date: row.date, interest: match.extracted_value }] : [];
+  });
+}
+
+function TrendsChart({ points, brandName }: { points: TrendSeriesPoint[]; brandName: string }) {
+  if (points.length < 2) return <div className="grid min-h-[320px] place-items-center rounded-xl border border-dashed border-border bg-bg-inset/40 px-6 text-center"><div><PlatformLogo engine="google_trends" className="mx-auto size-7" /><p className="mt-4 text-sm font-medium">A live Trends refresh will draw the timeline.</p><p className="mx-auto mt-1 max-w-sm text-xs leading-5 text-muted-foreground">The cached demo stores the average only. Live SerpApi runs retain dated interest points for {brandName}.</p></div></div>;
+  const peak = points.reduce((best, point) => point.interest > best.interest ? point : best, points[0]);
+  const average = Math.round(points.reduce((sum, point) => sum + point.interest, 0) / points.length * 10) / 10;
+  const start = points[0]?.interest ?? 0;
+  const end = points.at(-1)?.interest ?? 0;
+  const change = start === 0 ? null : Math.round((end - start) / start * 100);
+  return <div className="overflow-hidden rounded-xl border border-border bg-card"><div className="grid border-b border-border sm:grid-cols-[1fr_auto]"><div className="px-5 py-4"><div className="flex items-center gap-2"><PlatformLogo engine="google_trends" className="size-4" /><h3 className="text-sm font-semibold">Search interest over time</h3></div><p className="mt-1 text-xs text-muted-foreground">India, relative index from the latest stored run</p></div><div className="grid grid-cols-3 border-t border-border sm:border-l sm:border-t-0"><div className="px-4 py-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Average</p><p className="mt-1 font-mono text-lg font-semibold">{average}</p></div><div className="border-l border-border px-4 py-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Peak</p><p className="mt-1 font-mono text-lg font-semibold">{peak?.interest}</p></div><div className="border-l border-border px-4 py-3"><p className="text-[10px] uppercase tracking-[0.1em] text-muted-foreground">Change</p><p className={cn("mt-1 font-mono text-lg font-semibold", change !== null && change >= 0 ? "text-emerald-600" : "text-red-600")}>{change === null ? "n/a" : `${change > 0 ? "+" : ""}${change}%`}</p></div></div></div><div className="px-3 pb-4 pt-6 sm:px-5"><ChartContainer config={trendsChartConfig} className="h-[320px] w-full aspect-auto"><AreaChart accessibilityLayer data={points} margin={{ left: -12, right: 12, top: 8 }}><defs><linearGradient id="interest-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="5%" stopColor="var(--color-interest)" stopOpacity={0.28} /><stop offset="95%" stopColor="var(--color-interest)" stopOpacity={0.02} /></linearGradient></defs><CartesianGrid vertical={false} strokeDasharray="3 3" /><XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} minTickGap={36} /><YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={38} /><ChartTooltip cursor={{ stroke: "var(--accent)", strokeDasharray: "4 4" }} content={<ChartTooltipContent indicator="line" labelFormatter={(value) => String(value)} />} /><Area dataKey="interest" type="monotone" stroke="var(--color-interest)" strokeWidth={2} fill="url(#interest-fill)" activeDot={{ r: 4, strokeWidth: 2, fill: "var(--bg-raised)" }} /></AreaChart></ChartContainer></div></div>;
+}
 
 export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const [tab, setTab] = useState("overview");
-
   const brand = useQuery(api.brands.getBrand, { brandId });
   const claims = useQuery(api.claims.byBrand, { brandId });
-  const { runs, isLoading: isLoadingRuns } = useAllRuns();
-
-  const latestRun = useMemo(
-    () => latestRunForBrand(runs, String(brandId)),
-    [runs, brandId],
-  );
-
-  const snapshots = useQuery(
-    api.snapshots.byRun,
-    latestRun === null ? "skip" : { runId: latestRun._id },
-  );
-  const usage = useQuery(
-    api.llmUsage.usageForRun,
-    latestRun === null ? "skip" : { runId: latestRun._id },
-  );
-  const cohortLatest = useQuery(
-    api.runs.latestForCohort,
-    latestRun === null ? "skip" : { cohortKey: latestRun.cohortKey },
-  );
-
-  const claimList = useMemo(() => claims ?? [], [claims]);
-
-  const latestClaims = useMemo(
-    () => (latestRun === null ? [] : claimsForRun(claimList, String(latestRun._id))),
-    [claimList, latestRun],
-  );
-
-  const previousRunId = useMemo(
-    () => (latestRun === null ? null : previousRunFor(claimList, String(latestRun._id))),
-    [claimList, latestRun],
-  );
-
-  const previousClaims = useMemo(
-    () => (previousRunId === null ? [] : claimsForRun(claimList, previousRunId)),
-    [claimList, previousRunId],
-  );
-
-  const previousRunAt = useMemo(() => {
-    if (previousRunId === null) return null;
-    const run = runs.find((candidate) => String(candidate._id) === previousRunId);
-    if (run !== undefined) return run.requestedAt;
-    const claim = previousClaims[0];
-    return claim === undefined ? null : claim.fetchedAt;
-  }, [previousRunId, runs, previousClaims]);
-
-  const history = useMemo(
-    () => runHistoryRows(runs, claimList),
-    [runs, claimList],
-  );
-
-  const coverage = useMemo(
-    () => engineCoverage(snapshots ?? [], String(brandId)),
-    [snapshots, brandId],
-  );
-
-  const isLoading =
-    brand === undefined ||
-    claims === undefined ||
-    isLoadingRuns ||
-    (latestRun !== null && (snapshots === undefined || usage === undefined));
-
-  if (brand === null) {
-    return (
-      <div className={className}>
-        <EmptyState
-          bounded
-          icon={<Tag {...iconProps} size={16} />}
-          title="This brand no longer exists."
-          description="The record this profile pointed at was not found. Return to the brand list to pick a tracked rival."
-        />
-      </div>
-    );
-  }
-
-  return (
-    <div className={cn("flex flex-col gap-6", className)}>
-      {brand === undefined ? (
-        <div className="flex flex-col gap-4">
-          <Skeleton variant="text" width="40%" height={22} />
-          <Skeleton variant="text" width="24%" height={14} />
-          <SkeletonRows count={1} variant="block" height={96} />
-        </div>
-      ) : (
-        <BrandHeader
-          brand={brand}
-          latestAt={latestRun === null ? null : latestRun.requestedAt}
-          latestStatus={latestRun === null ? null : latestRun.status}
-        />
-      )}
-
-      <SegmentedNav
-        items={TABS}
-        value={tab}
-        onChange={setTab}
-        label="Brand profile sections"
-        loading={brand === undefined}
-      />
-
-      {tab === "overview" ? (
-        <>
-          <BrandOverview
-            claims={latestClaims}
-            latestRun={latestRun}
-            cohortLatest={cohortLatest ?? null}
-            exactCostUsd={usage?.exactCostUsd ?? 0}
-            estimatedCostUsd={usage?.estimatedCostUsd ?? 0}
-            llmRequestCount={usage?.requests ?? 0}
-            llmTokenCount={usage?.tokens ?? 0}
-            runCount={history.length}
-            onOpenSignals={() => setTab("signals")}
-            isLoading={isLoading}
-          />
-          <EngineCoverage rows={coverage} isLoading={isLoading} />
-        </>
-      ) : tab === "signals" ? (
-        <SignalsPanel claims={latestClaims} isLoading={isLoading} />
-      ) : tab === "hooks" ? (
-        <MixPanel
-          kind="hook"
-          claims={latestClaims}
-          previousClaims={previousClaims}
-          previousRunAt={previousRunAt}
-          isLoading={isLoading}
-        />
-      ) : tab === "funnel" ? (
-        <MixPanel
-          kind="funnel"
-          claims={latestClaims}
-          previousClaims={previousClaims}
-          previousRunAt={previousRunAt}
-          isLoading={isLoading}
-        />
-      ) : tab === "trends" ? (
-        <TrendsPanel claims={claimList} isLoading={isLoading} />
-      ) : (
-        <HistoryPanel rows={history} isLoading={isLoading} />
-      )}
-    </div>
-  );
+  const { runs, isLoading: runsLoading } = useAllRuns();
+  const latestRun = useMemo(() => { const related = runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))); const finished = related.filter((run) => run.status === "complete" || run.status === "partial"); return (finished.length ? finished : related).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))[0] ?? null; }, [brandId, runs]);
+  const snapshots = useQuery(api.snapshots.byRun, latestRun ? { runId: latestRun._id } : "skip");
+  const latestClaims = useMemo(() => claims && latestRun ? claims.filter((claim) => String(claim.runId) === String(latestRun._id)) : [], [claims, latestRun]);
+  const signals = signalClaims(latestClaims);
+  const coverage = useMemo(() => engineCoverage(snapshots ?? [], String(brandId)), [snapshots, brandId]);
+  const tags = tagBearingClaims(signals);
+  const history = runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt));
+  const isLoading = brand === undefined || claims === undefined || runsLoading || (latestRun !== null && snapshots === undefined);
+  if (brand === null) return <EmptyState bounded title="This brand no longer exists." description="The profile address is valid, but the tracked brand was not found. Return to Brands and choose another profile." action={<Button asChild variant="outline"><Link href="/brands">Back to brands</Link></Button>} />;
+  if (isLoading && brand === undefined) return <div className="flex flex-col gap-6"><Skeleton className="h-36 rounded-2xl" /><Skeleton className="h-12 rounded-xl" /><Skeleton className="h-64 rounded-2xl" /></div>;
+  if (!brand) return null;
+  const byEngine = (engine: string) => latestClaims.filter((claim) => claim.sourceEngine === engine);
+  const trends = trendPoints(claims ?? []);
+  const latestTrendSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google_trends" && String(snapshot.brandId) === String(brandId));
+  const series = trendSeries(latestTrendSnapshot?.rawResponse, brand.name);
+  return <div className={cn("flex min-w-0 flex-col gap-0", className)}>
+    <div className="mb-3 flex items-center justify-between"><Link href="/brands" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" />All brands</Link><span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Brand intelligence</span></div>
+    <header className="border-b border-border pb-5"><div className="flex flex-wrap items-start justify-between gap-5"><div className="flex min-w-0 items-center gap-3"><BrandMark name={brand.name} domain={brand.domain} className="size-14" /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h1 className="truncate text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{brand.name}</h1>{statusBadge(brand.profileStatus)}</div><p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><span>{brand.vertical}</span><span>•</span><span className="inline-flex items-center gap-1"><Globe2 className="size-3.5" />{brand.domain}</span><span>•</span><span>Last updated {shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}</span></p></div></div><div className="flex items-center gap-2"><Button variant="outline" size="sm" className="h-8 gap-1.5"><Bookmark className="size-3.5" />Track</Button>{latestRun ? <Button asChild size="sm" className="h-8 gap-1.5"><Link href={`/runs/${latestRun._id}`}>Latest run <ArrowUpRight className="size-3.5" /></Link></Button> : null}</div></div><div className="mt-4 flex flex-wrap items-center gap-2"><Badge variant="outline" className="h-7 rounded-full border-accent/25 bg-accent/[0.06] px-2.5 text-accent"><BarChart3 className="mr-1.5 size-3.5" />{signals.length} evidence signals</Badge><Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground"><Tag className="mr-1.5 size-3.5" />{tags.length} tagged findings</Badge><Coverage rows={coverage} /></div></header>
+    <Tabs value={tab} onValueChange={setTab} className="gap-0"><div className="overflow-x-auto border-b border-border"><TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">{tabs.map(([value, label]) => <TabsTrigger key={value} value={value} className="h-12 rounded-none px-3 text-xs data-[state=active]:font-semibold data-[state=active]:text-accent after:bg-accent">{label}</TabsTrigger>)}</TabsList></div>
+      {tab === "overview" ? <div className="border-b border-border py-3"><div className="flex flex-wrap items-center gap-2"><Button variant="outline" size="icon-sm" aria-label="Tune filters" className="size-9 rounded-lg"><SlidersHorizontal className="size-3.5" /></Button><FilterButton icon={CalendarDays} label="Latest run" /><FilterButton icon={BarChart3} label="All engines" /><FilterButton icon={Video} label="All formats" /><FilterButton icon={Tag} label="All hooks" /><FilterButton icon={Filter} label="All funnel stages" /><FilterButton icon={Languages} label="All languages" /><FilterButton icon={Timer} label="Freshness: Any" /><span className="ml-auto hidden sm:inline-flex"><FilterButton icon={History} label="Most recent" /></span></div></div> : null}
+      <TabsContent value="overview" className="mt-0 space-y-5 py-5"><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><SummaryPanel title="Evidence mix"><EvidenceMix claims={signals} /></SummaryPanel><SummaryPanel title="Engine coverage"><div className="space-y-2.5">{coverage.map((row) => <div key={row.engine} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformMark engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : "bg-muted-foreground/30")} />{row.label}</span><span className="font-mono text-muted-foreground">{row.status === "ok" ? byEngine(row.engine).length : row.status}</span></div>)}</div></SummaryPanel><SummaryPanel title="Top hooks"><HookChart claims={tags} /></SummaryPanel><SummaryPanel title="Funnel stage"><FunnelPanel claims={tags} /></SummaryPanel></div><div><div className="mb-3 flex items-end justify-between gap-3"><h2 className="text-base font-semibold tracking-[-0.02em]">{signals.length.toLocaleString()} pieces of evidence</h2><span className="text-xs text-muted-foreground">Stored claims from {shortDate(latestRun?.requestedAt)}</span></div>{signals.length ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{signals.slice(0, 24).map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />)}</div> : <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">No signal claims have been stored for the latest run.</div>}</div></TabsContent>
+      <TabsContent value="search" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Search className="size-4 text-accent" />Search presence</CardTitle></CardHeader><CardContent><ClaimsTable claims={byEngine("google")} empty="Google Search did not return stored claims for this run." /></CardContent></Card></TabsContent>
+      <TabsContent value="ads" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="text-base">Ads Transparency</CardTitle></CardHeader><CardContent><ClaimsTable claims={byEngine("google_ads_transparency_center")} empty="Ads Transparency is unavailable or did not return evidence for this run. This is not a zero." /></CardContent></Card></TabsContent>
+      <TabsContent value="youtube" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><Video className="size-4 text-red-500" />YouTube signals</CardTitle></CardHeader><CardContent><ClaimsTable claims={[...byEngine("youtube"), ...byEngine("youtube_video")]} empty="No YouTube evidence was stored for this run." /></CardContent></Card></TabsContent>
+      <TabsContent value="trends" className="mt-0 space-y-4 py-5"><TrendsChart points={series} brandName={brand.name} /><div className="rounded-lg border border-border bg-bg-inset/55 px-4 py-3 text-xs leading-5 text-muted-foreground">Google Trends scores are relative within the same query and period. They are not market share, search volume, or directly comparable across separate chunks.</div><Card className="shadow-none"><CardHeader><CardTitle className="text-sm">Stored trend evidence</CardTitle></CardHeader><CardContent><ClaimsTable claims={trends.map((point) => (claims ?? []).find((claim) => String(claim._id) === point.id)).filter((claim): claim is ClaimDoc => Boolean(claim))} empty="No relative interest values are stored yet." /></CardContent></Card></TabsContent>
+      <TabsContent value="evidence" className="mt-5"><div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{signals.length ? signals.map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />) : <div className="col-span-full"><ClaimsTable claims={signals} /></div>}</div></TabsContent>
+      <TabsContent value="history" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4 text-accent" />Run history</CardTitle></CardHeader><CardContent><div className="overflow-hidden rounded-xl border border-border"><Table><TableHeader><TableRow><TableHead>Requested</TableHead><TableHead>Status</TableHead><TableHead>Brands</TableHead><TableHead className="text-right">Run ID</TableHead></TableRow></TableHeader><TableBody>{history.length ? history.map((run) => <TableRow key={String(run._id)}><TableCell className="font-mono text-xs">{formatStamp(run.requestedAt)}</TableCell><TableCell>{statusBadge(run.status)}</TableCell><TableCell className="text-xs text-muted-foreground">{run.brandIds.length} in cohort</TableCell><TableCell className="text-right font-mono text-[10px] text-muted-foreground">{String(run._id).slice(-8)}</TableCell></TableRow>) : <TableRow><TableCell colSpan={4} className="py-8 text-center text-sm text-muted-foreground">No runs stored for this brand yet.</TableCell></TableRow>}</TableBody></Table></div></CardContent></Card></TabsContent>
+    </Tabs>
+  </div>;
 }

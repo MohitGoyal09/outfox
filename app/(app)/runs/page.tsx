@@ -7,7 +7,6 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import {
   EmptyState,
-  Panel,
   SkeletonRows,
   VALUE_CLASS,
   buttonClasses,
@@ -22,6 +21,8 @@ import {
   sortRunsNewestFirst,
 } from "@/components/drishti/runs";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent } from "@/components/ui/card";
 
 function RunsHistory() {
   const complete = useQuery(api.runs.listByStatus, { status: "complete" });
@@ -44,31 +45,30 @@ function RunsHistory() {
 
   return (
     <div className="flex flex-col gap-8">
-      <header className="flex flex-wrap items-end justify-between gap-x-6 gap-y-2">
+      <header className="flex flex-col gap-5 border-b border-border/70 pb-7 sm:flex-row sm:items-end sm:justify-between">
         <div>
-          <p className="type-label text-[var(--accent)]">Evidence history</p>
-          <h1 className="type-display mt-1 text-[var(--text-primary)]">Runs</h1>
-          <p className="type-body measure-prose mt-1.5 text-[var(--text-secondary,#9797a3)]">
+          <div className="flex items-center gap-2 text-[11px] font-semibold uppercase tracking-[0.18em] text-accent">
+            <History className="size-3.5" /> Research history
+          </div>
+          <h1 className="mt-2 text-3xl font-semibold tracking-[-0.045em] text-foreground sm:text-4xl">Runs</h1>
+          <p className="mt-2 max-w-[62ch] text-sm leading-6 text-muted-foreground">
             Each run is a time-stamped evidence snapshot. Open one to inspect
             coverage, changes, costs, and the claims behind them.
           </p>
         </div>
-        {freshest === null ? null : (
-          <p
-            className={cn(
-              VALUE_CLASS,
-              "text-[12px] text-[var(--text-secondary,#9797a3)]",
-            )}
-          >
-            fresh as of {formatRunDateTime(freshest)}
-          </p>
-        )}
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Badge variant="outline" className="rounded-full bg-card px-2.5 py-1 font-mono text-[10px] uppercase tracking-[0.12em]">
+            {runs.length} {runs.length === 1 ? "run" : "runs"}
+          </Badge>
+          {freshest === null ? null : <span className={cn(VALUE_CLASS, "text-[11px]")}>fresh {formatRunDateTime(freshest)}</span>}
+        </div>
       </header>
 
       {loading ? (
         <SkeletonRows count={4} variant="row" height={96} />
       ) : runs.length === 0 ? (
-        <Panel interactive={false} className="p-5">
+        <Card className="border-dashed bg-card shadow-none">
+          <CardContent className="p-8">
           <EmptyState
             icon={<History {...iconProps} size={16} />}
             title="No run has been recorded yet."
@@ -79,9 +79,10 @@ function RunsHistory() {
               </Link>
             }
           />
-        </Panel>
+          </CardContent>
+        </Card>
       ) : (
-        <ul className="flex flex-col gap-3">
+        <ul className="flex flex-col gap-3" aria-label="Comparison runs">
           {runs.map((run) => (
             <RunHistoryRow key={run._id} run={run} names={names} />
           ))}

@@ -11,7 +11,7 @@ import { EmptyState } from "@/components/drishti/EmptyState";
 import { iconProps } from "@/components/drishti/tokens";
 import type { Id } from "@/convex/_generated/dataModel";
 
-const BRAND_ID_RE = /^[a-z0-9_]+$/i;
+const BRAND_ID_RE = /^[a-z0-9]{32}$/;
 
 export default function BrandProfilePage({
   params,

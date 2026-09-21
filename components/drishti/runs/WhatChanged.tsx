@@ -3,12 +3,12 @@
 import { Fragment, type ReactNode } from "react";
 
 import {
-  Panel,
   Skeleton,
   SkeletonRegion,
   VALUE_CLASS,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
+import { Card, CardContent } from "@/components/ui/card";
 import { READOUT_SEPARATOR } from "./labels";
 import type { ChangeCopy } from "./types";
 
@@ -22,8 +22,9 @@ export type WhatChangedProps = {
 export function WhatChanged({ copy, action, loading = false, className }: WhatChangedProps) {
   const resolved = copy ?? null;
   return (
-    <Panel interactive={false} className={cn("p-5", className)} ariaLabel="What changed">
-      <h2 className="type-headline text-[var(--text-secondary,#9797a3)]">
+    <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="What changed">
+      <CardContent className="p-6">
+      <h2 className="text-[11px] font-semibold uppercase tracking-[0.15em] text-accent">
         What changed
       </h2>
 
@@ -37,7 +38,7 @@ export function WhatChanged({ copy, action, loading = false, className }: WhatCh
         </SkeletonRegion>
       ) : (
         <>
-          <p className="type-title mt-1 max-w-[42ch] text-balance text-[var(--text-primary,#eeeef2)]">
+          <p className="mt-2 max-w-[48ch] text-xl font-semibold tracking-[-0.03em] text-foreground">
             {resolved.headline}
           </p>
           <p className="type-body measure-prose mt-3 text-[var(--text-secondary,#9797a3)]">
@@ -67,6 +68,7 @@ export function WhatChanged({ copy, action, loading = false, className }: WhatCh
           </div>
         </>
       )}
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

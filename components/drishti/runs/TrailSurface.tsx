@@ -7,7 +7,6 @@ import {
   Button,
   Chip,
   LABEL_CLASS,
-  Panel,
   Trail,
   TrailSkeleton,
   VALUE_CLASS,
@@ -15,6 +14,7 @@ import {
   type Tone,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { READOUT_SEPARATOR, engineCellTone } from "./labels";
 import { BriefView } from "./BriefView";
 import {
@@ -117,12 +117,9 @@ export function TrailSurface({
     .join(` ${READOUT_SEPARATOR} `);
 
   return (
-    <Panel
-      interactive={false}
-      className={cn("p-5", className)}
-      ariaLabel="The brief and the trail"
-    >
-      <h2 className="type-title text-[var(--text-primary,#eeeef2)]">The trail</h2>
+    <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="The brief and the trail">
+      <CardHeader className="border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">The trail</CardTitle></CardHeader>
+      <CardContent className="p-5">
       <p className="type-body measure-prose mt-1.5 text-[var(--text-secondary,#9797a3)]">
         The brief and the trail are one surface. Every sentence cites the claims
         it rests on, and picking a citation marks the step below that produced it.
@@ -255,6 +252,7 @@ export function TrailSurface({
 
         {loading ? <TrailSkeleton className="mt-4" density="vertical" /> : null}
       </div>
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

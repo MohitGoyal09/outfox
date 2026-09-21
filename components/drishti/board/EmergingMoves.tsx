@@ -1,8 +1,8 @@
 import { TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Chip } from "../Chip";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "../EmptyState";
-import { Panel } from "../Panel";
 import { SkeletonRows } from "../Skeleton";
 import { TONE_COLOR, VALUE_CLASS, iconProps } from "../tokens";
 import {
@@ -27,25 +27,21 @@ export function EmergingMoves({
   const changed = emergingHasChange(moves);
 
   return (
-    <Panel
-      as="section"
-      interactive={false}
-      className={cn("p-4", className)}
-      ariaLabel="Emerging this week"
-    >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h2 className="text-[13px] font-medium text-[var(--text-primary,#eeeef2)]">
-          Emerging this week
-        </h2>
+    <Card className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="border-b border-border/70 px-5 py-4">
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <CardTitle className="text-base">Emerging moves</CardTitle>
+            <CardDescription className="mt-1">{EMERGING_BASIS_LINE}</CardDescription>
+          </div>
         {hasPrevious && previousLabel ? (
-          <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
+          <span className={cn(VALUE_CLASS, "text-xs text-muted-foreground")}>
             {previousLabel}
           </span>
         ) : null}
-      </div>
-      <p className="mt-1 max-w-[68ch] text-[12.5px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
-        {EMERGING_BASIS_LINE}
-      </p>
+        </div>
+      </CardHeader>
+      <CardContent className="px-5 py-4">
 
       {loading ? (
         <div className="mt-3">
@@ -72,19 +68,14 @@ export function EmergingMoves({
           />
         </div>
       ) : (
-        <ul className="mt-3 flex flex-col">
+        <ul className="flex flex-col divide-y divide-border/70">
           {moves.map((move) => (
             <li
               key={move.hook}
               className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2"
             >
               <span className="min-w-0 flex-1">
-                <Chip
-                  label={move.hook}
-                  value={move.hook}
-                  scale="hook"
-                  title={`Hook share change for ${move.hook}`}
-                />
+                <Badge variant="secondary" className="font-normal">{move.hook}</Badge>
               </span>
               <span
                 className={cn(
@@ -104,14 +95,15 @@ export function EmergingMoves({
               </span>
               <span
                 className={cn(VALUE_CLASS, "w-16 text-right text-[12.5px]")}
-                style={{ color: TONE_COLOR[move.tone] }}
-              >
+                  style={{ color: TONE_COLOR[move.tone] }}
+                >
                 {move.deltaText}
               </span>
             </li>
           ))}
         </ul>
       )}
-    </Panel>
+      </CardContent>
+    </Card>
   );
 }

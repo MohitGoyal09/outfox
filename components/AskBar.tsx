@@ -7,6 +7,8 @@ import {
   PromptInputTextarea,
 } from "@/components/ai-elements/prompt-input";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Spinner } from "@/components/ui/spinner";
 import { cn } from "@/lib/utils";
 import { LABEL_CLASS } from "@/components/drishti";
@@ -63,30 +65,17 @@ export function AskBar({
 
   if (brandIds.length === 0) {
     return (
-      <div
-        className={cn(
-        "border-t border-[var(--border)] py-5 text-sm text-[var(--text-secondary)]",
-          className,
-        )}
-      >
+      <div className={cn("rounded-lg border border-dashed border-border bg-card p-5 text-sm text-muted-foreground", className)}>
         Pick at least one brand to ask a question.
       </div>
     );
   }
 
   return (
-    <section
-      aria-label="Ask about these brands"
-      className={cn(
-        "border-t border-[var(--border)] py-5",
-        className,
-      )}
-    >
-      <div className="flex items-baseline justify-between gap-3">
-        <h2 className="type-title text-[var(--text-primary)]">Ask</h2>
+    <Card aria-label="Ask about these brands" className={cn("border-border/80 bg-card shadow-none", className)}>
+      <CardHeader className="flex flex-row items-center justify-between border-b border-border/70 px-5 py-4"><CardTitle className="text-sm font-semibold tracking-[-0.01em]">Ask</CardTitle>
         <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>stored evidence</span>
-      </div>
-      <PromptInput
+      </CardHeader><CardContent className="p-5"><PromptInput
         onSubmit={(message) => {
           void ask(message.text);
         }}
@@ -102,8 +91,7 @@ export function AskBar({
             disabled={asking}
           />
         </div>
-      </PromptInput>
-      <div className="mt-3">
+      </PromptInput><div className="mt-3">
         {asking ? (
           <p className="flex items-center gap-2 text-sm text-muted-foreground">
             <Spinner className="size-4" /> Answering from stored claims.
@@ -113,17 +101,12 @@ export function AskBar({
             {error}
           </p>
         ) : result && result.available === false ? (
-          <div className="border border-[var(--border)] bg-[var(--bg-inset)] p-3 text-sm">
-            <p className="font-medium text-foreground">
-              Ask is unavailable
-            </p>
-            <p className="mt-1 text-muted-foreground">
+          <Alert><AlertTitle>Ask is unavailable</AlertTitle><AlertDescription>
               {result.message ??
                 "Ask needs an LLM gateway key. Stored claims are still visible above."}
-            </p>
-          </div>
+            </AlertDescription></Alert>
         ) : result && result.mode === "empty" ? (
-          <div className="border border-[var(--border)] bg-[var(--bg-inset)] p-3 text-sm text-[var(--text-secondary)]">
+          <div className="rounded-lg border border-dashed border-border bg-muted/30 p-4 text-sm text-muted-foreground">
             {result.message ??
               result.answer ??
               "No stored claims cover these brands yet."}
@@ -138,7 +121,7 @@ export function AskBar({
             {result.error ?? result.message ?? "Ask failed."}
           </p>
         ) : result && result.answer !== "" ? (
-          <div className="border border-[var(--border)] bg-[var(--bg-inset)] p-3 text-sm">
+          <div className="rounded-lg border border-border bg-muted/30 p-4 text-sm">
             <MessageResponse>{result.answer}</MessageResponse>
             {result.citations.length > 0 ? (
               <p className="mt-2 text-xs text-muted-foreground">
@@ -159,7 +142,7 @@ export function AskBar({
             Answers cite stored claims only. No new fetch runs from here.
           </p>
         )}
-      </div>
-    </section>
+      </div></CardContent>
+    </Card>
   );
 }
