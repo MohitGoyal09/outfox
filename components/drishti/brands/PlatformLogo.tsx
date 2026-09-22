@@ -1,4 +1,4 @@
-import { Newspaper } from "lucide-react";
+import { Newspaper, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 export function PlatformLogo({
@@ -10,6 +10,10 @@ export function PlatformLogo({
 }) {
   if (engine === "google_news") {
     return <Newspaper aria-hidden className={cn("shrink-0", className)} />;
+  }
+
+  if (engine === "google_trends") {
+    return <TrendingUp aria-hidden className={cn("shrink-0", className)} />;
   }
 
   if (engine === "youtube" || engine === "youtube_video") {

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BarChart3, Bookmark, CheckCircle2, Clock3, Globe2, Link2, Tag } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, HelpCircle, History as HistoryIcon, LayoutGrid, Link2, Layers, MapPin, Sparkles, Tag, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 
@@ -43,14 +43,14 @@ import { InsightsTab } from "./tabs/InsightsTab";
 export type BrandProfileProps = { brandId: Id<"brands">; className?: string };
 
 const tabs = [
-  ["overview", "Overview"],
-  ["position", "Position"],
-  ["placement", "Placement"],
-  ["problem", "Problem"],
-  ["people", "People"],
-  ["evidence", "Evidence"],
-  ["history", "History"],
-  ["insights", "Insights"],
+  ["overview", "Overview", LayoutGrid],
+  ["position", "Position", Compass],
+  ["placement", "Placement", MapPin],
+  ["problem", "Problem", HelpCircle],
+  ["people", "People", Users],
+  ["evidence", "Evidence", Layers],
+  ["history", "History", HistoryIcon],
+  ["insights", "Insights", Sparkles],
 ] as const;
 
 function statusBadge(status: string) {
@@ -210,10 +210,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" className="h-8 gap-1.5">
-                <Bookmark className="size-3.5" />
-                Track
-              </Button>
               <ShareButton />
               {latestRun ? (
                 <Button asChild size="sm" className="h-8 gap-1.5">
@@ -239,8 +235,9 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
         <div className="overflow-x-auto border-b border-border">
           <TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">
-            {tabs.map(([value, label]) => (
-              <TabsTrigger key={value} value={value} className="h-12 rounded-none px-3 text-xs data-[state=active]:font-semibold data-[state=active]:text-accent after:bg-accent">
+            {tabs.map(([value, label, Icon]) => (
+              <TabsTrigger key={value} value={value} className="h-12 gap-1.5 rounded-none px-3 text-xs data-[state=active]:font-semibold data-[state=active]:text-accent after:bg-accent">
+                <Icon className="size-3.5" aria-hidden="true" />
                 {label}
               </TabsTrigger>
             ))}
@@ -324,7 +321,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               <HistoryTab rows={historyRows} />
             </TabsContent>
             <TabsContent value="insights" className="mt-0 py-5">
-              <InsightsTab brandId={brandId} claims={claims ?? []} now={now} />
+              <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} now={now} />
             </TabsContent>
           </>
         )}

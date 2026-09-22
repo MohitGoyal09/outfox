@@ -52,7 +52,13 @@ export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrga
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-[11px] font-semibold" style={{ color: accent }}>
+          <span
+            className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border text-[11px] font-semibold"
+            style={{ color: accent, backgroundColor: `${accent}1a` }}
+          >
+            {/* Low-alpha tint of the engine's own accent (via the hex+alpha
+                suffix above) — one step past a flat neutral chip, short of
+                a colored border or glow either of which DESIGN.md bans. */}
             {favicon !== null ? (
               <img src={favicon} alt="" loading="lazy" className="size-4 rounded-sm object-contain" />
             ) : (
@@ -68,7 +74,7 @@ export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrga
             ) : null}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-xs font-semibold">{raw?.sourceName ?? source}</p>
+            <p className="truncate text-[13px] font-bold text-foreground">{raw?.sourceName ?? source}</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</p>
           </div>
         </div>
