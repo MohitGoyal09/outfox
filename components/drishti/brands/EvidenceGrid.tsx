@@ -44,6 +44,18 @@ function cardRank(card: EvidenceGridCard): number | null {
 
 const CONFIDENCE_RANK: Record<string, number> = { high: 3, medium: 2, low: 1 };
 
+function cardMixKey(card: EvidenceGridCard): string {
+  return card.kind === "video" ? card.group.evidenceUrl : String(card.claim._id);
+}
+
+function mixHash(value: string): number {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return hash;
+}
+
 function sortCards(cards: EvidenceGridCard[], sort: SortValue): EvidenceGridCard[] {
   const sorted = [...cards];
   if (sort === "oldest") return sorted.sort((a, b) => (a.sortAt < b.sortAt ? -1 : 1));
@@ -82,7 +94,10 @@ function sortCards(cards: EvidenceGridCard[], sort: SortValue): EvidenceGridCard
       return bDays - aDays || (a.sortAt < b.sortAt ? 1 : -1);
     });
   }
-  return sorted.sort((a, b) => (a.sortAt < b.sortAt ? 1 : -1));
+  return sorted.sort((a, b) => {
+    if (a.sortAt !== b.sortAt) return a.sortAt < b.sortAt ? 1 : -1;
+    return mixHash(cardMixKey(a)) - mixHash(cardMixKey(b));
+  });
 }
 
 function adRunDays(claim: ClaimDoc): number {

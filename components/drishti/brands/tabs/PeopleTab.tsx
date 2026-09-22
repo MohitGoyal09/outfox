@@ -13,6 +13,7 @@ import {
   creatorRowsFromGroups,
   findYoutubeRawVideo,
   groupYoutubeVideoClaims,
+  isContentClaim,
   mergeCreatorRows,
   newsPublisherClaims,
   readYoutubeRawVideo,
@@ -23,7 +24,18 @@ import {
   type ClaimDoc,
   type SnapshotDoc,
 } from "../brand-model";
+import { EvidenceGrid } from "../EvidenceGrid";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+
+function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): ClaimDoc[] {
+  const byId = new Map(claims.map((claim) => [String(claim._id), claim]));
+  const resolved = new Map<string, ClaimDoc>();
+  for (const tag of tagRows) {
+    const target = tag.taggedClaimId !== undefined ? byId.get(String(tag.taggedClaimId)) : tag;
+    if (target !== undefined && isContentClaim(target)) resolved.set(String(target._id), target);
+  }
+  return [...resolved.values()];
+}
 
 function compactCount(value: number): string {
   return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
@@ -230,6 +242,17 @@ export function PeopleTab({
   const filteredTags = useMemo(() => tagBearingClaims(filtered), [filtered]);
   const audienceHintRows = useMemo(() => audienceHintFrequency(filteredTags), [filteredTags]);
 
+  const peopleVideoClaims = useMemo(() => filtered.filter((claim) => claim.sourceEngine === "youtube_video"), [filtered]);
+  const peopleAudienceHintClaims = useMemo(() => {
+    const audienceHintTagRows = filteredTags.filter((tag) => tag.audienceHint !== undefined && tag.audienceHint.trim() !== "");
+    return resolveTaggedContentClaims(filtered, audienceHintTagRows);
+  }, [filtered, filteredTags]);
+  const peopleEvidenceClaims = useMemo(() => {
+    const merged = new Map<string, ClaimDoc>();
+    for (const claim of [...peopleVideoClaims, ...peopleAudienceHintClaims]) merged.set(String(claim._id), claim);
+    return [...merged.values()];
+  }, [peopleVideoClaims, peopleAudienceHintClaims]);
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
@@ -245,6 +268,15 @@ export function PeopleTab({
       <div className="grid gap-4 lg:grid-cols-2">
         <OwnedVsCreatorSplit claims={filtered} youtubeSnapshot={youtubeSnapshot} brand={brand} />
         <PublisherListPanel claims={filtered} />
+      </div>
+      <div>
+        <h2 className="mb-3 text-sm font-semibold tracking-[-0.02em]">Real people evidence</h2>
+        <EvidenceGrid
+          claims={peopleEvidenceClaims}
+          youtubeSnapshot={youtubeSnapshot}
+          sort={filters.sort}
+          emptyMessage="No creator, video, or audience-hint evidence stored yet. This fills in once a run captures YouTube videos or a tagged run assigns a real audienceHint."
+        />
       </div>
     </div>
   );

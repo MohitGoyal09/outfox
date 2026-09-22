@@ -8,6 +8,7 @@ import { iconProps } from "../../tokens";
 import {
   funnelCoverageGaps,
   funnelDistribution,
+  isContentClaim,
   relatedQuestionClaims,
   relatedSearchClaims,
   tagBearingClaims,
@@ -16,10 +17,21 @@ import {
   type ClaimDoc,
   type SnapshotDoc,
 } from "../brand-model";
+import { EvidenceGrid } from "../EvidenceGrid";
 import { FunnelPanel } from "../EvidencePanels";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { displayClaimText } from "../format";
 import { TrendsExperience } from "../TrendsExperience";
+
+function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): ClaimDoc[] {
+  const byId = new Map(claims.map((claim) => [String(claim._id), claim]));
+  const resolved = new Map<string, ClaimDoc>();
+  for (const tag of tagRows) {
+    const target = tag.taggedClaimId !== undefined ? byId.get(String(tag.taggedClaimId)) : tag;
+    if (target !== undefined && isContentClaim(target)) resolved.set(String(target._id), target);
+  }
+  return [...resolved.values()];
+}
 
 function RelatedListPanel({
   title,
@@ -104,6 +116,7 @@ export function ProblemTab({
   );
   const filteredTags = useMemo(() => tagBearingClaims(filtered), [filtered]);
   const funnelItems = useMemo(() => funnelDistribution(filteredTags), [filteredTags]);
+  const problemEvidenceClaims = useMemo(() => resolveTaggedContentClaims(filtered, filteredTags), [filtered, filteredTags]);
 
   return (
     <div className="space-y-4">
@@ -125,6 +138,14 @@ export function ProblemTab({
       </div>
       <TrendsExperience snapshot={trendsSnapshot} claims={claims} brandId={brand._id} brandName={brand.name} latestRunAt={latestRunAt} />
       <FunnelCoveragePanel items={funnelItems} />
+      <div>
+        <h2 className="mb-3 text-sm font-semibold tracking-[-0.02em]">Real problem evidence</h2>
+        <EvidenceGrid
+          claims={problemEvidenceClaims}
+          sort={filters.sort}
+          emptyMessage="No tagged problem evidence stored yet. Real claims with a hook/funnel tag will fill this in once a tagged run completes."
+        />
+      </div>
     </div>
   );
 }

@@ -12,6 +12,7 @@ import {
   adRuntimeLeaderboard,
   newsPublisherClaims,
   organicRankBuckets,
+  productListingClaims,
   retailerListingRanking,
   tagsForClaim,
   youtubeAdResultClaims,
@@ -19,6 +20,7 @@ import {
   type ClaimDoc,
 } from "../brand-model";
 import { DestinationsPanel } from "../DestinationsPanel";
+import { EvidenceGrid } from "../EvidenceGrid";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { shortDate } from "../format";
 
@@ -169,6 +171,19 @@ export function PlacementTab({
     return [...counts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
   }, [filtered]);
 
+  const placementEvidenceClaims = useMemo(() => {
+    const rankedOrganicClaims = filtered.filter(
+      (claim) => claim.metric === "google_organic_result" && claim.unit === "rank",
+    );
+    return [
+      ...adCreativeClaims(filtered),
+      ...rankedOrganicClaims,
+      ...productListingClaims(filtered),
+      ...youtubeAdResultClaims(filtered),
+      ...youtubeShortResultClaims(filtered),
+    ];
+  }, [filtered]);
+
   return (
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
@@ -204,6 +219,14 @@ export function PlacementTab({
           {shortsCount} YouTube Shorts result{shortsCount === 1 ? "" : "s"} · {youtubeAdCount} YouTube ad result{youtubeAdCount === 1 ? "" : "s"} stamped {shortDate(filtered[0]?.fetchedAt)}
         </p>
       ) : null}
+      <div>
+        <h2 className="mb-3 text-sm font-semibold tracking-[-0.02em]">Real placements</h2>
+        <EvidenceGrid
+          claims={placementEvidenceClaims}
+          sort={filters.sort}
+          emptyMessage="No placement evidence stored yet. Ad creatives, ranked organic results, product listings, and video placements will fill this in once a run captures them."
+        />
+      </div>
     </div>
   );
 }
