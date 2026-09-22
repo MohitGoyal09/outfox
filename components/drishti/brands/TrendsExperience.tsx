@@ -178,7 +178,7 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} minTickGap={36} />
               <YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={38} />
-              <ChartTooltip content={<ChartTooltipContent indicator="line" />} />
+              <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent indicator="line" />} />
               <Legend verticalAlign="top" align="right" height={28} wrapperStyle={{ fontSize: 11 }} />
               {rows.names.map((name) => (
                 <Bar

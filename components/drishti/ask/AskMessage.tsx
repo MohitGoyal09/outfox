@@ -13,23 +13,33 @@ import {
   SourcesContent,
   SourcesTrigger,
 } from "@/components/ai-elements/sources";
+import type { Doc } from "@/convex/_generated/dataModel";
 import { Button } from "../Button";
-import { Chip } from "../Chip";
 import { Trail } from "../Trail";
 import { LABEL_CLASS, iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
 import { formatLatency } from "../tokens";
-import { buildToolTrace, citationViews, type AskClaimView } from "./ask-model";
+import { CitationCard } from "./CitationCard";
+import {
+  buildToolTrace,
+  citationViews,
+  type AskClaimView,
+  type AskTagView,
+} from "./ask-model";
 import type { AskExchange } from "./ask-store";
 
 function AskAnswerContent({
   exchange,
   claimIndex,
+  snapshotIndex,
+  tagIndex,
   onRetry,
   retrying,
 }: {
   exchange: AskExchange;
   claimIndex: Map<string, AskClaimView>;
+  snapshotIndex: Map<string, Doc<"snapshots">>;
+  tagIndex: Map<string, AskTagView>;
   onRetry: (question: string) => void;
   retrying: boolean;
 }) {
@@ -126,7 +136,7 @@ function AskAnswerContent({
     );
   }
 
-  const citations = citationViews(result.citations, claimIndex);
+  const citations = citationViews(result.citations, claimIndex, snapshotIndex, tagIndex);
 
   return (
     <>
@@ -142,15 +152,9 @@ function AskAnswerContent({
             </span>
             <ChevronDownIcon className="h-3.5 w-3.5" />
           </SourcesTrigger>
-          <SourcesContent className="flex-row flex-wrap gap-1.5">
+          <SourcesContent className="flex-row flex-wrap items-start gap-1.5">
             {citations.map((citation) => (
-              <Chip
-                key={citation.id}
-                href={citation.href ?? undefined}
-                title={citation.title}
-              >
-                {citation.label}
-              </Chip>
+              <CitationCard key={citation.id} citation={citation} />
             ))}
           </SourcesContent>
         </Sources>
@@ -162,11 +166,15 @@ function AskAnswerContent({
 export function AskMessage({
   exchange,
   claimIndex,
+  snapshotIndex,
+  tagIndex,
   onRetry,
   retrying,
 }: {
   exchange: AskExchange;
   claimIndex: Map<string, AskClaimView>;
+  snapshotIndex: Map<string, Doc<"snapshots">>;
+  tagIndex: Map<string, AskTagView>;
   onRetry: (question: string) => void;
   retrying: boolean;
 }) {
@@ -205,6 +213,8 @@ export function AskMessage({
           <AskAnswerContent
             exchange={exchange}
             claimIndex={claimIndex}
+            snapshotIndex={snapshotIndex}
+            tagIndex={tagIndex}
             onRetry={onRetry}
             retrying={retrying}
           />

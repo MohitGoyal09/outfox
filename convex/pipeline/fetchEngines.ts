@@ -124,10 +124,19 @@ export function buildGoogleSearchParams(brand: { name: string }) {
   };
 }
 
-export function buildGoogleNewsParams(brand: { name: string }) {
+/**
+ * Google News matches on plain keyword relevance, unlike Google Search,
+ * which has enough total results to filter a generic brand name down to the
+ * right entity anyway. A one-word brand name that's also a common English
+ * word ("Minimalist") returns generic lifestyle coverage or nothing, not the
+ * brand's own news — so the query is disambiguated with the brand's vertical
+ * when one is known, same real query, just a more specific one.
+ */
+export function buildGoogleNewsParams(brand: { name: string; vertical?: string }) {
+  const query = brand.vertical ? `${brand.name} ${brand.vertical}` : brand.name;
   return {
     engine: "google_news",
-    q: truncateQuery(brand.name),
+    q: truncateQuery(query),
     gl: "in",
     hl: "en",
   };
@@ -247,7 +256,7 @@ export async function fetchGoogleSearch(
  * Google News adapter, one brand per call. Mirrors fetchGoogleSearch exactly.
  */
 export async function fetchGoogleNews(
-  brand: { name: string },
+  brand: { name: string; vertical?: string },
   runId: string,
   fetchFn: SerpapiFetchFn = serpapiFetch,
 ): Promise<EngineFetchResult> {

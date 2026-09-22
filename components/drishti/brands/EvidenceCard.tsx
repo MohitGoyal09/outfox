@@ -6,7 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlatformLogo } from "./PlatformLogo";
 import { engineLabel, type ClaimDoc } from "./brand-model";
-import { shortDate } from "./format";
+import { displayClaimText, shortDate } from "./format";
 
 export const sourceAccent: Record<string, string> = {
   google: "#0f766e",
@@ -36,7 +36,7 @@ export function EvidenceCard({ claim }: { claim: ClaimDoc }) {
   return (
     <article
       className={cn(
-        "group flex min-h-[230px] flex-col rounded-xl border border-border p-4 transition-colors hover:border-accent/50 hover:bg-accent/[0.02]",
+        "group flex flex-col rounded-xl border border-border p-4 transition-colors hover:border-accent/50 hover:bg-accent/[0.02]",
         cardBg,
         lane.topBorder && "border-t-2",
       )}
@@ -57,8 +57,8 @@ export function EvidenceCard({ claim }: { claim: ClaimDoc }) {
           <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" aria-label="Open evidence" className="rounded-md p-1 hover:bg-muted"><ExternalLink className="size-3.5" /></a>
         </div>
       </div>
-      <div className="mt-4 flex-1">
-        <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{claim.text}</a>
+      <div className="mt-4">
+        <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{displayClaimText(claim.text)}</a>
         {lane.largeStat && claim.value !== undefined ? (
           <div className="mt-2 flex items-baseline gap-1.5"><span className="text-2xl font-bold tabular-nums text-foreground">{String(claim.value)}</span><span className="text-[10px] text-muted-foreground">relative interest{claim.unit ? ` (${claim.unit})` : ""}</span></div>
         ) : claim.metric ? (

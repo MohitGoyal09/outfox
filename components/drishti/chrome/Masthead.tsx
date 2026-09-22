@@ -8,7 +8,7 @@ import { useQuery } from "convex/react";
 import { LogOut, Plus, Search, UserRound } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
-import { NAV } from "@/components/drishti/chrome/TopNav";
+import { NAV } from "@/components/drishti/chrome/Sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import {

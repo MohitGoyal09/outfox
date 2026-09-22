@@ -22,7 +22,7 @@ import {
 import { EvidenceCard } from "./EvidenceCard";
 import { FilterSelect, FunnelPanel, HookChart, SummaryPanel } from "./EvidencePanels";
 import { NewsEvidenceCard } from "./NewsEvidenceCard";
-import { shortDate } from "./format";
+import { runTickLabel, shortDate } from "./format";
 
 const SEARCH_ENGINES = ["google", "youtube", "google_news"] as const;
 
@@ -59,7 +59,7 @@ function trendRows(claims: ClaimDoc[], runsDesc: RunDoc[]): TrendRow[] {
       const newsClaims = claims.filter((claim) => String(claim.runId) === runId && claim.sourceEngine === "google_news");
       const newsCount = newsClaims.filter((claim) => claim.metric === "google_news_result").length;
       return {
-        date: shortDate(run.requestedAt),
+        date: runTickLabel(run.requestedAt),
         google: typeof google?.value === "number" ? google.value : null,
         youtube: typeof youtube?.value === "number" ? youtube.value : null,
         google_news: newsClaims.length > 0 ? newsCount : null,
@@ -148,7 +148,7 @@ export function SearchExperience({
                 <CartesianGrid vertical={false} strokeDasharray="3 3" />
                 <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} />
                 <YAxis tickLine={false} axisLine={false} width={56} allowDecimals={false} />
-                <ChartTooltip content={<ChartTooltipContent />} />
+                <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent />} />
                 <Bar dataKey="google" name="Google Search" fill="var(--color-google)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
                 <Bar dataKey="youtube" name="YouTube Search" fill="var(--color-youtube)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
                 <Bar dataKey="google_news" name="Google News" fill="var(--color-google_news)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
@@ -171,12 +171,12 @@ export function SearchExperience({
 
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground">Google</h3>
-        {googleRows.length ? <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">{googleRows.map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />)}</div> : <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">No Google Search evidence matches these filters.</div>}
+        {googleRows.length ? <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">{googleRows.map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />)}</div> : <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">No Google Search evidence matches these filters.</div>}
       </div>
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground">Google News</h3>
         {newsRows.length ? (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+          <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">
             {newsRows.map((claim) => (
               <NewsEvidenceCard key={String(claim._id)} claim={claim} raw={findGoogleNewsRawItem(newsRawResponse, claim.evidenceUrl)} />
             ))}

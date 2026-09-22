@@ -1,6 +1,15 @@
 import type { AnswerQuestionResult } from "@/convex/ask";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import type { TrailStep } from "../Trail";
+import type { AskExchange } from "./ask-store";
+import {
+  findGoogleNewsRawItem,
+  findYoutubeRawVideo,
+  readGoogleNewsRawItem,
+  readYoutubeRawVideo,
+  youtubeVideoIdOf,
+} from "../brands/brand-model";
+import { displayClaimText } from "../brands/format";
 
 export const MAX_ASK_BRANDS = 6;
 export const LONG_ANSWER_CHARS = 240;
@@ -19,6 +28,17 @@ export type AskClaimView = {
   text: string;
   evidenceUrl: string;
   sourceEngine: string;
+  sourceQuery: string;
+  snapshotId: string;
+};
+
+export type AskTagView = {
+  hookType: string;
+  funnelStage: string;
+  theme?: string;
+  valueProp?: string;
+  cta?: string;
+  confidence?: string;
 };
 
 export function brandIdsFromCohortKey(
@@ -87,34 +107,56 @@ export function buildToolTrace(
   return steps;
 }
 
-export function buildClaimIndex(
-  claims: Doc<"claims">[],
-  brandNames: Record<string, string>,
-): Map<string, AskClaimView> {
-  const index = new Map<string, AskClaimView>();
+export function buildTagIndex(claims: Doc<"claims">[]): Map<string, AskTagView> {
   for (const claim of claims) {
-    const id = String(claim._id);
+    if (claim.sourceEngine !== "llm_tag") continue;
+    if (claim.taggedClaimId === undefined) continue;
+    if (claim.hookType === undefined || claim.hookType === "not_applicable") continue;
+    index.set(String(claim.taggedClaimId), {
+      hookType: claim.hookType,
+      funnelStage: claim.funnelStage ?? "not_applicable",
+      theme: claim.theme,
+      valueProp: claim.valueProp,
+      cta: claim.cta,
+      confidence: claim.confidence,
+    });
   }
 }
 
-export type CitationView = {
+export function citedSnapshotIds(
+  exchanges: AskExchange[],
+  claimIndex: Map<string, AskClaimView>,
+): Id<"snapshots">[] {
+  const ids = new Set<string>();
+  for (const exchange of exchanges) {
+    for (const citationId of exchange.result.citations) {
+      const claim = claimIndex.get(citationId);
+      if (claim === undefined) continue;
+      if (claim.sourceEngine !== "youtube_video" && claim.sourceEngine !== "google_news") continue;
+      ids.add(claim.snapshotId);
+    }
+  }
+  return [...ids] as Id<"snapshots">[];
+}
+
+export type CitationCardView = {
   id: string;
   label: string;
   href: string | null;
-  title: string;
+  brandName: string;
+  sourceEngine: string;
+  displayText: string;
+  thumbnailUrl: string | null;
+  tag: AskTagView | null;
 };
 
 export function citationViews(
   citations: string[],
-  index: Map<string, AskClaimView>,
-): CitationView[] {
+  claimIndex: Map<string, AskClaimView>,
+  snapshotIndex: Map<string, Doc<"snapshots">>,
+  tagIndex: Map<string, AskTagView>,
+): CitationCardView[] {
   return citations.map((id, position) => {
     const label = `#${position + 1}`;
-    return {
-      id,
-      label,
-      href: claim.evidenceUrl,
-      title: `${claim.brandName} · ${claim.text}`,
-    };
   });
 }

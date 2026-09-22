@@ -6,12 +6,10 @@ import { useQuery } from "convex/react";
 import {
   BarChart3,
   BookOpen,
-  ClipboardList,
-  LayoutDashboard,
+  GitCompare,
   MessageSquare,
   Plus,
   Tag,
-  Users,
 } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
@@ -31,16 +29,14 @@ import {
 import { cn } from "@/lib/utils";
 
 const NAV = [
-  { href: "/", label: "Feed", icon: LayoutDashboard, exact: true },
   { href: "/brands", label: "Brands", icon: Tag },
-  { href: "/cohorts", label: "Cohorts", icon: Users },
-  { href: "/runs", label: "Runs", icon: ClipboardList },
-  { href: "/board", label: "Board", icon: BarChart3 },
-  { href: "/ask", label: "Ask Drishti", icon: MessageSquare },
+  { href: "/comparisons", label: "Comparisons", icon: GitCompare },
+  { href: "/board", label: "Signal Board", icon: BarChart3 },
+  { href: "/ask", label: "Ask", icon: MessageSquare },
 ] as const;
 
-function isActive(pathname: string, href: string, exact?: boolean) {
-  return exact ? pathname === href : pathname === href || pathname.startsWith(`${href}/`);
+function isActive(pathname: string, href: string) {
+  return pathname === href || pathname.startsWith(`${href}/`);
 }
 
 export function Sidebar() {
@@ -69,7 +65,7 @@ export function Sidebar() {
           <SidebarGroupContent>
             <SidebarMenu>
               {NAV.map((item) => {
-                const active = isActive(pathname, item.href, "exact" in item ? item.exact : false);
+                const active = isActive(pathname, item.href);
                 const Icon = item.icon;
                 return (
                   <SidebarMenuItem key={item.href}>

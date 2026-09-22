@@ -13,7 +13,7 @@ import { useQuery } from "convex/react";
 import { CircleAlert, Database, Plus, ShieldCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import {
   Conversation,
   ConversationContent,
@@ -45,9 +45,12 @@ import {
   askScopeLabel,
   brandIdsFromCohortKey,
   buildClaimIndex,
+  buildTagIndex,
+  citedSnapshotIds,
   mergeAskBrandIds,
   type AskClaimView,
   type AskScope,
+  type AskTagView,
 } from "./ask-model";
 import {
   getAskExchanges,
@@ -63,6 +66,8 @@ const SUGGESTIONS = [
 ];
 
 const EMPTY_INDEX = new Map<string, AskClaimView>();
+const EMPTY_TAG_INDEX = new Map<string, AskTagView>();
+const EMPTY_SNAPSHOT_INDEX = new Map<string, Doc<"snapshots">>();
 
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 
@@ -105,6 +110,11 @@ export function AskView({
     [runClaims, brandNames],
   );
 
+  const tagIndex = useMemo(
+    () => (runClaims !== undefined ? buildTagIndex(runClaims) : EMPTY_TAG_INDEX),
+    [runClaims],
+  );
+
   const scope: AskScope = useMemo(() => {
     if (isBrandsMode) {
       return { cohortKey: null, brandIds: initialBrandIds, runId: null };
@@ -121,6 +131,22 @@ export function AskView({
     getAskExchanges,
     getAskExchanges,
   );
+
+  const snapshotIds = useMemo(
+    () => citedSnapshotIds(exchanges, claimIndex),
+    [exchanges, claimIndex],
+  );
+  const citedSnapshots = useQuery(
+    api.snapshots.byIds,
+    snapshotIds.length > 0 ? { snapshotIds } : "skip",
+  );
+  const snapshotIndex = useMemo(() => {
+    if (citedSnapshots === undefined) return EMPTY_SNAPSHOT_INDEX;
+    const map = new Map<string, Doc<"snapshots">>();
+    for (const snapshot of citedSnapshots) map.set(String(snapshot._id), snapshot);
+    return map;
+  }, [citedSnapshots]);
+
   const { ask, asking, error } = useAskSubmit();
   const [value, setValue] = useState("");
   const [pendingQuestion, setPendingQuestion] = useState<string | null>(null);
@@ -348,6 +374,8 @@ export function AskView({
                   key={exchange.id}
                   exchange={exchange}
                   claimIndex={claimIndex}
+                  snapshotIndex={snapshotIndex}
+                  tagIndex={tagIndex}
                   onRetry={(question) => {
                     void submit(question);
                   }}

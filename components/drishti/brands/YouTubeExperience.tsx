@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Filter, Tag, Video } from "lucide-react";
+import { NumberTicker } from "@/components/ui/number-ticker";
 import { HOOK_TYPES, FUNNEL_STAGES } from "../tokens";
 import {
   findYoutubeRawVideo,
@@ -97,7 +98,7 @@ export function YouTubeExperience({
       </div>
 
       <div>
-        <div className="mb-3 flex items-center gap-2"><Video className="size-4 text-red-500" /><h2 className="text-base font-semibold">{groups.length} {groups.length === 1 ? "video" : "videos"}</h2></div>
+        <div className="mb-3 flex items-center gap-2"><Video className="size-4 text-red-500" /><h2 className="text-base font-semibold"><NumberTicker value={groups.length} /> {groups.length === 1 ? "video" : "videos"}</h2></div>
         {groups.length ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {groups.map((group) => (
