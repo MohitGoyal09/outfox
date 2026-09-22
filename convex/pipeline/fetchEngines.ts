@@ -114,10 +114,17 @@ const ADVERTISER_ID_PATTERN = /^[0-9-]{1,64}$/;
  * Param builders, exported so the Phase 3 verifier asserts the exact
  * SerpApi params each adapter sends without any network call.
  */
-export function buildGoogleSearchParams(brand: { name: string }) {
+/**
+ * A one-word brand name that's also a common English word ("Minimalist")
+ * returns generic results, not the brand's own — so the query is
+ * disambiguated with the brand's vertical when one is known, same real
+ * query, just a more specific one. Mirrors buildGoogleNewsParams exactly.
+ */
+export function buildGoogleSearchParams(brand: { name: string; vertical?: string }) {
+  const query = brand.vertical ? `${brand.name} ${brand.vertical}` : brand.name;
   return {
     engine: "google",
-    q: truncateQuery(brand.name),
+    q: truncateQuery(query),
     gl: "in",
     hl: "en",
     google_domain: "google.co.in",
@@ -150,10 +157,12 @@ export function buildAdsTransparencyParams(advertiserId: string) {
   };
 }
 
-export function buildYoutubeSearchParams(brand: { name: string }) {
+/** Same disambiguation pattern as buildGoogleSearchParams/buildGoogleNewsParams. */
+export function buildYoutubeSearchParams(brand: { name: string; vertical?: string }) {
+  const query = brand.vertical ? `${brand.name} ${brand.vertical}` : brand.name;
   return {
     engine: "youtube",
-    search_query: truncateQuery(brand.name),
+    search_query: truncateQuery(query),
     gl: "in",
     hl: "en",
   };
@@ -234,7 +243,7 @@ export type EngineFetchResult =
  * Paid plus organic results for the India domain in English.
  */
 export async function fetchGoogleSearch(
-  brand: { name: string },
+  brand: { name: string; vertical?: string },
   runId: string,
   fetchFn: SerpapiFetchFn = serpapiFetch,
 ): Promise<EngineFetchResult> {
@@ -330,13 +339,22 @@ function readVideoResults(data: unknown): unknown[] {
   return Array.isArray(results) ? results : [];
 }
 
+/** Cap on shorts/ads entries carried into the youtube search rawResponse. */
+const MAX_ENRICHMENT_ITEMS = 10;
+
+function readListField(data: unknown, key: string): unknown[] {
+  if (typeof data !== "object" || data === null) return [];
+  const list = (data as Record<string, unknown>)[key];
+  return Array.isArray(list) ? list : [];
+}
+
 /**
  * YouTube Search for one brand. Queries engine youtube with the brand
  * name, gl in, hl en. Returns the top YOUTUBE_VIDEOS_PER_BRAND video ids
  * plus a snapshot payload the caller persists. No database write here.
  */
 export async function fetchYoutubeSearch(
-  brand: FetchBrand,
+  brand: FetchBrand & { vertical?: string },
   runId: Id<"runs">,
   fetchFn: SerpapiFetchFn = serpapiFetch,
 ): Promise<YoutubeSearchResult> {
@@ -369,6 +387,10 @@ export async function fetchYoutubeSearch(
     const id = readVideoId(entry);
     if (id !== null && !videoIds.includes(id)) videoIds.push(id);
   }
+  // Same response, just bounded slices of two more fields it already
+  // carries — zero extra SerpApi calls, no unbounded payload stored.
+  const shortsEntries = readListField(result.data, "shorts_results");
+  const adsEntries = readListField(result.data, "ads_results");
 
   return {
     videoIds,
@@ -382,6 +404,8 @@ export async function fetchYoutubeSearch(
       status: "ok",
       rawResponse: {
         video_results: entries.slice(0, YOUTUBE_VIDEOS_PER_BRAND),
+        shorts_results: shortsEntries.slice(0, MAX_ENRICHMENT_ITEMS),
+        ads_results: adsEntries.slice(0, MAX_ENRICHMENT_ITEMS),
         resultCount: entries.length,
         searchQuery: brand.name,
       },
