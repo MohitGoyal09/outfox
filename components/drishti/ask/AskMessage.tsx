@@ -83,22 +83,20 @@ function AskAnswerContent({
       <Alert>
         <AlertDescription className="flex flex-col gap-2 text-fg-secondary">
           <p className="font-medium text-fg">
-            The stored claims do not cover these brands yet.
+            {turn.brandCount === 0
+              ? "No brand was selected for this question."
+              : "The stored claims do not cover these brands yet."}
           </p>
           <p>
-            {result.message ??
-              result.answer ??
-              "No stored claims cover these brands yet."}
+            {turn.brandCount === 0
+              ? "Type @ to reference a brand, or open a cohort, then ask again."
+              : result.message ?? "Run a comparison to fetch real evidence for these brands."}
           </p>
           {result.liveRefresh?.attempted === true ? (
             <p className="text-[11px] text-fg-tertiary">
               {refreshFailed
                 ? `A live refresh ran automatically and failed: ${result.liveRefresh.error}`
                 : "A live refresh ran automatically and found nothing new."}
-            </p>
-          ) : turn.brandCount === 0 ? (
-            <p className="text-[11px] text-fg-tertiary">
-              No brands are in scope, so no live refresh could run.
             </p>
           ) : null}
         </AlertDescription>

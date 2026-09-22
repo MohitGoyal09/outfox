@@ -22,13 +22,28 @@ const funnelStage = v.union(
   v.literal("not_applicable"),
 );
 
-const claimDocValidator = v.object({
-  _id: v.id("claims"),
-  _creationTime: v.number(),
-  ownerId: v.optional(v.id("users")),
-  ...claimFields,
+const claimFields = {
+  text: v.string(),
+  metric: v.optional(v.string()),
+  value: v.optional(v.union(v.string(), v.number())),
+  unit: v.optional(v.string()),
+  period: v.optional(v.string()),
+  sourceEngine,
+  sourceQuery: v.string(),
+  evidenceUrl: v.string(),
+  fetchedAt: v.string(),
+  runId: v.id("runs"),
+  snapshotId: v.id("snapshots"),
+  brandId: v.id("brands"),
+  hookType: v.optional(hookType),
+  funnelStage: v.optional(funnelStage),
+  theme: v.optional(v.string()),
+  valueProp: v.optional(v.string()),
+  cta: v.optional(v.string()),
   audienceHint: v.optional(v.string()),
-});
+  confidence: v.optional(confidence),
+  taggedClaimId: v.optional(v.id("claims")),
+};
 
 export const insertClaims = internalMutation({
   args: { claims: v.array(v.object(claimFields)) },

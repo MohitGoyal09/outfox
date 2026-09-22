@@ -43,10 +43,6 @@ export function signalClaims(claims: ClaimDoc[]): ClaimDoc[] {
   return claims.filter(isSignalClaim);
 }
 
-export function isContentClaim(claim: ClaimDoc): boolean {
-  return claim.metric === undefined || !claim.metric.endsWith("_count");
-}
-
 export function claimsForRun(claims: ClaimDoc[], runId: string): ClaimDoc[] {
   return claims.filter((claim) => String(claim.runId) === runId);
 }
@@ -458,6 +454,10 @@ export function hookMixDrift(claims: ClaimDoc[], previous: ClaimDoc[]): HookDrif
   return [...labels]
     .map((label) => ({ label, current: currentMap.get(label) ?? 0, previous: previousMap.get(label) ?? 0 }))
     .sort((a, b) => b.current - a.current || b.previous - a.previous);
+}
+
+export function hookTypeFrequency(tags: ClaimDoc[]): LabeledCount[] {
+  const counts = new Map<string, number>();
 }
 
 

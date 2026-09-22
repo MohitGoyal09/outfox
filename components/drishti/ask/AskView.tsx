@@ -301,6 +301,10 @@ export function AskView({
       const trimmed = question.trim();
       if (trimmed === "" || asking) return;
       const { merged, overflowed } = mergeAskBrandIds(scope.brandIds, mentionedBrandIds);
+      if (merged.length === 0) {
+        setMentionNotice("Select a brand first — type @ to reference one, or open a cohort.");
+        return;
+      }
       if (overflowed) {
         setMentionNotice(`Only ${MAX_ASK_BRANDS} brands can be in context at once.`);
       }
@@ -476,7 +480,7 @@ export function AskView({
                 onSubmit={(message) => {
                   void submit(message.text);
                 }}
-                className="rounded-[10px] border border-border-strong bg-bg-raised transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(15,118,110,0.12)]"
+                className="rounded-3xl border border-border-strong bg-bg-raised transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_0_0_3px_rgba(15,118,110,0.12)]"
               >
                 <PromptInputBody>
                   <PromptInputTextarea
