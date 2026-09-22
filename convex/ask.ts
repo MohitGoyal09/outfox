@@ -11,6 +11,7 @@ import type { CallLLMResult, CallLLMUsage } from "./lib/llmClient";
 import { callLLMTracked, defaultBudgetForTask } from "./lib/modelRouter";
 import type { Doc, Id } from "./_generated/dataModel";
 import { MAX_BRANDS_PER_RUN, MAX_CONCURRENCY } from "./pipeline/plan";
+import { requireUserId } from "./lib/auth";
 
 export type LLMFn = (input: {
   system: string;
@@ -94,6 +95,7 @@ export const answerQuestion = action({
     latestRequested: v.optional(v.boolean()),
   },
   handler: async (ctx, args): Promise<AnswerQuestionResult> => {
+    await requireUserId(ctx);
     if (args.brandIds.length > MAX_BRANDS_PER_RUN) {
       throw new ConvexError(
         `Too many brands: ${args.brandIds.length}, limit is ${MAX_BRANDS_PER_RUN}`,

@@ -2,6 +2,7 @@ import { action, internalMutation, internalQuery, query } from "./_generated/ser
 import { v } from "convex/values";
 import { fetchSerpApiAccount } from "./lib/serpApiAccount";
 import { summarizeUsageRows } from "./llmUsage";
+import { requireUserId } from "./lib/auth";
 
 export const listReconcilableRows = internalQuery({
   args: { runId: v.optional(v.id("runs")), limit: v.number() },
