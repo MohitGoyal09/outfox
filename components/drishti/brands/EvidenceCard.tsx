@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { PlatformLogo } from "./PlatformLogo";
-import { engineLabel, type ClaimDoc } from "./brand-model";
+import { engineLabel, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
 import { displayClaimText, shortDate } from "./format";
 
 export const sourceAccent: Record<string, string> = {
@@ -28,11 +28,19 @@ const LANE_STYLE: Record<string, LaneStyle> = {
   google_news: { topBorder: true, iconClass: "size-4", titleClass: "", largeStat: false },
 };
 
-export function EvidenceCard({ claim }: { claim: ClaimDoc }) {
+function organicRank(claim: ClaimDoc): number | null {
+  return claim.metric === "google_organic_result" && claim.unit === "rank" && typeof claim.value === "number"
+    ? claim.value
+    : null;
+}
+
+export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrganicRawItem | null }) {
   const source = engineLabel(claim.sourceEngine).replace(" Search", "");
   const accent = sourceAccent[claim.sourceEngine] ?? "#0f766e";
   const lane = LANE_STYLE[claim.sourceEngine] ?? LANE_STYLE.google;
   const cardBg = claim.sourceEngine === "google_trends" ? "bg-blue-50/40" : "bg-card";
+  const rank = organicRank(claim);
+  const favicon = raw?.faviconUrl ?? null;
   return (
     <article
       className={cn(
@@ -44,11 +52,23 @@ export function EvidenceCard({ claim }: { claim: ClaimDoc }) {
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
-          <span className="grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-[11px] font-semibold" style={{ color: accent }}>
-            <PlatformLogo engine={claim.sourceEngine} className={lane.iconClass} />
+          <span className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border bg-background text-[11px] font-semibold" style={{ color: accent }}>
+            {favicon !== null ? (
+              <img src={favicon} alt="" loading="lazy" className="size-4 rounded-sm object-contain" />
+            ) : (
+              <PlatformLogo engine={claim.sourceEngine} className={lane.iconClass} />
+            )}
+            {rank !== null ? (
+              <span
+                className="absolute -bottom-1 -right-1.5 grid h-4 min-w-4 place-items-center rounded-full border border-background bg-accent px-1 font-mono text-[9px] font-semibold leading-none text-accent-ink"
+                title={`Organic rank ${rank}`}
+              >
+                #{rank}
+              </span>
+            ) : null}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-xs font-semibold">{source}</p>
+            <p className="truncate text-xs font-semibold">{raw?.sourceName ?? source}</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</p>
           </div>
         </div>
@@ -59,6 +79,7 @@ export function EvidenceCard({ claim }: { claim: ClaimDoc }) {
       </div>
       <div className="mt-4">
         <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{displayClaimText(claim.text)}</a>
+        {raw?.snippet ? <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-muted-foreground">{raw.snippet}</p> : null}
         {lane.largeStat && claim.value !== undefined ? (
           <div className="mt-2 flex items-baseline gap-1.5"><span className="text-2xl font-bold tabular-nums text-foreground">{String(claim.value)}</span><span className="text-[10px] text-muted-foreground">relative interest{claim.unit ? ` (${claim.unit})` : ""}</span></div>
         ) : claim.metric ? (

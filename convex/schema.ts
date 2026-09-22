@@ -27,6 +27,8 @@ const snapshotStatus = v.union(
   v.literal("unavailable"),
 );
 
+const enrichmentStatus = v.union(v.literal("hydrating"), v.literal("ready"));
+
 const planStep = v.object({
   id: v.string(),
   capability,
@@ -80,8 +82,21 @@ export default defineSchema({
     adsTransparencyAdvertiserId: v.optional(v.string()),
     createdAt: v.string(),
     lastRefreshedAt: v.optional(v.string()),
+    enrichmentStatus: v.optional(enrichmentStatus),
   })
     .index("by_owner", ["ownerId"])
+    .index("by_name", ["name"]),
+
+  brandCatalog: defineTable({
+    name: v.string(),
+    domain: v.string(),
+    vertical: v.string(),
+    aliases: v.array(v.string()),
+    adsTransparencyAdvertiserId: v.optional(v.string()),
+    description: v.optional(v.string()),
+    featured: v.boolean(),
+  })
+    .index("by_vertical", ["vertical"])
     .index("by_name", ["name"]),
 
   snapshots: defineTable({

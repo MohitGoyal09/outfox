@@ -194,26 +194,26 @@ export function BrandForm({
   const preview = (
     <dl className="flex flex-col gap-2 text-[13px]">
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-        <dt className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+        <dt className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#98A2B3)]")}>
           domain
         </dt>
-        <dd className={cn(VALUE_CLASS, "text-[var(--text-primary,#eeeef2)]")}>
+        <dd className={cn(VALUE_CLASS, "text-[var(--text-primary,#17191D)]")}>
           {effectiveDomain === "" ? "not resolved yet" : effectiveDomain}
         </dd>
       </div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-        <dt className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+        <dt className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#98A2B3)]")}>
           vertical
         </dt>
-        <dd className="text-[var(--text-primary,#eeeef2)]">
+        <dd className="text-[var(--text-primary,#17191D)]">
           {vertical.trim() === "" ? "not set" : vertical.trim()}
         </dd>
       </div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-        <dt className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+        <dt className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#98A2B3)]")}>
           ads transparency
         </dt>
-        <dd className="text-[var(--text-secondary,#9797a3)]">
+        <dd className="text-[var(--text-secondary,#667085)]">
           {adsTransparencyLabel(confirmedCandidate)}
         </dd>
       </div>
@@ -225,15 +225,15 @@ export function BrandForm({
       <div className="flex items-start gap-3">
         <span
           aria-hidden="true"
-          className="flex size-8 shrink-0 items-center justify-center rounded-[5px] border border-[var(--border,#24242f)] bg-[var(--bg-inset,#0e0e13)] text-[var(--text-tertiary,#64646f)]"
+          className="flex size-8 shrink-0 items-center justify-center rounded-[5px] border border-[var(--border,#E4E7EC)] bg-[var(--bg-inset,#F1F3F0)] text-[var(--text-tertiary,#98A2B3)]"
         >
           <Building2 {...iconProps} size={16} />
         </span>
         <div className="min-w-0">
-          <h3 className="text-[1.05rem] font-semibold leading-[1.32] text-[var(--text-primary,#eeeef2)]">
+          <h3 className="text-[1.05rem] font-semibold leading-[1.32] text-[var(--text-primary,#17191D)]">
             Add a rival
           </h3>
-          <p className="mt-1 max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+          <p className="mt-1 max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#667085)]">
             Paste a URL, type a handle, or search a name. The domain it resolves
             to is shown before anything is stored.
           </p>
@@ -309,8 +309,8 @@ export function BrandForm({
         />
       </div>
 
-      <div className="rounded-[5px] border border-dashed border-[var(--border,#24242f)] bg-[var(--bg-inset,#0e0e13)] p-3">
-        <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+      <div className="rounded-[5px] border border-dashed border-[var(--border,#E4E7EC)] bg-[var(--bg-inset,#F1F3F0)] p-3">
+        <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#98A2B3)]")}>
           preview
         </span>
         <div className="mt-2">{preview}</div>
@@ -319,9 +319,9 @@ export function BrandForm({
       {ambiguous.length > 0 ? (
         <div
           data-state="ambiguous"
-          className="flex flex-col gap-3 rounded-[5px] border border-[var(--warn,#fbbf24)] bg-[var(--bg-inset,#0e0e13)] p-3"
+          className="flex flex-col gap-3 rounded-[5px] border border-[var(--warn,#B45309)] bg-[var(--bg-inset,#F1F3F0)] p-3"
         >
-          <p className="text-[13px] leading-[1.5] text-[var(--text-primary,#eeeef2)]">
+          <p className="text-[13px] leading-[1.5] text-[var(--text-primary,#17191D)]">
             Names overlap a tracked brand. Confirm which one this is, or create a
             new profile.
           </p>
@@ -329,13 +329,13 @@ export function BrandForm({
             {ambiguous.map((brand) => (
               <li
                 key={String(brand._id)}
-                className="flex flex-wrap items-center justify-between gap-2 rounded-[5px] border border-[var(--border,#24242f)] bg-[var(--bg-raised,#131319)] px-3 py-2"
+                className="flex flex-wrap items-center justify-between gap-2 rounded-[5px] border border-[var(--border,#E4E7EC)] bg-[var(--bg-raised,#FFFFFF)] px-3 py-2"
               >
                 <span className="flex min-w-0 flex-col">
-                  <span className="truncate text-[13.5px] text-[var(--text-primary,#eeeef2)]">
+                  <span className="truncate text-[13.5px] text-[var(--text-primary,#17191D)]">
                     {brand.name}
                   </span>
-                  <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-tertiary,#64646f)]")}>
+                  <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-tertiary,#98A2B3)]")}>
                     {brand.domain}
                   </span>
                 </span>
@@ -366,10 +366,10 @@ export function BrandForm({
       {trackedBrand !== null ? (
         <div
           data-state="already-tracked"
-          className="flex flex-wrap items-center justify-between gap-3 rounded-[5px] border border-[var(--border,#24242f)] bg-[var(--bg-inset,#0e0e13)] p-3"
+          className="flex flex-wrap items-center justify-between gap-3 rounded-[5px] border border-[var(--border,#E4E7EC)] bg-[var(--bg-inset,#F1F3F0)] p-3"
         >
           <span className="flex min-w-0 flex-col gap-1">
-            <span className="text-[13.5px] text-[var(--text-primary,#eeeef2)]">
+            <span className="text-[13.5px] text-[var(--text-primary,#17191D)]">
               {trackedBrand.name} is already tracked.
             </span>
             <span className="flex flex-wrap items-center gap-2">
@@ -377,14 +377,14 @@ export function BrandForm({
                 label={profileStatusLabel(trackedBrand.profileStatus)}
                 tone={profileStatusTone(trackedBrand.profileStatus)}
               />
-              <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-tertiary,#64646f)]")}>
+              <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-tertiary,#98A2B3)]")}>
                 added {formatStamp(trackedBrand.createdAt)}
               </span>
             </span>
           </span>
           <Link
             href={`/brands/${trackedBrand._id}`}
-            className="inline-flex h-8 items-center gap-1.5 rounded-[5px] border border-[var(--border-strong,#35353f)] px-3 text-[13px] text-[var(--text-primary,#eeeef2)] hover:bg-[var(--bg-raised,#131319)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)]"
+            className="inline-flex h-8 items-center gap-1.5 rounded-[5px] border border-[var(--border-strong,#CBD2DC)] px-3 text-[13px] text-[var(--text-primary,#17191D)] hover:bg-[var(--bg-raised,#FFFFFF)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#0F766E)]"
           >
             Open profile
             <ExternalLink {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
@@ -393,13 +393,13 @@ export function BrandForm({
       ) : null}
 
       <fieldset className="flex flex-col gap-2">
-        <legend className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+        <legend className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#98A2B3)]")}>
           create path
         </legend>
         <div
           role="radiogroup"
           aria-label="Create path"
-          className="inline-flex w-fit items-center gap-1 rounded-full bg-[var(--bg-inset,#0e0e13)] p-[3px]"
+          className="inline-flex w-fit items-center gap-1 rounded-full bg-[var(--bg-inset,#F1F3F0)] p-[3px]"
         >
           {(
             [
@@ -420,13 +420,13 @@ export function BrandForm({
                   "inline-flex h-7 items-center rounded-full px-3 text-[12.5px] font-medium",
                   "max-[899px]:min-h-11",
                   active
-                    ? "bg-[var(--accent,#e2a339)] text-[var(--accent-ink,#1a1204)]"
+                    ? "bg-[var(--accent,#0F766E)] text-[var(--accent-ink,#FFFFFF)]"
                     : cn(
-                        "cursor-pointer bg-transparent text-[var(--text-secondary,#9797a3)] hover:text-[var(--text-primary,#eeeef2)]",
+                        "cursor-pointer bg-transparent text-[var(--text-secondary,#667085)] hover:text-[var(--text-primary,#17191D)]",
                         PRESS_CLASS,
                       ),
                   "motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-out",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)]",
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#0F766E)]",
                 )}
               >
                 {option.label}
@@ -434,7 +434,7 @@ export function BrandForm({
             );
           })}
         </div>
-        <p className="max-w-[68ch] text-[12px] leading-[1.45] text-[var(--text-secondary,#9797a3)]">
+        <p className="max-w-[68ch] text-[12px] leading-[1.45] text-[var(--text-secondary,#667085)]">
           {path === "shared"
             ? "Same path the agent uses. Stores the profile ready to compare."
             : "Stores a pending record the next run hydrates. Both paths write the same brands table."}
@@ -444,7 +444,7 @@ export function BrandForm({
       {error !== null ? (
         <p
           role="alert"
-          className="rounded-[5px] border border-[var(--danger,#f87171)] px-3 py-2 text-[13px] leading-[1.5] text-[var(--danger,#f87171)]"
+          className="rounded-[5px] border border-[var(--danger,#DC2626)] px-3 py-2 text-[13px] leading-[1.5] text-[var(--danger,#DC2626)]"
         >
           {error}
         </p>
@@ -452,9 +452,9 @@ export function BrandForm({
       {success !== null ? (
         <p
           role="status"
-          className="flex items-center gap-2 rounded-[5px] border border-[var(--border,#24242f)] bg-[var(--bg-inset,#0e0e13)] px-3 py-2 text-[13px] leading-[1.5] text-[var(--text-primary,#eeeef2)]"
+          className="flex items-center gap-2 rounded-[5px] border border-[var(--border,#E4E7EC)] bg-[var(--bg-inset,#F1F3F0)] px-3 py-2 text-[13px] leading-[1.5] text-[var(--text-primary,#17191D)]"
         >
-          <Link2 {...iconProps} size={14} aria-hidden="true" className="size-3.5 text-[var(--ok,#4ade80)]" />
+          <Link2 {...iconProps} size={14} aria-hidden="true" className="size-3.5 text-[var(--ok,#059669)]" />
           {success}
         </p>
       ) : null}
@@ -469,15 +469,15 @@ export function BrandForm({
           {error !== null ? "Retry create" : "Confirm rival"}
         </Button>
         {blockedByTracking ? (
-          <span className="text-[12.5px] text-[var(--text-secondary,#9797a3)]">
+          <span className="text-[12.5px] text-[var(--text-secondary,#667085)]">
             This rival is already tracked. Nothing to create.
           </span>
         ) : blockedByAmbiguity ? (
-          <span className="text-[12.5px] text-[var(--text-secondary,#9797a3)]">
+          <span className="text-[12.5px] text-[var(--text-secondary,#667085)]">
             Confirm a candidate, or choose to create a new profile.
           </span>
         ) : (
-          <span className="text-[12.5px] text-[var(--text-secondary,#9797a3)]">
+          <span className="text-[12.5px] text-[var(--text-secondary,#667085)]">
             Writes one BrandProfile through the chosen path.
           </span>
         )}

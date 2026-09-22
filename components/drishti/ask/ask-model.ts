@@ -1,7 +1,6 @@
 import type { AnswerQuestionResult } from "@/convex/ask";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
-import type { TrailStep } from "../Trail";
-import type { AskExchange } from "./ask-store";
+import type { Tone } from "../tokens";
 import {
   findGoogleNewsRawItem,
   findYoutubeRawVideo,
@@ -47,6 +46,11 @@ export function brandIdsFromCohortKey(
   return parts as Id<"brands">[];
 }
 
+export function askThreadKey(scope: AskScope): string {
+  if (scope.cohortKey !== null) return `ask:cohort:${scope.cohortKey}`;
+  return "ask:none";
+}
+
 export function askScopeLabel(
   scope: AskScope,
   brandNames: Record<string, string>,
@@ -56,55 +60,82 @@ export function askScopeLabel(
   );
 }
 
-function tokenText(call: NonNullable<AnswerQuestionResult["usage"]>[number]): string {
+
+export type PersistedMessage = {
+  id: string;
+  role: "user" | "assistant";
+  text: string;
+  citations: string[];
+  createdAt: string;
+};
+
+export type PersistedEvent = Doc<"agentEvents">;
+
+export function eventStatusTone(status: PersistedEvent["status"]): Tone {
+  if (status === "complete") return "ok";
+  if (status === "failed") return "danger";
+  if (status === "running" || status === "pending") return "weak";
+  return "neutral";
 }
 
-export function buildToolTrace(
-  result: AnswerQuestionResult,
-  brandCount: number,
-): TrailStep[] {
-  const steps: TrailStep[] = [];
+export function groupEventsIntoTurns(events: PersistedEvent[]): PersistedEvent[][] {
+  return groups;
+}
 
-  steps.push({
-    id: "read_stored_claims",
-    label: "read_stored_claims",
-    value:
-      brandCount === 0
-        ? "no brands in scope"
-        : `${brandCount} brand${brandCount === 1 ? "" : "s"}`,
-    tone: brandCount === 0 ? "weak" : "ok",
-    reasoning:
-      "The ask path reads stored claims only. It never fetches from an engine.",
-  });
+export type ToolCallCardView = {
+  id: string;
+  kind: PersistedEvent["kind"];
+  name: string;
+  status: PersistedEvent["status"];
+  tone: Tone;
+  detail: string | null;
+  query: string | null;
+  resultCount: string | null;
+  durationMs: number | null;
+  rawPayload: unknown;
+  seq: number;
+};
 
-  if (result.liveRefresh?.attempted === true) {
-    const refresh = result.liveRefresh;
-    steps.push({
-      id: "ran_live_refresh",
-      label: "ran_live_refresh",
-      value: `${refresh.brandCount} brand${refresh.brandCount === 1 ? "" : "s"}`,
-      tone: failed ? "danger" : "ok",
-      reasoning: failed
-        ? `This call fetched live data from SerpApi and used real SerpApi credits, then failed: ${refresh.error}`
-        : `This call fetched live data from SerpApi and used real SerpApi credits (run ${refresh.runId ?? "unknown"}).`,
-    });
+export type AskTurn = {
+  id: string;
+  question: string;
+  askedAt: string;
+  answeredAt: string;
+  durationMs: number | null;
+  brandCount: number;
+  result: AnswerQuestionResult;
+  events: PersistedEvent[];
+};
+
+type AnswerEventPayload = {
+  available?: boolean;
+  mode?: AnswerQuestionResult["mode"];
+  message?: string;
+  error?: string;
+  liveRefresh?: AnswerQuestionResult["liveRefresh"];
+  brandCount?: number;
+  durationMs?: number;
+};
+
+const ENGINE_LABELS: Record<string, string> = {
+  google: "Google Search",
+  google_news: "Google News",
+  youtube_video: "YouTube",
+  google_trends: "Google Trends",
+  llm_tag: "content tags",
+};
+
+export function buildFollowUpSuggestions(
+  brandNames: string[],
+  citedEngines: string[],
+): string[] {
+  if (brandNames.length >= 2) {
+    suggestions.push(`How does ${brandNames[0]} compare to ${brandNames[1]} here?`);
   }
-
-  const usage = result.usage ?? [];
-
-  const kept = result.mode === "invalid" ? 0 : result.citations.length;
-  steps.push({
-    id: "validate_citations",
-    label: "validate_citations",
-    value: kept === 0 ? "no citations kept" : `${kept} claim${kept === 1 ? "" : "s"} cited`,
-    tone: kept === 0 ? "danger" : "ok",
-    reasoning:
-      result.mode === "invalid"
-        ? (result.error ?? "The stored claims did not answer the question.")
-        : "Every kept sentence cites a claim that was supplied to the model.",
-  });
-
-  return steps;
+  for (const engine of citedEngines.slice(0, 1)) {
+    suggestions.push(`Show more evidence from ${engineLabel(engine)}.`);
+  }
+  return [...new Set(suggestions)].slice(0, 3);
 }
 
 export function buildTagIndex(claims: Doc<"claims">[]): Map<string, AskTagView> {
@@ -121,22 +152,6 @@ export function buildTagIndex(claims: Doc<"claims">[]): Map<string, AskTagView> 
       confidence: claim.confidence,
     });
   }
-}
-
-export function citedSnapshotIds(
-  exchanges: AskExchange[],
-  claimIndex: Map<string, AskClaimView>,
-): Id<"snapshots">[] {
-  const ids = new Set<string>();
-  for (const exchange of exchanges) {
-    for (const citationId of exchange.result.citations) {
-      const claim = claimIndex.get(citationId);
-      if (claim === undefined) continue;
-      if (claim.sourceEngine !== "youtube_video" && claim.sourceEngine !== "google_news") continue;
-      ids.add(claim.snapshotId);
-    }
-  }
-  return [...ids] as Id<"snapshots">[];
 }
 
 export type CitationCardView = {

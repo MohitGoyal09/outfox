@@ -16,12 +16,43 @@ const createBrandArgs = {
   adsTransparencyAdvertiserId: v.optional(v.string()),
 };
 
+const SIMILAR_BRANDS_LIMIT = 8;
+
+const enrichmentStatus = v.union(v.literal("hydrating"), v.literal("ready"));
+
+const brandDocValidator = v.object({
+  _id: v.id("brands"),
+  _creationTime: v.number(),
+  ownerId: v.optional(v.id("users")),
+  name: v.string(),
+  domain: v.string(),
+  vertical: v.string(),
+  aliases: v.array(v.string()),
+  profileStatus,
+  adsTransparencyAdvertiserId: v.optional(v.string()),
+  createdAt: v.string(),
+  lastRefreshedAt: v.optional(v.string()),
+  enrichmentStatus: v.optional(enrichmentStatus),
+});
+
 function normalizeDomain(domain: string): string {
   return domain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
 }
 
+export const listBrands = query({
+  args: {},
+  returns: v.array(brandDocValidator),
+  handler: async (ctx) => {
+    const ownerId = await requireUserId(ctx);
+    const brands = await ctx.db.query("brands").withIndex("by_owner", (q) => q.eq("ownerId", ownerId)).collect();
+    brands.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    return brands;
+  },
+});
+
 export const createBrand = mutation({
   args: createBrandArgs,
+  returns: v.id("brands"),
   handler: async (ctx, args) => {
     const ownerId = await requireUserId(ctx);
     const vertical = args.vertical.trim();
@@ -38,24 +69,19 @@ export const createBrand = mutation({
   },
 });
 
-export const createBrandInternal = internalMutation({
-  args: { ...createBrandArgs, ownerId: v.id("users") },
+export const updateBrandStatusInternal = internalMutation({
+  args: {
+    brandId: v.id("brands"),
+    profileStatus,
+    lastRefreshedAt: v.optional(v.string()),
+    ownerId: v.id("users"),
+  },
+  returns: v.id("brands"),
   handler: async (ctx, args) => {
-    const vertical = args.vertical.trim();
-    const existing = (await ctx.db.query("brands").withIndex("by_owner", (q) => q.eq("ownerId", args.ownerId)).collect()).find(
-      (brand) =>
-        brand.name.toLowerCase() === name.toLowerCase() &&
-        normalizeDomain(brand.domain) === domain,
-    );
-    return await ctx.db.insert("brands", {
-      ownerId: args.ownerId,
-      name,
-      domain,
-      vertical,
-      aliases: args.aliases,
-      profileStatus: "pending",
-      adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
-      createdAt: new Date().toISOString(),
-    });
+    const patch: {
+      profileStatus: "pending" | "ready" | "needs_confirmation";
+      lastRefreshedAt?: string;
+    } = { profileStatus: args.profileStatus };
+    return args.brandId;
   },
 });

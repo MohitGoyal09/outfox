@@ -48,9 +48,11 @@ export function AskBar({
     setError(null);
     try {
       const latestRequested = /latest/i.test(trimmed);
+      const threadKey = `ask:brand:${[...brandIds].sort().join(",")}`;
       const out = (await answerQuestion({
         question: trimmed,
         brandIds,
+        threadKey,
         ...(runId !== undefined ? { runId } : {}),
         ...(latestRequested ? { latestRequested: true } : {}),
       })) as AskResult;

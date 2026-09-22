@@ -32,7 +32,7 @@ export default async function AskPage({
   return (
     <AskView
       cohortKey={firstString(params.cohort)}
-      initialQuestion={firstString(params.q)}
+      initialQuestion={firstString(params.q) ?? firstString(params.prompt)}
       initialBrandIds={brandIdsFromParam(firstString(params.brands))}
     />
   );

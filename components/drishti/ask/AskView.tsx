@@ -6,10 +6,9 @@ import {
   useMemo,
   useRef,
   useState,
-  useSyncExternalStore,
 } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { CircleAlert, Database, Plus, ShieldCheck, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
@@ -31,9 +30,9 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { Button } from "../Button";
 import { Skeleton } from "../Skeleton";
-import { TrailSkeleton } from "../Trail";
 import { LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
 import { AskMessage } from "./AskMessage";
+import { AskReasoning } from "./AskReasoning";
 import {
   BrandMentionMenu,
   filterMentionBrands,
@@ -43,7 +42,9 @@ import {
 import {
   MAX_ASK_BRANDS,
   askScopeLabel,
+  askThreadKey,
   brandIdsFromCohortKey,
+  buildAskTurns,
   buildClaimIndex,
   buildTagIndex,
   citedSnapshotIds,
@@ -52,11 +53,6 @@ import {
   type AskScope,
   type AskTagView,
 } from "./ask-model";
-import {
-  getAskExchanges,
-  resetAskExchanges,
-  subscribeAskExchanges,
-} from "./ask-store";
 import { useAskSubmit } from "./useAsk";
 
 const SUGGESTIONS = [
@@ -68,6 +64,8 @@ const SUGGESTIONS = [
 const EMPTY_INDEX = new Map<string, AskClaimView>();
 const EMPTY_TAG_INDEX = new Map<string, AskTagView>();
 const EMPTY_SNAPSHOT_INDEX = new Map<string, Doc<"snapshots">>();
+const EMPTY_MESSAGES: never[] = [];
+const EMPTY_EVENTS: never[] = [];
 
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 
@@ -126,15 +124,38 @@ export function AskView({
     };
   }, [isBrandsMode, initialBrandIds, cohortKey, runId]);
 
-  const exchanges = useSyncExternalStore(
-    subscribeAskExchanges,
-    getAskExchanges,
-    getAskExchanges,
+  const threadKey = askThreadKey(scope);
+  const recentMessages = useQuery(api.messages.listRecent, { threadKey, limit: 50 });
+  const recentEvents = useQuery(api.agentEvents.listEvents, { threadKey, limit: 200 });
+  const clearMyThread = useMutation(api.messages.clearMyThread);
+  const clearMyEvents = useMutation(api.agentEvents.clearMyEvents);
+
+  const { turns, liveEvents } = useMemo(
+    () => buildAskTurns(recentMessages ?? EMPTY_MESSAGES, recentEvents ?? EMPTY_EVENTS),
+    [recentMessages, recentEvents],
   );
 
+  const [focusedCitation, setFocusedCitation] = useState<{ turnId: string; citationId: string } | null>(
+    null,
+  );
+  const focusCitation = useCallback((turnId: string, citationId: string) => {
+    setFocusedCitation((current) =>
+      current?.turnId === turnId && current.citationId === citationId
+        ? null
+        : { turnId, citationId },
+    );
+  }, []);
+  useEffect(() => {
+    if (focusedCitation === null) return;
+    const element = document.getElementById(
+      `citation-${focusedCitation.turnId}-${focusedCitation.citationId}`,
+    );
+    element?.scrollIntoView({ block: "nearest" });
+  }, [focusedCitation]);
+
   const snapshotIds = useMemo(
-    () => citedSnapshotIds(exchanges, claimIndex),
-    [exchanges, claimIndex],
+    () => citedSnapshotIds(turns, claimIndex),
+    [turns, claimIndex],
   );
   const citedSnapshots = useQuery(
     api.snapshots.byIds,
@@ -287,16 +308,16 @@ export function AskView({
       setPendingQuestion(trimmed);
       setLastQuestion(trimmed);
       setValue("");
-      const exchange = await ask(trimmed, current);
+      const result = await ask(trimmed, current, threadKey);
       setPendingQuestion(null);
-      if (exchange === null) {
+      if (result === null) {
         setValue(trimmed);
         return;
       }
       setMentionedBrandIds([]);
       closeMentionMenu();
     },
-    [ask, asking, scope, mentionedBrandIds],
+    [ask, asking, scope, mentionedBrandIds, threadKey],
   );
 
   useEffect(() => {
@@ -306,7 +327,7 @@ export function AskView({
     void submit(initialQuestion);
   }, [initialQuestion, submit]);
 
-  const hasTranscript = exchanges.length > 0;
+  const hasTranscript = turns.length > 0;
   const scopeText = askScopeLabel(scope, brandNames);
   const canSend = value.trim().length > 0 && !asking;
   const mentionBrandViews = mentionedBrandIds
@@ -333,7 +354,14 @@ export function AskView({
             {scopeText}
           </span>
           {hasTranscript ? (
-            <Button variant="ghost" size="sm" onClick={resetAskExchanges}>
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={() => {
+                void clearMyThread({ threadKey });
+                void clearMyEvents({ threadKey });
+              }}
+            >
               Clear
             </Button>
           ) : null}
@@ -369,10 +397,10 @@ export function AskView({
                 </ConversationEmptyState>
               ) : null}
 
-              {exchanges.map((exchange) => (
+              {turns.map((turn) => (
                 <AskMessage
-                  key={exchange.id}
-                  exchange={exchange}
+                  key={turn.id}
+                  turn={turn}
                   claimIndex={claimIndex}
                   snapshotIndex={snapshotIndex}
                   tagIndex={tagIndex}
@@ -380,18 +408,25 @@ export function AskView({
                     void submit(question);
                   }}
                   retrying={asking}
+                  focusedCitationId={focusedCitation?.turnId === turn.id ? focusedCitation.citationId : null}
+                  onFocusCitation={focusCitation}
                 />
               ))}
 
               {pendingQuestion !== null ? (
-                <div className="flex flex-col gap-4" aria-busy="true">
+                <div className="flex flex-col gap-3" aria-busy="true">
                   <p className="ml-auto w-fit max-w-[85%] rounded-[8px] bg-bg-inset px-4 py-3 text-sm text-fg">
                     {pendingQuestion}
                   </p>
+                  {liveEvents.length > 0 ? (
+                    <AskReasoning events={liveEvents} defaultOpen />
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Skeleton variant="text" width="40%" />
+                    </div>
+                  )}
                   <div className="flex flex-col gap-2">
-                    <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>tool trace</span>
-                    <TrailSkeleton density="vertical" stepCount={3} />
-                    <span className={cn(LABEL_CLASS, "mt-2 text-fg-tertiary")}>answer</span>
+                    <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>answer</span>
                     <Skeleton variant="text" width="92%" />
                     <Skeleton variant="text" width="84%" />
                     <Skeleton variant="text" width="60%" />
@@ -537,7 +572,7 @@ export function AskView({
           <div className="rounded-[10px] border border-border bg-bg-inset p-3.5">
             <p className="text-xs leading-5 text-fg-secondary">
               When stored claims can&apos;t answer a question, Ask fetches live evidence
-              automatically and shows it in the tool trace — no manual refresh needed.
+              automatically and shows it in the reasoning trail — no manual refresh needed.
             </p>
           </div>
         </aside>

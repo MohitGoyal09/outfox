@@ -1,7 +1,7 @@
 
 import type { DistributionItem } from "../DistributionPanel";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { ABSENT, type Tone } from "../tokens";
+import { ABSENT, FUNNEL_STAGES, type Tone } from "../tokens";
 
 export type BrandDoc = Doc<"brands">;
 export type RunDoc = Doc<"runs">;
@@ -374,4 +374,220 @@ export function readGoogleNewsRawItem(raw: unknown): GoogleNewsRawItem {
   const source = asRecord(record?.source);
   const thumbnailUrl = typeof record?.thumbnail === "string" ? record.thumbnail : null;
   const publisherName = typeof source?.name === "string" ? source.name : null;
+}
+
+
+export type GoogleOrganicRawItem = { faviconUrl: string | null; snippet: string | null; sourceName: string | null };
+
+export function findGoogleOrganicRawItem(rawResponse: unknown, evidenceUrl: string): unknown {
+  return null;
+}
+
+export function readGoogleOrganicRawItem(raw: unknown): GoogleOrganicRawItem {
+  const record = asRecord(raw);
+  const snippet = typeof record?.snippet === "string" ? record.snippet : null;
+  const sourceName = typeof record?.source === "string" ? record.source : null;
+  return { faviconUrl, snippet, sourceName };
+}
+
+
+export type YoutubeSearchResultRow = {
+  title: string | null;
+  link: string | null;
+  channelName: string | null;
+  views: number | null;
+  length: string | null;
+  thumbnailUrl: string | null;
+};
+
+function looseThumbnailUrl(value: unknown): string | null {
+  if (typeof value === "string") return value;
+  const record = asRecord(value);
+  if (record === null) return null;
+  if (typeof record.static === "string") return record.static;
+  if (typeof record.rich === "string") return record.rich;
+  return null;
+}
+
+export function youtubeSearchResultRows(rawResponse: unknown): YoutubeSearchResultRow[] {
+  const items = Array.isArray(root?.video_results) ? root.video_results : [];
+  return items.flatMap((entry): YoutubeSearchResultRow[] => {
+    if (record === null) return [];
+    const channel = asRecord(record.channel);
+    return [
+      {
+        title: typeof record.title === "string" ? record.title : null,
+        link: typeof record.link === "string" ? record.link : null,
+        channelName: typeof channel?.name === "string" ? channel.name : null,
+        views: looseNumber(record.views ?? record.view_count),
+        length: typeof record.length === "string" ? record.length : null,
+        thumbnailUrl: looseThumbnailUrl(record.thumbnail),
+      },
+    ];
+  });
+}
+
+
+export function tagsForClaim(tags: ClaimDoc[], claim: ClaimDoc): ClaimDoc[] {
+  return tags.filter(
+    (tag) =>
+      String(tag._id) === String(claim._id) ||
+      (tag.taggedClaimId !== undefined && String(tag.taggedClaimId) === String(claim._id)),
+  );
+}
+
+
+export type LabeledCount = { label: string; count: number };
+
+export function valuePropFrequency(tags: ClaimDoc[]): LabeledCount[] {
+  const counts = new Map<string, number>();
+  for (const tag of tagBearingClaims(tags)) {
+    const value = tag.valueProp;
+    if (value === undefined || value.trim() === "") continue;
+    counts.set(value, (counts.get(value) ?? 0) + 1);
+  }
+}
+
+export type HookDriftRow = { label: string; current: number; previous: number };
+
+export function hookMixDrift(claims: ClaimDoc[], previous: ClaimDoc[]): HookDriftRow[] {
+  const currentItems = hookDistribution(claims);
+  const toMap = (items: DistributionItem[]) => new Map(items.map((item) => [item.label, item.count ?? 0]));
+  const previousMap = toMap(previousItems);
+  const labels = new Set([...currentMap.keys(), ...previousMap.keys()]);
+  return [...labels]
+    .map((label) => ({ label, current: currentMap.get(label) ?? 0, previous: previousMap.get(label) ?? 0 }))
+    .sort((a, b) => b.current - a.current || b.previous - a.previous);
+}
+
+
+export type RankBucket = { label: string; min: number; max: number; count: number };
+
+export function organicRankBuckets(claims: ClaimDoc[]): RankBucket[] {
+}
+
+
+export function relatedQuestionClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "google_related_question");
+}
+
+export function relatedSearchClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "google_related_search");
+}
+
+export function knowledgeDescriptionClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "brand_knowledge_description");
+}
+
+export function knowledgeAttributeClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "brand_knowledge_attribute");
+}
+
+export function youtubeShortResultClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "youtube_short_result");
+}
+
+export function newsPublisherClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "google_news_publisher");
+}
+
+export function aiOverviewClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "google_ai_overview");
+}
+
+export function productListingClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "google_product_listing");
+}
+
+function hostnameOf(url: string): string | null {
+  try {
+    return new URL(url).hostname.replace(/^www\./, "");
+  } catch {
+    return null;
+  }
+}
+
+export type RetailerListingRow = { hostname: string; count: number };
+
+export type PricePoint = { claimId: string; hostname: string | null; price: number; unit: string | null; fetchedAt: string };
+
+export function pricePoints(claims: ClaimDoc[]): PricePoint[] {
+  return productListingClaims(claims)
+    .filter((claim): claim is ClaimDoc & { value: number } => typeof claim.value === "number")
+    .map((claim) => ({
+      claimId: String(claim._id),
+      hostname: hostnameOf(claim.evidenceUrl),
+      price: claim.value,
+      unit: claim.unit ?? null,
+      fetchedAt: claim.fetchedAt,
+    }))
+    .sort((a, b) => a.price - b.price);
+}
+
+
+export type CreatorRow = { channelName: string; totalViews: number; videoCount: number; owned: boolean; subscribers: number | null };
+
+export function creatorRowsFromGroups(
+  groups: YoutubeVideoGroup[],
+  rawResponse: unknown,
+  brandName: string,
+): CreatorRow[] {
+  const byChannel = new Map<string, CreatorRow>();
+  for (const group of groups) {
+    const raw = readYoutubeRawVideo(findYoutubeRawVideo(rawResponse, group.videoId));
+    if (raw.channelName === null) continue;
+    const views = group.viewCount ?? 0;
+    const subscribers = groupSubscriberCount(group);
+    const existing = byChannel.get(raw.channelName);
+    if (existing !== undefined) {
+      existing.totalViews += views;
+      existing.videoCount += 1;
+      if (existing.subscribers === null && subscribers !== null) existing.subscribers = subscribers;
+    }
+  }
+}
+
+export function mergeCreatorRows(base: CreatorRow[], searchRows: YoutubeSearchResultRow[], brandName: string): CreatorRow[] {
+  const byChannel = new Map(base.map((row) => [row.channelName, { ...row }]));
+  for (const row of searchRows) {
+    if (row.channelName === null || row.views === null) continue;
+    const existing = byChannel.get(row.channelName);
+    if (existing !== undefined) {
+      existing.totalViews += row.views;
+      existing.videoCount += 1;
+    }
+    byChannel.set(row.channelName, {
+      channelName: row.channelName,
+      totalViews: row.views,
+      videoCount: 1,
+      owned: namesLikelyMatch(row.channelName, brandName),
+      subscribers: null,
+    });
+  }
+}
+
+
+export type AdRuntimeRow = {
+  claimId: string;
+  format: string;
+  firstShown: string | null;
+  lastShown: string | null;
+  runDays: number | null;
+  evidenceUrl: string;
+};
+
+function parseAdPeriod(period: string | undefined): { firstShown: string | null; lastShown: string | null } {
+  if (period === undefined) return { firstShown: null, lastShown: null };
+  const [first, last] = period.split("..");
+  if (last !== undefined) return { firstShown: first || null, lastShown: last || null };
+}
+
+function daysBetween(a: string, b: string): number | null {
+  const end = Date.parse(b);
+  return Math.max(0, Math.round((end - start) / (24 * 60 * 60 * 1000)));
+}
+
+
+export function themeFrequency(tags: ClaimDoc[]): LabeledCount[] {
+  const counts = new Map<string, number>();
 }

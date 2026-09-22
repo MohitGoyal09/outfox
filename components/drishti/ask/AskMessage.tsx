@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDownIcon, RefreshCw } from "lucide-react";
+import { useState } from "react";
+import { Check, Copy, RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -8,48 +9,50 @@ import {
   MessageContent,
   MessageResponse,
 } from "@/components/ai-elements/message";
-import {
-  Sources,
-  SourcesContent,
-  SourcesTrigger,
-} from "@/components/ai-elements/sources";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { Button } from "../Button";
-import { Trail } from "../Trail";
-import { LABEL_CLASS, iconProps } from "../tokens";
+import { formatLatency, iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
-import { formatLatency } from "../tokens";
+import { AskReasoning } from "./AskReasoning";
 import { CitationCard } from "./CitationCard";
 import {
-  buildToolTrace,
+  buildFollowUpSuggestions,
   citationViews,
   type AskClaimView,
   type AskTagView,
+  type AskTurn,
 } from "./ask-model";
-import type { AskExchange } from "./ask-store";
+
+function citationDomId(turnId: string, citationId: string): string {
+  return `citation-${turnId}-${citationId}`;
+}
 
 function AskAnswerContent({
-  exchange,
+  turn,
   claimIndex,
   snapshotIndex,
   tagIndex,
   onRetry,
   retrying,
+  focusedCitationId,
+  onFocusCitation,
 }: {
-  exchange: AskExchange;
+  turn: AskTurn;
   claimIndex: Map<string, AskClaimView>;
   snapshotIndex: Map<string, Doc<"snapshots">>;
   tagIndex: Map<string, AskTagView>;
   onRetry: (question: string) => void;
   retrying: boolean;
+  focusedCitationId: string | null;
+  onFocusCitation: (turnId: string, citationId: string) => void;
 }) {
-  const { result } = exchange;
+  const { result } = turn;
   const retryButton = (
     <Button
       variant="ghost"
       size="sm"
       loading={retrying}
-      onClick={() => onRetry(exchange.question)}
+      onClick={() => onRetry(turn.question)}
       icon={<RefreshCw {...iconProps} size={14} />}
     >
       Retry
@@ -93,7 +96,7 @@ function AskAnswerContent({
                 ? `A live refresh ran automatically and failed: ${result.liveRefresh.error}`
                 : "A live refresh ran automatically and found nothing new."}
             </p>
-          ) : exchange.brandIds.length === 0 ? (
+          ) : turn.brandCount === 0 ? (
             <p className="text-[11px] text-fg-tertiary">
               No brands are in scope, so no live refresh could run.
             </p>
@@ -137,86 +140,144 @@ function AskAnswerContent({
   }
 
   const citations = citationViews(result.citations, claimIndex, snapshotIndex, tagIndex);
+  const followUps = buildFollowUpSuggestions(
+    [...new Set(citations.map((c) => c.brandName).filter((name) => name !== ""))],
+    [...new Set(citations.map((c) => c.sourceEngine).filter((engine) => engine !== ""))],
+  );
 
   return (
     <>
       <MessageResponse>{result.answer}</MessageResponse>
+
       {citations.length > 0 ? (
-        <Sources>
-          <SourcesTrigger
-            count={citations.length}
-            className={cn(LABEL_CLASS, "text-fg-tertiary hover:text-fg-secondary")}
-          >
-            <span>
-              {citations.length} citation{citations.length === 1 ? "" : "s"}
-            </span>
-            <ChevronDownIcon className="h-3.5 w-3.5" />
-          </SourcesTrigger>
-          <SourcesContent className="flex-row flex-wrap items-start gap-1.5">
+        <>
+          <div className="flex flex-wrap items-center gap-1.5">
             {citations.map((citation) => (
-              <CitationCard key={citation.id} citation={citation} />
+              <button
+                key={citation.id}
+                type="button"
+                onClick={() => onFocusCitation(turn.id, citation.id)}
+                aria-label={`Jump to source ${citation.label}`}
+                className={cn(
+                  "inline-flex h-5 items-center rounded-full border px-1.5 font-mono text-[10.5px] font-semibold",
+                  focusedCitationId === citation.id
+                    ? "border-accent bg-accent-dim text-fg"
+                    : "border-border-strong text-fg-tertiary hover:border-accent/50 hover:text-fg",
+                )}
+              >
+                {citation.label}
+              </button>
             ))}
-          </SourcesContent>
-        </Sources>
+          </div>
+          <div className="flex flex-row flex-wrap items-start gap-1.5">
+            {citations.map((citation) => (
+              <CitationCard
+                key={citation.id}
+                citation={citation}
+                id={citationDomId(turn.id, citation.id)}
+                focused={focusedCitationId === citation.id}
+              />
+            ))}
+          </div>
+        </>
+      ) : null}
+
+      {followUps.length > 0 ? (
+        <div className="flex flex-wrap gap-1.5 pt-1">
+          {followUps.map((question) => (
+            <button
+              key={question}
+              type="button"
+              onClick={() => onRetry(question)}
+              disabled={retrying}
+              className="rounded-full border border-border bg-bg-raised px-2.5 py-1 text-[11.5px] text-fg-secondary transition-colors duration-150 ease-out hover:border-accent/50 hover:bg-accent-dim hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              {question}
+            </button>
+          ))}
+        </div>
       ) : null}
     </>
   );
 }
 
+function CopyButton({ text }: { text: string }) {
+  const [copied, setCopied] = useState(false);
+  if (text.trim() === "") return null;
+  return (
+    <Button
+      variant="ghost"
+      size="sm"
+      onClick={() => {
+        void navigator.clipboard.writeText(text).then(() => {
+          setCopied(true);
+          setTimeout(() => setCopied(false), 1500);
+        });
+      }}
+      icon={
+        copied ? (
+          <Check {...iconProps} size={13} className="text-ok" />
+        ) : (
+          <Copy {...iconProps} size={13} />
+        )
+      }
+    >
+      {copied ? "Copied" : "Copy"}
+    </Button>
+  );
+}
+
 export function AskMessage({
-  exchange,
+  turn,
   claimIndex,
   snapshotIndex,
   tagIndex,
   onRetry,
   retrying,
+  focusedCitationId,
+  onFocusCitation,
 }: {
-  exchange: AskExchange;
+  turn: AskTurn;
   claimIndex: Map<string, AskClaimView>;
   snapshotIndex: Map<string, Doc<"snapshots">>;
   tagIndex: Map<string, AskTagView>;
   onRetry: (question: string) => void;
   retrying: boolean;
+  focusedCitationId: string | null;
+  onFocusCitation: (turnId: string, citationId: string) => void;
 }) {
-  const toolTrace = buildToolTrace(exchange.result, exchange.brandIds.length);
-  const latency = formatLatency(exchange.latencyMs);
+  const latency = formatLatency(turn.durationMs);
 
   return (
     <>
       <Message from="user">
         <MessageContent className="rounded-[8px] bg-bg-inset px-4 py-3 text-fg">
-          {exchange.question}
+          {turn.question}
         </MessageContent>
       </Message>
       <Message from="assistant">
         <MessageContent>
-          <span className="text-[10.5px] text-fg-tertiary">
-            {formatStamp(exchange.askedAt)}
-            {latency ? ` · ${latency}` : ""}
-          </span>
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-[10.5px] text-fg-tertiary">
+              {formatStamp(turn.answeredAt)}
+              {latency ? ` · ${latency}` : ""}
+            </span>
+            <div className="flex items-center gap-1">
+              <CopyButton text={turn.result.mode === "llm" ? turn.result.answer : ""} />
+            </div>
+          </div>
 
-          <Sources>
-            <SourcesTrigger
-              count={toolTrace.length}
-              className={cn(LABEL_CLASS, "text-fg-tertiary hover:text-fg-secondary")}
-            >
-              <span>
-                {toolTrace.length} tool{toolTrace.length === 1 ? "" : "s"}
-              </span>
-              <ChevronDownIcon className="h-3.5 w-3.5" />
-            </SourcesTrigger>
-            <SourcesContent className="rounded-[8px] border border-border bg-bg-inset p-3">
-              <Trail density="vertical" steps={toolTrace} />
-            </SourcesContent>
-          </Sources>
+          <AskReasoning events={turn.events} />
 
           <AskAnswerContent
-            exchange={exchange}
+            turn={turn}
             claimIndex={claimIndex}
             snapshotIndex={snapshotIndex}
             tagIndex={tagIndex}
             onRetry={onRetry}
             retrying={retrying}
+            focusedCitationId={focusedCitationId}
+            onFocusCitation={onFocusCitation}
           />
         </MessageContent>
       </Message>

@@ -18,11 +18,13 @@ type AppendTurnArgs = {
 
 export const appendTurn = internalMutation({
   args: appendTurnArgs,
+  returns: v.id("messages"),
   handler: appendTurnHandler,
 });
 
 export const appendTurnPublic = mutation({
   args: appendTurnArgs,
+  returns: v.id("messages"),
   handler: async (ctx, args) => {
     const ownerId = await requireUserId(ctx);
     if (args.runId !== undefined) {
@@ -35,6 +37,15 @@ export const appendTurnPublic = mutation({
 
 export const listRecent = query({
   args: { threadKey: v.string(), limit: v.number() },
+  returns: v.array(
+    v.object({
+      id: v.string(),
+      role: v.union(v.literal("user"), v.literal("assistant")),
+      text: v.string(),
+      citations: v.array(v.string()),
+      createdAt: v.string(),
+    }),
+  ),
   handler: async (ctx, args) => {
     const ownerId = await requireUserId(ctx);
     if (cap === 0) {
@@ -48,10 +59,28 @@ export const listRecent = query({
       .order("desc")
       .take(cap);
     return rows.filter((row) => row.ownerId === ownerId).reverse().map((row) => ({
+      id: String(row._id),
       role: row.role,
       text: row.text,
       citations: row.citations,
       createdAt: row.createdAt,
     }));
+  },
+});
+
+export const clearMyThread = mutation({
+  args: { threadKey: v.string() },
+  returns: v.number(),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    const rows = await ctx.db
+      .query("messages")
+      .withIndex("by_thread_and_createdAt", (q) =>
+        q.eq("threadKey", args.threadKey),
+      )
+      .collect();
+    for (const row of rows) {
+      if (row.ownerId !== ownerId) continue;
+    }
   },
 });

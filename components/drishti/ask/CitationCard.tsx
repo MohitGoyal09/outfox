@@ -4,25 +4,49 @@ import { Chip } from "../Chip";
 import { LABEL_CLASS } from "../tokens";
 import type { CitationCardView } from "./ask-model";
 
-export function CitationCard({ citation }: { citation: CitationCardView }) {
+export function CitationCard({
+  citation,
+  id,
+  focused = false,
+}: {
+  citation: CitationCardView;
+  id?: string;
+  focused?: boolean;
+}) {
   if (citation.href === null) {
-    return <Chip title={citation.displayText}>{citation.label}</Chip>;
+    return (
+      <span id={id} className="contents">
+        <Chip pressed={focused} title={citation.displayText}>
+          {citation.label}
+        </Chip>
+      </span>
+    );
   }
 
   if (citation.thumbnailUrl === null) {
     return (
-      <Chip href={citation.href} title={`${citation.brandName} · ${citation.displayText}`}>
-        {citation.label}
-      </Chip>
+      <span id={id} className="contents">
+        <Chip
+          pressed={focused}
+          href={citation.href}
+          title={`${citation.brandName} · ${citation.displayText}`}
+        >
+          {citation.label}
+        </Chip>
+      </span>
     );
   }
 
   return (
     <a
+      id={id}
       href={citation.href}
       target="_blank"
       rel="noreferrer noopener"
-      className="flex w-[212px] shrink-0 flex-col gap-2 rounded-[10px] border border-border bg-bg-raised p-2.5 transition-colors duration-150 ease-out hover:border-accent/50 hover:bg-accent-dim"
+      className={cn(
+        "flex w-[212px] shrink-0 flex-col gap-2 rounded-[10px] border border-border bg-bg-raised p-2.5 transition-colors duration-150 ease-out hover:border-accent/50 hover:bg-accent-dim",
+        focused && "border-accent ring-1 ring-accent",
+      )}
     >
       <div className="flex items-center gap-1.5">
         <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>{citation.label}</span>

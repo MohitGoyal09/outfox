@@ -2,7 +2,7 @@
 
 import { action } from "./_generated/server";
 import type { ActionCtx } from "./_generated/server";
-import { api } from "./_generated/api";
+import { api, internal } from "./_generated/api";
 import { v, ConvexError } from "convex/values";
 import { validateBriefSentences } from "./pipeline/guardrail";
 import type { BriefSentence } from "./pipeline/guardrail";
@@ -81,49 +81,65 @@ function hasGatewayKey(): boolean {
   return hasLLMKey();
 }
 
+type EventKind = "step" | "tool_call" | "warning" | "error" | "answer";
+type EventStatus = "pending" | "running" | "complete" | "failed" | "skipped";
+type EventInput = {
+  kind: EventKind;
+  name: string;
+  status: EventStatus;
+  detail?: string;
+  payload?: unknown;
+};
+
+async function safeTurn(
+  ctx: Pick<ActionCtx, "runMutation">,
+  ownerId: Id<"users">,
+  threadKey: string,
+  runId: Id<"runs"> | undefined,
+  role: "user" | "assistant",
+  text: string,
+  citations: string[],
+): Promise<void> {
+  try {
+    await ctx.runMutation(internal.messages.appendTurn, {
+      ownerId,
+      threadKey,
+      role,
+      text,
+      citations,
+      ...(runId !== undefined ? { runId } : {}),
+    });
+  } catch {
+    return;
+  }
+}
+
+function validateCitationsEvent(result: AnswerQuestionResult): EventInput {
+  const kept = result.mode === "llm" ? result.citations.length : 0;
+  return {
+    kind: "step",
+    name: "validate_citations",
+    status: result.mode === "invalid" ? "failed" : "complete",
+    detail:
+      result.mode === "invalid"
+        ? clip(result.error ?? "The stored claims did not answer the question.", 300)
+        : kept === 0
+          ? "no citations kept"
+          : `${kept} claim${kept === 1 ? "" : "s"} cited`,
+    payload: { resultCount: kept },
+  };
+}
+
+function displayAnswerText(result: AnswerQuestionResult): string {
+  if (result.mode === "empty") return result.message ?? result.answer ?? EMPTY_MESSAGE;
+  if (result.mode === "invalid") {
+    return result.error ?? "The stored claims did not answer this question.";
+  }
+  return result.answer;
+}
+
 async function fetchClaimViews(
   ctx: ActionCtx,
   args: { brandIds: Id<"brands">[]; runId?: Id<"runs"> },
 ): Promise<AskClaimView[]> {
 }
-
-export const answerQuestion = action({
-  args: {
-    question: v.string(),
-    brandIds: v.array(v.id("brands")),
-    runId: v.optional(v.id("runs")),
-    latestRequested: v.optional(v.boolean()),
-  },
-  handler: async (ctx, args): Promise<AnswerQuestionResult> => {
-    await requireUserId(ctx);
-    if (args.brandIds.length > MAX_BRANDS_PER_RUN) {
-      throw new ConvexError(
-        `Too many brands: ${args.brandIds.length}, limit is ${MAX_BRANDS_PER_RUN}`,
-      );
-    }
-    const question = clip(args.question, 2000);
-    if (question.trim() === "") {
-      throw new ConvexError("question must be non empty");
-    }
-
-    let firstResult: AnswerQuestionResult | undefined;
-    let needsLiveRun = args.latestRequested === true;
-
-    let liveRefresh: NonNullable<AnswerQuestionResult["liveRefresh"]>;
-    try {
-      const runResult = await ctx.runAction(api.pipeline.runComparison.runComparison, {
-        brandIds: args.brandIds,
-        mode: "live",
-        refreshAuthorized: true,
-      });
-      liveRefresh = {
-        attempted: true,
-        runId: String(runResult.runId),
-        brandCount: args.brandIds.length,
-      };
-      const freshViews = await fetchClaimViews(ctx, readArgs);
-    } catch (error) {
-      return { ...fallback, liveRefresh };
-    }
-  },
-});

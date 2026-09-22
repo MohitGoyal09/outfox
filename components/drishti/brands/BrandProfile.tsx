@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BarChart3, Bookmark, CheckCircle2, Clock3, ExternalLink, Filter, Globe2, History, Link2, Tag } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BarChart3, Bookmark, CheckCircle2, Clock3, Globe2, Link2, Tag } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 
@@ -10,97 +10,57 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { GlowingEffect } from "@/components/ui/glowing-effect";
-import { NumberTicker } from "@/components/ui/number-ticker";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
 import { useAllRuns } from "../cohorts/useAllRuns";
 import { formatStamp } from "../cohorts/cohorts-model";
-import { HOOK_TYPES, FUNNEL_STAGES } from "../tokens";
 import {
   engineCoverage,
-  engineLabel,
-  FETCH_ENGINES,
-  findGoogleNewsRawItem,
-  findYoutubeRawVideo,
   funnelDistribution,
-  groupYoutubeVideoClaims,
   hookDistribution,
-  isContentClaim,
   mostRecentTaggedRun,
   previousRunFor,
-  readYoutubeRawVideo,
   runHasRealTag,
   runHistoryRows,
   signalClaims,
   tagBearingClaims,
-  trendPoints,
   type ClaimDoc,
-  type EngineCoverageRow,
   type RunHistoryRow,
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
-import { PlatformLogo } from "./PlatformLogo";
-import { EvidenceCard, sourceAccent } from "./EvidenceCard";
-import { DeltaTag, FilterSelect, FunnelPanel, HookChart, SummaryPanel } from "./EvidencePanels";
-import { NewsEvidenceCard } from "./NewsEvidenceCard";
 import { shortDate } from "./format";
-import { DestinationsPanel } from "./DestinationsPanel";
-import { TrendsExperience } from "./TrendsExperience";
-import { SearchExperience } from "./SearchExperience";
-import { YouTubeExperience } from "./YouTubeExperience";
-import { YouTubeVideoCard } from "./YouTubeVideoCard";
+import { useBrandFilters } from "./filters/useBrandFilters";
+import { OverviewTab } from "./tabs/OverviewTab";
+import { PositionTab } from "./tabs/PositionTab";
+import { PlacementTab } from "./tabs/PlacementTab";
+import { ProblemTab } from "./tabs/ProblemTab";
+import { PeopleTab } from "./tabs/PeopleTab";
+import { EvidenceTab } from "./tabs/EvidenceTab";
+import { HistoryTab } from "./tabs/HistoryTab";
+import { InsightsTab } from "./tabs/InsightsTab";
 
 export type BrandProfileProps = { brandId: Id<"brands">; className?: string };
 
-const tabs = [["overview", "Overview"], ["search", "Search"], ["youtube", "YouTube"], ["trends", "Trends"], ["destinations", "Destinations"], ["history", "History"]] as const;
-const EVIDENCE_PAGE_SIZE = 24;
-const TABLE_PAGE_SIZE = 40;
+const tabs = [
+  ["overview", "Overview"],
+  ["position", "Position"],
+  ["placement", "Placement"],
+  ["problem", "Problem"],
+  ["people", "People"],
+  ["evidence", "Evidence"],
+  ["history", "History"],
+  ["insights", "Insights"],
+] as const;
 
-type OverviewCard =
-  | { kind: "video"; sortAt: string; group: ReturnType<typeof groupYoutubeVideoClaims>[number] }
-  | { kind: "claim"; sortAt: string; claim: ClaimDoc };
-
-function latestFetchedAt(claims: ClaimDoc[]): string {
-  return claims.reduce((latest, claim) => (claim.fetchedAt > latest ? claim.fetchedAt : latest), "");
-}
-
-function tagsForClaim(tags: ClaimDoc[], claim: ClaimDoc): ClaimDoc[] {
-  return tags.filter(
-    (tag) =>
-      String(tag._id) === String(claim._id) ||
-      (tag.taggedClaimId !== undefined && String(tag.taggedClaimId) === String(claim._id)),
+function statusBadge(status: string) {
+  const good = status === "ok" || status === "complete" || status === "ready";
+  return (
+    <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good && "border-emerald-200 bg-emerald-50 text-emerald-700")}>
+      {good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}
+      {status}
+    </Badge>
   );
-}
-
-function statusBadge(status: string) { const good = status === "ok" || status === "complete" || status === "ready"; return <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good && "border-emerald-200 bg-emerald-50 text-emerald-700")}>{good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}{status}</Badge>; }
-
-function ClaimsTable({ claims, empty = "No stored evidence for this context yet." }: { claims: ClaimDoc[]; empty?: string }) {
-  const [limit, setLimit] = useState(TABLE_PAGE_SIZE);
-  const [order, setOrder] = useState<"newest" | "oldest">("newest");
-  if (claims.length === 0) return <div className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">{empty}</div>;
-  const sorted = [...claims].sort((a, b) => order === "newest" ? (a.fetchedAt < b.fetchedAt ? 1 : -1) : (a.fetchedAt > b.fetchedAt ? 1 : -1));
-  const visible = sorted.slice(0, limit);
-  return <div className="space-y-2">
-    <div className="flex items-center justify-end"><Button variant="outline" size="sm" className="h-7 rounded-md px-2 text-[11px]" onClick={() => setOrder((current) => current === "newest" ? "oldest" : "newest")}>{order === "newest" ? "Newest first" : "Oldest first"}</Button></div>
-    <div className="overflow-hidden rounded-xl border border-border"><Table><TableHeader><TableRow><TableHead>Signal</TableHead><TableHead>Finding</TableHead><TableHead>Captured</TableHead><TableHead className="text-right">Source</TableHead></TableRow></TableHeader><TableBody>{visible.map((claim) => <TableRow key={String(claim._id)}><TableCell className="max-w-[190px] truncate font-medium">{claim.metric ?? "Signal"}</TableCell><TableCell className="max-w-[420px] whitespace-normal text-muted-foreground">{claim.text}</TableCell><TableCell className="whitespace-nowrap font-mono text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</TableCell><TableCell className="text-right"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex items-center gap-1 text-xs text-accent hover:underline"><ExternalLink className="size-3" />{engineLabel(claim.sourceEngine)}</a></TableCell></TableRow>)}</TableBody></Table></div>
-    {sorted.length > limit ? <div className="flex justify-center"><Button variant="outline" size="sm" onClick={() => setLimit((current) => current + TABLE_PAGE_SIZE)}>Show more</Button></div> : null}
-  </div>;
-}
-
-function Coverage({ rows }: { rows: EngineCoverageRow[] }) { return <div className="flex flex-wrap items-center gap-2 text-xs"><span className="mr-1 text-[11px] font-medium uppercase tracking-[0.14em] text-muted-foreground">Coverage</span>{rows.map((row) => <span key={row.engine} title={row.reason ?? row.status} className="inline-flex items-center gap-1.5 rounded-full border border-border bg-background px-2.5 py-1 text-muted-foreground"><PlatformLogo engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : row.status === "failed" ? "bg-red-500" : "bg-muted-foreground/30")} />{row.label}</span>)}</div>; }
-
-function EvidenceMix({ claims, previousClaims }: { claims: ClaimDoc[]; previousClaims: ClaimDoc[] | null }) {
-  const rows = useMemo(() => FETCH_ENGINES.map((engine) => {
-    const count = claims.filter((claim) => claim.sourceEngine === engine).length;
-    const delta = previousClaims ? count - previousClaims.filter((claim) => claim.sourceEngine === engine).length : null;
-    return { engine, label: engineLabel(engine).replace("Google ", ""), count, delta };
-  }).filter((row) => row.count > 0), [claims, previousClaims]);
-  const total = rows.reduce((sum, row) => sum + row.count, 0);
-  return <div className="space-y-3">{rows.length ? rows.map((row) => <div key={row.engine} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformLogo engine={row.engine} className="size-3.5" />{row.label}</span><NumberTicker value={row.count} className="font-mono text-muted-foreground" /><span className="font-mono text-[11px] text-emerald-600">{total ? `${Math.round(row.count / total * 100)}%` : "—"}</span><DeltaTag delta={row.delta} /></div>) : <p className="text-sm text-muted-foreground">No evidence mix for this run yet.</p>}<div className="flex h-2 overflow-hidden rounded-full bg-muted">{rows.map((row) => <span key={row.engine} style={{ width: `${total ? row.count / total * 100 : 0}%`, backgroundColor: sourceAccent[row.engine] ?? "#0f766e" }} />)}</div></div>;
 }
 
 function ShareButton() {
@@ -113,34 +73,51 @@ function ShareButton() {
     } catch {
     }
   }
-  return <Button variant="outline" size="sm" className="h-8 gap-1.5" title="Copy link to this page" onClick={() => void copyLink()}><Link2 className="size-3.5" />{copied ? "Copied" : "Copy link"}</Button>;
+  return (
+    <Button variant="outline" size="sm" className="h-8 gap-1.5" title="Copy link to this page" onClick={() => void copyLink()}>
+      <Link2 className="size-3.5" />
+      {copied ? "Copied" : "Copy link"}
+    </Button>
+  );
 }
 
 export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const [tab, setTab] = useState("overview");
-  const [engineFilter, setEngineFilter] = useState("all");
-  const [hookFilter, setHookFilter] = useState("all");
-  const [funnelFilter, setFunnelFilter] = useState("all");
-  const [overviewLimit, setOverviewLimit] = useState(EVIDENCE_PAGE_SIZE);
   const brand = useQuery(api.brands.getBrand, { brandId });
   const claims = useQuery(api.claims.byBrand, { brandId });
   const { runs, isLoading: runsLoading } = useAllRuns();
-  const latestRun = useMemo(() => { const related = runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))); const finished = related.filter((run) => run.status === "complete" || run.status === "partial"); return (finished.length ? finished : related).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))[0] ?? null; }, [brandId, runs]);
+  const { filters, setFilter, resetFilters } = useBrandFilters();
+  const now = Date.now();
+
+  const latestRun = useMemo(() => {
+    const related = runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId)));
+    const finished = related.filter((run) => run.status === "complete" || run.status === "partial");
+    return (finished.length ? finished : related).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt))[0] ?? null;
+  }, [brandId, runs]);
   const snapshots = useQuery(api.snapshots.byRun, latestRun ? { runId: latestRun._id } : "skip");
-  const latestClaims = useMemo(() => claims && latestRun ? claims.filter((claim) => String(claim.runId) === String(latestRun._id)) : [], [claims, latestRun]);
+  const latestClaims = useMemo(
+    () => (claims && latestRun ? claims.filter((claim) => String(claim.runId) === String(latestRun._id)) : []),
+    [claims, latestRun],
+  );
   const signals = signalClaims(latestClaims);
   const previousRunId = latestRun ? previousRunFor(claims ?? [], String(latestRun._id)) : null;
   const previousClaims = useMemo(
     () => (previousRunId ? (claims ?? []).filter((claim) => String(claim.runId) === previousRunId) : null),
     [claims, previousRunId],
   );
-  const coverage = useMemo(() => engineCoverage(snapshots ?? [], String(brandId)).filter((row) => row.engine !== "google_ads_transparency_center"), [snapshots, brandId]);
+  const coverage = useMemo(
+    () => engineCoverage(snapshots ?? [], String(brandId)).filter((row) => row.engine !== "google_ads_transparency_center"),
+    [snapshots, brandId],
+  );
   const tags = tagBearingClaims(latestClaims);
-  const history = useMemo(() => runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)), [runs, brandId]);
+  const history = useMemo(
+    () => runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)),
+    [runs, brandId],
+  );
 
   const hasLatestTags = runHasRealTag(latestClaims, latestRun ? String(latestRun._id) : "");
   const fallbackRun = !hasLatestTags ? mostRecentTaggedRun(claims ?? [], history) : null;
-  const hookFunnelRunId = fallbackRun ? String(fallbackRun._id) : (latestRun ? String(latestRun._id) : null);
+  const hookFunnelRunId = fallbackRun ? String(fallbackRun._id) : latestRun ? String(latestRun._id) : null;
   const hookFunnelClaims = fallbackRun ? (claims ?? []).filter((claim) => String(claim.runId) === hookFunnelRunId) : latestClaims;
   const hookFunnelPreviousRunId = hookFunnelRunId ? previousRunFor(claims ?? [], hookFunnelRunId) : null;
   const hookFunnelPreviousClaims = hookFunnelPreviousRunId ? (claims ?? []).filter((claim) => String(claim.runId) === hookFunnelPreviousRunId) : null;
@@ -151,56 +128,209 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const historyRows = useMemo(() => {
     const rows = runHistoryRows(runs, claims ?? []);
     const seen = new Set(rows.map((row) => row.runId));
-    const missing: RunHistoryRow[] = history.filter((run) => !seen.has(String(run._id))).map((run) => ({ runId: String(run._id), requestedAt: run.requestedAt, completedAt: run.completedAt ?? null, status: run.status, claimCount: 0, engines: [], topHook: null, topFunnel: null, requestCount: run.requestCount ?? null, llmTokenCount: run.llmTokenCount ?? null, llmCostUsd: run.llmCostUsd ?? null, run }));
+    const missing: RunHistoryRow[] = history
+      .filter((run) => !seen.has(String(run._id)))
+      .map((run) => ({
+        runId: String(run._id),
+        requestedAt: run.requestedAt,
+        completedAt: run.completedAt ?? null,
+        status: run.status,
+        claimCount: 0,
+        engines: [],
+        topHook: null,
+        topFunnel: null,
+        requestCount: run.requestCount ?? null,
+        llmTokenCount: run.llmTokenCount ?? null,
+        llmCostUsd: run.llmCostUsd ?? null,
+        run,
+      }));
     return [...rows, ...missing].sort((a, b) => (a.requestedAt < b.requestedAt ? 1 : -1));
   }, [runs, claims, history]);
-  const filteredSignals = signals.filter(isContentClaim).filter((claim) => {
-    if (engineFilter !== "all" && claim.sourceEngine !== engineFilter) return false;
-    if (hookFilter === "all" && funnelFilter === "all") return true;
-    const claimTags = tagsForClaim(tags, claim);
-    return (
-      (hookFilter === "all" || claimTags.some((tag) => tag.hookType === hookFilter)) &&
-      (funnelFilter === "all" || claimTags.some((tag) => tag.funnelStage === funnelFilter))
-    );
-  });
+
   const isLoading = brand === undefined || claims === undefined || runsLoading || (latestRun !== null && snapshots === undefined);
-  if (brand === null) return <EmptyState bounded title="This brand no longer exists." description="The profile address is valid, but the tracked brand was not found. Return to Brands and choose another profile." action={<Button asChild variant="outline"><Link href="/brands">Back to brands</Link></Button>} />;
-  if (brand === undefined) return <div className="flex flex-col gap-6"><Skeleton className="h-36 rounded-2xl" /><Skeleton className="h-12 rounded-xl" /><Skeleton className="h-64 rounded-2xl" /></div>;
-  const trends = trendPoints(claims ?? []);
+  if (brand === null) {
+    return (
+      <EmptyState
+        bounded
+        title="This brand no longer exists."
+        description="The profile address is valid, but the tracked brand was not found. Return to Brands and choose another profile."
+        action={
+          <Button asChild variant="outline">
+            <Link href="/brands">Back to brands</Link>
+          </Button>
+        }
+      />
+    );
+  }
+  if (brand === undefined) {
+    return (
+      <div className="flex flex-col gap-6">
+        <Skeleton className="h-36 rounded-2xl" />
+        <Skeleton className="h-12 rounded-xl" />
+        <Skeleton className="h-64 rounded-2xl" />
+      </div>
+    );
+  }
+
   const latestTrendSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google_trends" && String(snapshot.brandId) === String(brandId));
   const latestYoutubeVideoSnapshot = snapshots?.find((snapshot) => snapshot.engine === "youtube_video" && String(snapshot.brandId) === String(brandId));
   const latestGoogleNewsSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google_news" && String(snapshot.brandId) === String(brandId));
-  const overviewVideoGroups = groupYoutubeVideoClaims(filteredSignals);
-  const overviewNonVideoSignals = filteredSignals.filter((claim) => claim.sourceEngine !== "youtube_video");
-  const overviewCards: OverviewCard[] = [
-    ...overviewVideoGroups.map((group) => ({ kind: "video" as const, sortAt: latestFetchedAt(group.claims), group })),
-    ...overviewNonVideoSignals.map((claim) => ({ kind: "claim" as const, sortAt: claim.fetchedAt, claim })),
-  ].sort((a, b) => (a.sortAt < b.sortAt ? 1 : -1));
-  const overviewCardCount = overviewCards.length;
-  return <div className={cn("flex min-w-0 flex-col gap-0", className)}>
-    <div className="mb-3 flex items-center justify-between"><Link href="/brands" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground"><ArrowLeft className="size-3.5" />All brands</Link><span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Brand intelligence</span></div>
-    <header className="border-b border-border pb-5">
-      {/* The one restrained "special moment" on this page: a pointer-reactive
-          border glow (Aceternity's glowing-effect, recolored to the app's
-          single accent teal) on the brand identity card only — never on the
-          repeated evidence grid. It degrades to a static border under
-          prefers-reduced-motion (handled inside the component). */}
-      <div className="relative rounded-2xl border border-border/60 bg-card/40 p-5">
-        <GlowingEffect disabled={false} spread={32} proximity={72} inactiveZone={0.5} borderWidth={1.5} movementDuration={1} />
-        <div className="flex flex-wrap items-start justify-between gap-5"><div className="flex min-w-0 items-center gap-3"><BrandMark name={brand.name} domain={brand.domain} className="size-14" /><div className="min-w-0"><div className="flex flex-wrap items-center gap-2"><h1 className="truncate text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{brand.name}</h1>{statusBadge(brand.profileStatus)}</div><p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground"><span>{brand.vertical}</span><span>•</span><span className="inline-flex items-center gap-1"><Globe2 className="size-3.5" />{brand.domain}</span><span>•</span><span>Last updated {shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}</span></p></div></div><div className="flex items-center gap-2"><Button variant="outline" size="sm" className="h-8 gap-1.5"><Bookmark className="size-3.5" />Track</Button><ShareButton />{latestRun ? <Button asChild size="sm" className="h-8 gap-1.5"><Link href={`/runs/${latestRun._id}`}>Latest run <ArrowUpRight className="size-3.5" /></Link></Button> : null}</div></div>
-        <div className="mt-4 flex flex-wrap items-center gap-2"><Badge variant="outline" className="h-7 rounded-full border-accent/25 bg-accent/[0.06] px-2.5 text-accent"><BarChart3 className="mr-1.5 size-3.5" /><NumberTicker value={signals.length} /> evidence signals</Badge><Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground"><Tag className="mr-1.5 size-3.5" /><NumberTicker value={tags.length} /> tagged findings</Badge><Coverage rows={coverage} /></div>
+  const latestGoogleSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google" && String(snapshot.brandId) === String(brandId));
+  const latestYoutubeSearchSnapshot = snapshots?.find((snapshot) => snapshot.engine === "youtube" && String(snapshot.brandId) === String(brandId));
+
+  return (
+    <div className={cn("flex min-w-0 flex-col gap-0", className)}>
+      <div className="mb-3 flex items-center justify-between">
+        <Link href="/brands" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
+          <ArrowLeft className="size-3.5" />
+          All brands
+        </Link>
+        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Brand intelligence</span>
       </div>
-    </header>
-    <Tabs value={tab} onValueChange={setTab} className="gap-0"><div className="overflow-x-auto border-b border-border"><TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">{tabs.map(([value, label]) => <TabsTrigger key={value} value={value} className="h-12 rounded-none px-3 text-xs data-[state=active]:font-semibold data-[state=active]:text-accent after:bg-accent">{label}</TabsTrigger>)}</TabsList></div>
-      {tab === "overview" ? <div className="border-b border-border py-3"><div className="flex flex-wrap items-center gap-2"><FilterSelect icon={BarChart3} label="All engines" value={engineFilter} onChange={setEngineFilter} options={FETCH_ENGINES.map((engine) => ({ value: engine, label: engineLabel(engine) }))} /><FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hook.replaceAll("_", " ") }))} /><FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stage.replaceAll("_", " ") }))} /></div></div> : null}
-      {isLoading ? <div className="space-y-4 py-5"><Skeleton className="h-10 w-full rounded-lg" /><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /><Skeleton className="h-40 rounded-xl" /></div><Skeleton className="h-64 rounded-2xl" /></div> : <>
-      <TabsContent value="overview" className="mt-0 space-y-5 py-5"><div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4"><SummaryPanel title="Evidence mix"><EvidenceMix claims={signals} previousClaims={previousClaims} /></SummaryPanel><SummaryPanel title="Engine coverage"><div className="space-y-2.5">{coverage.map((row) => { const count = latestClaims.filter((claim) => claim.sourceEngine === row.engine).length; const delta = previousClaims && row.status === "ok" ? count - previousClaims.filter((claim) => claim.sourceEngine === row.engine).length : null; return <div key={row.engine} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-xs"><span className="flex items-center gap-2 truncate"><PlatformLogo engine={row.engine} className="size-3.5" /><span className={cn("size-1.5 rounded-full", row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : "bg-muted-foreground/30")} />{row.label}</span><span className="font-mono text-muted-foreground">{row.status === "ok" ? count : row.status}</span><DeltaTag delta={delta} /></div>; })}</div></SummaryPanel><SummaryPanel title="Top hooks" subtitle={fallbackLabel}><HookChart items={hookItems} /></SummaryPanel><SummaryPanel title="Funnel stage" subtitle={fallbackLabel}><FunnelPanel items={funnelItems} /></SummaryPanel></div><div><div className="mb-3 flex items-end justify-between gap-3"><h2 className="text-base font-semibold tracking-[-0.02em]"><NumberTicker value={filteredSignals.length} /> pieces of evidence</h2><span className="text-xs text-muted-foreground">Stored claims from {shortDate(latestRun?.requestedAt)}</span></div>{filteredSignals.length ? <><div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">{overviewCards.slice(0, overviewLimit).map((card) => card.kind === "video" ? <YouTubeVideoCard key={card.group.evidenceUrl} group={card.group} raw={readYoutubeRawVideo(findYoutubeRawVideo(latestYoutubeVideoSnapshot?.rawResponse, card.group.videoId))} /> : card.claim.sourceEngine === "google_news" ? <NewsEvidenceCard key={String(card.claim._id)} claim={card.claim} raw={findGoogleNewsRawItem(latestGoogleNewsSnapshot?.rawResponse, card.claim.evidenceUrl)} /> : <EvidenceCard key={String(card.claim._id)} claim={card.claim} />)}</div>{overviewCardCount > overviewLimit ? <div className="mt-4 flex justify-center"><Button variant="outline" size="sm" onClick={() => setOverviewLimit((limit) => limit + EVIDENCE_PAGE_SIZE)}>Load more</Button></div> : null}</> : <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">{signals.length === 0 ? "No signal claims have been stored for the latest run." : "No stored evidence matches these filters."}</div>}</div></TabsContent>
-      <TabsContent value="search" className="mt-0 py-5"><SearchExperience claims={claims ?? []} runsDesc={history} latestRunId={latestRun ? String(latestRun._id) : null} newsSnapshot={latestGoogleNewsSnapshot} /></TabsContent>
-      <TabsContent value="youtube" className="mt-0 py-5"><YouTubeExperience claims={claims ?? []} runsDesc={history} latestRunId={latestRun ? String(latestRun._id) : null} snapshot={latestYoutubeVideoSnapshot} /></TabsContent>
-      <TabsContent value="trends" className="mt-0 space-y-4 py-5"><TrendsExperience snapshot={latestTrendSnapshot} claims={claims ?? []} brandId={brandId} brandName={brand.name} latestRunAt={latestRun?.requestedAt} /><Card className="shadow-none"><CardHeader><CardTitle className="text-sm">Stored trend evidence</CardTitle></CardHeader><CardContent><ClaimsTable claims={trends.map((point) => (claims ?? []).find((claim) => String(claim._id) === point.id)).filter((claim): claim is ClaimDoc => Boolean(claim))} empty="No relative interest values are stored yet." /></CardContent></Card></TabsContent>
-      <TabsContent value="destinations" className="mt-0 py-5"><DestinationsPanel claims={latestClaims} /></TabsContent>
-      <TabsContent value="history" className="mt-5"><Card className="shadow-none"><CardHeader><CardTitle className="flex items-center gap-2 text-base"><History className="size-4 text-accent" />Run history</CardTitle></CardHeader><CardContent>{historyRows.length ? <div className="space-y-2">{historyRows.map((row) => <div key={row.runId} className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-border p-4"><div className="min-w-0 space-y-1.5"><div className="flex items-center gap-2"><span className="font-mono text-xs text-muted-foreground">{formatStamp(row.requestedAt)}</span>{statusBadge(row.status)}</div><div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground"><span>{row.claimCount} claims</span><span>{row.topHook ? `Top hook: ${row.topHook.replaceAll("_", " ")}` : "No hook tags"}</span><span>{row.topFunnel ? `Top funnel: ${row.topFunnel.replaceAll("_", " ")}` : "No funnel tags"}</span>{row.llmTokenCount !== null || row.llmCostUsd !== null ? <span className="font-mono">{row.llmTokenCount !== null ? `${row.llmTokenCount.toLocaleString()} tokens` : ""}{row.llmTokenCount !== null && row.llmCostUsd !== null ? " · " : ""}{row.llmCostUsd !== null ? `$${row.llmCostUsd.toFixed(2)}` : ""}</span> : null}</div></div><Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 font-mono text-[11px] text-accent hover:underline">{row.runId.slice(-8)} <ArrowUpRight className="size-3" /></Link></div>)}</div> : <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">No runs stored for this brand yet.</div>}</CardContent></Card></TabsContent>
-      </>}
-    </Tabs>
-  </div>;
+      <header className="border-b border-border pb-5">
+        <div className="rounded-2xl border border-border/60 bg-card/40 p-5">
+          <div className="flex flex-wrap items-start justify-between gap-5">
+            <div className="flex min-w-0 items-center gap-3">
+              <BrandMark name={brand.name} domain={brand.domain} className="size-14" />
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <h1 className="truncate text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{brand.name}</h1>
+                  {statusBadge(brand.profileStatus)}
+                </div>
+                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+                  <span>{brand.vertical}</span>
+                  <span>•</span>
+                  <span className="inline-flex items-center gap-1">
+                    <Globe2 className="size-3.5" />
+                    {brand.domain}
+                  </span>
+                  <span>•</span>
+                  <span>Last updated {shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}</span>
+                </p>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" className="h-8 gap-1.5">
+                <Bookmark className="size-3.5" />
+                Track
+              </Button>
+              <ShareButton />
+              {latestRun ? (
+                <Button asChild size="sm" className="h-8 gap-1.5">
+                  <Link href={`/runs/${latestRun._id}`}>
+                    Latest run <ArrowUpRight className="size-3.5" />
+                  </Link>
+                </Button>
+              ) : null}
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <Badge variant="outline" className="h-7 rounded-full border-accent/25 bg-accent/[0.06] px-2.5 text-accent">
+              <BarChart3 className="mr-1.5 size-3.5" />
+              {Intl.NumberFormat("en-US").format(signals.length)} evidence signals
+            </Badge>
+            <Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground">
+              <Tag className="mr-1.5 size-3.5" />
+              {Intl.NumberFormat("en-US").format(tags.length)} tagged findings
+            </Badge>
+          </div>
+        </div>
+      </header>
+      <Tabs value={tab} onValueChange={setTab} className="gap-0">
+        <div className="overflow-x-auto border-b border-border">
+          <TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">
+            {tabs.map(([value, label]) => (
+              <TabsTrigger key={value} value={value} className="h-12 rounded-none px-3 text-xs data-[state=active]:font-semibold data-[state=active]:text-accent after:bg-accent">
+                {label}
+              </TabsTrigger>
+            ))}
+          </TabsList>
+        </div>
+        {isLoading ? (
+          <div className="space-y-4 py-5">
+            <Skeleton className="h-10 w-full rounded-lg" />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <Skeleton className="h-40 rounded-xl" />
+              <Skeleton className="h-40 rounded-xl" />
+              <Skeleton className="h-40 rounded-xl" />
+              <Skeleton className="h-40 rounded-xl" />
+            </div>
+            <Skeleton className="h-64 rounded-2xl" />
+          </div>
+        ) : (
+          <>
+            <TabsContent value="overview" className="mt-0 py-5">
+              <OverviewTab
+                latestClaims={latestClaims}
+                previousClaims={previousClaims}
+                coverage={coverage}
+                tags={tags}
+                hookItems={hookItems}
+                funnelItems={funnelItems}
+                fallbackLabel={fallbackLabel}
+                filters={filters}
+                setFilter={setFilter}
+                resetFilters={resetFilters}
+                now={now}
+                youtubeSnapshot={latestYoutubeVideoSnapshot}
+                newsSnapshot={latestGoogleNewsSnapshot}
+                googleSnapshot={latestGoogleSnapshot}
+                latestRunAt={latestRun?.requestedAt}
+              />
+            </TabsContent>
+            <TabsContent value="position" className="mt-0 py-5">
+              <PositionTab brand={brand} latestClaims={latestClaims} previousClaims={previousClaims} tags={tags} filters={filters} now={now} />
+            </TabsContent>
+            <TabsContent value="placement" className="mt-0 py-5">
+              <PlacementTab latestClaims={latestClaims} tags={tags} filters={filters} now={now} />
+            </TabsContent>
+            <TabsContent value="problem" className="mt-0 py-5">
+              <ProblemTab
+                brand={brand}
+                latestClaims={latestClaims}
+                claims={claims ?? []}
+                tags={tags}
+                trendsSnapshot={latestTrendSnapshot}
+                latestRunAt={latestRun?.requestedAt}
+                filters={filters}
+                now={now}
+              />
+            </TabsContent>
+            <TabsContent value="people" className="mt-0 py-5">
+              <PeopleTab
+                brand={brand}
+                latestClaims={latestClaims}
+                tags={tags}
+                filters={filters}
+                now={now}
+                youtubeSnapshot={latestYoutubeVideoSnapshot}
+                youtubeSearchSnapshot={latestYoutubeSearchSnapshot}
+              />
+            </TabsContent>
+            <TabsContent value="evidence" className="mt-0 py-5">
+              <EvidenceTab
+                latestClaims={latestClaims}
+                tags={tags}
+                filters={filters}
+                setFilter={setFilter}
+                resetFilters={resetFilters}
+                now={now}
+                youtubeSnapshot={latestYoutubeVideoSnapshot}
+                newsSnapshot={latestGoogleNewsSnapshot}
+                googleSnapshot={latestGoogleSnapshot}
+              />
+            </TabsContent>
+            <TabsContent value="history" className="mt-5">
+              <HistoryTab rows={historyRows} />
+            </TabsContent>
+            <TabsContent value="insights" className="mt-0 py-5">
+              <InsightsTab brandId={brandId} claims={claims ?? []} now={now} />
+            </TabsContent>
+          </>
+        )}
+      </Tabs>
+    </div>
+  );
 }
+
+export type { ClaimDoc };

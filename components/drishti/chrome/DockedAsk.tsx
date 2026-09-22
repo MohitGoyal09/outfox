@@ -21,6 +21,7 @@ import {
   MAX_ASK_BRANDS,
   askHref,
   askScopeFromPath,
+  askThreadKey,
   isLongAnswer,
   mergeAskBrandIds,
   type AskScope,
@@ -193,12 +194,11 @@ export function DockedAsk() {
     const current: AskScope = { ...pathScope, brandIds: merged };
     setPreview(null);
     clearError();
-    const exchange = await ask(question, current);
-    if (exchange === null) return;
+    const result = await ask(question, current, askThreadKey(pathScope));
+    if (result === null) return;
     setValue("");
     setMentionedBrandIds([]);
     closeMentionMenu();
-    const result = exchange.result;
     const href = askHref(current);
     if (result.available === false) {
       setPreview({

@@ -9,6 +9,12 @@ import { requireUserId } from "../lib/auth";
 
 export type ProfileStatus = Doc<"brands">["profileStatus"];
 
+const profileStatusValidator = v.union(
+  v.literal("pending"),
+  v.literal("ready"),
+  v.literal("needs_confirmation"),
+);
+
 export type CreateBrandProfileInput = {
   name: string;
   domain: string;
@@ -32,6 +38,23 @@ export type CreateBrandProfileResult = {
 export type RefreshBrandProfileResult = {
   brandId: Id<"brands">;
   lastRefreshedAt: string;
+};
+
+export type CreateBrandProfileIO = {
+  listOwnerBrands: () => Promise<Doc<"brands">[]>;
+  insertBrand: (args: {
+    name: string;
+    domain: string;
+    vertical: string;
+    aliases: string[];
+    profileStatus: ProfileStatus;
+    adsTransparencyAdvertiserId?: string;
+  }) => Promise<Id<"brands">>;
+  markReady: (brandId: Id<"brands">, lastRefreshedAt: string) => Promise<void>;
+};
+
+export type CreateBrandProfileDeps = {
+  fetchGoogleSearchFn?: typeof fetchGoogleSearch;
 };
 
 export function normalizeBrandName(name: string): string {
@@ -61,73 +84,54 @@ function toCandidate(brand: Doc<"brands">): BrandCandidate {
   };
 }
 
-export const createBrandProfile = action({
-  args: {
-    name: v.string(),
-    domain: v.string(),
-    vertical: v.string(),
-    aliases: v.optional(v.array(v.string())),
-    adsTransparencyAdvertiserId: v.optional(v.string()),
-  },
-  handler: async (ctx, args): Promise<CreateBrandProfileResult> => {
-    const ownerId = await requireUserId(ctx);
-    const domain = normalizeBrandDomain(args.domain);
-    const vertical = args.vertical.trim();
+export async function createBrandProfileCore(
+  io: CreateBrandProfileIO,
+  args: CreateBrandProfileInput,
+  deps: CreateBrandProfileDeps = {},
+): Promise<CreateBrandProfileResult> {
+  const fetchGoogleSearchFn = deps.fetchGoogleSearchFn ?? fetchGoogleSearch;
+  const domain = normalizeBrandDomain(args.domain);
+  const vertical = args.vertical.trim();
 
-    if (name === "" || domain === "" || vertical === "") {
-      throw new ConvexError("name, domain, and vertical must be non-empty");
+  if (name === "" || domain === "" || vertical === "") {
+    throw new ConvexError("name, domain, and vertical must be non-empty");
+  }
+  if (!domain.includes(".")) {
+    throw new ConvexError("domain must contain '.' (e.g. example.in)");
+  }
+
+  const all = await io.listOwnerBrands();
+
+  if (exact !== null) {
+    if (exact.profileStatus !== "ready") {
     }
-    if (!domain.includes(".")) {
-      throw new ConvexError("domain must contain '.' (e.g. example.in)");
-    }
+    return {
+      brandId: exact._id,
+      status: exact.profileStatus,
+      needsConfirmation: exact.profileStatus === "needs_confirmation",
+    };
+  }
 
-    const lowered = name.toLowerCase();
-    const candidates = all
-      .filter((brand) => {
-        return existing.includes(lowered) || lowered.includes(existing);
-      })
-      .map(toCandidate);
+  const lowered = name.toLowerCase();
 
-    if (candidates.length > 0) {
-    }
-
-    const brandId = (await ctx.runMutation(
-      internal.pipeline.brandProfileDb.insertBrandProfileInternal,
-      {
-        ownerId,
-        name,
-        domain,
-        vertical,
-        aliases,
-        profileStatus: "pending",
-        adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
-      },
-    )) as Id<"brands">;
-    const profile = await fetchGoogleSearch({ name }, `brand-profile:${String(brandId)}`);
-    if (profile.status === "ok") {
-    await ctx.runMutation(internal.pipeline.brandProfileDb.markReadyInternal, {
+  if (candidates.length > 0) {
+    return {
       brandId,
-      lastRefreshedAt,
-      ownerId,
-      });
-      return { brandId, status: "ready", needsConfirmation: false };
-    }
-  },
-});
+      status: "needs_confirmation",
+      needsConfirmation: true,
+      candidates,
+    };
+  }
 
-export const refreshBrandProfile = action({
-  args: { brandId: v.id("brands") },
-  handler: async (ctx, args): Promise<RefreshBrandProfileResult> => {
-    const ownerId = await requireUserId(ctx);
-    const brand = (await ctx.runQuery(api.brands.getBrand, {
-      brandId: args.brandId,
-    })) as Doc<"brands"> | null;
-    if (brand === null) {
-      throw new ConvexError("brand not found");
-    }
-    if (profile.status !== "ok") {
-      throw new ConvexError(`brand profile refresh failed: ${profile.errorMessage}`);
-    }
-    return { brandId: args.brandId, lastRefreshedAt };
-  },
-});
+  const brandId = await io.insertBrand({
+    name,
+    domain,
+    vertical,
+    aliases,
+    profileStatus: "pending",
+    adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
+  });
+  if (profile.status === "ok") {
+    return { brandId, status: "ready", needsConfirmation: false };
+  }
+}
