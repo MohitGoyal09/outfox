@@ -20,7 +20,7 @@ import { WEB_SEARCH_MAX_REQUESTS_PER_CALL } from "./plan";
  * account state (free to read, costs no credits) so a burst of concurrent
  * requests can't drain the plan with each one seeing its own fresh counter.
  */
-const SEARCH_RESERVE_FLOOR = 5;
+export const SEARCH_RESERVE_FLOOR = 5;
 
 /**
  * web_search tool: one live SerpApi google search, persisted as real Claim
@@ -54,7 +54,7 @@ export function validateWebSearchArgs(input: {
 }
 
 /** Find the newest run for this one-brand cohort, or start one. */
-async function resolveOrCreateRun(
+export async function resolveOrCreateRun(
   ctx: Pick<ActionCtx, "runQuery" | "runMutation">,
   brandId: Id<"brands">,
 ): Promise<Id<"runs">> {

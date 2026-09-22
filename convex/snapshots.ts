@@ -68,3 +68,18 @@ export const byIds = query({
     return snapshots;
   },
 });
+
+export const latestByEngineAndRegion = query({
+  args: { brandId: v.id("brands"), engine: sourceEngine, region: v.string() },
+  returns: v.union(snapshotDocValidator, v.null()),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    if (brand?.ownerId !== ownerId) throw new Error("Brand not found");
+    const snapshots = await ctx.db
+      .query("snapshots")
+      .withIndex("by_brand_engine_and_region", (q) =>
+        q.eq("brandId", args.brandId).eq("engine", args.engine).eq("region", args.region),
+      )
+      .collect();
+  },
+});

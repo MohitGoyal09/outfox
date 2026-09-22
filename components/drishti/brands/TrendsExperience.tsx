@@ -1,8 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useAction } from "convex/react";
-import { useRouter } from "next/navigation";
+import { useAction, useQuery } from "convex/react";
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 import { CalendarDays, Globe2, Info, Loader2, Map as MapIcon, TrendingUp } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -118,18 +117,22 @@ function regionLabel(code: string): string {
 }
 
 export function TrendsExperience({ snapshot, claims, brandId, brandName, latestRunAt }: { snapshot?: SnapshotDoc; claims: ClaimDoc[]; brandId: Id<"brands">; brandName: string; latestRunAt?: string | null }) {
-  const runComparison = useAction(api.pipeline.runComparison.runComparison);
-  const router = useRouter();
+  const refreshTrends = useAction(api.pipeline.refreshTrends.refreshTrends);
   const storedDate = record(snapshot?.queryParams)?.date;
   const initialDate: TrendsDate = typeof storedDate === "string" && ["now 7-d", "today 1-m", "today 3-m", "today 12-m", "today 5-y"].includes(storedDate) ? storedDate as TrendsDate : "today 3-m";
   const [range, setRange] = useState<TrendsDate>(initialDate);
   const [region, setRegion] = useState(snapshot?.region ?? "IN");
-  const capturedRegion = snapshot?.region ?? "IN";
-  const pendingGeoChange = region !== capturedRegion;
   const [confirming, setConfirming] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const points = useMemo(() => readTrendSeries(snapshot?.rawResponse), [snapshot?.rawResponse]);
+  const activeSnapshot = useQuery(api.snapshots.latestByEngineAndRegion, {
+    brandId,
+    engine: "google_trends",
+    region,
+  });
+  const regionLoading = activeSnapshot === undefined;
+  const noStoredData = activeSnapshot === null;
+  const points = useMemo(() => readTrendSeries(activeSnapshot?.rawResponse), [activeSnapshot?.rawResponse]);
   const filtered = useMemo(() => selectedRange(points, range), [points, range]);
   const rows = useMemo(() => chartRows(filtered, brandName), [filtered, brandName]);
   const target = rows.label;
@@ -141,21 +144,27 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
     setRefreshing(true);
     setError(null);
     try {
-      const result = await runComparison({ brandIds: [brandId], mode: "live", refreshAuthorized: true, trendsGeo: region as TrendsGeo, trendsDate: range });
-      router.push(`/runs/${result.runId}`);
+      const result = await refreshTrends({ brandId, geo: region, date: range });
+      if (!result.ok) throw new Error(result.error);
+      setConfirming(false);
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "The live refresh could not start.");
+      setError(cause instanceof Error ? cause.message : "The live Trends refresh could not start.");
     } finally {
       setRefreshing(false);
     }
   }
   return <section className="space-y-4" aria-label="Google Trends intelligence">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><PlatformLogo engine="google_trends" className="size-4" /><h2 className="text-base font-semibold">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest stored Google Trends run{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2 rounded-lg", pendingGeoChange && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" />Refresh scope</Button></div>
-    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion} pending={pendingGeoChange}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" />Date range filters the stored chart locally. Geography applies to your next refresh, not the chart shown now.</span></div>
-    {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Run a live brand refresh?</p><p className="mt-1 text-xs text-muted-foreground">This runs every evidence engine, including Google Trends for {region} and {range}, and uses SerpApi credits.</p>{error ? <p role="alert" className="mt-2 text-xs text-red-600">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Run refresh</Button></div></div> : null}
-    {filtered.length < 2 ? (
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><PlatformLogo engine="google_trends" className="size-4" /><h2 className="text-base font-semibold">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest stored Google Trends run{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2 rounded-lg", noStoredData && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" />Refresh {regionLabel(region)}</Button></div>
+    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion} pending={noStoredData}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" />Geography switches instantly between already-stored regions. Date range filters the stored chart locally.</span></div>
+    {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Run a live Google Trends fetch?</p><p className="mt-1 text-xs text-muted-foreground">This makes one live SerpApi Google Trends call for {regionLabel(region)} and stores it for next time. It does not touch any other evidence engine, and costs far less than a full brand refresh.</p>{error ? <p role="alert" className="mt-2 text-xs text-red-600">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Run refresh</Button></div></div> : null}
+    {regionLoading ? (
+      <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-border bg-muted/20">
+        <Loader2 className="size-5 animate-spin text-muted-foreground" />
+      </div>
+    ) : filtered.length < 2 ? (
       <EmptyTrend
         brandName={brandName}
+        message={noStoredData ? `No stored Google Trends data for ${regionLabel(region)} yet.` : undefined}
         onRefresh={() => setConfirming(true)}
         refreshing={refreshing}
         hideAction={confirming}
@@ -204,11 +213,11 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
         </div>
       </div>
     )}
-    <div aria-live="polite" className={cn("rounded-lg border px-4 py-3 text-xs leading-5", pendingGeoChange ? "border-accent/30 bg-accent/[0.05] text-foreground" : "border-border bg-muted/30 text-muted-foreground")}>
+    <div aria-live="polite" className={cn("rounded-lg border px-4 py-3 text-xs leading-5", noStoredData ? "border-accent/30 bg-accent/[0.05] text-foreground" : "border-border bg-muted/30 text-muted-foreground")}>
       <MapIcon className="mr-1 inline size-3.5" />
-      {pendingGeoChange
-        ? `Showing data for ${regionLabel(capturedRegion)}${latestRunAt ? ` · captured ${formatStamp(latestRunAt)}` : ""} — you've selected ${regionLabel(region)}. Refresh scope to update.`
-        : `The chart shows stored ${regionLabel(capturedRegion)} data. Comparison lines appear only when Google returned the same dated query chunk.`}
+      {noStoredData
+        ? `No live Google Trends fetch has been run for ${regionLabel(region)} yet. Refresh ${regionLabel(region)} to store one.`
+        : `The chart shows stored ${regionLabel(region)} data${activeSnapshot?.fetchedAt ? `, captured ${formatStamp(activeSnapshot.fetchedAt)}` : ""}. Comparison lines appear only when Google returned the same dated query chunk.`}
     </div>
     {claims.length > 0 ? <p className="text-[11px] text-muted-foreground">{claims.filter((claim) => claim.metric === "google_trends_avg_interest").length} stored trend claims support this view.</p> : null}
   </section>;

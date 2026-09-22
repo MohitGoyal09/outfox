@@ -51,6 +51,14 @@ export function askThreadKey(scope: AskScope): string {
   return "ask:none";
 }
 
+export function askHref(scope: AskScope, question?: string): string {
+  const params = new URLSearchParams();
+  if (question !== undefined && question.trim() !== "") {
+    params.set("q", question.trim());
+  }
+  return query === "" ? "/ask" : `/ask?${query}`;
+}
+
 export function askScopeLabel(
   scope: AskScope,
   brandNames: Record<string, string>,

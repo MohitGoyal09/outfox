@@ -84,3 +84,8 @@ export const clearMyThread = mutation({
     }
   },
 });
+
+const MAX_TITLE_LENGTH = 60;
+
+function titleFrom(text: string): string {
+}

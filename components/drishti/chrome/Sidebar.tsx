@@ -1,7 +1,8 @@
 "use client";
 
+import type { CSSProperties } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import {
   BarChart3,
@@ -28,6 +29,17 @@ import {
 } from "@/components/ui/sidebar";
 import { cn } from "@/lib/utils";
 
+const LIGHT_SIDEBAR_VARS = {
+  "--sidebar": "var(--bg-raised)",
+  "--sidebar-foreground": "var(--text-primary)",
+  "--sidebar-primary": "var(--accent)",
+  "--sidebar-primary-foreground": "var(--accent-ink)",
+  "--sidebar-accent": "var(--bg-inset)",
+  "--sidebar-accent-foreground": "var(--text-primary)",
+  "--sidebar-border": "var(--border)",
+  "--sidebar-ring": "var(--accent)",
+} as CSSProperties;
+
 const NAV = [
   { href: "/brands", label: "Brands", icon: Tag },
   { href: "/comparisons", label: "Comparisons", icon: GitCompare },
@@ -39,12 +51,19 @@ function isActive(pathname: string, href: string) {
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
+function hrefForThread(threadKey: string): string {
+  return threadKey === "" ? "/ask" : `/ask?cohort=${encodeURIComponent(threadKey)}`;
+}
+
 export function Sidebar() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const activeThreadKey = pathname === "/ask" ? searchParams.get("cohort") ?? "" : null;
   const brands = useQuery(api.brands.listBrands) ?? [];
+  const threads = useQuery(api.messages.listThreads, {});
 
   return (
-    <SidebarPrimitive collapsible="icon" className="border-sidebar-border">
+    <SidebarPrimitive collapsible="icon" className="border-sidebar-border" style={LIGHT_SIDEBAR_VARS}>
       <SidebarHeader className="gap-3 p-4 group-data-[collapsible=icon]:p-2">
         <Link href="/" className="flex min-h-10 items-center gap-3 overflow-hidden group-data-[collapsible=icon]:justify-center" aria-label="Drishti home">
           <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground group-data-[collapsible=icon]:size-9">
@@ -87,6 +106,40 @@ export function Sidebar() {
                   </SidebarMenuItem>
                 );
               })}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarSeparator className="mx-4 w-auto bg-sidebar-border/70" />
+
+        <SidebarGroup className="px-3 py-2 group-data-[collapsible=icon]:hidden">
+          <SidebarGroupLabel className="px-2 font-mono text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/45">
+            Recent chats
+          </SidebarGroupLabel>
+          <SidebarGroupContent className="mt-1">
+            <SidebarMenu>
+              {threads === undefined || threads.length === 0 ? (
+                <li className="px-2 py-2 text-xs leading-5 text-sidebar-foreground/45">
+                  Questions you ask will show up here.
+                </li>
+              ) : (
+                threads.slice(0, 6).map((thread) => (
+                  <SidebarMenuItem key={thread.threadKey}>
+                    <SidebarMenuButton
+                      asChild
+                      size="sm"
+                      isActive={activeThreadKey === thread.threadKey}
+                      tooltip={thread.title}
+                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                    >
+                      <Link href={hrefForThread(thread.threadKey)}>
+                        <MessageSquare aria-hidden className="size-3.5" />
+                        <span className="truncate">{thread.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))
+              )}
             </SidebarMenu>
           </SidebarGroupContent>
         </SidebarGroup>

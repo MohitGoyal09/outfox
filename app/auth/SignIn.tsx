@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 export function SignIn() {
   const { signIn } = useAuthActions();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
+  const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -22,7 +23,12 @@ export function SignIn() {
     setIsSubmitting(true);
 
     try {
-      await signIn("password", { flow: mode, email, password });
+      await signIn("password", {
+        flow: mode,
+        email,
+        password,
+        ...(mode === "signUp" ? { name } : {}),
+      });
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : "Unable to sign in.");
       setIsSubmitting(false);
@@ -45,6 +51,9 @@ export function SignIn() {
           <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em]">{mode === "signIn" ? "Welcome back" : "Create your account"}</h2>
           <p className="mt-3 max-w-sm text-sm leading-6 text-fg-secondary">{mode === "signIn" ? "Continue your brand research with the evidence still attached." : "Start a private evidence desk for the brands you follow."}</p>
           <form className="mt-8 space-y-5" onSubmit={submit}>
+            {mode === "signUp" ? (
+              <div className="space-y-2"><Label htmlFor="name">Name</Label><Input id="name" required autoComplete="name" value={name} onChange={(event) => setName(event.target.value)} placeholder="Your name" /></div>
+            ) : null}
             <div className="space-y-2"><Label htmlFor="email">Email</Label><Input id="email" required type="email" autoComplete="email" value={email} onChange={(event) => setEmail(event.target.value)} placeholder="you@company.com" /></div>
             <div className="space-y-2"><Label htmlFor="password">Password</Label><Input id="password" required minLength={8} type="password" autoComplete={mode === "signIn" ? "current-password" : "new-password"} value={password} onChange={(event) => setPassword(event.target.value)} placeholder="At least 8 characters" /></div>
             {error ? <Alert variant="destructive"><AlertCircle className="size-4" /><AlertDescription>{error}</AlertDescription></Alert> : null}

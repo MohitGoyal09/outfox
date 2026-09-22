@@ -1,6 +1,6 @@
 "use client";
 
-import { AgentPanel } from "@/components/AgentPanel";
+import { AgentChat } from "@/components/drishti/ask/AgentChat";
 import { BriefView, type BriefClaimRef } from "@/components/BriefView";
 import { ComparisonMatrix } from "@/components/ComparisonMatrix";
 import { CrossBrandChart } from "@/components/CrossBrandChart";
@@ -289,7 +289,7 @@ export default function ComparePage({
         loading={brief === undefined || claims === undefined}
       />
 
-      <AgentPanel brandIds={brandIdStrings} cohortKey={cohortKey} />
+      <AgentChat brandIds={brandIdStrings} cohortKey={cohortKey} />
     </main>
   );
 }

@@ -2,9 +2,8 @@
 
 import { useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
-import { usePathname, useRouter } from "next/navigation";
 import { useQuery } from "convex/react";
-import { ArrowUpRight, CircleAlert, Plus, ShieldCheck, X } from "lucide-react";
+import { Plus, ShieldCheck } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -21,8 +20,6 @@ import {
   MAX_ASK_BRANDS,
   askHref,
   askScopeFromPath,
-  askThreadKey,
-  isLongAnswer,
   mergeAskBrandIds,
   type AskScope,
 } from "@/components/drishti/ask/ask-model";
@@ -32,26 +29,15 @@ import {
   mentionOptionId,
   type MentionBrand,
 } from "@/components/drishti/ask/BrandMentionMenu";
-import { useAskSubmit } from "@/components/drishti/ask/useAsk";
-import { VALUE_CLASS, iconProps } from "@/components/drishti/tokens";
-
-type Preview = {
-  tone: "ok" | "warn" | "danger";
-  text: string;
-  href: string | null;
-};
+import { VALUE_CLASS } from "@/components/drishti/tokens";
 
 const NO_SCOPE: AskScope = { cohortKey: null, brandIds: [], runId: null };
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 
 export function DockedAsk() {
-  const pathname = usePathname();
-  const router = useRouter();
   const [scope, setScope] = useState<AskScope>(NO_SCOPE);
   const [value, setValue] = useState("");
   const [focused, setFocused] = useState(false);
-  const [preview, setPreview] = useState<Preview | null>(null);
-  const { ask, asking, error, clearError } = useAskSubmit();
   const trackedBrands = useQuery(api.brands.listBrands);
 
   const [mentionedBrandIds, setMentionedBrandIds] = useState<Id<"brands">[]>([]);
@@ -77,9 +63,8 @@ export function DockedAsk() {
   const listboxId = "docked-ask-mentions";
 
   const scopeCount = scope.brandIds.length;
-  const canSend = value.trim().length > 0 && !asking;
+  const canSend = value.trim().length > 0;
   const showScope = scopeCount > 0 && (focused || value !== "");
-  const onAskPage = pathname.startsWith("/ask");
 
   function refreshScope() {
     setScope(askScopeFromPath(window.location.pathname, window.location.search));
@@ -180,9 +165,9 @@ export function DockedAsk() {
     inputRef.current?.focus();
   }
 
-  async function submit() {
+  function submit() {
     const question = value.trim();
-    if (question === "" || asking) return;
+    if (question === "") return;
     const pathScope = askScopeFromPath(
       window.location.pathname,
       window.location.search,
@@ -192,141 +177,19 @@ export function DockedAsk() {
       setMentionNotice(`Only ${MAX_ASK_BRANDS} brands can be in context at once.`);
     }
     const current: AskScope = { ...pathScope, brandIds: merged };
-    setPreview(null);
-    clearError();
-    const result = await ask(question, current, askThreadKey(pathScope));
-    if (result === null) return;
     setValue("");
     setMentionedBrandIds([]);
     closeMentionMenu();
-    const href = askHref(current);
-    if (result.available === false) {
-      setPreview({
-        tone: "danger",
-        text:
-          result.message ??
-          "Ask needs a model key. No answer was generated.",
-        href: null,
-      });
-      return;
-    }
-    if (result.mode === "empty") {
-      const refreshFailed = result.liveRefresh?.error !== undefined;
-      setPreview({
-        tone: "warn",
-        text: refreshFailed
-          ? `A live refresh ran automatically and failed: ${result.liveRefresh?.error}`
-          : result.liveRefresh?.attempted === true
-            ? "A live refresh ran automatically and found nothing new for these brands."
-            : (result.message ?? "No stored claims cover these brands yet."),
-        href: null,
-      });
-      return;
-    }
-    if (result.mode === "error") {
-      setPreview({
-        tone: "danger",
-        text: result.error ?? result.message ?? "Ask failed.",
-        href: null,
-      });
-      return;
-    }
-    if (result.mode === "invalid" || result.answer.trim() === "") {
-      setPreview({
-        tone: "warn",
-        text: "The stored claims do not answer that question.",
-        href,
-      });
-      return;
-    }
-    if (isLongAnswer(result.answer)) {
-      if (!onAskPage) router.push(href);
-      return;
-    }
-    setPreview({ tone: "ok", text: result.answer, href });
+    window.location.href = askHref(current, question);
   }
 
-  const blockTone = error !== null ? "danger" : preview?.tone ?? "neutral";
-  const blockText = error ?? preview?.text ?? null;
-  const blockHref = error !== null ? null : (preview?.href ?? null);
   const activeOption = visibleMentionBrands[safeHighlightedIndex];
 
   return (
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
       <div className="pointer-events-auto mx-auto w-full max-w-3xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-5">
         <div className="flex flex-col gap-2">
-          {blockText !== null ? (
-            <div
-              aria-live="polite"
-              className={cn(
-                "mx-auto flex w-full items-start gap-2 rounded-xl border bg-bg-raised-2 p-3 shadow-[var(--shadow-toast)]",
-                blockTone === "danger"
-                  ? "border-[var(--danger)]"
-                  : blockTone === "warn"
-                    ? "border-border-strong"
-                    : "border-border",
-              )}
-            >
-              {blockTone === "danger" ? (
-                <CircleAlert
-                  {...iconProps}
-                  size={14}
-                  aria-hidden="true"
-                  className="mt-0.5 size-3.5 shrink-0 text-[var(--danger)]"
-                />
-              ) : null}
-              <p
-                className={cn(
-                  "min-w-0 flex-1 text-[12.5px] leading-[1.5]",
-                  blockTone === "danger"
-                    ? "text-[var(--danger)]"
-                    : blockTone === "warn"
-                      ? "text-fg-secondary"
-                      : "text-fg",
-                )}
-              >
-                <span className="line-clamp-3">{blockText}</span>
-                {blockHref !== null ? (
-                  <>
-                    {" "}
-                    <button
-                      type="button"
-                      onClick={() => router.push(blockHref)}
-                      className="inline-flex cursor-pointer items-center gap-1 font-medium text-[var(--accent)] underline decoration-[var(--border-strong)] underline-offset-[3px] hover:decoration-[var(--accent)]"
-                    >
-                      Open in Ask
-                      <ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
-                    </button>
-                  </>
-                ) : null}
-                {error !== null ? (
-                  <>
-                    {" "}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        void submit();
-                      }}
-                      className="cursor-pointer font-medium text-[var(--accent)] underline decoration-[var(--border-strong)] underline-offset-[3px] hover:decoration-[var(--accent)]"
-                    >
-                      Retry
-                    </button>
-                  </>
-                ) : null}
-              </p>
-              <button
-                type="button"
-                aria-label="Dismiss"
-                onClick={() => {
-                  setPreview(null);
-                  clearError();
-                }}
-                className="inline-flex size-6 shrink-0 cursor-pointer items-center justify-center rounded-[5px] text-fg-tertiary transition-colors duration-150 ease-out hover:bg-bg-raised hover:text-fg"
-              >
-                <X {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
-              </button>
-            </div>
-          ) : showScope ? (
+          {showScope ? (
             <p
               className={cn(
                 VALUE_CLASS,
@@ -359,9 +222,7 @@ export function DockedAsk() {
               />
             ) : null}
             <PromptInput
-              onSubmit={() => {
-                void submit();
-              }}
+              onSubmit={submit}
               onFocus={() => {
                 setFocused(true);
                 refreshScope();
@@ -381,8 +242,6 @@ export function DockedAsk() {
                   onChange={handleValueChange}
                   onKeyDown={handleInputKeyDown}
                   autoComplete="off"
-                  disabled={asking}
-                  aria-invalid={error !== null ? true : undefined}
                   role="combobox"
                   aria-autocomplete="list"
                   aria-expanded={mentionMenuOpen}
@@ -393,7 +252,7 @@ export function DockedAsk() {
                       : undefined
                   }
                   placeholder="Ask about your rivals, or type @ to reference a brand."
-                  className="min-h-10 bg-transparent text-[14px] text-fg placeholder:text-fg-placeholder aria-invalid:text-[var(--danger)]"
+                  className="min-h-10 max-h-[200px] overflow-y-auto bg-transparent text-[14px] text-fg placeholder:text-fg-placeholder"
                 />
               </PromptInputBody>
               <PromptInputFooter>
@@ -406,11 +265,10 @@ export function DockedAsk() {
                     <Plus aria-hidden className="size-4" />
                   </PromptInputButton>
                   <span className="hidden items-center gap-1.5 text-xs text-fg-tertiary sm:flex">
-                    <ShieldCheck className="size-3.5 text-ok" /> Answers cite stored claims only
+                    <ShieldCheck className="size-3.5 text-ok" /> Every answer cites a tool result
                   </span>
                 </PromptInputTools>
                 <PromptInputSubmit
-                  status={asking ? "submitted" : undefined}
                   disabled={!canSend}
                   aria-label="Send"
                   className="rounded-full bg-accent text-accent-ink hover:bg-accent-strong disabled:bg-bg-inset disabled:text-fg-tertiary"
