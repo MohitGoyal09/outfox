@@ -22,23 +22,47 @@ const funnelStage = v.union(
   v.literal("not_applicable"),
 );
 
+const claimDocValidator = v.object({
+  _id: v.id("claims"),
+  _creationTime: v.number(),
+  ownerId: v.optional(v.id("users")),
+  ...claimFields,
+  audienceHint: v.optional(v.string()),
+});
+
+export const insertClaims = internalMutation({
+  args: { claims: v.array(v.object(claimFields)) },
+  returns: v.array(v.id("claims")),
+  handler: async (ctx, args) => {
+    return ids;
+  },
+});
+
 export const byRun = query({
   args: { runId: v.id("runs") },
+  returns: v.array(claimDocValidator),
   handler: async (ctx, args) => {
     const run = await ctx.db.get(args.runId);
     if (run?.ownerId !== ownerId) throw new Error("Run not found");
   },
 });
 
-export const byBrand = query({
-  args: { brandId: v.id("brands") },
+export const byBrands = query({
+  args: { brandIds: v.array(v.id("brands")) },
+  returns: v.array(claimDocValidator),
   handler: async (ctx, args) => {
-    if (brand?.ownerId !== ownerId) throw new Error("Brand not found");
+    if (args.brandIds.length > MAX_BRANDS_PER_RUN) {
+      throw new ConvexError(
+        `Too many brands: ${args.brandIds.length}, limit is ${MAX_BRANDS_PER_RUN}`,
+      );
+    }
+    return claims;
   },
 });
 
 export const byBrandAndMetric = query({
   args: { brandId: v.id("brands"), metric: v.string() },
+  returns: v.array(claimDocValidator),
   handler: async (ctx, args) => {
     if (brand?.ownerId !== ownerId) throw new Error("Brand not found");
   },

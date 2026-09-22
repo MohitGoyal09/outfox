@@ -39,6 +39,19 @@ let lookupFactory: (apiKey: string) => GatewayCostLookup =
 
 export const reconcileExactCosts = internalAction({
   args: { runId: v.optional(v.id("runs")), limit: v.optional(v.number()) },
+  returns: v.union(
+    v.object({
+      reconciled: v.number(),
+      skipped: v.number(),
+      reason: v.string(),
+    }),
+    v.object({
+      reconciled: v.number(),
+      skipped: v.number(),
+      reason: v.null(),
+      skippedReasons: v.array(v.string()),
+    }),
+  ),
   handler: async (ctx, args) => {
     let reconciled = 0;
     const skippedReasons: string[] = [];

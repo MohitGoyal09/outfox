@@ -24,11 +24,13 @@ const createRunArgs = {
   mode: runMode,
 };
 
-export const createRun = mutation({
-  args: { ...createRunArgs, refreshAuthorized: v.optional(v.boolean()) },
+export const internalCreateRun = internalMutation({
+  args: { ...createRunArgs, ownerId: v.optional(v.id("users")) },
+  returns: v.id("runs"),
   handler: async (ctx, args) => {
-    const ownerId = await requireUserId(ctx);
     const brands = await Promise.all(args.brandIds.map((id) => ctx.db.get(id)));
+    const ownerId = args.ownerId ?? brands[0]?.ownerId;
+    if (ownerId === undefined || brands.some((brand) => brand?.ownerId !== ownerId)) throw new Error("Brand not found");
     return await ctx.db.insert("runs", {
       ownerId,
       cohortKey: args.cohortKey,
@@ -43,8 +45,19 @@ export const createRun = mutation({
 
 type TerminalStatus = "complete" | "partial" | "failed";
 
+export const closeRun = mutation({
+  args: closeRunArgs,
+  returns: v.id("runs"),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    const run = await ctx.db.get(args.runId);
+    await patchRunClosed(ctx, args.runId, args.status, args.errorMessage);
+  },
+});
+
 export const internalCloseRun = internalMutation({
   args: closeRunArgs,
+  returns: v.id("runs"),
   handler: async (ctx, args) => {
     const run = await ctx.db.get(args.runId);
     if (run === null) {
@@ -62,6 +75,7 @@ type CloseStaleRunsArgs = {
 
 export const closeStaleRunsPublic = mutation({
   args: closeStaleRunsArgs,
+  returns: v.object({ closed: v.number() }),
   handler: async (ctx, args) => {
     const ownerId = await requireUserId(ctx);
   },
@@ -74,6 +88,7 @@ export const internalRecordLlmTotals = internalMutation({
     llmTokenCount: v.number(),
     llmCostUsd: v.number(),
   },
+  returns: v.id("runs"),
   handler: async (ctx, args) => {
     const run = await ctx.db.get(args.runId);
     if (run === null) {
@@ -87,16 +102,9 @@ export const internalRecordLlmTotals = internalMutation({
   },
 });
 
-export const getRun = query({
-  args: { runId: v.id("runs") },
-  handler: async (ctx, args) => {
-    const ownerId = await requireUserId(ctx);
-    const run = await ctx.db.get(args.runId);
-  },
-});
-
 export const latestForCohort = query({
   args: { cohortKey: v.string() },
+  returns: v.union(runDocValidator, v.null()),
   handler: async (ctx, args) => {
     const ownerId = await requireUserId(ctx);
     const runs = await ctx.db
@@ -106,14 +114,27 @@ export const latestForCohort = query({
   },
 });
 
-export const listByStatus = query({
-  args: { status: queryableStatus },
+export const internalSaveAgentProgress = internalMutation({
+  args: {
+    runId: v.id("runs"),
+    plan: v.optional(agentPlanValidator),
+    currentStep: v.optional(v.string()),
+    stepStates: v.optional(v.array(stepStateValidator)),
+    errorMessage: v.optional(v.string()),
+  },
+  returns: v.id("runs"),
   handler: async (ctx, args) => {
-    const ownerId = await requireUserId(ctx);
-    return await ctx.db
-      .query("runs")
-      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
-      .order("desc")
-      .collect().then((runs) => runs.filter((run) => run.status === args.status));
+    const run = await ctx.db.get(args.runId);
+    if (run === null) {
+      throw new Error(`Run not found: ${args.runId}`);
+    }
+    await ctx.db.patch(args.runId, {
+      ...(args.plan !== undefined ? { plan: args.plan } : {}),
+      ...(args.currentStep !== undefined ? { currentStep: args.currentStep } : {}),
+      ...(args.stepStates !== undefined ? { stepStates: args.stepStates } : {}),
+      ...(args.errorMessage !== undefined
+        ? { errorMessage: args.errorMessage }
+        : {}),
+    });
   },
 });
