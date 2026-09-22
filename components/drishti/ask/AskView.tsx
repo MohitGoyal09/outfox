@@ -10,7 +10,7 @@ import {
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
 import { motion, useReducedMotion } from "motion/react";
-import { CircleAlert, Plus, ShieldCheck, X } from "lucide-react";
+import { CircleAlert, Plus, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -32,7 +32,7 @@ import {
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Sidebar } from "@/components/drishti/chrome/Sidebar";
 import { Button } from "../Button";
-import { LABEL_CLASS, iconProps } from "../tokens";
+import { LABEL_CLASS, STATE_TRANSITION_CLASS, iconProps } from "../tokens";
 import { AgentMessage } from "./AgentMessage";
 import {
   BrandMentionMenu,
@@ -46,12 +46,13 @@ import {
   brandIdsFromCohortKey,
   mergeAskBrandIds,
   type AskScope,
+  type ToolCallCardView,
 } from "./ask-model";
 import { sourcesOf } from "./agentChat-model";
 import { PromptCategories } from "./PromptCategories";
 import { SourcesDrawer } from "./SourcesDrawer";
-import { ThinkingIndicator } from "./ThinkingIndicator";
 import { useAgentChat } from "./useAgentChat";
+import { toolCardsByAssistantTurn, useAskTraceEvents } from "./useAskTrace";
 
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 
@@ -105,9 +106,22 @@ export function AskView({
   } = useAgentChat({ brandIds: scope.brandIds, cohortKey: scope.cohortKey ?? "" });
 
   const history = useQuery(api.messages.listRecent, { threadKey, limit: 50 });
+  const traceEvents = useAskTraceEvents(threadKey);
+  const persistedCardsByMessageId = useMemo(() => {
+    if (history === undefined || traceEvents === undefined) return {};
+    const cardsByTurn = toolCardsByAssistantTurn(traceEvents);
+    const byMessageId: Record<string, ToolCallCardView[]> = {};
+    history
+      .filter((row) => row.role === "assistant")
+      .forEach((row, turnIndex) => {
+        const cards = cardsByTurn[turnIndex];
+        if (cards !== undefined && cards.length > 0) byMessageId[row.id] = cards;
+      });
+    return byMessageId;
+  }, [history, traceEvents]);
   const hydratedThreadRef = useRef<string | null>(null);
   useEffect(() => {
-    if (history === undefined) return;
+    if (history === undefined || traceEvents === undefined) return;
     if (hydratedThreadRef.current === threadKey) return;
     hydratedThreadRef.current = threadKey;
     if (history.length === 0) return;
@@ -118,7 +132,7 @@ export function AskView({
         parts: [{ type: "text" as const, text: row.text }],
       })),
     );
-  }, [history, threadKey, setMessages]);
+  }, [history, traceEvents, threadKey, setMessages]);
 
   const [value, setValue] = useState("");
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
@@ -280,7 +294,7 @@ export function AskView({
 
   useEffect(() => {
     if (!authReady) return;
-    if (history === undefined) return;
+    if (history === undefined || traceEvents === undefined) return;
     if (initialQuestion === null || initialQuestion.trim() === "") return;
     if (autoSubmitted.current === initialQuestion) return;
     autoSubmitted.current = initialQuestion;
@@ -288,7 +302,7 @@ export function AskView({
     return () => {
       autoSubmitted.current = null;
     };
-  }, [authReady, history, initialQuestion]);
+  }, [authReady, history, traceEvents, initialQuestion]);
 
   async function respondToApproval(approvalId: string, approved: boolean) {
     const { brandIds, cohortKey: cohortKeyForSend } = lastScopeRef.current;
@@ -309,6 +323,7 @@ export function AskView({
   const mentionBrandViews = mentionedBrandIds
     .map((id) => mentionBrands.find((brand) => brand.id === id))
     .filter((brand): brand is MentionBrand => brand !== undefined);
+  const totalScopeBrandCount = mergeAskBrandIds(scope.brandIds, mentionedBrandIds).merged.length;
 
   const composer = (
     <>
@@ -370,8 +385,8 @@ export function AskView({
               className="max-h-[300px] overflow-y-auto bg-transparent text-fg placeholder:text-fg-placeholder"
             />
           </PromptInputBody>
-          <PromptInputFooter className="rounded-b-[28px] border-t border-border bg-bg-inset/60">
-            <PromptInputTools>
+          <PromptInputFooter className="items-center gap-x-2 rounded-b-[28px] border-t border-border bg-bg-inset/60">
+            <PromptInputTools className="gap-2">
               <PromptInputButton
                 aria-label="Add a brand to this question"
                 aria-pressed={mentionSource === "plus"}
@@ -379,9 +394,30 @@ export function AskView({
               >
                 <Plus className="size-4" />
               </PromptInputButton>
-              <span className="hidden items-center gap-1.5 text-xs text-fg-tertiary sm:flex">
-                <ShieldCheck className="size-3.5 text-ok" /> Every answer cites a tool result
-              </span>
+              {/* Brand scope: which tracked brands this question may read.
+                  Same picker as the "+" attach control — this is a second,
+                  always-visible entry point into it, not separate state. */}
+              <button
+                type="button"
+                aria-label="Choose which tracked brands this question can read"
+                aria-pressed={mentionSource === "plus"}
+                onClick={togglePlusMenu}
+                disabled={asking}
+                className={cn(
+                  "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium",
+                  STATE_TRANSITION_CLASS,
+                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:ring-[3px] focus-visible:ring-accent/20",
+                  "disabled:cursor-not-allowed disabled:opacity-60",
+                  totalScopeBrandCount > 0
+                    ? "border-border-strong text-fg-secondary hover:border-accent/40 hover:text-fg"
+                    : "border-dashed border-accent/40 text-accent hover:border-accent hover:bg-accent-dim",
+                )}
+              >
+                <Users className="size-3" aria-hidden="true" />
+                {totalScopeBrandCount > 0
+                  ? `${totalScopeBrandCount} brand${totalScopeBrandCount === 1 ? "" : "s"} in scope`
+                  : "Add brands to scope"}
+              </button>
             </PromptInputTools>
             <PromptInputSubmit
               status={asking ? "submitted" : undefined}
@@ -504,11 +540,10 @@ export function AskView({
               <AgentMessage
                 key={message.id}
                 message={message}
+                persistedCards={persistedCardsByMessageId[message.id]}
                 onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
               />
             ))}
-
-            {asking ? <ThinkingIndicator /> : null}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>

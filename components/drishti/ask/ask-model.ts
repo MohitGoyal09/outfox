@@ -1,4 +1,4 @@
-import type { AnswerQuestionResult } from "@/convex/ask";
+import type { AnswerQuestionResult } from "@/lib/askTypes";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import type { Tone } from "../tokens";
 import {
@@ -103,6 +103,26 @@ export type ToolCallCardView = {
   rawPayload: unknown;
   seq: number;
 };
+
+const PAYLOAD_COUNT_FIELDS: { key: string; noun: string }[] = [
+  { key: "resultCount", noun: "result" },
+  { key: "claimCount", noun: "claim" },
+  { key: "brandCount", noun: "brand" },
+  { key: "tokens", noun: "token" },
+];
+
+function phrasedResultSummary(payload: Record<string, unknown>): string | null {
+  return null;
+}
+
+export function buildToolCallCards(events: PersistedEvent[]): ToolCallCardView[] {
+  const cards: ToolCallCardView[] = [];
+  for (const event of events) {
+    if (event.kind === "plan" || event.kind === "answer") continue;
+    const running = queue?.shift();
+  }
+  return cards;
+}
 
 export type AskTurn = {
   id: string;

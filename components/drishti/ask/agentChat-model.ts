@@ -31,8 +31,17 @@ function toolCallStatusOf(state: string): ToolCallCardView["status"] {
   if (state === "output-error" || state === "output-denied") return "failed";
 }
 
-export function toolCallCardsOf(message: PartsHolder): ToolCallCardView[] {
-  return out;
+function resultSummaryOfOutput(output: unknown): string | null {
+  if (typeof output !== "object" || output === null) return null;
+  const record = output as Record<string, unknown>;
+  for (const key of ["claims", "matches", "rows", "points", "citations"]) {
+    const list = record[key];
+    const base = list.length === 0 ? `no ${noun}s` : `${list.length} ${noun}${list.length === 1 ? "" : "s"}`;
+    const coverage = record["coverage"];
+    const engineCount =
+      typeof coverage === "object" && coverage !== null ? Object.keys(coverage).length : 0;
+  }
+  return null;
 }
 
 export type AnswerProvenance = {
@@ -50,4 +59,30 @@ export function answerProvenanceOf(messages: PartsHolder[]): AnswerProvenance | 
     }
   }
   return latest;
+}
+
+export function citationSourcesOf(messages: PartsHolder[]): Map<string, SourceView> {
+  for (const message of messages) {
+    for (const part of partsOf(message)) {
+      if (part["type"] !== "data-answer-meta") continue;
+      const data = part["data"];
+      const citationSources = (data as Record<string, unknown>)["citationSources"];
+      if (typeof citationSources !== "object" || citationSources === null) continue;
+      for (const [claimId, source] of Object.entries(citationSources as Record<string, unknown>)) {
+      }
+    }
+  }
+  return byClaimId;
+}
+
+export type UntrackedBrandMention = { name: string };
+
+export function untrackedBrandMentionOf(message: PartsHolder): UntrackedBrandMention | null {
+  for (const part of partsOf(message)) {
+    if (part["type"] !== "data-answer-meta") continue;
+    const data = part["data"];
+    const untrackedBrand = (data as Record<string, unknown>)["untrackedBrand"];
+    if (typeof untrackedBrand !== "object" || untrackedBrand === null) continue;
+  }
+  return null;
 }

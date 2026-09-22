@@ -23,7 +23,6 @@ import { Chip } from "../Chip";
 import { AgentMessage } from "./AgentMessage";
 import { answerProvenanceOf, sourcesOf } from "./agentChat-model";
 import { SourcesDrawer } from "./SourcesDrawer";
-import { ThinkingIndicator } from "./ThinkingIndicator";
 import { useAgentChat } from "./useAgentChat";
 
 export function AgentChat({
@@ -100,7 +99,6 @@ export function AgentChat({
               />
             ))
           )}
-          {busy ? <ThinkingIndicator /> : null}
           {provenance?.mode === "template" ? (
             <Chip tone="warn" label="Model unavailable — showing raw claims" />
           ) : null}

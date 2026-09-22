@@ -5,17 +5,19 @@ import {
   Compass,
   Database,
   GitCompare,
-  Globe,
+  ListChecks,
   type LucideIcon,
   MessageSquareText,
   RefreshCw,
+  Search,
+  Tag,
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { LABEL_CLASS, STATE_TRANSITION_CLASS, TONE_COLOR, formatLatency } from "../tokens";
 import type { ToolCallCardView } from "./ask-model";
 
-const STATUS_LABEL: Record<ToolCallCardView["status"], string> = {
+export const STATUS_LABEL: Record<ToolCallCardView["status"], string> = {
   pending: "pending",
   running: "running…",
   complete: "complete",
@@ -24,16 +26,28 @@ const STATUS_LABEL: Record<ToolCallCardView["status"], string> = {
 };
 
 const TOOL_META: Record<string, { icon: LucideIcon; title: string }> = {
-  resolve_brand: { icon: Compass, title: "Looked up a brand" },
-  search_claims: { icon: Database, title: "Checked stored evidence" },
-  get_trends: { icon: TrendingUp, title: "Checked search trends" },
-  compare_brands: { icon: GitCompare, title: "Compared brands" },
-  web_search: { icon: Globe, title: "Searched the web" },
-  refresh_cohort: { icon: RefreshCw, title: "Requested a live refresh" },
+  resolve_brand: { icon: Compass, title: "Resolving brand" },
+  search_claims: { icon: Database, title: "Reading claims" },
+  get_claims: { icon: Database, title: "Reading claims" },
+  get_tags: { icon: Tag, title: "Reading content tags" },
+  get_coverage: { icon: ListChecks, title: "Checking coverage" },
+  get_trends: { icon: TrendingUp, title: "Reading trends" },
+  compare_brands: { icon: GitCompare, title: "Comparing brands" },
+  web_search: { icon: Search, title: "Searching the web" },
+  fetch_brand: { icon: RefreshCw, title: "Fetching a new brand" },
+  refresh_cohort: { icon: RefreshCw, title: "Requesting a live refresh" },
 };
-const DEFAULT_TOOL_META = { icon: MessageSquareText, title: "Ran a step" };
+const DEFAULT_TOOL_META = { icon: MessageSquareText, title: "Running a step" };
 
-function subjectOf(name: string, rawPayload: unknown): string | null {
+export function toolTitle(name: string): string {
+  return (TOOL_META[name] ?? DEFAULT_TOOL_META).title;
+}
+
+export function toolIcon(name: string): LucideIcon {
+  return (TOOL_META[name] ?? DEFAULT_TOOL_META).icon;
+}
+
+export function subjectOf(name: string, rawPayload: unknown): string | null {
   if (typeof rawPayload !== "object" || rawPayload === null) return null;
   const input = rawPayload as Record<string, unknown>;
   if ((name === "resolve_brand" || name === "web_search") && typeof input.query === "string") {
@@ -44,6 +58,11 @@ function subjectOf(name: string, rawPayload: unknown): string | null {
   }
   if (typeof input.dimension === "string") return input.dimension.replaceAll("_", " ");
   return null;
+}
+
+export function toolSourceLabel(name: string): string {
+  const words = name.split("_");
+  return words.map((word, index) => (index === 0 ? word[0].toUpperCase() + word.slice(1) : word)).join(" ");
 }
 
 export function ToolCallCard({ card }: { card: ToolCallCardView }) {
@@ -96,9 +115,10 @@ export function ToolCallCard({ card }: { card: ToolCallCardView }) {
           {card.resultCount !== null ? (
             <>
               <span aria-hidden="true">·</span>
-              <span>
-                {card.resultCount} result{card.resultCount === "1" ? "" : "s"}
-              </span>
+              {/* Already a full phrase (e.g. "42 claims, 2 engines" or "no
+                  rows") — see `resultSummaryOfOutput`/`buildToolCallCards`,
+                  never a bare count appended with a generic "result(s)". */}
+              <span>{card.resultCount}</span>
             </>
           ) : null}
         </div>

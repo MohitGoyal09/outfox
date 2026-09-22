@@ -12,6 +12,7 @@ import { extractGoogleClaims } from "./extractClaims";
 import type { ExtractCtx } from "./extractClaims";
 import { buildCohortKey } from "./brandProfile";
 import { WEB_SEARCH_MAX_REQUESTS_PER_CALL } from "./plan";
+import type { Coverage } from "../../lib/agentTypes";
 
 /**
  * Real, account-wide floor below which a web_search call refuses to fire.
@@ -79,6 +80,19 @@ const webSearchClaimValidator = v.object({
   evidenceUrl: v.string(),
 });
 
+const webSearchCoverageValidator = v.record(
+  v.string(),
+  v.union(v.literal("ok"), v.literal("missing"), v.literal("stale")),
+);
+
+/**
+ * web_search's tool contract, per docs/specs/agent-redesign.md section 3:
+ * every tool returns { rows, total, coverage, asOf }. `ok`/`error`/`runId`/
+ * `requestCount` stay alongside it -- they are this tool's own live-call
+ * bookkeeping (spend, which run the snapshot landed on), not part of the
+ * shared envelope, and existing callers (refreshTrends.ts's sibling
+ * pattern) don't touch this shape.
+ */
 export const webSearch = action({
   args: { query: v.string(), brandId: v.id("brands") },
   returns: v.union(
@@ -87,13 +101,19 @@ export const webSearch = action({
       error: v.string(),
       runId: v.string(),
       requestCount: v.number(),
-      claims: v.array(webSearchClaimValidator),
+      rows: v.array(webSearchClaimValidator),
+      total: v.number(),
+      coverage: webSearchCoverageValidator,
+      asOf: v.union(v.string(), v.null()),
     }),
     v.object({
       ok: v.literal(true),
       runId: v.string(),
       requestCount: v.number(),
-      claims: v.array(webSearchClaimValidator),
+      rows: v.array(webSearchClaimValidator),
+      total: v.number(),
+      coverage: webSearchCoverageValidator,
+      asOf: v.union(v.string(), v.null()),
     }),
   ),
   handler: async (ctx, args) => {
@@ -145,7 +165,10 @@ export const webSearch = action({
         error: result.error,
         runId: String(runId),
         requestCount: WEB_SEARCH_MAX_REQUESTS_PER_CALL,
-        claims: [],
+        rows: [],
+        total: 0,
+        coverage: { google: "missing" } as Coverage,
+        asOf: null,
       };
     }
 
@@ -165,17 +188,21 @@ export const webSearch = action({
       claimIds,
     });
 
+    const rows = extracted.map((claim, index) => ({
+      id: String(claimIds[index]),
+      text: claim.text,
+      metric: claim.metric,
+      value: claim.value,
+      evidenceUrl: claim.evidenceUrl,
+    }));
     return {
       ok: true as const,
       runId: String(runId),
       requestCount: WEB_SEARCH_MAX_REQUESTS_PER_CALL,
-      claims: extracted.map((claim, index) => ({
-        id: String(claimIds[index]),
-        text: claim.text,
-        metric: claim.metric,
-        value: claim.value,
-        evidenceUrl: claim.evidenceUrl,
-      })),
+      rows,
+      total: rows.length,
+      coverage: { google: "ok" } as Coverage,
+      asOf: fetchedAt,
     };
   },
 });

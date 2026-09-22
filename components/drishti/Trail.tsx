@@ -2,7 +2,7 @@
 
 
 import { useEffect, useRef, type Ref } from "react";
-import { ExternalLink, Inbox } from "lucide-react";
+import { ChevronDown, ExternalLink, Inbox, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "./EmptyState";
 import { Skeleton } from "./Skeleton";
@@ -30,6 +30,10 @@ export type TrailStep = {
   tone?: Tone;
   href?: string;
   meta?: { at?: string; latencyMs?: number };
+  icon?: LucideIcon;
+  sentence?: string;
+  statusLabel?: string;
+  detail?: { args: Record<string, unknown> | null; result: string | null };
 };
 
 export type TrailGap = {
@@ -81,6 +85,10 @@ export type TrailRow = {
   at: string | null;
   latency: string | null;
   focused: boolean;
+  icon: LucideIcon | null;
+  sentence: string | null;
+  statusLabel: string | null;
+  detail: { args: Record<string, unknown> | null; result: string | null } | null;
 };
 
 export function deriveTrailRows(
@@ -101,6 +109,10 @@ export function deriveTrailRows(
       at: step.meta?.at ?? null,
       latency: trailLatencyText(step.meta?.latencyMs),
       focused: focusedId !== null && focusedId !== undefined && focusedId === step.id,
+      icon: step.icon ?? null,
+      sentence: step.sentence ?? null,
+      statusLabel: step.statusLabel ?? null,
+      detail: step.detail ?? null,
     };
   });
 }
@@ -117,6 +129,10 @@ export type TrailRowView = {
   reasoning: string | null;
   reasoningVisible: boolean;
   focused: boolean;
+  icon: LucideIcon | null;
+  sentence: string | null;
+  statusLabel: string | null;
+  detail: { args: Record<string, unknown> | null; result: string | null } | null;
 };
 
 export function trailRowView(row: TrailRow, density: TrailDensity): TrailRowView {
@@ -133,6 +149,10 @@ export function trailRowView(row: TrailRow, density: TrailDensity): TrailRowView
     reasoning: vertical ? row.reasoning : null,
     reasoningVisible: vertical,
     focused: row.focused,
+    icon: row.icon,
+    sentence: row.sentence,
+    statusLabel: row.statusLabel,
+    detail: row.detail,
   };
 }
 
@@ -159,6 +179,29 @@ function StepDot({ view, size = "sm" }: { view: TrailRowView; size?: "sm" | "md"
       className={cn("shrink-0 rounded-full", size === "sm" ? "size-1.5" : "size-2")}
       style={{ backgroundColor: view.dotColor }}
     />
+  );
+}
+
+function StepMarker({ view }: { view: TrailRowView }) {
+  if (view.icon === null) return <StepDot view={view} size="md" />;
+  const Icon = view.icon;
+  return (
+    <span
+      className={cn(
+        "relative z-10 flex size-[26px] shrink-0 items-center justify-center rounded-full border bg-[var(--bg-raised,#131319)]",
+        view.tone === "danger" ? "border-[var(--danger,#f87171)]/40" : "border-[var(--border,#24242f)]",
+      )}
+    >
+      <Icon {...iconProps} size={14} aria-hidden="true" className="text-[var(--text-secondary,#9797a3)]" />
+      <span
+        aria-hidden="true"
+        className={cn(
+          "absolute -bottom-0.5 -right-0.5 size-2 rounded-full ring-2 ring-[var(--bg,#0a0a0f)]",
+          STATE_TRANSITION_CLASS,
+        )}
+        style={{ backgroundColor: view.dotColor }}
+      />
+    </span>
   );
 }
 
@@ -225,19 +268,13 @@ function StepValue({ view }: { view: TrailRowView }) {
 }
 
 function StepMeta({ view }: { view: TrailRowView }) {
-  if (!view.latency && !view.at) return null;
+  if (!view.latency && !view.at && !view.statusLabel) return null;
+  const metaTextClass = cn(VALUE_CLASS, "text-[10.5px] text-[var(--text-tertiary,#64646f)]");
   return (
-    <span className="flex flex-wrap items-center gap-x-3 gap-y-0.5">
-      {view.latency ? (
-        <span className={cn(VALUE_CLASS, "text-[10.5px] text-[var(--text-tertiary,#64646f)]")}>
-          {view.latency}
-        </span>
-      ) : null}
-      {view.at ? (
-        <span className={cn(VALUE_CLASS, "text-[10.5px] text-[var(--text-tertiary,#64646f)]")}>
-          {view.at}
-        </span>
-      ) : null}
+    <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
+      {view.statusLabel ? <span className={metaTextClass}>{view.statusLabel}</span> : null}
+      {view.latency ? <span className={metaTextClass}>{view.latency}</span> : null}
+      {view.at ? <span className={metaTextClass}>{view.at}</span> : null}
     </span>
   );
 }
@@ -297,6 +334,69 @@ export function TrailInline({
   );
 }
 
+function StepHeadline({
+  view,
+  onStepFocus,
+}: {
+  view: TrailRowView;
+  onStepFocus?: (id: string) => void;
+}) {
+  if (view.sentence === null) {
+    return (
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <StepLabel view={view} onStepFocus={onStepFocus} />
+        <StepValue view={view} />
+      </div>
+    );
+  }
+  return (
+    <div className="min-w-0">
+      <p className="text-[13px] font-medium leading-5 text-[var(--text-primary,#eeeef2)]">
+        {view.sentence}
+      </p>
+      <p className={cn(LABEL_CLASS, "mt-0.5 text-[var(--text-tertiary,#64646f)]")}>{view.label}</p>
+    </div>
+  );
+}
+
+function StepDetail({ detail }: { detail: NonNullable<TrailRowView["detail"]> }) {
+  const argsText =
+    detail.args !== null && Object.keys(detail.args).length > 0
+      ? JSON.stringify(detail.args, null, 2)
+      : null;
+  if (argsText === null && detail.result === null) return null;
+  return (
+    <details className="mt-1.5">
+      <summary
+        className={cn(
+          LABEL_CLASS,
+          "flex w-fit cursor-pointer select-none items-center gap-1 text-[var(--text-tertiary,#64646f)] hover:text-[var(--text-secondary,#9797a3)]",
+          STATE_TRANSITION_CLASS,
+          "[&::-webkit-details-marker]:hidden",
+        )}
+      >
+        <ChevronDown
+          {...iconProps}
+          size={12}
+          aria-hidden="true"
+          className="size-3 [details[open]_&]:rotate-180 motion-safe:transition-transform motion-safe:duration-150 motion-safe:ease-out"
+        />
+        Detail
+      </summary>
+      <div className="mt-1 flex flex-col gap-1.5">
+        {detail.result !== null ? (
+          <p className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-secondary,#9797a3)]")}>{detail.result}</p>
+        ) : null}
+        {argsText !== null ? (
+          <pre className="overflow-x-auto rounded-[4px] bg-[var(--bg-inset,#0e0e13)] p-2 text-[10.5px] leading-[1.5] text-[var(--text-tertiary,#64646f)]">
+            {argsText}
+          </pre>
+        ) : null}
+      </div>
+    </details>
+  );
+}
+
 export function TrailVertical({
   view,
   isLast,
@@ -310,20 +410,27 @@ export function TrailVertical({
   onStepFocus?: (id: string) => void;
   itemRef?: Ref<HTMLLIElement>;
 }) {
+  const hasIcon = view.icon !== null;
   return (
     <li
       ref={itemRef}
       aria-current={view.focused ? "true" : undefined}
-      className="relative grid grid-cols-[0.75rem_minmax(0,1fr)] gap-x-3"
+      className={cn(
+        "relative grid gap-x-3 pb-6 last:pb-0",
+        hasIcon ? "grid-cols-[26px_minmax(0,1fr)]" : "grid-cols-[0.75rem_minmax(0,1fr)]",
+      )}
     >
       {showRail && !isLast ? (
         <span
           aria-hidden="true"
-          className="absolute left-[3px] top-[11px] -bottom-[27px] w-px bg-[var(--border,#24242f)]"
+          className={cn(
+            "absolute bottom-0 w-px bg-[var(--border,#24242f)]",
+            hasIcon ? "left-[13px] top-[26px]" : "left-[3px] top-[11px]",
+          )}
         />
       ) : null}
-      <span aria-hidden="true" className="flex justify-center pt-[3px]">
-        <StepDot view={view} size="md" />
+      <span aria-hidden="true" className={cn("flex justify-center", hasIcon ? "" : "pt-[3px]")}>
+        <StepMarker view={view} />
       </span>
       <div
         className={cn(
@@ -332,20 +439,18 @@ export function TrailVertical({
           view.focused && FOCUS_MARK_CLASS,
         )}
       >
-        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <StepLabel view={view} onStepFocus={onStepFocus} />
-          <StepValue view={view} />
-        </div>
+        <StepHeadline view={view} onStepFocus={onStepFocus} />
         {view.reasoningVisible && view.reasoning ? (
           <p className="mt-1.5 max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
             {view.reasoning}
           </p>
         ) : null}
-        {view.latency || view.at ? (
+        {view.latency || view.at || view.statusLabel ? (
           <span className="mt-1 block">
             <StepMeta view={view} />
           </span>
         ) : null}
+        {view.detail !== null ? <StepDetail detail={view.detail} /> : null}
       </div>
     </li>
   );
@@ -455,7 +560,12 @@ export function Trail({
 
   return (
     <div className={className} data-state="default">
-      <ol className="relative flex flex-col gap-6">
+      {/* Spacing between rows comes from each `<li>`'s own `pb-6 last:pb-0`
+          (see `TrailVertical`), not a container gap — that per-item
+          padding is what lets the connector line's `top-X bottom-0` reach
+          exactly into the next row's marker with no fragile negative-offset
+          arithmetic. */}
+      <ol className="relative flex flex-col">
         {rows.map((row, index) => {
           const view = trailRowView(row, "vertical");
           const isLast = index === rows.length - 1;

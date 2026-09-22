@@ -11,22 +11,29 @@ import {
   ConfirmationRequest,
   ConfirmationTitle,
 } from "@/components/ai-elements/confirmation";
+import { Message, MessageContent } from "@/components/ai-elements/message";
 import {
-  Message,
-  MessageContent,
-  MessageResponse,
-} from "@/components/ai-elements/message";
-import { cn } from "@/lib/utils";
-import { LABEL_CLASS, STATE_TRANSITION_CLASS } from "../tokens";
-import { approvalPartsOf, textOf, toolCallCardsOf } from "./agentChat-model";
-import { ToolCallCard } from "./ToolCallCard";
+  answerProvenanceOf,
+  approvalPartsOf,
+  citationSourcesOf,
+  textOf,
+  toolCallCardsOf,
+  untrackedBrandMentionOf,
+} from "./agentChat-model";
+import { AnswerMarkdown } from "./AnswerMarkdown";
+import type { ToolCallCardView } from "./ask-model";
+import { StepTrace } from "./StepTrace";
+import { TrackBrandChip } from "./TrackBrandChip";
+import { UnavailableBlock } from "./UnavailableBlock";
 
 export function AgentMessage({
   message,
   onRespondToApproval,
+  persistedCards,
 }: {
   message: UIMessage;
   onRespondToApproval: (approvalId: string, approved: boolean) => void;
+  persistedCards?: ToolCallCardView[];
 }) {
   const text = textOf(message as unknown as { parts?: unknown });
 
@@ -40,34 +47,17 @@ export function AgentMessage({
     );
   }
 
-  const cards = toolCallCardsOf(message as unknown as { parts?: unknown });
+  const cards = persistedCards ?? toolCallCardsOf(message as unknown as { parts?: unknown });
   const approvals = approvalPartsOf(message as unknown as { parts?: unknown });
+  const provenance = answerProvenanceOf([message as unknown as { parts?: unknown }]);
+  const failedCards = cards.filter((card) => card.status === "failed");
+  const citationSources = citationSourcesOf([message as unknown as { parts?: unknown }]);
+  const untrackedBrand = untrackedBrandMentionOf(message as unknown as { parts?: unknown });
 
   return (
     <Message from="assistant">
       <MessageContent>
-        {cards.length === 1 ? (
-          <ul className="flex flex-col rounded-[8px] border border-border bg-bg-inset px-3 py-2.5">
-            <ToolCallCard card={cards[0]} />
-          </ul>
-        ) : cards.length > 1 ? (
-          <details className="rounded-[8px] border border-border bg-bg-inset">
-            <summary
-              className={cn(
-                LABEL_CLASS,
-                "cursor-pointer select-none px-3 py-2 text-fg-tertiary hover:text-fg-secondary",
-                STATE_TRANSITION_CLASS,
-              )}
-            >
-              {cards.length} actions completed
-            </summary>
-            <ul className="flex flex-col border-t border-border px-3 pt-3">
-              {cards.map((card) => (
-                <ToolCallCard key={card.id} card={card} />
-              ))}
-            </ul>
-          </details>
-        ) : null}
+        <StepTrace cards={cards} isRunning={text === ""} isLive={persistedCards === undefined} />
 
         {approvals.map((part) => (
           <Confirmation
@@ -111,7 +101,20 @@ export function AgentMessage({
           </Confirmation>
         ))}
 
-        {text !== "" ? <MessageResponse>{text}</MessageResponse> : null}
+        {text !== "" ? (
+          <UnavailableBlock
+            failedSteps={failedCards}
+            noGroundedEvidence={provenance?.mode === "template"}
+          />
+        ) : null}
+
+        {text !== "" ? <AnswerMarkdown text={text} citationSources={citationSources} /> : null}
+
+        {untrackedBrand !== null ? (
+          <div className="mt-1">
+            <TrackBrandChip brandName={untrackedBrand.name} />
+          </div>
+        ) : null}
       </MessageContent>
     </Message>
   );

@@ -1,7 +1,7 @@
 import { internalMutation, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { v } from "convex/values";
+import { v, type Infer } from "convex/values";
 import { MAX_BRANDS_PER_RUN } from "./pipeline/plan";
 import { requireUserId } from "./lib/auth";
 
@@ -114,6 +114,50 @@ export const latestForCohort = query({
   },
 });
 
+type AgentPlan = Infer<typeof agentPlanValidator>;
+type StepState = Infer<typeof stepStateValidator>;
+
+type AgentProgressArgs = {
+  plan?: AgentPlan;
+  currentStep?: string;
+  stepStates?: StepState[];
+  errorMessage?: string;
+};
+
+export function buildAgentProgressPatch(
+  args: AgentProgressArgs,
+): Partial<{
+  plan: AgentPlan;
+  currentStep: string;
+  stepStates: StepState[];
+  errorMessage: string;
+}> {
+  return {
+    ...(args.plan !== undefined ? { plan: args.plan } : {}),
+    ...(args.currentStep !== undefined ? { currentStep: args.currentStep } : {}),
+    ...(args.stepStates !== undefined ? { stepStates: args.stepStates } : {}),
+    ...(args.errorMessage !== undefined
+      ? { errorMessage: args.errorMessage }
+      : {}),
+  };
+}
+
+export const savePlanPublic = mutation({
+  args: {
+    runId: v.id("runs"),
+    plan: v.optional(agentPlanValidator),
+    currentStep: v.optional(v.string()),
+    stepStates: v.optional(v.array(stepStateValidator)),
+    errorMessage: v.optional(v.string()),
+  },
+  returns: v.id("runs"),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    const run = await ctx.db.get(args.runId);
+    await ctx.db.patch(args.runId, buildAgentProgressPatch(args));
+  },
+});
+
 export const internalSaveAgentProgress = internalMutation({
   args: {
     runId: v.id("runs"),
@@ -128,13 +172,6 @@ export const internalSaveAgentProgress = internalMutation({
     if (run === null) {
       throw new Error(`Run not found: ${args.runId}`);
     }
-    await ctx.db.patch(args.runId, {
-      ...(args.plan !== undefined ? { plan: args.plan } : {}),
-      ...(args.currentStep !== undefined ? { currentStep: args.currentStep } : {}),
-      ...(args.stepStates !== undefined ? { stepStates: args.stepStates } : {}),
-      ...(args.errorMessage !== undefined
-        ? { errorMessage: args.errorMessage }
-        : {}),
-    });
+    await ctx.db.patch(args.runId, buildAgentProgressPatch(args));
   },
 });
