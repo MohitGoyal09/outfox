@@ -158,7 +158,7 @@ export default function ComparePage({
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
         <Card className="border-dashed shadow-none"><CardContent className="p-8"><p className="text-sm text-muted-foreground">No cohort key in the URL.</p>
-        <Link href="/" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
+        <Link href="/cohorts" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
           Back to cohorts
         </Link>
         </CardContent></Card>
@@ -170,7 +170,7 @@ export default function ComparePage({
     return (
       <main className="mx-auto w-full max-w-6xl px-6 py-8">
         <Alert variant="destructive"><AlertTriangle className="size-4" /><AlertTitle>Invalid cohort</AlertTitle><AlertDescription>{cohortError}</AlertDescription></Alert>
-        <Link href="/" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
+        <Link href="/cohorts" className="mt-2 inline-block text-sm text-primary underline-offset-4 hover:underline">
           Back to cohorts
         </Link>
       </main>

@@ -96,7 +96,7 @@ export function Sidebar() {
         <SidebarGroup className="px-3 py-3 group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between px-2">
             <SidebarGroupLabel className="p-0 font-mono text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/45">Tracked brands</SidebarGroupLabel>
-            <Link href="/brands#brand-form" className="rounded-md p-1 text-sidebar-foreground/50 transition-colors duration-150 ease-out hover:bg-sidebar-accent hover:text-sidebar-foreground" aria-label="Add brand">
+            <Link href="/onboarding" className="rounded-md p-1 text-sidebar-foreground/50 transition-colors duration-150 ease-out hover:bg-sidebar-accent hover:text-sidebar-foreground" aria-label="Add brand">
               <Plus aria-hidden className="size-3.5" />
             </Link>
           </div>

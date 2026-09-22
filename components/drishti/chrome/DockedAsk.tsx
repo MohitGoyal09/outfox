@@ -367,7 +367,7 @@ export function DockedAsk() {
                 refreshScope();
               }}
               onBlur={() => setFocused(false)}
-              className="rounded-[10px] border border-border-strong bg-white shadow-[0_12px_32px_rgba(16,24,40,0.14)] transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_16px_38px_rgba(16,24,40,0.18)]"
+              className="rounded-3xl border border-border-strong bg-white shadow-[0_12px_32px_rgba(16,24,40,0.14)] transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_16px_38px_rgba(16,24,40,0.18)]"
             >
               <PromptInputBody>
                 <label htmlFor="docked-ask" className="sr-only">
