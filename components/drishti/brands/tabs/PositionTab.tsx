@@ -12,6 +12,7 @@ import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   aiOverviewClaims,
   hookMixDrift,
+  hookTypeFrequency,
   knowledgeAttributeClaims,
   knowledgeDescriptionClaims,
   pricePoints,
@@ -221,6 +222,7 @@ export function PositionTab({
     [previousClaims, previousTags, filters, now],
   );
   const filteredTags = useMemo(() => tagBearingClaims(filteredLatest), [filteredLatest]);
+  const hookTypeRows = useMemo(() => hookTypeFrequency(filteredTags), [filteredTags]);
   const themeRows = useMemo(() => themeFrequency(filteredTags), [filteredTags]);
   const valuePropRows = useMemo(() => valuePropFrequency(filteredTags), [filteredTags]);
 
@@ -228,19 +230,45 @@ export function PositionTab({
     <div className="space-y-4">
       <KnowledgeGraphCard brand={brand} latestClaims={filteredLatest} />
       <AiOverviewPanel claims={filteredLatest} />
-      <div className="grid gap-4 lg:grid-cols-2">
+      {/*
+        Ranked hook catalog — two levels of the same enrichment pass, both
+        real server-side faceted counts from get_tags, never re-derived here:
+        the fixed 9-value hookType vocabulary (colored on DESIGN.md's
+        hookType hue scale — the Data-Color Rule, so a hue means the same
+        thing here as it does in a chip elsewhere in the product), then the
+        theme and valueProp free-text long tail underneath it, where the
+        real specificity lives.
+      */}
+      <div>
+        <h2 className="mb-1 text-sm font-semibold tracking-[-0.02em]">Ranked hook catalog</h2>
+        <p className="mb-3 text-[11px] text-muted-foreground">
+          The fixed hookType vocabulary, then the free-text theme and value-proposition long tail underneath it — every count real and server-computed.
+        </p>
+        {/* Hook type stands alone, full width: its labels are single words, so
+            the width is better spent on the free-text long tail below, whose
+            sentence-length labels need the room lg:grid-cols-2 already gives
+            them elsewhere in this tab. */}
         <RankedCatalogChart
-          title="Themes"
-          rows={themeRows}
-          emptyTitle="No tagged themes yet."
-          emptyDescription="Ranks the real theme text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+          title="Hook type"
+          rows={hookTypeRows}
+          colorFor={(label) => HOOK_COLOR[label as HookType] ?? "#6b7280"}
+          emptyTitle="No tagged hook types yet."
+          emptyDescription="Ranks the real, fixed hookType vocabulary an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
         />
-        <RankedCatalogChart
-          title="Value propositions"
-          rows={valuePropRows}
-          emptyTitle="No tagged value propositions yet."
-          emptyDescription="Ranks the real valueProp text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
-        />
+        <div className="mt-4 grid gap-4 lg:grid-cols-2">
+          <RankedCatalogChart
+            title="Themes"
+            rows={themeRows}
+            emptyTitle="No tagged themes yet."
+            emptyDescription="Ranks the real theme text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+          />
+          <RankedCatalogChart
+            title="Value propositions"
+            rows={valuePropRows}
+            emptyTitle="No tagged value propositions yet."
+            emptyDescription="Ranks the real valueProp text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+          />
+        </div>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">
         <PriceLadderCard claims={filteredLatest} />

@@ -2,7 +2,7 @@
 
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { ArrowUpRight, BadgeDollarSign, Clapperboard, Newspaper, Store, TrendingUp } from "lucide-react";
+import { BadgeDollarSign, Clapperboard, Newspaper, Store, TrendingUp } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
@@ -94,38 +94,75 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
   );
 }
 
-function AdRuntimeLeaderboard({ claims }: { claims: ClaimDoc[] }) {
-  const rows = useMemo(() => adRuntimeLeaderboard(claims).slice(0, 8), [claims]);
+function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
+  const rows = useMemo(() => adRuntimeLeaderboard(claims), [claims]);
   return (
     <Card className="shadow-none">
       <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
         <Clapperboard className="size-4 text-accent" />
         <CardTitle className="text-sm">Longest-running ads</CardTitle>
+        {rows.length > 0 ? (
+          <span className="ml-auto font-mono text-[11px] text-muted-foreground">
+            {rows.length} creative{rows.length === 1 ? "" : "s"}
+          </span>
+        ) : null}
       </CardHeader>
       <CardContent className="pt-4">
         {rows.length === 0 ? (
           <EmptyState
             size="sm"
             icon={<Clapperboard {...iconProps} size={16} />}
-            title="No ad creatives stored yet."
-            description="Ranks real Ads Transparency creatives by real run length (first shown → last shown) once a run captures them."
+            title="No Ads Transparency data for this brand."
+            description="Many brands have no resolvable advertiser id, so this engine genuinely returns nothing for them — this is not an error, and it fills in once a run resolves one."
           />
         ) : (
-          <ul className="space-y-2">
-            {rows.map((row) => (
-              <li key={row.claimId} className="flex items-center justify-between gap-3 text-xs">
-                <span className="truncate capitalize">{row.format.replaceAll("_", " ")}</span>
-                {row.runDays !== null ? (
-                  <span className="font-mono tabular-nums text-foreground">{row.runDays}d</span>
-                ) : (
-                  <span className="font-mono text-[11px] text-muted-foreground">run length unknown</span>
-                )}
-                <a href={row.evidenceUrl} target="_blank" rel="noreferrer noopener" className="inline-flex shrink-0 items-center text-muted-foreground hover:text-accent">
-                  <ArrowUpRight className="size-3.5" />
-                </a>
-              </li>
-            ))}
-          </ul>
+          <>
+            <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
+              Run length is how long we observed each creative live — our honest proxy for spend, not spend itself. A longer-running ad is one the brand kept live, nothing more.
+            </p>
+            <div className="max-h-[420px] overflow-auto rounded-md border border-border/60">
+              <table className="w-full min-w-[560px] border-collapse text-xs">
+                <thead className="sticky top-0 bg-card">
+                  <tr className="border-b border-border/70 text-left text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
+                    <th className="py-2 pl-3 pr-2 font-normal">#</th>
+                    <th className="py-2 pr-2 font-normal">Creative</th>
+                    <th className="py-2 pr-2 font-normal">Format</th>
+                    <th className="py-2 pr-2 font-normal">Window</th>
+                    <th className="py-2 pr-3 text-right font-normal">Run length</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {rows.map((row, index) => (
+                    <tr key={row.claimId} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03]">
+                      <td className="py-2 pl-3 pr-2 font-mono text-[10px] tabular-nums text-muted-foreground">{index + 1}</td>
+                      <td className="max-w-[240px] truncate py-2 pr-2 text-foreground" title={row.title}>
+                        <a href={row.evidenceUrl} target="_blank" rel="noreferrer noopener" className="hover:text-accent hover:underline">
+                          {row.title}
+                        </a>
+                      </td>
+                      <td className="py-2 pr-2 capitalize text-muted-foreground">{row.format.replaceAll("_", " ")}</td>
+                      <td className="py-2 pr-2 font-mono text-[11px] tabular-nums text-muted-foreground">
+                        {row.firstShown && row.lastShown
+                          ? `${shortDate(row.firstShown)} – ${shortDate(row.lastShown)}`
+                          : row.firstShown
+                            ? shortDate(row.firstShown)
+                            : row.lastShown
+                              ? shortDate(row.lastShown)
+                              : "unknown"}
+                      </td>
+                      <td className="py-2 pr-3 text-right">
+                        {row.runDays !== null ? (
+                          <span className="font-mono text-[12px] font-semibold tabular-nums text-foreground">{row.runDays}d</span>
+                        ) : (
+                          <span className="font-mono text-[11px] tabular-nums text-muted-foreground">unknown</span>
+                        )}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </>
         )}
       </CardContent>
     </Card>
@@ -186,10 +223,8 @@ export function PlacementTab({
 
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <OrganicRankChart claims={filtered} />
-        <AdRuntimeLeaderboard claims={filtered} />
-      </div>
+      <OrganicRankChart claims={filtered} />
+      <AdRunLengthLeaderboard claims={filtered} />
       <DestinationsPanel claims={filtered} />
       <div className="grid gap-4 lg:grid-cols-3">
         <CountListPanel

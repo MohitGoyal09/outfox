@@ -29,6 +29,7 @@ import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
 import type { ToolCallCardView } from "./ask-model";
 import { descriptiveToolLabel } from "./ToolCallCard";
 import { FollowUpList } from "./FollowUpList";
+import { AnswerCharts } from "./AnswerCharts";
 import { ThoughtLine, type ThoughtStep, type ThoughtStepStatus } from "./ThoughtLine";
 import { TrackBrandChip } from "./TrackBrandChip";
 import { UnavailableBlock } from "./UnavailableBlock";
@@ -98,6 +99,11 @@ export function AgentMessage({
     <Message from="assistant">
       <MessageContent>
         <ThoughtLine steps={steps} working={isLive && isRunning && isBusy} elapsedSeconds={persistedElapsedSeconds} />
+
+        {/* Bound to the tool result, not to model text: the chart reads
+            get_trends' own returned rows, so a plotted point cannot be
+            fabricated. Renders nothing when no trends tool ran. */}
+        <AnswerCharts message={message as unknown as { parts?: unknown }} />
 
         {approvals.map((part) => (
           <Confirmation

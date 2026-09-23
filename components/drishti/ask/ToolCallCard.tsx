@@ -36,6 +36,7 @@ const TOOL_META: Record<string, { icon: LucideIcon; title: string }> = {
   web_search: { icon: Search, title: "Searching the web" },
   fetch_brand: { icon: RefreshCw, title: "Fetching a brand" },
   refresh_cohort: { icon: RefreshCw, title: "Requesting a live refresh" },
+  diff_runs: { icon: GitCompare, title: "Comparing the last two runs" },
 };
 const DEFAULT_TOOL_META = { icon: MessageSquareText, title: "Running a step" };
 

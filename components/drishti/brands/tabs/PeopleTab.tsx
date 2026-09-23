@@ -10,6 +10,7 @@ import { iconProps } from "../../tokens";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   audienceHintFrequency,
+  breakoutVideoRanking,
   creatorRowsFromGroups,
   findYoutubeRawVideo,
   groupYoutubeVideoClaims,
@@ -25,6 +26,7 @@ import {
   type SnapshotDoc,
 } from "../brand-model";
 import { EvidenceGrid } from "../EvidenceGrid";
+import { YouTubeVideoCard } from "../YouTubeVideoCard";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 
 function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): ClaimDoc[] {
@@ -139,41 +141,40 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
   );
 }
 
-function BreakoutHits({ claims }: { claims: ClaimDoc[] }) {
+function BreakoutVideos({ claims, youtubeSnapshot }: { claims: ClaimDoc[]; youtubeSnapshot?: SnapshotDoc }) {
   const groups = useMemo(
-    () =>
-      groupYoutubeVideoClaims(claims)
-        .filter((group) => group.viewCount !== null)
-        .sort((a, b) => (b.viewCount ?? 0) - (a.viewCount ?? 0))
-        .slice(0, 6),
+    () => breakoutVideoRanking(groupYoutubeVideoClaims(claims)).slice(0, 8),
     [claims],
   );
   return (
     <Card className="shadow-none">
       <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
         <Video className="size-4 text-accent" />
-        <CardTitle className="text-sm">Breakout hits</CardTitle>
+        <CardTitle className="text-sm">Breakout videos</CardTitle>
+        {groups.length > 0 ? <span className="ml-auto font-mono text-[11px] text-muted-foreground">ranked by views</span> : null}
       </CardHeader>
       <CardContent className="pt-4">
         {groups.length === 0 ? (
           <EmptyState
             size="sm"
             icon={<Video {...iconProps} size={16} />}
-            title="No videos with a stored view count yet."
-            description="Ranks the brand's real stored YouTube videos by real view count once video evidence is captured."
+            title="No YouTube videos stored yet."
+            description="Ranks the brand's real stored YouTube videos by real view count, likes shown alongside where stored, once video evidence is captured."
           />
         ) : (
-          <ol className="space-y-2">
-            {groups.map((group, index) => (
-              <li key={group.evidenceUrl} className="grid grid-cols-[20px_1fr_auto] items-center gap-2 text-xs">
-                <span className="font-mono text-[10px] text-muted-foreground">{index + 1}</span>
-                <a href={group.evidenceUrl} target="_blank" rel="noreferrer noopener" className="truncate text-foreground hover:text-accent hover:underline">
-                  {group.title ?? "Untitled video"}
-                </a>
-                <span className="font-mono tabular-nums text-muted-foreground">{compactCount(group.viewCount ?? 0)}</span>
-              </li>
-            ))}
-          </ol>
+          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+            {groups.map((group, index) => {
+              const raw = readYoutubeRawVideo(findYoutubeRawVideo(youtubeSnapshot?.rawResponse, group.videoId));
+              return (
+                <div key={group.evidenceUrl} className="relative">
+                  <span className="absolute -left-1.5 -top-1.5 z-10 grid size-5 place-items-center rounded-full border border-border-strong bg-card font-mono text-[10px] font-semibold tabular-nums text-foreground">
+                    {index + 1}
+                  </span>
+                  <YouTubeVideoCard group={group} raw={raw} />
+                </div>
+              );
+            })}
+          </div>
         )}
       </CardContent>
     </Card>
@@ -257,18 +258,16 @@ export function PeopleTab({
     <div className="space-y-4">
       <div className="grid gap-4 lg:grid-cols-2">
         <CreatorLeaderboard claims={filtered} youtubeSnapshot={youtubeSnapshot} youtubeSearchSnapshot={youtubeSearchSnapshot} brand={brand} />
-        <BreakoutHits claims={filtered} />
+        <OwnedVsCreatorSplit claims={filtered} youtubeSnapshot={youtubeSnapshot} brand={brand} />
       </div>
+      <BreakoutVideos claims={filtered} youtubeSnapshot={youtubeSnapshot} />
       <RankedCatalogChart
         title="Audience hints"
         rows={audienceHintRows}
         emptyTitle="No tagged audience hints yet."
         emptyDescription="Ranks the real audienceHint text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
       />
-      <div className="grid gap-4 lg:grid-cols-2">
-        <OwnedVsCreatorSplit claims={filtered} youtubeSnapshot={youtubeSnapshot} brand={brand} />
-        <PublisherListPanel claims={filtered} />
-      </div>
+      <PublisherListPanel claims={filtered} />
       <div>
         <h2 className="mb-3 text-sm font-semibold tracking-[-0.02em]">Real people evidence</h2>
         <EvidenceGrid

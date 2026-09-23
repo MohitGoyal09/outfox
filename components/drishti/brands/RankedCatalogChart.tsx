@@ -1,14 +1,14 @@
 "use client";
 
 import { Layers } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../EmptyState";
 import { iconProps } from "../tokens";
 import type { LabeledCount } from "./brand-model";
 
-export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription }: { title: string; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string }) {
+export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription, colorFor }: { title: string; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string }) {
   const top = rows.slice(0, 8);
   const chartConfig = { count: { label: "Times assigned", color: "#0f766e" } } satisfies ChartConfig;
   return (
@@ -27,7 +27,9 @@ export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription }
               <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
               <YAxis dataKey="label" type="category" width={160} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="count" fill="var(--color-count)" radius={3} barSize={16} />
+              <Bar dataKey="count" fill="var(--color-count)" radius={3} barSize={16}>
+                {colorFor ? top.map((row) => <Cell key={row.label} fill={colorFor(row.label)} />) : null}
+              </Bar>
             </BarChart>
           </ChartContainer>
         )}

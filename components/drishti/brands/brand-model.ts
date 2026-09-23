@@ -584,6 +584,7 @@ export function mergeCreatorRows(base: CreatorRow[], searchRows: YoutubeSearchRe
 
 export type AdRuntimeRow = {
   claimId: string;
+  title: string;
   format: string;
   firstShown: string | null;
   lastShown: string | null;
@@ -605,7 +606,7 @@ function daysBetween(a: string, b: string): number | null {
 export function adRuntimeLeaderboard(claims: ClaimDoc[]): AdRuntimeRow[] {
   return adCreativeClaims(claims)
     .map(adCreativeWindow)
-    .sort((a, b) => (b.runDays ?? -1) - (a.runDays ?? -1));
+    .sort((a, b) => (b.runDays ?? -1) - (a.runDays ?? -1) || a.claimId.localeCompare(b.claimId));
 }
 
 

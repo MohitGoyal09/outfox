@@ -1,0 +1,43 @@
+"use client";
+
+
+import { TrendsChart, type TrendsChartResult } from "@/components/drishti/charts";
+
+type UnknownPart = { type?: unknown; state?: unknown; output?: unknown; toolCallId?: unknown };
+
+function isTrendsOutput(value: unknown): value is TrendsChartResult {
+  if (typeof value !== "object" || value === null) return false;
+  const candidate = value as { rows?: unknown };
+  return Array.isArray(candidate.rows);
+}
+
+export function trendsResultsOf(message: { parts?: unknown }): TrendsChartResult[] {
+  const parts = Array.isArray(message.parts) ? (message.parts as UnknownPart[]) : [];
+  const out: TrendsChartResult[] = [];
+  for (const part of parts) {
+    if (part.type !== "tool-get_trends") continue;
+    if (part.state !== "output-available") continue;
+    if (!isTrendsOutput(part.output)) continue;
+    if (part.output.rows.length === 0) continue;
+    out.push(part.output);
+  }
+  return out;
+}
+
+export function AnswerCharts({
+  message,
+  brandLabel,
+}: {
+  message: { parts?: unknown };
+  brandLabel?: (brandId: string) => string;
+}) {
+  const results = trendsResultsOf(message);
+  if (results.length === 0) return null;
+  return (
+    <div className="mt-3 flex flex-col gap-3">
+      {results.map((result, i) => (
+        <TrendsChart key={i} result={result} {...(brandLabel ? { brandLabel } : {})} />
+      ))}
+    </div>
+  );
+}
