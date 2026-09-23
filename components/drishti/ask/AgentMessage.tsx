@@ -55,6 +55,7 @@ export function AgentMessage({
   isStreaming = false,
   isBusy = true,
   persistedCards,
+  persistedDurationMs,
 }: {
   message: UIMessage;
   onRespondToApproval: (approvalId: string, approved: boolean) => void;
@@ -68,6 +69,7 @@ export function AgentMessage({
   isStreaming?: boolean;
   isBusy?: boolean;
   persistedCards?: ToolCallCardView[];
+  persistedDurationMs?: number | null;
 }) {
   const text = textOf(message as unknown as { parts?: unknown });
 
@@ -100,12 +102,11 @@ export function AgentMessage({
     text: descriptiveToolLabel(card.name, card.rawPayload, brandNames),
     status: thoughtStatusOf(card.status),
   }));
-  const persistedDurationMs = !isLive
-    ? cards.reduce((sum, card) => sum + (card.durationMs ?? 0), 0)
-    : 0;
   const persistedElapsedSeconds =
-    !isLive && persistedDurationMs > 0 ? persistedDurationMs / 1000 : undefined;
-  const showTimer = isBusy || isLive || persistedDurationMs > 0;
+    !isLive && persistedDurationMs != null && persistedDurationMs > 0
+      ? persistedDurationMs / 1000
+      : undefined;
+  const showTimer = isBusy || isLive || persistedElapsedSeconds !== undefined;
 
   return (
     <Message from="assistant">

@@ -55,7 +55,7 @@ import { CitationDrawer, type EvidenceDetail } from "./CitationDrawer";
 import { PromptCategories } from "./PromptCategories";
 import { SourcesDrawer } from "./SourcesDrawer";
 import { useAgentChat } from "./useAgentChat";
-import { toolCardsByAssistantTurn, useAskTraceEvents } from "./useAskTrace";
+import { tracesByAssistantMessageId, useAskTraceEvents } from "./useAskTrace";
 
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 const ASK_MAX_CHARS = 2000;
@@ -183,18 +183,20 @@ export function AskView({
     threadKey === "" ? "skip" : { threadKey, limit: 50 },
   );
   const traceEvents = useAskTraceEvents(threadKey === "" ? null : threadKey);
-  const persistedCardsByMessageId = useMemo(() => {
+  const tracesByMessageId = useMemo(() => {
     if (history === undefined || traceEvents === undefined) return {};
-    const cardsByTurn = toolCardsByAssistantTurn(traceEvents);
-    const byMessageId: Record<string, ToolCallCardView[]> = {};
-    history
-      .filter((row) => row.role === "assistant")
-      .forEach((row, turnIndex) => {
-        const cards = cardsByTurn[turnIndex];
-        if (cards !== undefined && cards.length > 0) byMessageId[row.id] = cards;
-      });
-    return byMessageId;
+    return tracesByAssistantMessageId(
+      history.filter((row) => row.role === "assistant"),
+      traceEvents,
+    );
   }, [history, traceEvents]);
+  const persistedCardsByMessageId = useMemo(() => {
+    const byMessageId: Record<string, ToolCallCardView[]> = {};
+    for (const [id, trace] of Object.entries(tracesByMessageId)) {
+      if (trace.cards.length > 0) byMessageId[id] = trace.cards;
+    }
+    return byMessageId;
+  }, [tracesByMessageId]);
   const hydratedThreadRef = useRef<string | null>(null);
   useEffect(() => {
     if (history === undefined || traceEvents === undefined || claims === undefined) return;
@@ -661,6 +663,7 @@ export function AskView({
                   isStreaming={isLastMessage && chatStatus === "streaming"}
                   isBusy={isLastMessage && isGenerating}
                   persistedCards={persistedCardsByMessageId[message.id]}
+                  persistedDurationMs={tracesByMessageId[message.id]?.durationMs}
                   question={precedingUserText}
                   threadKey={threadKey}
                   onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}

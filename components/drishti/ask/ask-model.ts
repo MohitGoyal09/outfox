@@ -117,6 +117,11 @@ export function buildToolCallCards(events: PersistedEvent[]): ToolCallCardView[]
   return cards;
 }
 
+export function turnWallDurationMs(group: PersistedEvent[]): number | null {
+  const last = new Date(group[group.length - 1]!.createdAt).getTime();
+  const span = last - first;
+}
+
 type PersistedTrendsRow = TrendsChartResult["rows"][number];
 
 type PersistedTrendsGroup = {

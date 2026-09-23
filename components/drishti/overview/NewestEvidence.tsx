@@ -31,7 +31,7 @@ export function NewestEvidence({ loading, hasBrands, feed, nowMs }: NewestEviden
   const trailing =
     feed && feed.bounded ? (
       <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
-        {feed.items.length} of {feed.total}
+        newest {feed.items.length}
       </span>
     ) : null;
 

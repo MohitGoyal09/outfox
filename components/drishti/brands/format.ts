@@ -11,6 +11,6 @@ export function periodWindow(period: string | undefined | null): string | null {
   if (last === undefined) return shortDate(first);
 }
 
-export function displayClaimText(text: string): string {
-  const match = text.match(/^(?:Organic|News) result "([\s\S]*)"$/);
+export function decodeClaimEntities(text: string): string {
+  if (!text.includes("&")) return text;
 }
