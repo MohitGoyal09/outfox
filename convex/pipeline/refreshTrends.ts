@@ -1,6 +1,6 @@
 "use node";
 
-import { action } from "../_generated/server";
+import { action, internalAction } from "../_generated/server";
 import { api, internal } from "../_generated/api";
 import { v, ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
@@ -9,7 +9,8 @@ import { fetchSerpApiAccount } from "../lib/serpApiAccount";
 import { fetchGoogleTrends } from "./fetchEngines";
 import { extractTrendsClaims } from "./extractClaims";
 import type { ExtractCtx } from "./extractClaims";
-import { resolveOrCreateRun, SEARCH_RESERVE_FLOOR } from "./webSearch";
+import { SEARCH_RESERVE_FLOOR } from "./webSearch";
+import { buildCohortKey } from "./brandProfile";
 
 function recordOf(value: unknown): Record<string, unknown> | null {
   return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
@@ -34,21 +35,58 @@ const trendsClaimValidator = v.object({
  * fan-out — switching the Trends geography filter should cost one Trends
  * call, not a whole-cohort live run.
  */
-export const refreshTrends = action({
+/**
+ * One shape for both callers, so the public gate and the internal repair path
+ * can never drift apart.
+ */
+const refreshTrendsReturns = v.union(
+  v.object({ ok: v.literal(false), error: v.string() }),
+  v.object({
+    ok: v.literal(true),
+    runId: v.string(),
+    snapshotId: v.string(),
+    region: v.string(),
+    claims: v.array(trendsClaimValidator),
+  }),
+);
+
+/**
+ * The annotation is required, not decoration: `refreshTrends` delegates to
+ * `refreshTrendsInternal` in the SAME file, so without an explicit return type
+ * TypeScript cannot infer either one ("referenced directly or indirectly in its
+ * own initializer") and both become `any`.
+ */
+export type RefreshTrendsResult =
+  | { ok: false; error: string }
+  | {
+      ok: true;
+      runId: string;
+      snapshotId: string;
+      region: string;
+      claims: Array<{
+        id: string;
+        text: string;
+        metric?: string;
+        value?: string | number;
+        evidenceUrl: string;
+      }>;
+    };
+
+/**
+ * The work, with no auth of its own. Reachable only from the public action below
+ * or from the Convex CLI, never from a client.
+ *
+ * Exists because the public action MUST have a user (it is a user's action), which
+ * made this impossible to run from `npx convex run` for a data repair. Verified
+ * 2026-09-23: needs it for brands whose Trends evidence predates per-point
+ * extraction, where `get_trends` returns nothing at all because
+ * `selectTrends` filters to the point metric and only averages exist.
+ */
+export const refreshTrendsInternal = internalAction({
   args: { brandId: v.id("brands"), geo: v.string(), date: v.string() },
-  returns: v.union(
-    v.object({ ok: v.literal(false), error: v.string() }),
-    v.object({
-      ok: v.literal(true),
-      runId: v.string(),
-      snapshotId: v.string(),
-      region: v.string(),
-      claims: v.array(trendsClaimValidator),
-    }),
-  ),
-  handler: async (ctx, args) => {
-    await requireUserId(ctx);
-    const brand = (await ctx.runQuery(api.brands.getBrand, {
+  returns: refreshTrendsReturns,
+  handler: async (ctx, args): Promise<RefreshTrendsResult> => {
+    const brand = (await ctx.runQuery(internal.brands.getBrandInternal, {
       brandId: args.brandId,
     })) as Doc<"brands"> | null;
     if (brand === null) throw new ConvexError("brand not found");
@@ -60,7 +98,20 @@ export const refreshTrends = action({
       );
     }
 
-    const runId = await resolveOrCreateRun(ctx, args.brandId);
+    // Resolved without auth on purpose: this path runs from the Convex CLI. The
+    // public action has already authenticated the human before delegating.
+    const cohortKey = buildCohortKey([String(args.brandId)]);
+    const existingRun = (await ctx.runQuery(internal.runs.latestForCohortInternal, {
+      cohortKey,
+    })) as Doc<"runs"> | null;
+    const runId =
+      existingRun?._id ??
+      ((await ctx.runMutation(internal.runs.internalCreateRun, {
+        cohortKey,
+        brandIds: [args.brandId],
+        mode: "live" as const,
+        ownerId: brand.ownerId,
+      })) as Id<"runs">);
     const fetchedAt = new Date().toISOString();
 
     const result = await fetchGoogleTrends([{ _id: brand._id, name: brand.name }], runId, undefined, {
@@ -127,5 +178,19 @@ export const refreshTrends = action({
         evidenceUrl: claim.evidenceUrl,
       })),
     };
+  },
+});
+
+/**
+ * The user-facing action: authenticate, then delegate. The auth check lives here
+ * and only here, so the work itself stays callable for data repair without ever
+ * becoming callable without a user from a client.
+ */
+export const refreshTrends = action({
+  args: { brandId: v.id("brands"), geo: v.string(), date: v.string() },
+  returns: refreshTrendsReturns,
+  handler: async (ctx, args): Promise<RefreshTrendsResult> => {
+    await requireUserId(ctx);
+    return await ctx.runAction(internal.pipeline.refreshTrends.refreshTrendsInternal, args);
   },
 });

@@ -1,4 +1,4 @@
-import { mutation, query, internalMutation } from "./_generated/server";
+import { mutation, query, internalMutation, internalQuery } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { requireUserId } from "./lib/auth";
 

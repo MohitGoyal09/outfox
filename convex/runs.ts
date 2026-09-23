@@ -1,4 +1,4 @@
-import { internalMutation, mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { v, type Infer } from "convex/values";
@@ -111,6 +111,14 @@ export const latestForCohort = query({
       .query("runs")
       .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
       .collect();
+  },
+});
+
+export const latestForCohortInternal = internalQuery({
+  args: { cohortKey: v.string() },
+  returns: v.union(runDocValidator, v.null()),
+  handler: async (ctx, args) => {
+    const runs = await ctx.db.query("runs").collect();
   },
 });
 
