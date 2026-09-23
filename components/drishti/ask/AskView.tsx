@@ -50,7 +50,7 @@ import {
   type AskScope,
   type ToolCallCardView,
 } from "./ask-model";
-import { precedingUserTextOf, sourcesOf } from "./agentChat-model";
+import { precedingUserTextOf, sourceRowsOf } from "./agentChat-model";
 import { CitationDrawer } from "./CitationDrawer";
 import { PromptCategories } from "./PromptCategories";
 import { SourcesDrawer } from "./SourcesDrawer";
@@ -67,8 +67,14 @@ function ComposerAttachButton({ disabled }: { disabled: boolean }) {
       aria-label="Attach a file"
       disabled={disabled}
       onClick={() => attachments.openFileDialog()}
+      className={cn(
+        "size-8 rounded-full border border-transparent bg-bg-inset text-fg-secondary",
+        STATE_TRANSITION_CLASS,
+        "hover:border-border-strong hover:bg-bg-raised-2 hover:text-fg",
+        "disabled:cursor-not-allowed disabled:opacity-60",
+      )}
     >
-      <Paperclip className="size-4" aria-hidden="true" />
+      <Paperclip className="size-3.5" aria-hidden="true" />
     </PromptInputButton>
   );
 }
@@ -368,9 +374,9 @@ export function AskView({
     });
   }
 
-  const sources = useMemo(
-    () => sourcesOf(messages as unknown as { parts?: unknown }[]),
-    [messages],
+  const sourceRows = useMemo(
+    () => sourceRowsOf(messages as unknown as { parts?: unknown }[], claimsById),
+    [messages, claimsById],
   );
   const hasTranscript = messages.length > 0;
   const focusedEmptyState = useRef(false);
@@ -428,7 +434,7 @@ export function AskView({
           onSubmit={(message) => {
             void submit(message.text);
           }}
-          className="rounded-[28px] border border-border/70 bg-bg-raised shadow-[var(--shadow-drawer),0_2px_0_rgba(255,255,255,0.6)_inset] transition-shadow duration-200 ease-out focus-within:shadow-[var(--shadow-drawer),0_1px_2px_rgba(16,24,40,0.08)]"
+          className="rounded-[20px] border border-border/70 bg-bg-raised shadow-[var(--shadow-drawer),0_2px_0_rgba(255,255,255,0.6)_inset] transition-[box-shadow,border-color] duration-200 ease-out focus-within:border-accent/50 focus-within:shadow-[var(--shadow-drawer),0_1px_2px_rgba(16,24,40,0.08)]"
         >
           <PromptInputBody>
             <PromptInputTextarea
@@ -448,11 +454,14 @@ export function AskView({
                   ? mentionOptionId(listboxId, activeMentionOption.id)
                   : undefined
               }
-              className="min-h-[72px] max-h-[300px] overflow-y-auto bg-transparent text-fg placeholder:text-fg-placeholder"
+              className="min-h-[76px] max-h-[300px] overflow-y-auto bg-transparent pt-3.5 pl-1 text-fg placeholder:text-fg-placeholder"
             />
           </PromptInputBody>
-          <PromptInputFooter className="items-center gap-x-2 rounded-b-[28px] border-t border-border bg-bg-inset/60">
-            <PromptInputTools className="gap-1.5">
+          {/* Bottom control row: one continuous card with the textarea above it
+              (no divider line, no tinted well) -- Karax's composer reads as a
+              single card, never two stacked panels. */}
+          <PromptInputFooter className="items-center gap-x-2 rounded-b-[20px] border-t-0 pb-1">
+            <PromptInputTools className="gap-2">
               <ComposerAttachButton disabled={asking} />
               {/* Brand scope, in the reference's model-picker slot: which
                   tracked brands this question may read. A manual depth/effort
@@ -467,7 +476,7 @@ export function AskView({
                 onClick={togglePlusMenu}
                 disabled={asking}
                 className={cn(
-                  "inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium",
+                  "inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium",
                   STATE_TRANSITION_CLASS,
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:ring-[3px] focus-visible:ring-accent/20",
                   "disabled:cursor-not-allowed disabled:opacity-60",
@@ -566,7 +575,7 @@ export function AskView({
               <span className="hidden max-w-[32ch] truncate text-xs text-fg-secondary md:inline">
                 {scopeText}
               </span>
-              {sources.length > 0 ? <SourcesDrawer sources={sources} /> : null}
+              {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} /> : null}
               <Button variant="ghost" size="sm" onClick={() => setMessages([])}>
                 Clear
               </Button>
@@ -642,6 +651,7 @@ export function AskView({
                   key={message.id}
                   message={message}
                   brandNames={brandNames}
+                  claimsById={claimsById}
                   isStreaming={isLastMessage && chatStatus === "streaming"}
                   isBusy={isLastMessage && isGenerating}
                   persistedCards={persistedCardsByMessageId[message.id]}

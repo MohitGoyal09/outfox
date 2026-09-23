@@ -18,11 +18,12 @@ import {
   citationSourcesOf,
   followUpsOf,
   hasStreamedThisSession,
-  sourcesOf,
+  sourceRowsOf,
   textOf,
   toolCallCardsOf,
   untrackedBrandMentionOf,
 } from "./agentChat-model";
+import type { ClaimTextById } from "./agentChat-model";
 import { AnswerActions } from "./AnswerActions";
 import { AnswerMarkdown } from "./AnswerMarkdown";
 import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
@@ -47,6 +48,7 @@ export function AgentMessage({
   onSelectFollowUp,
   onRetry,
   brandNames = {},
+  claimsById,
   isStreaming = false,
   isBusy = true,
   persistedCards,
@@ -57,6 +59,7 @@ export function AgentMessage({
   onSelectFollowUp: (question: string) => void;
   onRetry?: () => void;
   brandNames?: Record<string, string>;
+  claimsById: ClaimTextById;
   isStreaming?: boolean;
   isBusy?: boolean;
   persistedCards?: ToolCallCardView[];
@@ -81,7 +84,7 @@ export function AgentMessage({
   const failedCards = cards.filter((card) => card.status === "failed");
   const citationSources = citationSourcesOf([message as unknown as { parts?: unknown }]);
   const untrackedBrand = untrackedBrandMentionOf(message as unknown as { parts?: unknown });
-  const sources = sourcesOf([message as unknown as { parts?: unknown }]);
+  const sourceRows = sourceRowsOf([message as unknown as { parts?: unknown }], claimsById);
   const followUps = followUpsOf([message as unknown as { parts?: unknown }]);
   const isRunning = text === "";
   const isLive = streamedThisSession;
@@ -91,14 +94,22 @@ export function AgentMessage({
     text: descriptiveToolLabel(card.name, card.rawPayload, brandNames),
     status: thoughtStatusOf(card.status),
   }));
-  const persistedElapsedSeconds = !isLive
-    ? cards.reduce((sum, card) => sum + (card.durationMs ?? 0), 0) / 1000
-    : undefined;
+  const persistedDurationMs = !isLive
+    ? cards.reduce((sum, card) => sum + (card.durationMs ?? 0), 0)
+    : 0;
+  const persistedElapsedSeconds =
+    !isLive && persistedDurationMs > 0 ? persistedDurationMs / 1000 : undefined;
+  const showTimer = isLive || persistedDurationMs > 0;
 
   return (
     <Message from="assistant">
       <MessageContent>
-        <ThoughtLine steps={steps} working={isLive && isRunning && isBusy} elapsedSeconds={persistedElapsedSeconds} />
+        <ThoughtLine
+          steps={steps}
+          working={isLive && isRunning && isBusy}
+          elapsedSeconds={persistedElapsedSeconds}
+          showTimer={showTimer}
+        />
 
         {/* Bound to the tool result, not to model text: the chart reads
             get_trends' own returned rows, so a plotted point cannot be
@@ -165,7 +176,7 @@ export function AgentMessage({
 
         {text !== "" ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <AnswerSourcesPanel sources={sources} />
+            <AnswerSourcesPanel sources={sourceRows} />
             <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
           </div>
         ) : null}

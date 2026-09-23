@@ -1,4 +1,5 @@
 
+import { displayClaimText } from "../brands/format";
 import { ABSENT, HOOK_TYPES, isHookType, type HookType } from "../tokens";
 
 export type ClaimLike = {
@@ -219,10 +220,17 @@ export function composeDigest(input: {
 }): Digest {
   const claims = input.claims.filter((claim) => claim.text.trim() !== "");
   const counts = cohortCounts(claims, input.brandNameById);
-  const sources: DigestSource[] = claims.slice(0, 2).map((claim) => ({
-    brandName: input.brandNameById[claim.brandId] ?? claim.brandId,
-    text: claim.text,
-  }));
+  const sources: DigestSource[] = [];
+  const seenBrandIds = new Set<string>();
+  for (const claim of claims) {
+    if (seenBrandIds.has(claim.brandId)) continue;
+    seenBrandIds.add(claim.brandId);
+    sources.push({
+      brandName: input.brandNameById[claim.brandId] ?? claim.brandId,
+      text: displayClaimText(claim.text),
+    });
+    if (sources.length >= 2) break;
+  }
 
   if (input.briefText && input.briefMode === "llm") {
     const sentences = llmBriefSentences(input.briefText);
@@ -497,6 +505,18 @@ export function composeUsage(input: {
   };
 }
 
+export function hasReportedUsage(usage: UsageView): boolean {
+  return (
+    usage.searches !== null ||
+    usage.searchesLeftAfter !== null ||
+    usage.creditsReported ||
+    usage.llmRequests !== null ||
+    usage.llmTokens !== null ||
+    (usage.exactCostUsd !== null && usage.exactCostUsd > 0) ||
+    (usage.estimatedCostUsd !== null && usage.estimatedCostUsd > 0)
+  );
+}
+
 
 export type ClaimFeedItem = {
   id: string;
@@ -521,7 +541,7 @@ export function buildClaimFeed(
   const clean = claims.filter((claim) => claim.text.trim() !== "");
   const items = clean.slice(0, Math.max(0, limit)).map((claim) => ({
     id: claim.id,
-    text: claim.text,
+    text: displayClaimText(claim.text),
     brandName: brandNameById[claim.brandId] ?? claim.brandId,
     hookType:
       claim.hookType !== null && isHookType(claim.hookType)

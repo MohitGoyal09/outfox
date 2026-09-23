@@ -18,7 +18,7 @@ import { formatStamp } from "../cohorts/cohorts-model";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
 import { ABSENT, LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
-import { groupByChunk, type ChunkGroup, type TrendsChunkRow } from "./groupByChunk";
+import { canConnectWithLine, groupByChunk, type ChunkGroup, type TrendsChunkRow } from "./groupByChunk";
 
 export type TrendsChartResult = {
   rows: TrendsChunkRow[];
@@ -92,6 +92,7 @@ function ChunkPanel({
       { label: brandLabel(brandId), color: SERIES_COLORS[index % SERIES_COLORS.length] },
     ]),
   ) satisfies ChartConfig;
+  const hasWindowRows = !canConnectWithLine(group.rows);
 
   return (
     <Panel interactive={false} padded className="flex flex-col gap-3">
@@ -103,7 +104,14 @@ function ChunkPanel({
           {brandIds.length} {brandIds.length === 1 ? "brand" : "brands"}
         </span>
       </div>
-      {showChrome ? (
+      {hasWindowRows ? (
+        <p className="text-[12px] leading-[1.5] text-[var(--text-secondary,#667085)]">
+          Each dot is a 30-day average from the last run, not a daily reading --
+          refresh Trends for this brand to get a real daily series. Dots are
+          shown unconnected on purpose: a line would imply days were measured
+          in between, and none were.
+        </p>
+      ) : showChrome ? (
         <p className="text-[12px] leading-[1.5] text-[var(--text-secondary,#667085)]">
           Values in this panel are comparable to each other only. Google Trends
           normalises interest within one query chunk, so a different chunk is
@@ -162,7 +170,7 @@ function ChunkPanel({
               type="monotone"
               dataKey={brandId}
               name={brandLabel(brandId)}
-              stroke={`var(--color-${brandId})`}
+              stroke={hasWindowRows ? "none" : `var(--color-${brandId})`}
               strokeWidth={2}
               dot={{ r: 3.5, fill: `var(--color-${brandId})`, stroke: "var(--bg-raised,#ffffff)", strokeWidth: 1 }}
               activeDot={{ r: 4.5, fill: `var(--color-${brandId})`, stroke: "var(--bg-raised,#ffffff)", strokeWidth: 1.5 }}

@@ -8,12 +8,17 @@ export type TrendsChunkRow = {
   period?: string;
   evidenceUrl: string;
   fetchedAt: string;
+  granularity: "point" | "window";
 };
 
 export type ChunkGroup = {
   chunkKey: string;
   rows: TrendsChunkRow[];
 };
+
+export function canConnectWithLine(rows: readonly TrendsChunkRow[]): boolean {
+  return rows.every((row) => row.granularity === "point");
+}
 
 export const UNKNOWN_CHUNK_KEY = "unknown-chunk";
 

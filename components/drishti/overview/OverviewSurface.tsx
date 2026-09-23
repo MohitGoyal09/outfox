@@ -1,71 +1,267 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowUpRight, CheckCircle2, CircleAlert, Clock3, Plus, Radar, Search, TriangleAlert } from "lucide-react";
+import { ArrowRight, ArrowUpRight, Plus, Radar, Search } from "lucide-react";
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
-import { cn } from "@/lib/utils";
+import { EmptyState, Panel, StatReadout, iconProps } from "@/components/drishti";
 
+import { ActionLink } from "./ActionLink";
+import { AttentionPanel } from "./AttentionPanel";
+import { ClaimsOfTheDay } from "./ClaimsOfTheDay";
+import { EmergingPanel } from "./EmergingPanel";
 import { OverviewErrorBoundary } from "./OverviewErrorBoundary";
-import { buildClaimFeed, cohortKeyFromBrands, composeAttention, composeDigest, composeEmerging, composeUsage, engineLabel, formatRunDate, type BrandNameById, type ClaimLike } from "./digest";
+import { SectionLabel } from "./SectionLabel";
+import { SinceLastRun } from "./SinceLastRun";
+import {
+  buildClaimFeed,
+  cohortCounts,
+  cohortKeyFromBrands,
+  composeAttention,
+  composeDigest,
+  composeEmerging,
+  composeUsage,
+  hasReportedUsage,
+  runHref,
+  type BrandNameById,
+  type ClaimLike,
+} from "./digest";
 
-const ENGINE_ORDER = ["google", "google_ads_transparency_center", "youtube", "youtube_video", "google_trends"] as const;
+const ASK_NEXT_QUESTIONS = [
+  "What changed since the last run?",
+  "Which claims are shared across brands?",
+  "Where is the evidence incomplete?",
+] as const;
 
 export function OverviewSurface() {
-  return <OverviewErrorBoundary><OverviewBody /></OverviewErrorBoundary>;
+  return (
+    <OverviewErrorBoundary>
+      <OverviewBody />
+    </OverviewErrorBoundary>
+  );
+}
+
+function greetingWord(hour: number): string {
+  if (hour < 5) return "night";
+  if (hour < 12) return "morning";
+  if (hour < 18) return "afternoon";
+  return "evening";
 }
 
 function OverviewBody() {
+  const [greeting] = useState(() => greetingWord(new Date().getHours()));
   const brandsQuery = useQuery(api.brands.listBrands);
   const brands = useMemo(() => brandsQuery ?? [], [brandsQuery]);
-  const brandNameById: BrandNameById = useMemo(() => Object.fromEntries(brands.map((brand) => [String(brand._id), brand.name])), [brands]);
+  const brandNameById: BrandNameById = useMemo(
+    () => Object.fromEntries(brands.map((brand) => [String(brand._id), brand.name])),
+    [brands],
+  );
   const cohortKey = useMemo(() => cohortKeyFromBrands(brands), [brands]);
   const runQuery = useQuery(api.runs.latestForCohort, cohortKey ? { cohortKey } : "skip");
   const run = runQuery ?? null;
   const briefQuery = useQuery(api.briefs.latestForCohort, cohortKey ? { cohortKey } : "skip");
   const claimsQuery = useQuery(api.claims.byRun, run?._id ? { runId: run._id } : "skip");
-  const snapshotsQuery = useQuery(api.snapshots.byRun, run?._id ? { runId: run._id } : "skip");
   const usageQuery = useQuery(api.llmUsage.usageForRun, run?._id ? { runId: run._id } : "skip");
 
-  const claims: ClaimLike[] = useMemo(() => (claimsQuery ?? []).map((claim) => ({ id: String(claim._id), text: claim.text, brandId: String(claim.brandId), sourceEngine: claim.sourceEngine, hookType: claim.hookType ?? null })), [claimsQuery]);
-  const digest = useMemo(() => composeDigest({ briefText: briefQuery?.briefText, briefMode: briefQuery?.mode, claims, brandNameById }), [briefQuery, claims, brandNameById]);
+  const claims: ClaimLike[] = useMemo(
+    () =>
+      (claimsQuery ?? []).map((claim) => ({
+        id: String(claim._id),
+        text: claim.text,
+        brandId: String(claim.brandId),
+        sourceEngine: claim.sourceEngine,
+        hookType: claim.hookType ?? null,
+      })),
+    [claimsQuery],
+  );
+
+  const brandsLoading = brandsQuery === undefined;
+  const runLoading = cohortKey !== "" && runQuery === undefined;
+  const claimsLoading = run !== null && claimsQuery === undefined;
+  const panelLoading = brandsLoading || runLoading || claimsLoading;
+  const runExists = run !== null;
+
+  const digest = useMemo(
+    () =>
+      composeDigest({
+        briefText: briefQuery?.briefText,
+        briefMode: briefQuery?.mode,
+        claims,
+        brandNameById,
+      }),
+    [briefQuery, claims, brandNameById],
+  );
+  const counts = useMemo(() => cohortCounts(claims, brandNameById), [claims, brandNameById]);
   const emerging = useMemo(() => composeEmerging(claims, brandNameById), [claims, brandNameById]);
-  const attention = useMemo(() => composeAttention({ runStatus: run?.status, errorMessage: run?.errorMessage, claims, briefText: briefQuery?.briefText }), [run, claims, briefQuery]);
-  const usage = useMemo(() => composeUsage({ requestCount: run?.requestCount, creditCount: run?.creditCount, creditsReported: run?.creditsReported, searchesLeftAfter: run?.searchesLeftAfter, llmRequestCount: run?.llmRequestCount, llmTokenCount: run?.llmTokenCount, exactCostUsd: usageQuery?.exactCostUsd, estimatedCostUsd: usageQuery?.estimatedCostUsd }), [run, usageQuery]);
+  const attention = useMemo(
+    () =>
+      composeAttention({
+        runStatus: run?.status,
+        errorMessage: run?.errorMessage,
+        claims,
+        briefText: briefQuery?.briefText,
+      }),
+    [run, claims, briefQuery],
+  );
+  const usage = useMemo(
+    () =>
+      composeUsage({
+        requestCount: run?.requestCount,
+        creditCount: run?.creditCount,
+        creditsReported: run?.creditsReported,
+        searchesLeftAfter: run?.searchesLeftAfter,
+        llmRequestCount: run?.llmRequestCount,
+        llmTokenCount: run?.llmTokenCount,
+        exactCostUsd: usageQuery?.exactCostUsd,
+        estimatedCostUsd: usageQuery?.estimatedCostUsd,
+      }),
+    [run, usageQuery],
+  );
+  const usageForPanel = runExists && hasReportedUsage(usage) ? usage : null;
   const feed = useMemo(() => buildClaimFeed(claims, brandNameById), [claims, brandNameById]);
-  const loading = brandsQuery === undefined || (cohortKey !== "" && runQuery === undefined) || (run !== null && claimsQuery === undefined);
 
   if (brandsQuery !== undefined && brands.length === 0) return <Onboarding />;
-  const answeredEngines = new Set((snapshotsQuery ?? []).filter((snapshot) => snapshot.status === "ok").map((snapshot) => snapshot.engine));
-  const runHref = cohortKey ? `/compare/${encodeURIComponent(cohortKey)}` : "/runs";
-  const statusTone = run?.status === "complete" ? "bg-emerald-50 text-emerald-700 border-emerald-200" : run?.status === "partial" ? "bg-amber-50 text-amber-800 border-amber-200" : run?.status === "failed" ? "bg-red-50 text-red-700 border-red-200" : "bg-slate-100 text-slate-700 border-slate-200";
 
-  return <div className="mx-auto w-full max-w-[1480px] space-y-8 pb-12">
-    <header className="flex flex-col justify-between gap-5 border-b border-border pb-7 sm:flex-row sm:items-end">
-      <div className="space-y-2"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent">Evidence atlas</p><h1 className="text-3xl font-semibold tracking-[-0.04em] text-fg sm:text-4xl">Good morning, here&apos;s what moved.</h1><p className="max-w-2xl text-sm leading-6 text-fg-secondary">A grounded read of the latest stored signals across your tracked brands.</p></div>
-      <div className="flex flex-wrap gap-2"><Button asChild variant="outline" size="sm"><Link href="/brands"><Search /> Browse brands</Link></Button><Button asChild size="sm"><Link href="/cohorts"><Plus /> New comparison</Link></Button></div>
-    </header>
-    {loading ? <FeedSkeleton /> : <>
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12" aria-label="Current intelligence">
-        <Card className="overflow-hidden border-0 bg-[#171b2b] text-white shadow-none lg:col-span-8"><CardHeader className="flex flex-row items-start justify-between gap-4 border-b border-white/10 pb-5"><div><p className="text-xs font-semibold uppercase tracking-[0.16em] text-teal-200">Daily intelligence</p><CardTitle className="mt-2 text-2xl tracking-[-0.03em] text-white">{digest.headline}</CardTitle></div><Radar className="mt-1 size-5 shrink-0 text-teal-200" aria-hidden="true" /></CardHeader><CardContent className="space-y-5 pt-5"><p className="max-w-2xl text-sm leading-6 text-slate-300">{digest.body}</p><div className="flex flex-wrap gap-2 text-xs text-slate-300">{digest.sources.slice(0, 2).map((source) => <span key={`${source.brandName}-${source.text}`} className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">{source.brandName}</span>)}{run ? <span className="rounded-full border border-white/10 bg-white/5 px-3 py-1.5">{formatRunDate(run.requestedAt)}</span> : null}</div><Button asChild variant="secondary" size="sm"><Link href={runHref}>Open evidence <ArrowUpRight /></Link></Button></CardContent></Card>
-        <div className="grid grid-cols-2 gap-4 lg:col-span-4 lg:grid-cols-1"><FactCard label="Tracked brands" value={String(brands.length)} detail="active profiles" /><FactCard label="Latest run" value={run?.status ?? "not reported"} detail={run ? formatRunDate(run.requestedAt) : "Run a comparison to begin"} tone={statusTone} /></div>
+  const needsAttention =
+    runExists &&
+    (attention.status === "failed" || attention.status === "partial" || attention.gaps.length > 0);
+
+  return (
+    <div className="space-y-6 pb-12">
+      <header className="flex flex-col justify-between gap-5 border-b border-border pb-6 sm:flex-row sm:items-end">
+        <div className="space-y-2">
+          <h1 className="type-display text-fg">{`Good ${greeting}.`}</h1>
+          <p className="type-body max-w-2xl text-fg-secondary">
+            A grounded read of the latest stored signals across your tracked brands.
+          </p>
+        </div>
+        <div className="flex flex-wrap items-center gap-4">
+          <StatReadout label="Tracked brands" value={brands.length} layout="inline" loading={brandsLoading} />
+          <div className="flex gap-2">
+            <ActionLink
+              href="/brands"
+              variant="ghost"
+              size="sm"
+              icon={<Search {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+            >
+              Browse brands
+            </ActionLink>
+            <ActionLink
+              href="/cohorts"
+              variant="primary"
+              size="sm"
+              icon={<Plus {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+            >
+              New comparison
+            </ActionLink>
+          </div>
+        </div>
+      </header>
+
+      {/* Hero: what a growth marketer needs first -- what the latest run
+          found, in words, with its evidence. Full width, real scale
+          contrast against everything below it. */}
+      <SinceLastRun
+        brandsLoading={brandsLoading}
+        cohortKey={cohortKey}
+        runLoading={runLoading}
+        runExists={runExists}
+        runRequestedAt={run?.requestedAt ?? null}
+        claimsLoading={claimsLoading}
+        claimsEmpty={!claimsLoading && claims.length === 0}
+        digest={digest}
+        counts={counts}
+      />
+
+      {/* Second tier: is the data trustworthy (Attention, folding in run
+          status + per-engine coverage + cost so a failed run is told once,
+          with a way to act), and what pattern is emerging across the cohort. */}
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-7">
+          <AttentionPanel
+            loading={panelLoading}
+            runExists={runExists}
+            attention={attention}
+            usage={usageForPanel}
+            action={
+              needsAttention ? (
+                <ActionLink
+                  href={runHref(cohortKey)}
+                  icon={<ArrowRight {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+                >
+                  Open run view
+                </ActionLink>
+              ) : null
+            }
+          />
+        </div>
+        <div className="lg:col-span-5">
+          <EmergingPanel loading={panelLoading} runExists={runExists} emerging={emerging} cohortKey={cohortKey} />
+        </div>
       </section>
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12"><ActivityCard className="lg:col-span-7" feed={feed} runHref={runHref} loading={loading} /><Card className="lg:col-span-5"><CardHeader><CardTitle>Coverage at a glance</CardTitle><CardDescription>What the latest run could verify.</CardDescription></CardHeader><CardContent className="space-y-3">{ENGINE_ORDER.map((engine) => { const answered = answeredEngines.has(engine); return <div key={engine} className="flex items-center justify-between gap-3 border-b border-border py-2.5 last:border-0"><span className="text-sm text-fg">{engineLabel(engine)}</span><Badge variant={answered ? "secondary" : "outline"} className={answered ? "bg-emerald-50 text-emerald-700" : "text-fg-tertiary"}>{answered ? "verified" : "not available"}</Badge></div>; })}{run?.status === "partial" || attention?.gaps.length ? <p className="flex items-start gap-2 pt-2 text-xs leading-5 text-amber-800"><TriangleAlert className="mt-0.5 size-4 shrink-0" /> Some engines did not return data for this run. Treat gaps as unknowns.</p> : null}</CardContent></Card></section>
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12"><Card className="lg:col-span-5"><CardHeader><CardTitle>Emerging signal</CardTitle><CardDescription>Pooled pattern from this run, not a long-term trend.</CardDescription></CardHeader><CardContent>{emerging ? <div className="space-y-3"><p className="text-xl font-semibold tracking-[-0.02em] text-fg">{emerging.hookLabelText}</p><p className="text-sm leading-6 text-fg-secondary">{emerging.count} claims across {emerging.brandCount} brands · {emerging.sharePct}% of tagged claims</p><div className="flex flex-wrap gap-2">{emerging.brandNames.map((name) => <Badge key={name} variant="outline">{name}</Badge>)}</div></div> : <EmptyCopy title="No pooled pattern yet" body="Complete a comparison to see which claim themes appear across brands." />}</CardContent></Card><Card className="lg:col-span-4"><CardHeader><CardTitle>Attention</CardTitle><CardDescription>What needs context before you act.</CardDescription></CardHeader><CardContent>{run ? <div className="space-y-3"><div className="flex items-center gap-2"><Badge variant="outline" className={statusTone}>{run.status}</Badge><span className="text-sm text-fg-secondary">{attention.answeredEngineCount}/{attention.totalEngineCount} engines answered</span></div>{attention.errorMessage ? <p className="flex gap-2 text-sm text-red-700"><CircleAlert className="size-4 shrink-0" />{attention.errorMessage}</p> : <p className="text-sm leading-6 text-fg-secondary">{attention.gaps.length ? `${attention.gaps.length} engine${attention.gaps.length === 1 ? "" : "s"} need review.` : "Every engine returned data for this run."}</p>}</div> : <EmptyCopy title="Nothing needs attention" body="Run a comparison to receive coverage and freshness warnings." />}</CardContent></Card><Card className="lg:col-span-3"><CardHeader><CardTitle>Run usage</CardTitle><CardDescription>Provider-reported where available.</CardDescription></CardHeader><CardContent>{run ? <div className="space-y-3 text-sm"><UsageRow label="Searches" value={usage?.searches === null ? "not reported" : String(usage?.searches ?? "not reported")} /><UsageRow label="Model calls" value={usage?.llmRequests === null ? "not reported" : String(usage?.llmRequests ?? "not reported")} /><UsageRow label="Cost" value={usage?.exactCostUsd ? `$${usage.exactCostUsd.toFixed(2)} exact` : usage?.estimatedCostUsd ? `$${usage.estimatedCostUsd.toFixed(2)} estimated` : "not reported"} /></div> : <EmptyCopy title="No usage yet" body="Usage appears after the first run." />}</CardContent></Card></section>
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12"><Card className="lg:col-span-8"><CardHeader className="flex flex-row items-center justify-between"><div><CardTitle>Claims worth opening</CardTitle><CardDescription>Verbatim source claims from the latest run.</CardDescription></div><Button asChild variant="ghost" size="sm"><Link href={runHref}>View all <ArrowUpRight /></Link></Button></CardHeader><CardContent>{feed.items.length ? <div className="divide-y divide-border">{feed.items.slice(0, 4).map((item) => <div key={item.id} className="grid gap-2 py-4 first:pt-0 sm:grid-cols-[1fr_auto] sm:items-start"><p className="text-sm leading-6 text-fg">“{item.text}”</p><div className="flex items-center gap-2 text-xs text-fg-secondary"><span>{item.brandName}</span>{item.hookType ? <Badge variant="outline">{item.hookType.replaceAll("_", " ")}</Badge> : null}</div></div>)}</div> : <EmptyCopy title="No claims in this run" body="Claims appear here when engines return source-backed text." />}</CardContent></Card><Card className="lg:col-span-4"><CardHeader><CardTitle>Ask next</CardTitle><CardDescription>Grounded questions to continue the research.</CardDescription></CardHeader><CardContent className="space-y-2">{["What changed since the last run?", "Which claims are shared across brands?", "Where is the evidence incomplete?"].map((question) => <Link key={question} href={`/ask?q=${encodeURIComponent(question)}`} className="flex items-center justify-between gap-3 rounded-lg border border-border p-3 text-sm text-fg transition-[border-color,background-color] duration-150 ease-out hover:border-accent/40 hover:bg-bg-inset"><span>{question}</span><ArrowUpRight className="size-4 shrink-0 text-fg-tertiary" /></Link>)}</CardContent></Card></section>
-    </>}
-  </div>;
+
+      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+        <div className="lg:col-span-8">
+          <ClaimsOfTheDay loading={panelLoading} runExists={runExists} cohortKey={cohortKey} feed={feed} />
+        </div>
+        <div className="lg:col-span-4">
+          <AskNext />
+        </div>
+      </section>
+    </div>
+  );
 }
 
-function FactCard({ label, value, detail, tone }: { label: string; value: string; detail: string; tone?: string }) { return <Card><CardContent className="space-y-2"><p className="text-xs font-semibold uppercase tracking-[0.12em] text-fg-tertiary">{label}</p><div className="flex items-center gap-2"><p className="text-2xl font-semibold tracking-[-0.04em] text-fg">{value}</p>{tone ? <Badge variant="outline" className={cn("capitalize", tone)}>{value}</Badge> : null}</div><p className="text-xs text-fg-secondary">{detail}</p></CardContent></Card>; }
-function ActivityCard({ feed, runHref, loading, className }: { feed: ReturnType<typeof buildClaimFeed>; runHref: string; loading: boolean; className?: string }) { return <Card className={className}><CardHeader className="flex flex-row items-center justify-between"><div><CardTitle>What changed</CardTitle><CardDescription>Recent evidence from the latest stored run.</CardDescription></div><Clock3 className="size-4 text-fg-tertiary" /></CardHeader><CardContent>{loading ? <div className="space-y-3"><Skeleton className="h-5 w-3/4" /><Skeleton className="h-5 w-1/2" /><Skeleton className="h-5 w-2/3" /></div> : feed.items.length ? <div className="divide-y divide-border">{feed.items.slice(0, 3).map((item) => <div key={item.id} className="flex gap-3 py-3 first:pt-0"><span className="mt-1.5 size-2 shrink-0 rounded-full bg-accent" /><div className="min-w-0"><p className="line-clamp-2 text-sm leading-6 text-fg">{item.text}</p><p className="mt-1 text-xs text-fg-secondary">{item.brandName} · {item.engineLabelText}</p></div></div>)}</div> : <EmptyCopy title="No activity yet" body="The first completed comparison will create your evidence timeline." />}<Button asChild variant="link" size="sm" className="mt-3 px-0"><Link href={runHref}>Open run history <ArrowUpRight /></Link></Button></CardContent></Card>; }
-function UsageRow({ label, value }: { label: string; value: string }) { return <div className="flex items-center justify-between gap-3 border-b border-border pb-2 last:border-0 last:pb-0"><span className="text-fg-secondary">{label}</span><span className="font-mono text-xs text-fg">{value}</span></div>; }
-function EmptyCopy({ title, body }: { title: string; body: string }) { return <div className="space-y-1 py-2"><p className="text-sm font-medium text-fg">{title}</p><p className="text-sm leading-6 text-fg-secondary">{body}</p></div>; }
-function FeedSkeleton() { return <div className="space-y-4"><div className="grid gap-4 lg:grid-cols-12"><Skeleton className="h-64 lg:col-span-8" /><Skeleton className="h-64 lg:col-span-4" /></div><div className="grid gap-4 lg:grid-cols-12"><Skeleton className="h-72 lg:col-span-7" /><Skeleton className="h-72 lg:col-span-5" /></div></div>; }
-function Onboarding() { return <Card className="mx-auto max-w-3xl border-0 bg-[#171b2b] text-white shadow-none"><CardContent className="space-y-7 p-8 sm:p-12"><div className="flex size-12 items-center justify-center rounded-2xl bg-teal-400/10 text-teal-200"><Radar className="size-6" /></div><div className="space-y-3"><p className="text-xs font-semibold uppercase tracking-[0.18em] text-teal-200">Your evidence atlas</p><h1 className="max-w-xl text-3xl font-semibold tracking-[-0.04em] sm:text-4xl">Start with the brands you want to understand.</h1><p className="max-w-xl text-sm leading-6 text-slate-300">Add a brand, then Drishti will build a source-backed profile across Search, YouTube, Trends, and Ads Transparency where data is available.</p></div><div className="flex flex-wrap gap-3"><Button asChild variant="secondary"><Link href="/brands"><Plus /> Add your first brand</Link></Button><Button asChild variant="ghost" className="text-white hover:bg-white/10 hover:text-white"><Link href="/ask">Ask Drishti <ArrowUpRight /></Link></Button></div><div className="grid gap-3 border-t border-white/10 pt-5 text-xs text-slate-300 sm:grid-cols-3"><span className="flex gap-2"><CheckCircle2 className="size-4 text-emerald-300" /> Evidence linked</span><span className="flex gap-2"><CheckCircle2 className="size-4 text-emerald-300" /> Freshness shown</span><span className="flex gap-2"><CheckCircle2 className="size-4 text-emerald-300" /> Gaps called out</span></div></CardContent></Card>; }
+function AskNext() {
+  return (
+    <Panel as="section" interactive={false} padded ariaLabel="Ask next">
+      <SectionLabel>Ask next</SectionLabel>
+      <div className="mt-4 flex flex-col gap-2">
+        {ASK_NEXT_QUESTIONS.map((question) => (
+          <Link
+            key={question}
+            href={`/ask?q=${encodeURIComponent(question)}`}
+            className="flex items-center justify-between gap-3 rounded-[8px] border border-border p-3 type-body text-fg transition-colors duration-150 ease-out hover:border-border-strong hover:bg-bg-inset"
+          >
+            <span>{question}</span>
+            <ArrowUpRight
+              {...iconProps}
+              size={16}
+              aria-hidden="true"
+              className="size-4 shrink-0 text-fg-tertiary"
+            />
+          </Link>
+        ))}
+      </div>
+    </Panel>
+  );
+}
+
+function Onboarding() {
+  return (
+    <Panel as="section" interactive={false} padded ariaLabel="Start with your brands" className="mx-auto max-w-3xl p-8 sm:p-12">
+      <EmptyState
+        size="md"
+        icon={<Radar {...iconProps} size={20} aria-hidden="true" />}
+        title="Start with the brands you want to understand"
+        description="Add a brand, then Drishti builds a source-backed profile across Search, YouTube, Trends, and Ads Transparency where data is available."
+        action={
+          <>
+            <ActionLink href="/brands" variant="primary">
+              Add your first brand
+            </ActionLink>
+            <ActionLink
+              href="/ask"
+              variant="ghost"
+              icon={<ArrowUpRight {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+            >
+              Ask Drishti
+            </ActionLink>
+          </>
+        }
+      />
+    </Panel>
+  );
+}

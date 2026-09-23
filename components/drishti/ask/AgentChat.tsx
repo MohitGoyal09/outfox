@@ -24,7 +24,7 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Chip } from "../Chip";
 import { AgentMessage } from "./AgentMessage";
-import { answerProvenanceOf, precedingUserTextOf, sourcesOf } from "./agentChat-model";
+import { answerProvenanceOf, precedingUserTextOf, sourceRowsOf } from "./agentChat-model";
 import { MAX_ASK_BRANDS } from "./ask-model";
 import { CitationDrawer } from "./CitationDrawer";
 import { SourcesDrawer } from "./SourcesDrawer";
@@ -70,9 +70,9 @@ export function AgentChat({
     return map;
   }, [claims]);
 
-  const sources = useMemo(
-    () => sourcesOf(messages as unknown as { parts?: unknown }[]),
-    [messages],
+  const sourceRows = useMemo(
+    () => sourceRowsOf(messages as unknown as { parts?: unknown }[], claimsById),
+    [messages, claimsById],
   );
   const provenance = useMemo(
     () => answerProvenanceOf(messages as unknown as { parts?: unknown }[]),
@@ -125,6 +125,7 @@ export function AgentChat({
                   key={message.id}
                   message={message}
                   brandNames={brandNames}
+                  claimsById={claimsById}
                   isStreaming={isLastMessage && status === "streaming"}
                   isBusy={isLastMessage && (status === "streaming" || status === "submitted")}
                   onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
@@ -151,9 +152,9 @@ export function AgentChat({
         </ConversationContent>
         <ConversationScrollButton />
       </Conversation>
-      {sources.length > 0 ? (
+      {sourceRows.length > 0 ? (
         <div className="border-t border-border py-4">
-          <SourcesDrawer sources={sources} />
+          <SourcesDrawer rows={sourceRows} />
         </div>
       ) : null}
       <div className="border-t border-border py-4">

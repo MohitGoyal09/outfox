@@ -1,6 +1,7 @@
 "use client";
 
 import { CircleAlert, TriangleAlert } from "lucide-react";
+import type { ReactNode } from "react";
 
 import {
   Chip,
@@ -28,6 +29,7 @@ export type AttentionPanelProps = {
   runExists: boolean;
   attention: Attention | null;
   usage: UsageView | null;
+  action?: ReactNode;
 };
 
 const STATUS_TONE: Record<AttentionStatus, Tone> = {
@@ -56,6 +58,7 @@ export function AttentionPanel({
   runExists,
   attention,
   usage,
+  action = null,
 }: AttentionPanelProps) {
   return (
     <Panel interactive={false} padded ariaLabel="Attention">
@@ -143,6 +146,8 @@ export function AttentionPanel({
                 Every engine returned data for this run.
               </p>
             )}
+
+            {action ? <div className="pt-0.5">{action}</div> : null}
 
             {usage ? (
               <div className="mt-1 border-t border-border pt-3">

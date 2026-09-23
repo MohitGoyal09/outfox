@@ -30,6 +30,7 @@ export function ThoughtLine({
   steps = EMPTY_STEPS,
   working,
   elapsedSeconds,
+  showTimer = true,
   color = "var(--text-secondary, #667085)",
   glyphColor = "var(--text-tertiary, #98a2b3)",
   fontSize = 13,
@@ -42,6 +43,7 @@ export function ThoughtLine({
   steps?: ThoughtStep[];
   working: boolean;
   elapsedSeconds?: number | null;
+  showTimer?: boolean;
   color?: string;
   glyphColor?: string;
   fontSize?: number;
@@ -79,6 +81,7 @@ export function ThoughtLine({
   const glyphRef = useRef<HTMLSpanElement | null>(null);
   const breathRef = useRef<HTMLSpanElement | null>(null);
   const timerRef = useRef<HTMLSpanElement | null>(null);
+  const [clockRan, setClockRan] = useState(false);
   const stackRef = useRef<HTMLSpanElement | null>(null);
   const workRef = useRef<HTMLSpanElement | null>(null);
   const doneRef = useRef<HTMLSpanElement | null>(null);
@@ -124,6 +127,7 @@ export function ThoughtLine({
 
   const paint = (deciseconds: number) => {
     dsRef.current = deciseconds;
+    if (deciseconds > 0) setClockRan(true);
     if (timerRef.current) timerRef.current.textContent = formatElapsed(deciseconds);
   };
 
@@ -184,9 +188,11 @@ export function ThoughtLine({
           Thought for
         </span>
       </span>
-      <span ref={timerRef} className="thought-line__timer" data-done={isWorking ? undefined : ""} aria-hidden="true">
-        0.0s
-      </span>
+      {showTimer && (isWorking || clockRan || (elapsedSeconds ?? 0) > 0) ? (
+        <span ref={timerRef} className="thought-line__timer" data-done={isWorking ? undefined : ""} aria-hidden="true">
+          0.0s
+        </span>
+      ) : null}
       <span className="thought-line__chevron" data-on={hasTrace ? "" : undefined} aria-hidden="true">
         <ChevronDown {...iconProps} />
       </span>

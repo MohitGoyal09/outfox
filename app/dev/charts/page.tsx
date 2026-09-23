@@ -41,6 +41,7 @@ function timelineRows(
     value: values[i % values.length],
     evidenceUrl: `https://trends.google.com/trends/explore?q=${encodeURIComponent(label(brandId))}`,
     fetchedAt,
+    granularity: "point" as const,
   }));
 }
 

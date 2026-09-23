@@ -1,4 +1,5 @@
 
+import type { Doc } from "@/convex/_generated/dataModel";
 import { eventStatusTone } from "./ask-model";
 import type { ToolCallCardView } from "./ask-model";
 
@@ -89,6 +90,30 @@ export function citationSourcesOf(messages: PartsHolder[]): Map<string, SourceVi
   return byClaimId;
 }
 
+export type SourceRowView = {
+  claimId: string;
+  url: string;
+  engine: string;
+  text: string;
+  fetchedAt: string | null;
+};
+
+export type ClaimTextById = Map<string, Pick<Doc<"claims">, "text" | "fetchedAt">>;
+
+export function sourceRowsOf(
+  messages: PartsHolder[],
+  claimsById: ClaimTextById,
+): SourceRowView[] {
+  const byUrl = new Map<string, SourceRowView>();
+  return [...byUrl.values()];
+}
+
+export function formatFetchedAt(iso: string | null): string {
+  if (iso === null) return "date unknown";
+  if (Number.isNaN(date.getTime())) return iso;
+  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
+}
+
 export function hostnameOf(url: string): string {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
@@ -108,6 +133,50 @@ const ENGINE_DOMAIN: Record<string, string> = {
 
 export function engineDomain(engine: string, url: string): string {
   return ENGINE_DOMAIN[engine] ?? hostnameOf(url);
+}
+
+type CitationUnit = { n: string; id: string };
+
+const CITATION_RUN_RE = /(?:\[\d+\]\(claim:[^)\s]+\)[ \t]*,?[ \t]*)+/g;
+
+function unitsOf(run: string): CitationUnit[] {
+  const units: CitationUnit[] = [];
+  CITATION_UNIT_RE.lastIndex = 0;
+  return units;
+}
+
+function hostOfClaim(claimId: string, citationSources: Map<string, SourceView>): string | null {
+  return source === undefined ? null : engineDomain(source.engine, source.url);
+}
+
+export function collapseAdjacentSameHostCitations(
+  markdown: string,
+  citationSources: Map<string, SourceView>,
+): string {
+  return markdown.replace(CITATION_RUN_RE, (run) => {
+    const units = unitsOf(run);
+    if (units.length < 2) return run;
+
+    const segments: string[] = [];
+    let i = 0;
+    while (i < units.length) {
+      const host = hostOfClaim(units[i].id, citationSources);
+      while (j < units.length && host !== null && hostOfClaim(units[j].id, citationSources) === host) {
+        j += 1;
+      }
+      if (host !== null && j - i >= 2) {
+        const pairs = units
+          .slice(i, j)
+          .map((unit) => `${unit.n}:${unit.id}`)
+          .join(",");
+        segments.push(`[${units[i].n}](claimset:${pairs})`);
+      } else {
+        segments.push(`[${units[i].n}](claim:${units[i].id})`);
+        j = i + 1;
+      }
+    }
+    return segments.join(" ");
+  });
 }
 
 export type UntrackedBrandMention = { name: string };

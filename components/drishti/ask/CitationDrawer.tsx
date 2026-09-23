@@ -12,14 +12,9 @@ import {
 import type { Doc } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { LABEL_CLASS, isValidEvidenceHref } from "../tokens";
+import { formatFetchedAt } from "./agentChat-model";
 import { engineLabel } from "./ask-model";
-import { engineGlyph } from "./SourcesDrawer";
-
-function formatFetchedAt(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return iso;
-  return date.toLocaleDateString(undefined, { year: "numeric", month: "short", day: "numeric" });
-}
+import { engineGlyph, engineHue } from "./SourcesDrawer";
 
 export function CitationDrawer({
   open,
@@ -59,7 +54,7 @@ export function CitationDrawer({
               <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Source</span>
               {(() => {
                 const Icon = engineGlyph(claim.sourceEngine);
-                return <Icon className="size-4 text-fg-tertiary" aria-hidden="true" />;
+                return <Icon className="size-4" style={{ color: engineHue(claim.sourceEngine) }} aria-hidden="true" />;
               })()}
               <span className="text-sm text-fg-secondary">{engineLabel(claim.sourceEngine)}</span>
             </div>
