@@ -27,17 +27,18 @@ import {
   deriveFunnelDistribution,
   deriveHookDistribution,
   deriveLeaderboard,
+  runCoverageLine,
   scopeCohortRuns,
 } from "./board-model";
 
 const EMPTY_DESCRIPTION =
-  "A run is one comparison of a rival set at one moment. The board pools every rival in the cohort, so it appears once at least one run has finished.";
+  "A run reads every brand it covers at one moment. Signals pools those brands together, so it appears once at least one run has finished.";
 
 function BoardSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-2">
-        <DistributionPanel items={[]} kind="hook" title="Top hooks across the cohort" loading />
+        <DistributionPanel items={[]} kind="hook" title="Top hooks across these brands" loading />
         <DistributionPanel items={[]} kind="funnel" title="Funnel distribution" loading />
       </div>
       <SkeletonRegion label="Loading brand leaderboard" className="rounded-[10px] border border-[var(--border,#24242f)] p-4">
@@ -127,13 +128,15 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     [claims, previousClaims],
   );
 
+  const coverageLine = brands !== undefined ? runCoverageLine(brands, finishedRuns) : null;
+
   const gaps = coverageGaps(coverage);
   const isPartial = current?.status === "partial" || gaps.length > 0;
   const singleBrand = brandIds.length === 1;
   const cohortTitle =
     brandIds.length > 0
       ? brandIds.map((id) => brandNames[id] ?? id.slice(0, 8)).join(" · ")
-      : "No cohort selected";
+      : "No brands in this run";
 
   return (
     <div className="flex flex-col gap-5">
@@ -141,7 +144,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Cross-brand evidence</p>
-            <h1 className="type-display text-fg">Signal board</h1>
+            <h1 className="type-display text-fg">Signals</h1>
           </div>
           {current ? <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{current.status} · {formatStamp(current.requestedAt)}</Badge> : null}
         </div>
@@ -156,12 +159,15 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         <p className="max-w-[68ch] type-body text-fg-secondary">
           {BOARD_HONESTY_LINE}
         </p>
+        {coverageLine !== null ? (
+          <p className="max-w-[68ch] type-caption text-fg-secondary">{coverageLine}</p>
+        ) : null}
       </header>
 
       {singleBrand ? (
         <p className="max-w-[68ch] type-caption text-fg-secondary">
-          This cohort holds one rival. A pooled board compares two or more, so
-          the mix below describes that rival alone.
+          This run covers one brand. A pooled read compares two or more, so
+          the mix below describes that brand alone.
         </p>
       ) : null}
 
@@ -200,11 +206,11 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       ) : current === null ? (
         <EmptyState
           icon={<BarChart3 {...iconProps} size={20} />}
-          title="No runs yet for this cohort."
+          title="No finished runs yet."
           description={EMPTY_DESCRIPTION}
           action={
-            <Link href="/cohorts" className={buttonClasses({ variant: "ghost", size: "sm" })}>
-              Open cohorts
+            <Link href="/brands" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+              Browse brands
             </Link>
           }
         />

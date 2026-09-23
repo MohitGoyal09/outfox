@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
-import { Mic, Paperclip, Send } from "lucide-react";
+import { Mic, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -13,38 +13,26 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import {
-  MAX_ASK_BRANDS,
-  askHref,
-  askScopeFromPath,
-  mergeAskBrandIds,
-  type AskScope,
-} from "@/components/drishti/ask/ask-model";
+import { askHref } from "@/components/drishti/ask/ask-model";
 import {
   BrandMentionMenu,
   filterMentionBrands,
   mentionOptionId,
   type MentionBrand,
 } from "@/components/drishti/ask/BrandMentionMenu";
-import { VALUE_CLASS } from "@/components/drishti/tokens";
 
-const NO_SCOPE: AskScope = { cohortKey: null, brandIds: [], runId: null };
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 
 const PILL_BUTTON_CLASS =
   "flex size-11 shrink-0 items-center justify-center rounded-full transition-colors duration-150 ease-out";
 
 export function DockedAsk() {
-  const [scope, setScope] = useState<AskScope>(NO_SCOPE);
   const [value, setValue] = useState("");
-  const [focused, setFocused] = useState(false);
   const trackedBrands = useQuery(api.brands.listBrands);
 
-  const [mentionedBrandIds, setMentionedBrandIds] = useState<Id<"brands">[]>([]);
-  const [mentionSource, setMentionSource] = useState<"typed" | "plus" | null>(null);
+  const [mentionSource, setMentionSource] = useState<"typed" | null>(null);
   const [mentionToken, setMentionToken] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const [mentionNotice, setMentionNotice] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   const mentionBrands: MentionBrand[] = useMemo(
@@ -62,13 +50,7 @@ export function DockedAsk() {
   );
   const listboxId = "docked-ask-mentions";
 
-  const scopeCount = scope.brandIds.length;
   const canSend = value.trim().length > 0;
-  const showScope = scopeCount > 0 && (focused || value !== "");
-
-  function refreshScope() {
-    setScope(askScopeFromPath(window.location.pathname, window.location.search));
-  }
 
   function closeMentionMenu() {
     setMentionSource(null);
@@ -76,36 +58,20 @@ export function DockedAsk() {
     setHighlightedIndex(0);
   }
 
-  function addMention(brand: MentionBrand) {
-    if (mentionedBrandIds.includes(brand.id)) return;
-    const { overflowed } = mergeAskBrandIds(scope.brandIds, [...mentionedBrandIds, brand.id]);
-    if (overflowed) {
-      setMentionNotice(
-        `Only ${MAX_ASK_BRANDS} brands can be in context at once. Remove one before adding ${brand.name}.`,
-      );
-      return;
-    }
-    setMentionNotice(null);
-    setMentionedBrandIds((prev) => [...prev, brand.id]);
-  }
-
   function selectMentionBrand(brand: MentionBrand) {
-    if (mentionSource === "typed") {
-      const input = inputRef.current;
-      const cursor = input?.selectionStart ?? value.length;
-      const before = value.slice(0, cursor);
-      const match = MENTION_TOKEN_RE.exec(before);
-      if (match !== null) {
-        const insertion = `@${brand.name} `;
-        const nextValue = value.slice(0, match.index) + insertion + value.slice(cursor);
-        const nextCursor = match.index + insertion.length;
-        setValue(nextValue);
-        requestAnimationFrame(() => {
-          input?.setSelectionRange(nextCursor, nextCursor);
-        });
-      }
+    const input = inputRef.current;
+    const cursor = input?.selectionStart ?? value.length;
+    const before = value.slice(0, cursor);
+    const match = MENTION_TOKEN_RE.exec(before);
+    if (match !== null) {
+      const insertion = `@${brand.name} `;
+      const nextValue = value.slice(0, match.index) + insertion + value.slice(cursor);
+      const nextCursor = match.index + insertion.length;
+      setValue(nextValue);
+      requestAnimationFrame(() => {
+        input?.setSelectionRange(nextCursor, nextCursor);
+      });
     }
-    addMention(brand);
     closeMentionMenu();
     inputRef.current?.focus();
   }
@@ -154,33 +120,12 @@ export function DockedAsk() {
     }
   }
 
-  function togglePlusMenu() {
-    if (mentionSource === "plus") {
-      closeMentionMenu();
-      return;
-    }
-    setMentionSource("plus");
-    setMentionToken("");
-    setHighlightedIndex(0);
-    inputRef.current?.focus();
-  }
-
   function submit() {
     const question = value.trim();
     if (question === "") return;
-    const pathScope = askScopeFromPath(
-      window.location.pathname,
-      window.location.search,
-    );
-    const { merged, overflowed } = mergeAskBrandIds(pathScope.brandIds, mentionedBrandIds);
-    if (overflowed) {
-      setMentionNotice(`Only ${MAX_ASK_BRANDS} brands can be in context at once.`);
-    }
-    const current: AskScope = { ...pathScope, brandIds: merged };
     setValue("");
-    setMentionedBrandIds([]);
     closeMentionMenu();
-    window.location.href = askHref(current, question);
+    window.location.href = askHref({ cohortKey: null, brandIds: [] as Id<"brands">[], runId: null }, question);
   }
 
   const activeOption = visibleMentionBrands[safeHighlightedIndex];
@@ -189,29 +134,6 @@ export function DockedAsk() {
     <div className="pointer-events-none fixed inset-x-0 bottom-0 z-40">
       <div className="pointer-events-auto mx-auto w-full max-w-3xl px-4 pb-[calc(1rem+env(safe-area-inset-bottom))] sm:px-6 sm:pb-5">
         <div className="flex flex-col gap-2">
-          {showScope ? (
-            <p
-              className={cn(
-                VALUE_CLASS,
-                "ml-auto w-full max-w-2xl px-1 text-right text-[10.5px] text-fg-tertiary",
-              )}
-            >
-              {scopeCount} rival{scopeCount === 1 ? "" : "s"} in view
-            </p>
-          ) : null}
-
-          {mentionNotice !== null ? (
-            <p
-              role="status"
-              className={cn(
-                VALUE_CLASS,
-                "ml-auto w-full max-w-2xl px-1 text-right text-[10.5px] text-[var(--danger)]",
-              )}
-            >
-              {mentionNotice}
-            </p>
-          ) : null}
-
           <div className="relative">
             {mentionMenuOpen ? (
               <BrandMentionMenu
@@ -228,19 +150,6 @@ export function DockedAsk() {
               }}
               className="flex items-center gap-1 rounded-full border border-border bg-bg-raised px-1.5 py-1.5 transition-colors duration-150 ease-out focus-within:border-border-strong sm:gap-1.5 sm:px-2"
             >
-              <button
-                type="button"
-                aria-label="Add a brand to this question"
-                aria-pressed={mentionSource === "plus"}
-                onClick={togglePlusMenu}
-                className={cn(
-                  PILL_BUTTON_CLASS,
-                  "text-fg-tertiary hover:bg-bg-inset hover:text-fg-secondary",
-                )}
-              >
-                <Paperclip aria-hidden className="size-[18px]" />
-              </button>
-
               <label htmlFor="docked-ask" className="sr-only">
                 Ask about these rivals
               </label>
@@ -251,11 +160,6 @@ export function DockedAsk() {
                 value={value}
                 onChange={handleValueChange}
                 onKeyDown={handleInputKeyDown}
-                onFocus={() => {
-                  setFocused(true);
-                  refreshScope();
-                }}
-                onBlur={() => setFocused(false)}
                 autoComplete="off"
                 role="combobox"
                 aria-autocomplete="list"

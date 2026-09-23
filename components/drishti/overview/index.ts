@@ -1,2 +1,2 @@
 export { OverviewSurface } from "./OverviewSurface";
-export * from "./digest";
+export * from "./overview-model";

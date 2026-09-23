@@ -5,7 +5,7 @@ import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 import { ShieldCheck } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import type { Doc } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import {
   Conversation,
   ConversationContent,
@@ -51,7 +51,7 @@ export function AgentChat({
   } = useAgentChat({ brandIds, cohortKey });
 
   const [draft, setDraft] = useState("");
-  const [openClaimId, setOpenClaimId] = useState<string | null>(null);
+  const [openCitation, setOpenCitation] = useState<{ claimId: string; question: string | null } | null>(null);
 
   const brands = useQuery(api.brands.listBrands);
   const brandNames = useMemo(() => {
@@ -138,8 +138,10 @@ export function AgentChat({
                   claimsById={claimsById}
                   isStreaming={isLastMessage && status === "streaming"}
                   isBusy={isLastMessage && (status === "streaming" || status === "submitted")}
+                  question={precedingUserText}
+                  threadKey={cohortKey}
                   onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
-                  onOpenCitation={setOpenClaimId}
+                  onOpenCitation={(claimId) => setOpenCitation({ claimId, question: precedingUserText })}
                   onSelectFollowUp={(question) => void submit(question)}
                   onRetry={
                     precedingUserText !== null && !busy ? () => void submit(precedingUserText) : undefined
@@ -164,7 +166,7 @@ export function AgentChat({
       </Conversation>
       {sourceRows.length > 0 ? (
         <div className="border-t border-border py-4">
-          <SourcesDrawer rows={sourceRows} />
+          <SourcesDrawer rows={sourceRows} claimsById={claimsById} />
         </div>
       ) : null}
       <div className="border-t border-border py-4">
@@ -196,10 +198,14 @@ export function AgentChat({
         </PromptInput>
       </div>
       <CitationDrawer
-        open={openClaimId !== null}
-        claim={openClaimId !== null ? evidenceById.get(openClaimId) : undefined}
+        open={openCitation !== null}
+        claim={openCitation !== null ? evidenceById.get(openCitation.claimId) : undefined}
+        claimId={(openCitation?.claimId ?? null) as Id<"claims"> | null}
+        isStoredClaim={openCitation !== null && claimsById.has(openCitation.claimId)}
+        question={openCitation?.question ?? null}
+        threadKey={cohortKey}
         onOpenChange={(open) => {
-          if (!open) setOpenClaimId(null);
+          if (!open) setOpenCitation(null);
         }}
       />
     </section>

@@ -6,6 +6,7 @@ import { EvidenceGrid, gridSortOptionsFrom } from "./EvidenceGrid";
 import { FilterBar } from "./filters/FilterBar";
 import {
   engineOptionsFrom,
+  evidencePageLabel,
   freshnessOptionsFrom,
   funnelOptionsFrom,
   hookOptionsFrom,
@@ -25,6 +26,7 @@ export function EvidenceSection({
   newsSnapshot,
   googleSnapshot,
   heading,
+  tabLabel,
 }: {
   latestClaims: ClaimDoc[];
   tags: ClaimDoc[];
@@ -36,6 +38,7 @@ export function EvidenceSection({
   newsSnapshot?: SnapshotDoc;
   googleSnapshot?: SnapshotDoc;
   heading?: (count: number) => ReactNode;
+  tabLabel: string;
 }) {
   const contentClaims = useMemo(() => latestClaims.filter(isContentClaim), [latestClaims]);
   const filtered = useMemo(
@@ -71,6 +74,7 @@ export function EvidenceSection({
         googleSnapshot={googleSnapshot}
         sort={filters.sort}
         emptyMessage={contentClaims.length === 0 ? "No signal claims have been stored for the latest run." : "No stored evidence matches these filters."}
+        pageLabel={evidencePageLabel(tabLabel, filters)}
       />
     </div>
   );

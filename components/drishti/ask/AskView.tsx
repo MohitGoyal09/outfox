@@ -109,7 +109,7 @@ export function AskView({
     return map;
   }, [brands]);
 
-  const [openClaimId, setOpenClaimId] = useState<string | null>(null);
+  const [openCitation, setOpenCitation] = useState<{ claimId: string; question: string | null } | null>(null);
 
   const scope: AskScope = useMemo(
     () => ({
@@ -581,7 +581,7 @@ export function AskView({
         <div className="flex min-w-0 items-center gap-3">
           {hasTranscript ? (
             <>
-              {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} /> : null}
+              {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} claimsById={claimsById} /> : null}
               <Button variant="ghost" size="sm" onClick={() => setMessages([])}>
                 Clear
               </Button>
@@ -661,8 +661,10 @@ export function AskView({
                   isStreaming={isLastMessage && chatStatus === "streaming"}
                   isBusy={isLastMessage && isGenerating}
                   persistedCards={persistedCardsByMessageId[message.id]}
+                  question={precedingUserText}
+                  threadKey={threadKey}
                   onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
-                  onOpenCitation={setOpenClaimId}
+                  onOpenCitation={(claimId) => setOpenCitation({ claimId, question: precedingUserText })}
                   onSelectFollowUp={(question) => void submit(question)}
                   onRetry={
                     precedingUserText !== null && !asking ? () => void submit(precedingUserText) : undefined
@@ -686,10 +688,14 @@ export function AskView({
         ) : null}
       </div>
       <CitationDrawer
-        open={openClaimId !== null}
-        claim={openClaimId !== null ? evidenceById.get(openClaimId) : undefined}
+        open={openCitation !== null}
+        claim={openCitation !== null ? evidenceById.get(openCitation.claimId) : undefined}
+        claimId={(openCitation?.claimId ?? null) as Id<"claims"> | null}
+        isStoredClaim={openCitation !== null && claimsById.has(openCitation.claimId)}
+        question={openCitation?.question ?? null}
+        threadKey={threadKey}
         onOpenChange={(open) => {
-          if (!open) setOpenClaimId(null);
+          if (!open) setOpenCitation(null);
         }}
       />
       </SidebarInset>

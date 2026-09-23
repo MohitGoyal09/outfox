@@ -7,7 +7,7 @@ import { useQuery } from "convex/react";
 import {
   BarChart3,
   BookOpen,
-  GitCompare,
+  Bookmark,
   MessageSquare,
   Plus,
   Tag,
@@ -42,8 +42,8 @@ const LIGHT_SIDEBAR_VARS = {
 
 const NAV = [
   { href: "/brands", label: "Brands", icon: Tag },
-  { href: "/comparisons", label: "Comparisons", icon: GitCompare },
-  { href: "/board", label: "Signal Board", icon: BarChart3 },
+  { href: "/signals", label: "Signals", icon: BarChart3 },
+  { href: "/boards", label: "Boards", icon: Bookmark },
   { href: "/ask", label: "Ask", icon: MessageSquare },
 ] as const;
 

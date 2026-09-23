@@ -3,15 +3,24 @@
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EvidenceCard, sourceAccent } from "./EvidenceCard";
 import { EngineTag } from "./PlatformLogo";
 import { readGoogleNewsRawItem, type ClaimDoc } from "./brand-model";
 import { displayClaimText, periodWindow, shortDate } from "./format";
 
-export function NewsEvidenceCard({ claim, raw }: { claim: ClaimDoc; raw: unknown }) {
+export function NewsEvidenceCard({
+  claim,
+  raw,
+  pageLabel,
+}: {
+  claim: ClaimDoc;
+  raw: unknown;
+  pageLabel?: string;
+}) {
   const info = readGoogleNewsRawItem(raw);
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
-  if (info.thumbnailUrl === null || thumbnailFailed) return <EvidenceCard claim={claim} />;
+  if (info.thumbnailUrl === null || thumbnailFailed) return <EvidenceCard claim={claim} pageLabel={pageLabel} />;
   const publishedLabel = periodWindow(claim.period) ?? shortDate(claim.fetchedAt);
   return (
     <article
@@ -29,6 +38,12 @@ export function NewsEvidenceCard({ claim, raw }: { claim: ClaimDoc; raw: unknown
         <span className="absolute left-2 top-2 rounded-md bg-black/70 px-1.5 py-0.5">
           <EngineTag engine="google_news" className="text-white" />
         </span>
+        <SaveToBoardButton
+          claimId={claim._id}
+          variant="icon"
+          className="absolute right-2 top-2 rounded-md bg-black/70 text-white hover:bg-black/80 hover:text-white"
+          context={pageLabel ? { pageLabel } : undefined}
+        />
       </div>
       <div className="flex flex-col gap-2 p-4">
         <a

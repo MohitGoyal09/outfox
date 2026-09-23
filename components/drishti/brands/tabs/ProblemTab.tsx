@@ -19,7 +19,7 @@ import {
 } from "../brand-model";
 import { EvidenceGrid } from "../EvidenceGrid";
 import { FunnelPanel } from "../EvidencePanels";
-import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { displayClaimText } from "../format";
 import { TrendsExperience } from "../TrendsExperience";
 
@@ -144,6 +144,7 @@ export function ProblemTab({
           claims={problemEvidenceClaims}
           sort={filters.sort}
           emptyMessage="No tagged problem evidence stored yet. Real claims with a hook/funnel tag will fill this in once a tagged run completes."
+          pageLabel={evidencePageLabel("Problem tab", filters)}
         />
       </div>
     </div>

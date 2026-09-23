@@ -50,6 +50,8 @@ export function AgentMessage({
   onRetry,
   brandNames = {},
   claimsById,
+  question = null,
+  threadKey = "",
   isStreaming = false,
   isBusy = true,
   persistedCards,
@@ -61,6 +63,8 @@ export function AgentMessage({
   onRetry?: () => void;
   brandNames?: Record<string, string>;
   claimsById: ClaimTextById;
+  question?: string | null;
+  threadKey?: string;
   isStreaming?: boolean;
   isBusy?: boolean;
   persistedCards?: ToolCallCardView[];
@@ -101,14 +105,14 @@ export function AgentMessage({
     : 0;
   const persistedElapsedSeconds =
     !isLive && persistedDurationMs > 0 ? persistedDurationMs / 1000 : undefined;
-  const showTimer = isLive || persistedDurationMs > 0;
+  const showTimer = isBusy || isLive || persistedDurationMs > 0;
 
   return (
     <Message from="assistant">
       <MessageContent>
         <ThoughtLine
           steps={steps}
-          working={isLive && isRunning && isBusy}
+          working={isRunning && isBusy}
           elapsedSeconds={persistedElapsedSeconds}
           showTimer={showTimer}
         />
@@ -194,7 +198,7 @@ export function AgentMessage({
 
         {text !== "" ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
-            <AnswerSourcesPanel sources={sourceRows} />
+            <AnswerSourcesPanel sources={sourceRows} claimsById={claimsById} question={question} threadKey={threadKey} />
             <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
           </div>
         ) : null}

@@ -21,7 +21,7 @@ import {
 } from "../brand-model";
 import { DestinationsPanel } from "../DestinationsPanel";
 import { EvidenceGrid } from "../EvidenceGrid";
-import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { shortDate } from "../format";
 
 function CountListPanel({
@@ -260,6 +260,7 @@ export function PlacementTab({
           claims={placementEvidenceClaims}
           sort={filters.sort}
           emptyMessage="No placement evidence stored yet. Ad creatives, ranked organic results, product listings, and video placements will fill this in once a run captures them."
+          pageLabel={evidencePageLabel("Placement tab", filters)}
         />
       </div>
     </div>

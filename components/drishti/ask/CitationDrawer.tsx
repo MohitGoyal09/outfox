@@ -10,6 +10,9 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import type { Id } from "@/convex/_generated/dataModel";
+import { SaveToBoardButton } from "../boards/SaveToBoardButton";
+import type { BoardItemContext } from "../boards/boards-model";
 import { LABEL_CLASS, isValidEvidenceHref } from "../tokens";
 import { formatFetchedAt } from "./agentChat-model";
 import { engineLabel } from "./ask-model";
@@ -27,17 +30,32 @@ export type EvidenceDetail = {
 export function CitationDrawer({
   open,
   claim,
+  claimId,
+  isStoredClaim = false,
+  question = null,
+  threadKey = "",
   onOpenChange,
 }: {
   open: boolean;
   claim: EvidenceDetail | undefined;
+  claimId?: Id<"claims"> | null;
+  isStoredClaim?: boolean;
+  question?: string | null;
+  threadKey?: string;
   onOpenChange: (open: boolean) => void;
 }) {
+  const context: BoardItemContext | undefined =
+    question !== null && question !== "" ? { question, ...(threadKey !== "" ? { threadKey } : {}) } : undefined;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent className="bg-bg-raised">
         <SheetHeader>
-          <SheetTitle className="text-fg">Evidence</SheetTitle>
+          <div className="flex items-center justify-between gap-2">
+            <SheetTitle className="text-fg">Evidence</SheetTitle>
+            {claim !== undefined && isStoredClaim && claimId ? (
+              <SaveToBoardButton claimId={claimId} variant="labeled" context={context} />
+            ) : null}
+          </div>
           <SheetDescription>
             {claim !== undefined
               ? "The stored claim this citation points at."
@@ -47,6 +65,12 @@ export function CitationDrawer({
         {claim !== undefined ? (
           <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-4">
             <p className="text-sm leading-6 text-fg">{claim.text}</p>
+
+            {!isStoredClaim ? (
+              <p className="text-xs text-fg-tertiary">
+                This source was read live and was never stored as a claim, so it can&rsquo;t be added to a board yet.
+              </p>
+            ) : null}
 
             {claim.value !== undefined ? (
               <div className="flex items-center gap-2">

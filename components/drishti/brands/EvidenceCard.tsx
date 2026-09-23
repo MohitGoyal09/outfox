@@ -1,10 +1,11 @@
 "use client";
 
 import { useState } from "react";
-import { ArrowUpRight, Bookmark, ExternalLink } from "lucide-react";
+import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { adCreativeWindow, engineLabel, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
 import { displayClaimText, periodWindow, shortDate } from "./format";
@@ -35,7 +36,15 @@ function organicRank(claim: ClaimDoc): number | null {
     : null;
 }
 
-export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrganicRawItem | null }) {
+export function EvidenceCard({
+  claim,
+  raw,
+  pageLabel,
+}: {
+  claim: ClaimDoc;
+  raw?: GoogleOrganicRawItem | null;
+  pageLabel?: string;
+}) {
   const source = engineLabel(claim.sourceEngine).replace(" Search", "");
   const accent = sourceAccent[claim.sourceEngine] ?? "#0f766e";
   const lane = LANE_STYLE[claim.sourceEngine] ?? LANE_STYLE.google;
@@ -93,7 +102,7 @@ export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrga
         <div className="flex flex-col items-end gap-1.5">
           <EngineTag engine={claim.sourceEngine} />
           <div className="flex items-center gap-1 text-muted-foreground">
-            <button type="button" aria-label="Save evidence" className="rounded-md p-1 hover:bg-muted"><Bookmark className="size-3.5" /></button>
+            <SaveToBoardButton claimId={claim._id} variant="icon" context={pageLabel ? { pageLabel } : undefined} />
             <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" aria-label="Open evidence" className="rounded-md p-1 hover:bg-muted"><ExternalLink className="size-3.5" /></a>
           </div>
         </div>

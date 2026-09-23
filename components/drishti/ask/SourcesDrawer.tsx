@@ -12,9 +12,11 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import type { Id } from "@/convex/_generated/dataModel";
+import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { LABEL_CLASS, VALUE_CLASS } from "../tokens";
 import { formatFetchedAt, hostnameOf } from "./agentChat-model";
-import type { SourceRowView } from "./agentChat-model";
+import type { ClaimTextById, SourceRowView } from "./agentChat-model";
 
 export const SOURCE_ENGINES = [
   "google",
@@ -76,39 +78,48 @@ export function groupSourcesByEngine(rows: SourceRowView[]): EngineGroup[] {
   return [...byEngine.entries()].map(([engine, groupRows]) => ({ engine, rows: groupRows }));
 }
 
-function SourceRow({ row }: { row: SourceRowView }) {
+function SourceRow({ row, isStoredClaim }: { row: SourceRowView; isStoredClaim: boolean }) {
   return (
-    <a
-      href={row.url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="group flex flex-col gap-1 rounded-[6px] px-2 py-2 transition-colors duration-150 ease-out hover:bg-bg-inset"
-    >
-      <div className="flex items-start justify-between gap-2">
-        <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-[1.45] text-fg">
-          {row.text !== "" ? row.text : "This claim is not in the current scope's view."}
-        </p>
-        <ExternalLink
-          className="mt-0.5 size-3 shrink-0 text-fg-tertiary opacity-0 group-hover:opacity-100"
-          aria-hidden="true"
+    <div className="group flex items-start gap-1 rounded-[6px] px-2 py-2 transition-colors duration-150 ease-out hover:bg-bg-inset">
+      <a
+        href={row.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex min-w-0 flex-1 flex-col gap-1"
+      >
+        <div className="flex items-start justify-between gap-2">
+          <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-[1.45] text-fg">
+            {row.text !== "" ? row.text : "This claim is not in the current scope's view."}
+          </p>
+          <ExternalLink
+            className="mt-0.5 size-3 shrink-0 text-fg-tertiary opacity-0 group-hover:opacity-100"
+            aria-hidden="true"
+          />
+        </div>
+        <div className="flex items-center gap-2">
+          <span className={cn(LABEL_CLASS, "normal-case tracking-normal text-fg-tertiary")}>
+            {hostnameOf(row.url)}
+          </span>
+          <span aria-hidden="true" className="text-fg-tertiary">
+            ·
+          </span>
+          <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
+            {formatFetchedAt(row.fetchedAt)}
+          </span>
+        </div>
+      </a>
+      {isStoredClaim ? (
+        <SaveToBoardButton
+          claimId={row.claimId as Id<"claims">}
+          variant="icon"
+          className="mt-0.5 shrink-0 opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
         />
-      </div>
-      <div className="flex items-center gap-2">
-        <span className={cn(LABEL_CLASS, "normal-case tracking-normal text-fg-tertiary")}>
-          {hostnameOf(row.url)}
-        </span>
-        <span aria-hidden="true" className="text-fg-tertiary">
-          ·
-        </span>
-        <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
-          {formatFetchedAt(row.fetchedAt)}
-        </span>
-      </div>
-    </a>
+      ) : null}
+    </div>
   );
 }
 
-export function SourcesDrawerContent({ rows }: { rows: SourceRowView[] }) {
+export function SourcesDrawerContent({ rows, claimsById }: { rows: SourceRowView[]; claimsById: ClaimTextById }) {
   const groups = groupSourcesByEngine(rows);
   return (
     <div className="flex flex-col gap-5 overflow-y-auto px-4 pb-4">
@@ -131,7 +142,7 @@ export function SourcesDrawerContent({ rows }: { rows: SourceRowView[] }) {
             </div>
             <div className="flex flex-col gap-0.5 rounded-[8px] border border-border bg-bg-inset p-1">
               {engineRows.map((row) => (
-                <SourceRow key={row.claimId} row={row} />
+                <SourceRow key={row.claimId} row={row} isStoredClaim={claimsById.has(row.claimId)} />
               ))}
             </div>
           </div>
@@ -141,7 +152,7 @@ export function SourcesDrawerContent({ rows }: { rows: SourceRowView[] }) {
   );
 }
 
-export function SourcesDrawer({ rows }: { rows: SourceRowView[] }) {
+export function SourcesDrawer({ rows, claimsById }: { rows: SourceRowView[]; claimsById: ClaimTextById }) {
   if (rows.length === 0) return null;
 
   return (
@@ -154,7 +165,7 @@ export function SourcesDrawer({ rows }: { rows: SourceRowView[] }) {
           <SheetTitle className="text-fg">Sources</SheetTitle>
           <SheetDescription>Every page this answer&rsquo;s claims are grounded in.</SheetDescription>
         </SheetHeader>
-        <SourcesDrawerContent rows={rows} />
+        <SourcesDrawerContent rows={rows} claimsById={claimsById} />
       </SheetContent>
     </Sheet>
   );

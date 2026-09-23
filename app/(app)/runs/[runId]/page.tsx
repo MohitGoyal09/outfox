@@ -92,11 +92,11 @@ function RunViewSkeleton() {
 function BackToRuns() {
   return (
     <Link
-      href="/runs"
+      href="/"
       className="inline-flex w-fit items-center gap-1.5 text-[12.5px] text-[var(--text-secondary,#9797a3)] hover:text-[var(--text-primary,#eeeef2)]"
     >
       <ArrowLeft {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
-      All runs
+      Evidence desk
     </Link>
   );
 }
@@ -118,8 +118,8 @@ function RunUnavailable({
           title={title}
           description={description}
           action={
-            <Link href="/runs" className={buttonClasses({ variant: "ghost", size: "sm" })}>
-              Back to all runs
+            <Link href="/" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+              Back to the evidence desk
             </Link>
           }
         />

@@ -1,4 +1,9 @@
-import { redirect } from "next/navigation";
+import type { Metadata } from "next";
+import { BoardView } from "@/components/drishti/board/BoardView";
+
+export const metadata: Metadata = {
+  title: "Signals",
+};
 
 function firstString(value: string | string[] | undefined): string | null {
   if (typeof value === "string") {
@@ -9,12 +14,11 @@ function firstString(value: string | string[] | undefined): string | null {
   return null;
 }
 
-export default async function BoardPage({
+export default async function SignalsPage({
   searchParams,
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>;
 }) {
   const params = await searchParams;
-  const cohort = firstString(params.cohort);
-  redirect(cohort === null ? "/signals" : `/signals?cohort=${encodeURIComponent(cohort)}`);
+  return <BoardView cohortKey={firstString(params.cohort)} />;
 }

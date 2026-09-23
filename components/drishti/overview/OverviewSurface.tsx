@@ -1,39 +1,31 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowRight, ArrowUpRight, Plus, Radar, Search } from "lucide-react";
-import Link from "next/link";
+import { ArrowUpRight, Radar, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import { api } from "@/convex/_generated/api";
 import { EmptyState, Panel, StatReadout, iconProps } from "@/components/drishti";
+import { useAllRuns } from "@/components/drishti/cohorts/useAllRuns";
 
 import { ActionLink } from "./ActionLink";
-import { AttentionPanel } from "./AttentionPanel";
-import { ClaimsOfTheDay } from "./ClaimsOfTheDay";
 import { EmergingPanel } from "./EmergingPanel";
+import { NeedsAttention } from "./NeedsAttention";
+import { NewestEvidence } from "./NewestEvidence";
 import { OverviewErrorBoundary } from "./OverviewErrorBoundary";
-import { SectionLabel } from "./SectionLabel";
-import { SinceLastRun } from "./SinceLastRun";
+import { PickUpWhereYouLeftOff } from "./PickUpWhereYouLeftOff";
 import {
-  buildClaimFeed,
-  cohortCounts,
-  cohortKeyFromBrands,
-  composeAttention,
-  composeDigest,
+  brandCoverage,
   composeEmerging,
-  composeUsage,
-  hasReportedUsage,
-  runHref,
+  composeNeedsAttention,
+  composeNewestEvidence,
+  recentBoards,
+  recentThreads,
+  type BrandLike,
   type BrandNameById,
-  type ClaimLike,
-} from "./digest";
-
-const ASK_NEXT_QUESTIONS = [
-  "What changed since the last run?",
-  "Which claims are shared across brands?",
-  "Where is the evidence incomplete?",
-] as const;
+  type FeedClaim,
+  type RunLike,
+} from "./overview-model";
 
 export function OverviewSurface() {
   return (
@@ -52,81 +44,91 @@ function greetingWord(hour: number): string {
 
 function OverviewBody() {
   const [greeting] = useState(() => greetingWord(new Date().getHours()));
+  const [nowMs] = useState(() => Date.now());
+
   const brandsQuery = useQuery(api.brands.listBrands);
   const brands = useMemo(() => brandsQuery ?? [], [brandsQuery]);
-  const brandNameById: BrandNameById = useMemo(
-    () => Object.fromEntries(brands.map((brand) => [String(brand._id), brand.name])),
+  const brandsLoading = brandsQuery === undefined;
+
+  const brandLikes: BrandLike[] = useMemo(
+    () => brands.map((brand) => ({ id: String(brand._id), name: brand.name, domain: brand.domain })),
     [brands],
   );
-  const cohortKey = useMemo(() => cohortKeyFromBrands(brands), [brands]);
-  const runQuery = useQuery(api.runs.latestForCohort, cohortKey ? { cohortKey } : "skip");
-  const run = runQuery ?? null;
-  const briefQuery = useQuery(api.briefs.latestForCohort, cohortKey ? { cohortKey } : "skip");
-  const claimsQuery = useQuery(api.claims.byRun, run?._id ? { runId: run._id } : "skip");
-  const usageQuery = useQuery(api.llmUsage.usageForRun, run?._id ? { runId: run._id } : "skip");
+  const brandNameById: BrandNameById = useMemo(
+    () => Object.fromEntries(brandLikes.map((brand) => [brand.id, brand.name])),
+    [brandLikes],
+  );
+  const brandIds = useMemo(() => brands.map((brand) => brand._id), [brands]);
 
-  const claims: ClaimLike[] = useMemo(
+  const { runs, isLoading: runsLoading } = useAllRuns();
+  const runLikes: RunLike[] = useMemo(
     () =>
-      (claimsQuery ?? []).map((claim) => ({
-        id: String(claim._id),
-        text: claim.text,
-        brandId: String(claim.brandId),
-        sourceEngine: claim.sourceEngine,
-        hookType: claim.hookType ?? null,
+      runs.map((run) => ({
+        id: String(run._id),
+        brandIds: run.brandIds.map((id) => String(id)),
+        status: run.status,
+        requestedAt: run.requestedAt,
+        completedAt: run.completedAt ?? null,
+        errorMessage: run.errorMessage ?? null,
       })),
-    [claimsQuery],
+    [runs],
   );
 
-  const brandsLoading = brandsQuery === undefined;
-  const runLoading = cohortKey !== "" && runQuery === undefined;
-  const claimsLoading = run !== null && claimsQuery === undefined;
-  const panelLoading = brandsLoading || runLoading || claimsLoading;
-  const runExists = run !== null;
+  const feedQuery = useQuery(
+    api.claims.overviewFeed,
+    brandIds.length > 0 ? { brandIds } : "skip",
+  );
+  const feedLoading = brandIds.length > 0 && feedQuery === undefined;
 
-  const digest = useMemo(
-    () =>
-      composeDigest({
-        briefText: briefQuery?.briefText,
-        briefMode: briefQuery?.mode,
-        claims,
-        brandNameById,
-      }),
-    [briefQuery, claims, brandNameById],
+  const totalClaimCount = useMemo(
+    () => (feedQuery ?? []).reduce((sum, entry) => sum + entry.totalCount, 0),
+    [feedQuery],
   );
-  const counts = useMemo(() => cohortCounts(claims, brandNameById), [claims, brandNameById]);
-  const emerging = useMemo(() => composeEmerging(claims, brandNameById), [claims, brandNameById]);
-  const attention = useMemo(
+  const claims: FeedClaim[] = useMemo(
     () =>
-      composeAttention({
-        runStatus: run?.status,
-        errorMessage: run?.errorMessage,
-        claims,
-        briefText: briefQuery?.briefText,
-      }),
-    [run, claims, briefQuery],
+      (feedQuery ?? []).flatMap((entry) =>
+        entry.recent.map((claim) => ({
+          id: String(claim._id),
+          runId: String(claim.runId),
+          brandId: String(claim.brandId),
+          text: claim.text,
+          sourceEngine: claim.sourceEngine,
+          hookType: claim.hookType ?? null,
+          fetchedAt: claim.fetchedAt,
+          evidenceUrl: claim.evidenceUrl,
+        })),
+      ),
+    [feedQuery],
   );
-  const usage = useMemo(
+
+  const threadsQuery = useQuery(api.messages.listThreads, {});
+  const boardsQuery = useQuery(api.boards.listBoards, {});
+
+  const panelsLoading = brandsLoading || runsLoading || feedLoading;
+
+  const coverage = useMemo(() => brandCoverage(brandLikes, runLikes), [brandLikes, runLikes]);
+  const coveredBrandCount = useMemo(
+    () => [...coverage.values()].filter((entry) => entry.hasData).length,
+    [coverage],
+  );
+  const attentionRows = useMemo(
     () =>
-      composeUsage({
-        requestCount: run?.requestCount,
-        creditCount: run?.creditCount,
-        creditsReported: run?.creditsReported,
-        searchesLeftAfter: run?.searchesLeftAfter,
-        llmRequestCount: run?.llmRequestCount,
-        llmTokenCount: run?.llmTokenCount,
-        exactCostUsd: usageQuery?.exactCostUsd,
-        estimatedCostUsd: usageQuery?.estimatedCostUsd,
-      }),
-    [run, usageQuery],
+      panelsLoading
+        ? []
+        : composeNeedsAttention({ brands: brandLikes, runs: runLikes, claims, brandNameById, nowMs }),
+    [panelsLoading, brandLikes, runLikes, claims, brandNameById, nowMs],
   );
-  const usageForPanel = runExists && hasReportedUsage(usage) ? usage : null;
-  const feed = useMemo(() => buildClaimFeed(claims, brandNameById), [claims, brandNameById]);
+  const evidenceFeed = useMemo(() => composeNewestEvidence(claims, brandNameById), [claims, brandNameById]);
+  const emerging = useMemo(() => composeEmerging(claims, coverage, brandNameById), [claims, coverage, brandNameById]);
+
+  const threads = useMemo(() => recentThreads(threadsQuery ?? []), [threadsQuery]);
+  const boards = useMemo(
+    () => recentBoards((boardsQuery ?? []).map((board) => ({ id: String(board._id), name: board.name, createdAt: board.createdAt }))),
+    [boardsQuery],
+  );
+  const activityLoading = threadsQuery === undefined || boardsQuery === undefined;
 
   if (brandsQuery !== undefined && brands.length === 0) return <Onboarding />;
-
-  const needsAttention =
-    runExists &&
-    (attention.status === "failed" || attention.status === "partial" || attention.gaps.length > 0);
 
   return (
     <div className="space-y-6 pb-12">
@@ -134,11 +136,17 @@ function OverviewBody() {
         <div className="space-y-2">
           <h1 className="type-display text-fg">{`Good ${greeting}.`}</h1>
           <p className="type-body max-w-2xl text-fg-secondary">
-            A grounded read of the latest stored signals across your tracked brands.
+            A grounded read of the latest stored evidence across your tracked brands.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <StatReadout label="Tracked brands" value={brands.length} layout="inline" loading={brandsLoading} />
+          <StatReadout
+            label="Stored claims"
+            value={totalClaimCount}
+            layout="inline"
+            loading={brandsLoading || feedLoading}
+          />
           <div className="flex gap-2">
             <ActionLink
               href="/brands"
@@ -149,93 +157,32 @@ function OverviewBody() {
               Browse brands
             </ActionLink>
             <ActionLink
-              href="/cohorts"
+              href="/ask"
               variant="primary"
               size="sm"
-              icon={<Plus {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+              icon={<ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
             >
-              New comparison
+              Ask Drishti
             </ActionLink>
           </div>
         </div>
       </header>
 
-      {/* Hero: what a growth marketer needs first -- what the latest run
-          found, in words, with its evidence. Full width, real scale
-          contrast against everything below it. */}
-      <SinceLastRun
-        brandsLoading={brandsLoading}
-        cohortKey={cohortKey}
-        runLoading={runLoading}
-        runExists={runExists}
-        runRequestedAt={run?.requestedAt ?? null}
-        claimsLoading={claimsLoading}
-        claimsEmpty={!claimsLoading && claims.length === 0}
-        digest={digest}
-        counts={counts}
-      />
+      <NeedsAttention rows={attentionRows} />
 
-      {/* Second tier: is the data trustworthy (Attention, folding in run
-          status + per-engine coverage + cost so a failed run is told once,
-          with a way to act), and what pattern is emerging across the cohort. */}
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-7">
-          <AttentionPanel
-            loading={panelLoading}
-            runExists={runExists}
-            attention={attention}
-            usage={usageForPanel}
-            action={
-              needsAttention ? (
-                <ActionLink
-                  href={runHref(cohortKey)}
-                  icon={<ArrowRight {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-                >
-                  Open run view
-                </ActionLink>
-              ) : null
-            }
-          />
-        </div>
-        <div className="lg:col-span-5">
-          <EmergingPanel loading={panelLoading} runExists={runExists} emerging={emerging} cohortKey={cohortKey} />
-        </div>
-      </section>
-
+      {/* Section 3 — Newest Evidence, the part that is alive every day, plus
+          the pooled pattern across the brands that do have data beside it. */}
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-8">
-          <ClaimsOfTheDay loading={panelLoading} runExists={runExists} cohortKey={cohortKey} feed={feed} />
+          <NewestEvidence loading={panelsLoading} hasBrands={brands.length > 0} feed={evidenceFeed} nowMs={nowMs} />
         </div>
         <div className="lg:col-span-4">
-          <AskNext />
+          <EmergingPanel loading={panelsLoading} coveredBrandCount={coveredBrandCount} emerging={emerging} />
         </div>
       </section>
-    </div>
-  );
-}
 
-function AskNext() {
-  return (
-    <Panel as="section" interactive={false} padded ariaLabel="Ask next">
-      <SectionLabel>Ask next</SectionLabel>
-      <div className="mt-4 flex flex-col gap-2">
-        {ASK_NEXT_QUESTIONS.map((question) => (
-          <Link
-            key={question}
-            href={`/ask?q=${encodeURIComponent(question)}`}
-            className="flex items-center justify-between gap-3 rounded-[8px] border border-border p-3 type-body text-fg transition-colors duration-150 ease-out hover:border-border-strong hover:bg-bg-inset"
-          >
-            <span>{question}</span>
-            <ArrowUpRight
-              {...iconProps}
-              size={16}
-              aria-hidden="true"
-              className="size-4 shrink-0 text-fg-tertiary"
-            />
-          </Link>
-        ))}
-      </div>
-    </Panel>
+      <PickUpWhereYouLeftOff loading={activityLoading} threads={threads} boards={boards} nowMs={nowMs} />
+    </div>
   );
 }
 

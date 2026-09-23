@@ -37,6 +37,7 @@ export function EvidenceTab({
       newsSnapshot={newsSnapshot}
       googleSnapshot={googleSnapshot}
       heading={(count) => <h2 className="text-base font-semibold tracking-[-0.02em]">{Intl.NumberFormat("en-US").format(count)} pieces of evidence</h2>}
+      tabLabel="Evidence tab"
     />
   );
 }

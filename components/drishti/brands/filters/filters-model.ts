@@ -46,6 +46,13 @@ export const SORT_LABEL: Record<SortValue, string> = {
   longest_run: "Longest run",
 };
 
+export function evidencePageLabel(tabLabel: string, filters: Pick<BrandFilters, "engine" | "sort">): string {
+  const enginePart = filters.engine === "all" ? null : engineLabel(filters.engine);
+  return [tabLabel, enginePart, SORT_LABEL[filters.sort]]
+    .filter((part): part is string => part !== null)
+    .join(" · ");
+}
+
 export function parseBrandFilters(params: URLSearchParams): BrandFilters {
   const engine = params.get("engine") ?? DEFAULT_BRAND_FILTERS.engine;
   const hook = params.get("hook") ?? DEFAULT_BRAND_FILTERS.hook;

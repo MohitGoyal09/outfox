@@ -27,7 +27,7 @@ import {
 } from "../brand-model";
 import { EvidenceGrid } from "../EvidenceGrid";
 import { YouTubeVideoCard } from "../YouTubeVideoCard";
-import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 
 function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): ClaimDoc[] {
   const byId = new Map(claims.map((claim) => [String(claim._id), claim]));
@@ -275,6 +275,7 @@ export function PeopleTab({
           youtubeSnapshot={youtubeSnapshot}
           sort={filters.sort}
           emptyMessage="No creator, video, or audience-hint evidence stored yet. This fills in once a run captures YouTube videos or a tagged run assigns a real audienceHint."
+          pageLabel={evidencePageLabel("People tab", filters)}
         />
       </div>
     </div>

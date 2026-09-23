@@ -156,6 +156,7 @@ export function OverviewTab({
             <span className="text-xs text-muted-foreground">Stored claims from {shortDate(latestRunAt)}</span>
           </div>
         )}
+        tabLabel="Overview"
       />
     </div>
   );

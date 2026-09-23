@@ -130,6 +130,7 @@ export function EvidenceGrid({
   googleSnapshot,
   sort,
   emptyMessage,
+  pageLabel,
 }: {
   claims: ClaimDoc[];
   youtubeSnapshot?: SnapshotDoc;
@@ -137,6 +138,7 @@ export function EvidenceGrid({
   googleSnapshot?: SnapshotDoc;
   sort: SortValue;
   emptyMessage: string;
+  pageLabel?: string;
 }) {
   const [limit, setLimit] = useState(PAGE_SIZE);
   const cards = useMemo(() => sortCards(buildCards(claims), sort), [claims, sort]);
@@ -160,15 +162,17 @@ export function EvidenceGrid({
               key={String(card.claim._id)}
               claim={card.claim}
               raw={findGoogleNewsRawItem(newsSnapshot?.rawResponse, card.claim.evidenceUrl)}
+              pageLabel={pageLabel}
             />
           ) : card.claim.sourceEngine === "google" ? (
             <EvidenceCard
               key={String(card.claim._id)}
               claim={card.claim}
               raw={readGoogleOrganicRawItem(findGoogleOrganicRawItem(googleSnapshot?.rawResponse, card.claim.evidenceUrl))}
+              pageLabel={pageLabel}
             />
           ) : (
-            <EvidenceCard key={String(card.claim._id)} claim={card.claim} />
+            <EvidenceCard key={String(card.claim._id)} claim={card.claim} pageLabel={pageLabel} />
           ),
         )}
       </div>

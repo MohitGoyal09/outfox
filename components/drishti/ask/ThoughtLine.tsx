@@ -140,7 +140,6 @@ export function ThoughtLine({
         return undefined;
       }
       setFrozenDeciseconds(dsRef.current);
-      if (dsRef.current <= 0 && timerRef.current) timerRef.current.textContent = "";
       return undefined;
     }
     setFrozenDeciseconds(null);
@@ -175,6 +174,13 @@ export function ThoughtLine({
     return () => ro.disconnect();
   }, [isWorking, fontSize]);
 
+  const settledDeciseconds =
+    elapsedSeconds !== undefined && elapsedSeconds !== null
+      ? Math.round(elapsedSeconds * 10)
+      : frozenDeciseconds;
+  const settledText =
+    settledDeciseconds !== null && settledDeciseconds > 0 ? formatElapsed(settledDeciseconds) : "";
+
   const toggle = hasTrace;
 
   const head = (
@@ -203,10 +209,15 @@ export function ThoughtLine({
           recomputed when this effect's deps change, not on every render.
           Never shows a measured-looking value it does not have: `paint`
           blanks the text when nothing was measured, and `showTimer` itself
-          is false for a persisted turn with no recorded duration. */}
-      {showTimer ? (
+          is false for a persisted turn with no recorded duration. Also stays
+          mounted once `frozenDeciseconds` holds a real self-measured value
+          even if the caller's `showTimer` has already dropped back to false
+          by settle time (a turn stopped or that errored before ever going
+          live) -- otherwise the label reads "Thought for" with no number
+          beside it, the exact dangling-label bug this line exists to avoid. */}
+      {showTimer || frozenDeciseconds !== null ? (
         <span ref={timerRef} className="thought-line__timer" data-done={isWorking ? undefined : ""} aria-hidden="true">
-          0.0s
+          {isWorking ? "0.0s" : settledText}
         </span>
       ) : null}
       <span className="thought-line__chevron" data-on={hasTrace ? "" : undefined} aria-hidden="true">
