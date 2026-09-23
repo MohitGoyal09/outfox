@@ -53,7 +53,17 @@ export type ApprovalPartView = {
   toolCallId: string;
   toolName: string;
   approval?: { id: string; approved?: boolean };
+  input?: unknown;
 };
+
+export function approvalPartsOf(message: PartsHolder): ApprovalPartView[] {
+  for (const part of partsOf(message)) {
+    if (!isToolPart(type)) continue;
+    if (part["state"] !== "approval-requested") continue;
+    const approval = part["approval"] as { id: string; approved?: boolean } | undefined;
+  }
+  return out;
+}
 
 function toolCallStatusOf(state: string): ToolCallCardView["status"] {
   if (state === "output-error" || state === "output-denied") return "failed";

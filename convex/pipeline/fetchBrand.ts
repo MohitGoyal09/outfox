@@ -159,6 +159,13 @@ export const fetchBrand = action({
      * tool has one job. The branch below is the whole difference between them.
      */
     mode: v.union(v.literal("read"), v.literal("add")),
+    /**
+     * The brand's real website, when the caller has already established it (the
+     * agent reads it off `fetch_brand`/`web_search` rows and the USER confirms it
+     * on the approval card). Passed through rather than re-derived, so what the
+     * user approved is exactly what gets ingested. Omitted means "derive it".
+     */
+    domain: v.optional(v.string()),
   },
   returns: v.union(
     v.object({
@@ -335,10 +342,18 @@ export const fetchBrand = action({
   // -----------------------------------------------------------------------
     // mode "add": the real ingest pipeline. Unchanged.
     // -----------------------------------------------------------------------
+    /**
+     * The domain the USER confirmed on the approval card, if any. When present it
+     * wins outright: re-deriving would mean ingesting something other than what
+     * the user was shown and agreed to.
+     */
+    const confirmedDomain =
+      typeof args.domain === "string" && args.domain.trim() !== "" ? args.domain.trim() : null;
+
     const brandId = (await ctx.runMutation(internal.brands.createBrandInternal, {
       ownerId,
       name,
-      domain: placeholderDomain(name),
+      domain: confirmedDomain ?? placeholderDomain(name),
       vertical: PLACEHOLDER_VERTICAL,
       aliases: [],
     })) as Id<"brands">;
@@ -358,7 +373,11 @@ export const fetchBrand = action({
      * brand from a same-named thing: verified live 2026-09-23, "Plum" ingested
      * nutrition videos about the fruit while the domain was a placeholder.
      */
-    let brand: { _id: Id<"brands">; name: string; domain?: string } = { _id: brandId, name };
+    let brand: { _id: Id<"brands">; name: string; domain?: string } = {
+      _id: brandId,
+      name,
+      ...(confirmedDomain !== null ? { domain: confirmedDomain } : {}),
+    };
     const engineSet = new Set(engines);
     const coverage: Coverage = {};
     const rows: ReturnType<typeof toRow>[] = [];
@@ -404,7 +423,7 @@ export const fetchBrand = action({
       const result = await fetchGoogleSearch({ name }, String(runId));
       // Derive the real domain BEFORE extracting, so the very first batch of
       // claims is filtered against it rather than after the damage is stored.
-      if (result.status === "ok") {
+      if (result.status === "ok" && confirmedDomain === null) {
         const derived = deriveDomainFromGoogleResults(name, result.data);
         if (derived !== null) {
           await ctx.runMutation(internal.brands.setBrandDomainInternal, { brandId, domain: derived });

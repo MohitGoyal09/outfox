@@ -41,6 +41,18 @@ function thoughtStatusOf(status: ToolCallCardView["status"]): ThoughtStepStatus 
   return "running";
 }
 
+function approvalSummaryFor(part: { toolName: string; input?: unknown }): {
+  name: string;
+  domain: string | null;
+} | null {
+  if (part.toolName !== "add_brand") return null;
+  const input = (part.input ?? {}) as { name?: unknown; domain?: unknown };
+  const name = typeof input.name === "string" ? input.name.trim() : "";
+  if (name === "") return null;
+  const domain = typeof input.domain === "string" ? input.domain.trim() : "";
+  return { name, domain: domain === "" ? null : domain };
+}
+
 export function AgentMessage({
   message,
   onRespondToApproval,
@@ -116,20 +128,42 @@ export function AgentMessage({
             fabricated. Renders nothing when no trends tool ran. */}
         <AnswerCharts message={message as unknown as { parts?: unknown }} />
 
-        {approvals.map((part) => (
+        {approvals.map((part) => {
+          const approvalSummary = approvalSummaryFor(part);
+          return (
           <Confirmation
             key={part.toolCallId}
             approval={part.approval}
             state="approval-requested"
           >
+            {/* `part.input` is what the model proposed, so naming it here is a
+                claim we can back: the user confirms the exact brand and website
+                the ingest will use, not a generic "approve this step". */}
             <ConfirmationTitle>
-              {part.toolName} needs your approval
-              {part.toolName.includes("refresh") ? " before any live fetch runs" : ""}.
+              {approvalSummary !== null ? (
+                <>
+                  Add {approvalSummary.name}
+                  {approvalSummary.domain !== null
+                    ? ` (${approvalSummary.domain})`
+                    : " (no website found)"}{" "}
+                  to your workspace?
+                </>
+              ) : (
+                <>
+                  {part.toolName} needs your approval
+                  {part.toolName.includes("refresh") ? " before any live fetch runs" : ""}.
+                </>
+              )}
             </ConfirmationTitle>
             <ConfirmationRequest>
               <p className="text-sm text-muted-foreground">
-                Approve once to let this step run
-                {part.toolName.includes("refresh") ? " a single live refresh" : ""}.
+                {approvalSummary !== null
+                  ? approvalSummary.domain !== null
+                    ? "Accepting fetches this brand from the five engines and adds it to your workspace. Check the name and website are the brand you meant."
+                    : "No website was found for this name, so it cannot be told apart from anything else with the same name. Accepting still adds it."
+                  : `Approve once to let this step run${
+                      part.toolName.includes("refresh") ? " a single live refresh" : ""
+                    }.`}
               </p>
             </ConfirmationRequest>
             <ConfirmationActions>
@@ -156,7 +190,8 @@ export function AgentMessage({
               </p>
             </ConfirmationRejected>
           </Confirmation>
-        ))}
+          );
+        })}
 
         {text !== "" ? (
           <UnavailableBlock
