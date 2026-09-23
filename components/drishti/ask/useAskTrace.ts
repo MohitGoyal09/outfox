@@ -12,8 +12,11 @@ import {
 
 const EVENTS_LIMIT = 200;
 
-export function useAskTraceEvents(threadKey: string): PersistedEvent[] | undefined {
-  return useQuery(api.agentEvents.listEvents, { threadKey, limit: EVENTS_LIMIT });
+export function useAskTraceEvents(threadKey: string | null): PersistedEvent[] | undefined {
+  return useQuery(
+    api.agentEvents.listEvents,
+    threadKey === null ? "skip" : { threadKey, limit: EVENTS_LIMIT },
+  );
 }
 
 export function toolCardsByAssistantTurn(events: PersistedEvent[]): ToolCallCardView[][] {

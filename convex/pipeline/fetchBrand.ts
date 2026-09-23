@@ -27,10 +27,11 @@ import {
 } from "./extractClaims";
 import type { ExtractCtx, ExtractedClaim } from "./extractClaims";
 import { buildCohortKey } from "./brandProfile";
-import { matchBrandQuery } from "../agent";
+import { matchBrandQuery } from "../lib/brandMatch";
+import { deriveDomainFromGoogleResults } from "../lib/brandDomain";
 import { SEARCH_RESERVE_FLOOR } from "./webSearch";
 import { YOUTUBE_VIDEO_DETAIL_COUNT } from "../../lib/constants";
-import type { Coverage } from "../../lib/agentTypes";
+import type { Coverage, Engine } from "../../lib/agentTypes";
 
 /**
  * fetch_brand: the escape hatch for a brand absent from the catalog.
@@ -106,7 +107,8 @@ function placeholderDomain(name: string): string {
 
 const fetchedClaimValidator = v.object({
   id: v.string(),
-  brandId: v.string(),
+  /** Absent in `mode: "read"` -- a read creates no brand for a claim to belong to. */
+  brandId: v.optional(v.string()),
   text: v.string(),
   metric: v.optional(v.string()),
   value: v.optional(v.union(v.string(), v.number())),
@@ -144,7 +146,20 @@ async function persist(
 }
 
 export const fetchBrand = action({
-  args: { name: v.string(), engines: v.array(v.string()) },
+  args: {
+    name: v.string(),
+    engines: v.array(v.string()),
+    /**
+     * `"read"` fetches the web and returns rows for this turn only: no brand, no
+     * run, no snapshot, no claim. `"add"` runs the real ingest pipeline, which is
+     * the only way to get durable, citable evidence for a brand outside the
+     * catalog.
+     *
+     * Two agent tools sit on this one action (`fetch_brand`, `add_brand`) so each
+     * tool has one job. The branch below is the whole difference between them.
+     */
+    mode: v.union(v.literal("read"), v.literal("add")),
+  },
   returns: v.union(
     v.object({
       ok: v.literal(false),
@@ -155,7 +170,9 @@ export const fetchBrand = action({
     }),
     v.object({
       ok: v.literal(true),
-      brandId: v.string(),
+      mode: v.union(v.literal("read"), v.literal("add")),
+      /** Absent in `mode: "read"`. */
+      brandId: v.optional(v.string()),
       brandName: v.string(),
       rows: v.array(fetchedClaimValidator),
       total: v.number(),
@@ -191,6 +208,133 @@ export const fetchBrand = action({
       );
     }
 
+    // -----------------------------------------------------------------------
+    // mode "read": fetch the web and return rows. Nothing is written -- no
+    // brand, no run, no snapshot, no claim. Placeholder ids below exist only so
+    // the existing extract functions can be reused; they never reach a document.
+    // -----------------------------------------------------------------------
+    if (args.mode === "read") {
+      const readFetchedAt = new Date().toISOString();
+      const readBrand = {
+        _id: "webfetch" as unknown as Id<"brands">,
+        name,
+      };
+      const readCtx = (engine: string): ExtractCtx => ({
+        runId: "webfetch" as unknown as Id<"runs">,
+        snapshotId: `webfetch-${engine}` as unknown as Id<"snapshots">,
+        brandId: readBrand._id,
+        query: name,
+        fetchedAt: readFetchedAt,
+      });
+      const readCoverage: Coverage = {};
+      const readRows: Array<{
+        id: string;
+        text: string;
+        metric?: string;
+        value?: string | number;
+        period?: string;
+        sourceEngine: string;
+        evidenceUrl: string;
+        fetchedAt: string;
+      }> = [];
+      const collect = (engine: Engine, claims: ExtractedClaim[]): void => {
+        readCoverage[engine] = claims.length > 0 ? "ok" : "missing";
+        claims.forEach((claim, index) => {
+          readRows.push({
+            // Never a Convex id: this row is not stored anywhere. Stable within
+            // the turn so the thread ledger can key it.
+            id: `webfetch:${engine}:${index}`,
+            text: claim.text,
+            ...(claim.metric !== undefined ? { metric: claim.metric } : {}),
+            ...(claim.value !== undefined ? { value: claim.value } : {}),
+            ...(claim.period !== undefined ? { period: claim.period } : {}),
+            sourceEngine: claim.sourceEngine,
+            evidenceUrl: claim.evidenceUrl,
+            fetchedAt: claim.fetchedAt,
+          });
+        });
+      };
+      const engineSet = new Set(engines);
+
+      if (engineSet.has("google")) {
+        const result = await fetchGoogleSearch({ name }, "webfetch");
+        collect(
+          "google",
+          result.status === "ok" ? extractGoogleClaims(result.data, readCtx("google"), readBrand) : [],
+        );
+      }
+      if (engineSet.has("google_news")) {
+        const result = await fetchGoogleNews({ name }, "webfetch");
+        collect(
+          "google_news",
+          result.status === "ok" ? extractGoogleNewsClaims(result.data, readCtx("google_news")) : [],
+        );
+      }
+      if (engineSet.has("google_ads_transparency_center")) {
+        // Without an advertiserId this engine has nothing to read; the ingest
+        // path reports the same. No snapshot is written here either way.
+        readCoverage.google_ads_transparency_center = "missing";
+      }
+      if (engineSet.has("youtube")) {
+        const search = await fetchYoutubeSearch(readBrand, "webfetch" as unknown as Id<"runs">);
+        const searchRaw = search.snapshot.rawResponse ?? { video_results: [] };
+        collect(
+          "youtube",
+          search.snapshot.status === "ok"
+            ? extractYoutubeSearchClaims(searchRaw, readCtx("youtube"))
+            : [],
+        );
+      }
+      if (engineSet.has("google_trends")) {
+        const trends = await fetchGoogleTrends(
+          [{ _id: readBrand._id, name }],
+          "webfetch" as unknown as Id<"runs">,
+        );
+        for (const [index, snapshot] of trends.snapshots.entries()) {
+          const engine = "google_trends";
+          const params = (snapshot.queryParams ?? {}) as Record<string, unknown>;
+          const raw = snapshot.rawResponse as Record<string, unknown> | undefined;
+          const timeline = raw?.timeline_data ?? [];
+          const chunkKey = typeof params.chunkKey === "string" ? params.chunkKey : "trends-chunk-0";
+          const anchor = typeof params.anchor === "string" ? params.anchor : "0";
+          const claims =
+            snapshot.status === "ok"
+              ? extractTrendsClaims(timeline, name, chunkKey, anchor, readCtx(engine))
+              : [];
+          if (claims.length === 0) {
+            readCoverage[engine] = "missing";
+            continue;
+          }
+          readCoverage[engine] = "ok";
+          claims.forEach((claim, i) => {
+            readRows.push({
+              id: `webfetch:${engine}:${index}-${i}`,
+              text: claim.text,
+              ...(claim.metric !== undefined ? { metric: claim.metric } : {}),
+              ...(claim.value !== undefined ? { value: claim.value } : {}),
+              ...(claim.period !== undefined ? { period: claim.period } : {}),
+              sourceEngine: claim.sourceEngine,
+              evidenceUrl: claim.evidenceUrl,
+              fetchedAt: claim.fetchedAt,
+            });
+          });
+        }
+      }
+
+      return {
+        ok: true as const,
+        mode: "read" as const,
+        brandName: name,
+        rows: readRows,
+        total: readRows.length,
+        coverage: readCoverage,
+        asOf: readFetchedAt,
+      };
+    }
+
+  // -----------------------------------------------------------------------
+    // mode "add": the real ingest pipeline. Unchanged.
+    // -----------------------------------------------------------------------
     const brandId = (await ctx.runMutation(internal.brands.createBrandInternal, {
       ownerId,
       name,
@@ -208,7 +352,13 @@ export const fetchBrand = action({
     })) as Id<"runs">;
 
     const fetchedAt = new Date().toISOString();
-    const brand = { _id: brandId, name };
+    /**
+     * Starts as the bare name and gains a real domain once the Google results
+     * reveal it (below). The domain is what lets `isRelevantToBrand` separate the
+     * brand from a same-named thing: verified live 2026-09-23, "Plum" ingested
+     * nutrition videos about the fruit while the domain was a placeholder.
+     */
+    let brand: { _id: Id<"brands">; name: string; domain?: string } = { _id: brandId, name };
     const engineSet = new Set(engines);
     const coverage: Coverage = {};
     const rows: ReturnType<typeof toRow>[] = [];
@@ -252,8 +402,23 @@ export const fetchBrand = action({
 
     if (engineSet.has("google")) {
       const result = await fetchGoogleSearch({ name }, String(runId));
+      // Derive the real domain BEFORE extracting, so the very first batch of
+      // claims is filtered against it rather than after the damage is stored.
+      if (result.status === "ok") {
+        const derived = deriveDomainFromGoogleResults(name, result.data);
+        if (derived !== null) {
+          await ctx.runMutation(internal.brands.setBrandDomainInternal, { brandId, domain: derived });
+          brand = { _id: brandId, name, domain: derived };
+        }
+      }
       await storeEngine("google", result, (_sid, ctxIn) =>
-        extractGoogleClaims(result.status === "ok" ? result.data : {}, ctxIn),
+        extractGoogleClaims(
+          result.status === "ok" ? result.data : {},
+          ctxIn,
+          // Filter only when a domain was found: without one, name-only matching
+          // is the looser behaviour the other callers already rely on.
+          brand.domain !== undefined ? { name, aliases: [], domain: brand.domain } : undefined,
+        ),
       );
     }
 
@@ -426,6 +591,7 @@ export const fetchBrand = action({
 
     return {
       ok: true as const,
+      mode: "add" as const,
       brandId: String(brandId),
       brandName: name,
       rows,

@@ -9,12 +9,20 @@ import {
   SheetHeader,
   SheetTitle,
 } from "@/components/ui/sheet";
-import type { Doc } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { LABEL_CLASS, isValidEvidenceHref } from "../tokens";
 import { formatFetchedAt } from "./agentChat-model";
 import { engineLabel } from "./ask-model";
 import { engineGlyph, engineHue } from "./SourcesDrawer";
+
+export type EvidenceDetail = {
+  text: string;
+  value?: string | number;
+  unit?: string;
+  sourceEngine: string;
+  fetchedAt: string;
+  evidenceUrl: string;
+};
 
 export function CitationDrawer({
   open,
@@ -22,7 +30,7 @@ export function CitationDrawer({
   onOpenChange,
 }: {
   open: boolean;
-  claim: Doc<"claims"> | undefined;
+  claim: EvidenceDetail | undefined;
   onOpenChange: (open: boolean) => void;
 }) {
   return (

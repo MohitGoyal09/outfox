@@ -1,5 +1,5 @@
 import { mutation, query, internalMutation } from "./_generated/server";
-import { v } from "convex/values";
+import { v, ConvexError } from "convex/values";
 import { requireUserId } from "./lib/auth";
 
 const profileStatus = v.union(
@@ -66,6 +66,50 @@ export const createBrand = mutation({
       adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
       createdAt: new Date().toISOString(),
     });
+  },
+});
+
+export const deleteBrandInternal = internalMutation({
+  args: { name: v.string(), confirm: v.boolean() },
+  returns: v.object({
+    deleted: v.boolean(),
+    brandId: v.optional(v.string()),
+    claims: v.number(),
+    snapshots: v.number(),
+    runs: v.number(),
+  }),
+  handler: async (ctx, args) => {
+    if (!args.confirm) {
+      throw new ConvexError("deleteBrandInternal requires confirm: true");
+    }
+    if (brand === undefined) {
+      return { deleted: false, claims: 0, snapshots: 0, runs: 0 };
+    }
+    for (const claim of await ctx.db
+      .query("claims")
+      .withIndex("by_brand", (q) => q.eq("brandId", brand._id))
+      .collect()) {
+    }
+
+    let snapshots = 0;
+    for (const run of await ctx.db.query("runs").collect()) {
+      if (run.brandIds.length !== 1 || run.brandIds[0] !== brand._id) continue;
+      await ctx.db.delete(run._id);
+    }
+
+    await ctx.db.delete(brand._id);
+    return { deleted: true, brandId: String(brand._id), claims, snapshots, runs };
+  },
+});
+
+export const setBrandDomainInternal = internalMutation({
+  args: { brandId: v.id("brands"), domain: v.string() },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const trimmed = args.domain.trim();
+    if (trimmed === "") return null;
+    await ctx.db.patch(args.brandId, { domain: trimmed });
+    return null;
   },
 });
 

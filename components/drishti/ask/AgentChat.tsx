@@ -26,7 +26,7 @@ import { Chip } from "../Chip";
 import { AgentMessage } from "./AgentMessage";
 import { answerProvenanceOf, precedingUserTextOf, sourceRowsOf } from "./agentChat-model";
 import { MAX_ASK_BRANDS } from "./ask-model";
-import { CitationDrawer } from "./CitationDrawer";
+import { CitationDrawer, type EvidenceDetail } from "./CitationDrawer";
 import { SourcesDrawer } from "./SourcesDrawer";
 import { useAgentChat } from "./useAgentChat";
 
@@ -69,10 +69,20 @@ export function AgentChat({
     for (const claim of claims ?? []) map.set(String(claim._id), claim);
     return map;
   }, [claims]);
+  const ledgerRefs = useQuery(
+    api.threadLedger.listForThread,
+    cohortKey === "" ? "skip" : { threadKey: cohortKey },
+  );
+  const evidenceById = useMemo(() => {
+    const map = new Map<string, EvidenceDetail>();
+    for (const ref of ledgerRefs ?? []) map.set(ref.claimId, ref);
+    for (const [id, claim] of claimsById) if (!map.has(id)) map.set(id, claim);
+    return map;
+  }, [ledgerRefs, claimsById]);
 
   const sourceRows = useMemo(
-    () => sourceRowsOf(messages as unknown as { parts?: unknown }[], claimsById),
-    [messages, claimsById],
+    () => sourceRowsOf(messages as unknown as { parts?: unknown }[], evidenceById),
+    [messages, evidenceById],
   );
   const provenance = useMemo(
     () => answerProvenanceOf(messages as unknown as { parts?: unknown }[]),
@@ -187,7 +197,7 @@ export function AgentChat({
       </div>
       <CitationDrawer
         open={openClaimId !== null}
-        claim={openClaimId !== null ? claimsById.get(openClaimId) : undefined}
+        claim={openClaimId !== null ? evidenceById.get(openClaimId) : undefined}
         onOpenChange={(open) => {
           if (!open) setOpenClaimId(null);
         }}

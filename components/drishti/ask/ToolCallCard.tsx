@@ -8,6 +8,7 @@ import {
   ListChecks,
   type LucideIcon,
   MessageSquareText,
+  Plus,
   RefreshCw,
   Search,
   Tag,
@@ -26,6 +27,7 @@ export const STATUS_LABEL: Record<ToolCallCardView["status"], string> = {
 };
 
 const TOOL_META: Record<string, { icon: LucideIcon; title: string }> = {
+  list_brands: { icon: ListChecks, title: "Listing tracked brands" },
   resolve_brand: { icon: Compass, title: "Finding a brand" },
   search_claims: { icon: Database, title: "Reading claims" },
   get_claims: { icon: Database, title: "Reading stored evidence" },
@@ -35,6 +37,7 @@ const TOOL_META: Record<string, { icon: LucideIcon; title: string }> = {
   compare_brands: { icon: GitCompare, title: "Comparing brands" },
   web_search: { icon: Search, title: "Searching the web" },
   fetch_brand: { icon: RefreshCw, title: "Fetching a brand" },
+  add_brand: { icon: Plus, title: "Adding a brand" },
   refresh_cohort: { icon: RefreshCw, title: "Requesting a live refresh" },
   diff_runs: { icon: GitCompare, title: "Comparing the last two runs" },
 };

@@ -9,8 +9,9 @@ import {
 } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowUp, ChevronDown, CircleAlert, Paperclip, Square, Users, X } from "lucide-react";
+import { ArrowUp, CircleAlert, Paperclip, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
@@ -44,14 +45,13 @@ import {
 } from "./BrandMentionMenu";
 import {
   MAX_ASK_BRANDS,
-  askScopeLabel,
   brandIdsFromCohortKey,
   mergeAskBrandIds,
   type AskScope,
   type ToolCallCardView,
 } from "./ask-model";
 import { precedingUserTextOf, sourceRowsOf } from "./agentChat-model";
-import { CitationDrawer } from "./CitationDrawer";
+import { CitationDrawer, type EvidenceDetail } from "./CitationDrawer";
 import { PromptCategories } from "./PromptCategories";
 import { SourcesDrawer } from "./SourcesDrawer";
 import { useAgentChat } from "./useAgentChat";
@@ -87,10 +87,12 @@ function greetingWord(hour: number): string {
 }
 
 export function AskView({
+  initialChatId,
   cohortKey,
   initialQuestion,
   initialBrandIds = [],
 }: {
+  initialChatId: string | null;
   cohortKey: string | null;
   initialQuestion: string | null;
   initialBrandIds?: Id<"brands">[];
@@ -117,7 +119,30 @@ export function AskView({
     }),
     [cohortKey, initialBrandIds],
   );
-  const threadKey = scope.cohortKey ?? [...scope.brandIds].sort().join(":");
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const chatId = searchParams.get("chat") ?? initialChatId ?? "";
+
+  const mintChatId = useCallback((): string => {
+    const next = `chat-${crypto.randomUUID()}`;
+    const params = new URLSearchParams(searchParams.toString());
+    params.set("chat", next);
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    return next;
+  }, [pathname, router, searchParams]);
+
+  useEffect(() => {
+    if (chatId !== "") return;
+    mintChatId();
+  }, [chatId, mintChatId]);
+
+  const ensureChatId = useCallback((): string => {
+    if (chatId !== "") return chatId;
+    return mintChatId();
+  }, [chatId, mintChatId]);
+
+  const threadKey = chatId !== "" ? chatId : scope.cohortKey ?? "";
 
   const {
     messages,
@@ -130,7 +155,7 @@ export function AskView({
     error,
     clearError,
     addToolApprovalResponse,
-  } = useAgentChat({ brandIds: scope.brandIds, cohortKey: scope.cohortKey ?? "" });
+  } = useAgentChat({ brandIds: scope.brandIds, cohortKey: scope.cohortKey ?? "", chatId });
 
   const claimBrandIds = useMemo(
     () => (brands ?? []).map((brand) => brand._id).slice(0, MAX_ASK_BRANDS),
@@ -142,9 +167,22 @@ export function AskView({
     for (const claim of claims ?? []) map.set(String(claim._id), claim);
     return map;
   }, [claims]);
+  const ledgerRefs = useQuery(
+    api.threadLedger.listForThread,
+    threadKey === "" ? "skip" : { threadKey },
+  );
+  const evidenceById = useMemo(() => {
+    const map = new Map<string, EvidenceDetail>();
+    for (const ref of ledgerRefs ?? []) map.set(ref.claimId, ref);
+    for (const [id, claim] of claimsById) if (!map.has(id)) map.set(id, claim);
+    return map;
+  }, [ledgerRefs, claimsById]);
 
-  const history = useQuery(api.messages.listRecent, { threadKey, limit: 50 });
-  const traceEvents = useAskTraceEvents(threadKey);
+  const history = useQuery(
+    api.messages.listRecent,
+    threadKey === "" ? "skip" : { threadKey, limit: 50 },
+  );
+  const traceEvents = useAskTraceEvents(threadKey === "" ? null : threadKey);
   const persistedCardsByMessageId = useMemo(() => {
     if (history === undefined || traceEvents === undefined) return {};
     const cardsByTurn = toolCardsByAssistantTurn(traceEvents);
@@ -172,7 +210,7 @@ export function AskView({
         const citationSources: Record<string, { url: string; engine: string }> = {};
         const sourcesByUrl = new Map<string, { url: string; engine: string }>();
         for (const claimId of row.citations) {
-          const claim = claimsById.get(claimId);
+          const claim = evidenceById.get(claimId);
           if (claim === undefined) continue;
           citationSources[claimId] = { url: claim.evidenceUrl, engine: claim.sourceEngine };
           sourcesByUrl.set(claim.evidenceUrl, { url: claim.evidenceUrl, engine: claim.sourceEngine });
@@ -193,19 +231,20 @@ export function AskView({
         };
       }),
     );
-  }, [history, traceEvents, claims, claimsById, threadKey, setMessages]);
+  }, [history, traceEvents, claims, evidenceById, threadKey, setMessages]);
 
   const [value, setValue] = useState("");
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
   const autoSubmitted = useRef<string | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
-  const lastScopeRef = useRef<{ brandIds: Id<"brands">[]; cohortKey: string }>({
+  const lastScopeRef = useRef<{ brandIds: Id<"brands">[]; cohortKey: string; chatId: string }>({
     brandIds: scope.brandIds,
     cohortKey: scope.cohortKey ?? "",
+    chatId: "",
   });
 
   const [mentionedBrandIds, setMentionedBrandIds] = useState<Id<"brands">[]>([]);
-  const [mentionSource, setMentionSource] = useState<"typed" | "plus" | null>(null);
+  const [mentionSource, setMentionSource] = useState<"typed" | null>(null);
   const [mentionToken, setMentionToken] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [mentionNotice, setMentionNotice] = useState<string | null>(null);
@@ -314,17 +353,6 @@ export function AskView({
     }
   }
 
-  function togglePlusMenu() {
-    if (mentionSource === "plus") {
-      closeMentionMenu();
-      return;
-    }
-    setMentionSource("plus");
-    setMentionToken("");
-    setHighlightedIndex(0);
-    textareaRef.current?.focus();
-  }
-
   const submit = useCallback(
     async (question: string) => {
       const trimmed = question.trim();
@@ -334,7 +362,8 @@ export function AskView({
         setMentionNotice(`Only ${MAX_ASK_BRANDS} brands can be in context at once.`);
       }
       const cohortKeyForSend = scope.cohortKey ?? "";
-      lastScopeRef.current = { brandIds: merged, cohortKey: cohortKeyForSend };
+      const chatIdForSend = ensureChatId();
+      lastScopeRef.current = { brandIds: merged, cohortKey: cohortKeyForSend, chatId: chatIdForSend };
       setLastQuestion(trimmed);
       setValue("");
       setMentionedBrandIds([]);
@@ -342,10 +371,10 @@ export function AskView({
       clearError();
       await sendMessage(
         { text: trimmed },
-        { body: { brandIds: merged, cohortKey: cohortKeyForSend } },
+        { body: { brandIds: merged, cohortKey: cohortKeyForSend, chatId: chatIdForSend } },
       );
     },
-    [sendMessage, asking, scope, mentionedBrandIds, clearError],
+    [sendMessage, asking, scope, mentionedBrandIds, clearError, ensureChatId],
   );
 
   const submitRef = useRef(submit);
@@ -370,7 +399,9 @@ export function AskView({
     await addToolApprovalResponse({
       id: approvalId,
       approved,
-      options: { body: { brandIds, cohortKey: cohortKeyForSend } },
+      options: {
+        body: { brandIds, cohortKey: cohortKeyForSend, chatId: lastScopeRef.current.chatId },
+      },
     });
   }
 
@@ -386,7 +417,6 @@ export function AskView({
     focusedEmptyState.current = true;
     textareaRef.current?.focus();
   }, [hasTranscript, history]);
-  const scopeText = askScopeLabel(scope, brandNames);
   const draftLength = value.length;
   const overCap = draftLength > ASK_MAX_CHARS;
   const nearCap = draftLength >= ASK_MAX_CHARS * 0.9;
@@ -395,8 +425,6 @@ export function AskView({
   const mentionBrandViews = mentionedBrandIds
     .map((id) => mentionBrands.find((brand) => brand.id === id))
     .filter((brand): brand is MentionBrand => brand !== undefined);
-  const totalScopeBrandCount = mergeAskBrandIds(scope.brandIds, mentionedBrandIds).merged.length;
-
   const composer = (
     <>
       {mentionBrandViews.length > 0 ? (
@@ -463,34 +491,10 @@ export function AskView({
           <PromptInputFooter className="items-center gap-x-2 rounded-b-[20px] border-t-0 pb-1">
             <PromptInputTools className="gap-2">
               <ComposerAttachButton disabled={asking} />
-              {/* Brand scope, in the reference's model-picker slot: which
-                  tracked brands this question may read. A manual depth/effort
-                  selector was deliberately removed elsewhere in this app and
-                  must not come back here -- this chevron control opens the
-                  same brand picker as the mention menu, never a complexity
-                  override (the agent classifies its own complexity). */}
-              <button
-                type="button"
-                aria-label="Choose which tracked brands this question can read"
-                aria-pressed={mentionSource === "plus"}
-                onClick={togglePlusMenu}
-                disabled={asking}
-                className={cn(
-                  "inline-flex h-8 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium",
-                  STATE_TRANSITION_CLASS,
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:ring-[3px] focus-visible:ring-accent/20",
-                  "disabled:cursor-not-allowed disabled:opacity-60",
-                  totalScopeBrandCount > 0
-                    ? "border-border-strong text-fg-secondary hover:border-accent/40 hover:text-fg"
-                    : "border-dashed border-accent/40 text-accent hover:border-accent hover:bg-accent-dim",
-                )}
-              >
-                <Users className="size-3" aria-hidden="true" />
-                {totalScopeBrandCount > 0
-                  ? `${totalScopeBrandCount} brand${totalScopeBrandCount === 1 ? "" : "s"} in scope`
-                  : "Add brands to scope"}
-                <ChevronDown className="size-3" aria-hidden="true" />
-              </button>
+              {/* No brand-scope control here, on purpose: the agent picks the
+                  brands from the message (docs/specs/agent-brand-scope.md 3.8).
+                  Typing "@name" still adds one, because a typed name IS part of
+                  the message. Do not add a manual scope picker back. */}
             </PromptInputTools>
             <div className="flex items-center gap-2.5">
               <span
@@ -572,9 +576,6 @@ export function AskView({
         <div className="flex min-w-0 items-center gap-3">
           {hasTranscript ? (
             <>
-              <span className="hidden max-w-[32ch] truncate text-xs text-fg-secondary md:inline">
-                {scopeText}
-              </span>
               {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} /> : null}
               <Button variant="ghost" size="sm" onClick={() => setMessages([])}>
                 Clear
@@ -681,7 +682,7 @@ export function AskView({
       </div>
       <CitationDrawer
         open={openClaimId !== null}
-        claim={openClaimId !== null ? claimsById.get(openClaimId) : undefined}
+        claim={openClaimId !== null ? evidenceById.get(openClaimId) : undefined}
         onOpenChange={(open) => {
           if (!open) setOpenClaimId(null);
         }}

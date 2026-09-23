@@ -98,7 +98,7 @@ export type SourceRowView = {
   fetchedAt: string | null;
 };
 
-export type ClaimTextById = Map<string, Pick<Doc<"claims">, "text" | "fetchedAt">>;
+export type ClaimTextById = Map<string, { text: string; fetchedAt: string }>;
 
 export function sourceRowsOf(
   messages: PartsHolder[],

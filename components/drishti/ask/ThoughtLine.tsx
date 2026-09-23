@@ -81,7 +81,6 @@ export function ThoughtLine({
   const glyphRef = useRef<HTMLSpanElement | null>(null);
   const breathRef = useRef<HTMLSpanElement | null>(null);
   const timerRef = useRef<HTMLSpanElement | null>(null);
-  const [clockRan, setClockRan] = useState(false);
   const stackRef = useRef<HTMLSpanElement | null>(null);
   const workRef = useRef<HTMLSpanElement | null>(null);
   const doneRef = useRef<HTMLSpanElement | null>(null);
@@ -127,7 +126,6 @@ export function ThoughtLine({
 
   const paint = (deciseconds: number) => {
     dsRef.current = deciseconds;
-    if (deciseconds > 0) setClockRan(true);
     if (timerRef.current) timerRef.current.textContent = formatElapsed(deciseconds);
   };
 
@@ -188,7 +186,10 @@ export function ThoughtLine({
           Thought for
         </span>
       </span>
-      {showTimer && (isWorking || clockRan || (elapsedSeconds ?? 0) > 0) ? (
+      {/* Never show a timer that measured nothing: the "Thought for 0.0s" lie.
+          `isWorking` covers the live clock; the settled clock shows only when a
+          real duration was recorded. */}
+      {showTimer && (isWorking || (elapsedSeconds ?? 0) > 0) ? (
         <span ref={timerRef} className="thought-line__timer" data-done={isWorking ? undefined : ""} aria-hidden="true">
           0.0s
         </span>

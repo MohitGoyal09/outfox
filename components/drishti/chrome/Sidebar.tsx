@@ -52,13 +52,14 @@ function isActive(pathname: string, href: string) {
 }
 
 function hrefForThread(threadKey: string): string {
-  return threadKey === "" ? "/ask" : `/ask?cohort=${encodeURIComponent(threadKey)}`;
+  return threadKey === "" ? "/ask" : `/ask?chat=${encodeURIComponent(threadKey)}`;
 }
 
 export function Sidebar() {
   const pathname = usePathname();
   const searchParams = useSearchParams();
-  const activeThreadKey = pathname === "/ask" ? searchParams.get("cohort") ?? "" : null;
+  const activeThreadKey =
+    pathname === "/ask" ? searchParams.get("chat") ?? searchParams.get("cohort") ?? "" : null;
   const brands = useQuery(api.brands.listBrands) ?? [];
   const threads = useQuery(api.messages.listThreads, {});
 

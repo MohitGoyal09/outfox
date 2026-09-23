@@ -59,15 +59,6 @@ export function askHref(scope: AskScope, question?: string): string {
   return query === "" ? "/ask" : `/ask?${query}`;
 }
 
-export function askScopeLabel(
-  scope: AskScope,
-  brandNames: Record<string, string>,
-): string {
-  const names = scope.brandIds.map(
-    (id) => brandNames[String(id)] ?? String(id).slice(0, 8),
-  );
-}
-
 
 export type PersistedMessage = {
   id: string;

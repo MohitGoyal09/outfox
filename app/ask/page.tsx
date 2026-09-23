@@ -31,6 +31,7 @@ export default async function AskPage({
   const params = await searchParams;
   return (
     <AskView
+      initialChatId={firstString(params.chat) ?? firstString(params.cohort)}
       cohortKey={firstString(params.cohort)}
       initialQuestion={firstString(params.q) ?? firstString(params.prompt)}
       initialBrandIds={brandIdsFromParam(firstString(params.brands))}
