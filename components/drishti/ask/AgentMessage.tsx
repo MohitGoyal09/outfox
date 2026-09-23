@@ -33,24 +33,13 @@ import { FollowUpList } from "./FollowUpList";
 import { AnswerCharts } from "./AnswerCharts";
 import { ThoughtLine, type ThoughtStep, type ThoughtStepStatus } from "./ThoughtLine";
 import { TrackBrandChip } from "./TrackBrandChip";
+import { AddBrandConfirmation, addBrandProposalOf } from "./AddBrandConfirmation";
 import { UnavailableBlock } from "./UnavailableBlock";
 
 function thoughtStatusOf(status: ToolCallCardView["status"]): ThoughtStepStatus {
   if (status === "complete") return "complete";
   if (status === "failed") return "failed";
   return "running";
-}
-
-function approvalSummaryFor(part: { toolName: string; input?: unknown }): {
-  name: string;
-  domain: string | null;
-} | null {
-  if (part.toolName !== "add_brand") return null;
-  const input = (part.input ?? {}) as { name?: unknown; domain?: unknown };
-  const name = typeof input.name === "string" ? input.name.trim() : "";
-  if (name === "") return null;
-  const domain = typeof input.domain === "string" ? input.domain.trim() : "";
-  return { name, domain: domain === "" ? null : domain };
 }
 
 export function AgentMessage({
@@ -129,41 +118,31 @@ export function AgentMessage({
         <AnswerCharts message={message as unknown as { parts?: unknown }} />
 
         {approvals.map((part) => {
-          const approvalSummary = approvalSummaryFor(part);
+          const approvalSummary = addBrandProposalOf(part);
+          if (approvalSummary !== null) {
+            return (
+              <AddBrandConfirmation
+                key={part.toolCallId}
+                part={part}
+                onRespondToApproval={onRespondToApproval}
+                onSubmitCorrection={onSelectFollowUp}
+              />
+            );
+          }
           return (
           <Confirmation
             key={part.toolCallId}
             approval={part.approval}
             state="approval-requested"
           >
-            {/* `part.input` is what the model proposed, so naming it here is a
-                claim we can back: the user confirms the exact brand and website
-                the ingest will use, not a generic "approve this step". */}
             <ConfirmationTitle>
-              {approvalSummary !== null ? (
-                <>
-                  Add {approvalSummary.name}
-                  {approvalSummary.domain !== null
-                    ? ` (${approvalSummary.domain})`
-                    : " (no website found)"}{" "}
-                  to your workspace?
-                </>
-              ) : (
-                <>
-                  {part.toolName} needs your approval
-                  {part.toolName.includes("refresh") ? " before any live fetch runs" : ""}.
-                </>
-              )}
+              {part.toolName} needs your approval
+              {part.toolName.includes("refresh") ? " before any live fetch runs" : ""}.
             </ConfirmationTitle>
             <ConfirmationRequest>
               <p className="text-sm text-muted-foreground">
-                {approvalSummary !== null
-                  ? approvalSummary.domain !== null
-                    ? "Accepting fetches this brand from the five engines and adds it to your workspace. Check the name and website are the brand you meant."
-                    : "No website was found for this name, so it cannot be told apart from anything else with the same name. Accepting still adds it."
-                  : `Approve once to let this step run${
-                      part.toolName.includes("refresh") ? " a single live refresh" : ""
-                    }.`}
+                Approve once to let this step run
+                {part.toolName.includes("refresh") ? " a single live refresh" : ""}.
               </p>
             </ConfirmationRequest>
             <ConfirmationActions>
