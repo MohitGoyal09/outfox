@@ -228,7 +228,14 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
             </Badge>
             <Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground">
               <Tag className="mr-1.5 size-3.5" />
-              {Intl.NumberFormat("en-US").format(tags.length)} tagged findings
+              {/* `tags.length === 0` means no tag row exists for this run at
+                  all -- tagging never touched it, the same "absent" the
+                  engine coverage rows call `not_run` -- not that tagging ran
+                  and found nothing (PRODUCT.md principle 2). A run that IS
+                  tagged always has at least one tag-bearing claim, even one
+                  the tagger marked `not_applicable`, so a real zero-finding
+                  run can never land here. */}
+              {tags.length > 0 ? `${Intl.NumberFormat("en-US").format(tags.length)} tagged findings` : "Not tagged"}
             </Badge>
             <SimilarBrandsPanel brandId={brandId} />
           </div>

@@ -57,6 +57,8 @@ export function ThoughtLine({
   const [autoSettled, setAutoSettled] = useState(false);
   const [open, setOpen] = useState(true);
   const [announce, setAnnounce] = useState("Thinking…");
+  const [frozenDeciseconds, setFrozenDeciseconds] = useState<number | null>(null);
+  const dsRef = useRef(0);
 
   const [prevWorkingProp, setPrevWorkingProp] = useState(working);
   if (working !== prevWorkingProp) {
@@ -78,13 +80,15 @@ export function ThoughtLine({
     setAnnounce(isWorking ? "Thinking…" : "Thought");
   }
 
+  const hasMeasuredDuration = (elapsedSeconds ?? 0) > 0 || (frozenDeciseconds ?? 0) > 0;
+  const doneLabel = hasMeasuredDuration ? "Thought for" : "Done thinking";
+
   const glyphRef = useRef<HTMLSpanElement | null>(null);
   const breathRef = useRef<HTMLSpanElement | null>(null);
   const timerRef = useRef<HTMLSpanElement | null>(null);
   const stackRef = useRef<HTMLSpanElement | null>(null);
   const workRef = useRef<HTMLSpanElement | null>(null);
   const doneRef = useRef<HTMLSpanElement | null>(null);
-  const dsRef = useRef(0);
   const prevWorking = useRef(isWorking);
 
   useEffect(() => {
@@ -131,9 +135,15 @@ export function ThoughtLine({
 
   useLayoutEffect(() => {
     if (!isWorking) {
-      if (elapsedSeconds !== undefined && elapsedSeconds !== null) paint(Math.round(elapsedSeconds * 10));
+      if (elapsedSeconds !== undefined && elapsedSeconds !== null) {
+        paint(Math.round(elapsedSeconds * 10));
+        return undefined;
+      }
+      setFrozenDeciseconds(dsRef.current);
+      if (dsRef.current <= 0 && timerRef.current) timerRef.current.textContent = "";
       return undefined;
     }
+    setFrozenDeciseconds(null);
     const startedAt = performance.now();
     paint(0);
     const id = setInterval(() => {
@@ -183,13 +193,18 @@ export function ThoughtLine({
           className="thought-line__text thought-line__text--done"
           data-active={isWorking ? undefined : ""}
         >
-          Thought for
+          {doneLabel}
         </span>
       </span>
-      {/* Never show a timer that measured nothing: the "Thought for 0.0s" lie.
-          `isWorking` covers the live clock; the settled clock shows only when a
-          real duration was recorded. */}
-      {showTimer && (isWorking || (elapsedSeconds ?? 0) > 0) ? (
+      {/* Mounted for the whole live turn (working through settled) so the
+          settle transition never unmounts and re-mounts this node -- that
+          remount was the earlier bug (see `paint`/`dsRef` above) and it would
+          also lose the timer's own `translateX` placement, which only gets
+          recomputed when this effect's deps change, not on every render.
+          Never shows a measured-looking value it does not have: `paint`
+          blanks the text when nothing was measured, and `showTimer` itself
+          is false for a persisted turn with no recorded duration. */}
+      {showTimer ? (
         <span ref={timerRef} className="thought-line__timer" data-done={isWorking ? undefined : ""} aria-hidden="true">
           0.0s
         </span>

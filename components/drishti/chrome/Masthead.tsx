@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
-import { LogOut, Plus, Search, UserRound } from "lucide-react";
+import { LogOut, MessageSquare, Plus, Search, UserRound } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import { NAV } from "@/components/drishti/chrome/Sidebar";
@@ -29,7 +29,20 @@ export function Masthead() {
   const { signOut } = useAuthActions();
   const brands = useQuery(api.brands.listBrands) ?? [];
   const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
   const [isSigningOut, setIsSigningOut] = useState(false);
+
+  function navigateToAsk(question: string) {
+    const trimmed = question.trim();
+    setOpen(false);
+    setQuery("");
+    if (trimmed === "") {
+      router.push("/ask");
+      return;
+    }
+    const chatId = `chat-${crypto.randomUUID()}`;
+    router.push(`/ask?${new URLSearchParams({ chat: chatId, q: trimmed }).toString()}`);
+  }
 
   useEffect(() => {
     const onKeyDown = (event: KeyboardEvent) => {
@@ -59,9 +72,9 @@ export function Masthead() {
               it to lg so the header stays within the viewport there. */}
           <span className="hidden border-l border-border pl-3 font-mono text-[10px] uppercase tracking-[0.16em] text-fg-tertiary lg:inline-flex">Evidence atlas</span>
         </Link>
-        <button type="button" onClick={() => setOpen(true)} className="group flex h-10 min-w-0 max-w-[820px] flex-1 items-center gap-2.5 rounded-[7px] border border-border bg-bg-inset px-3.5 text-left text-sm text-fg-tertiary transition-[border-color,background-color] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised focus-visible:border-accent sm:ml-4" aria-label="Search brands, claims, and research surfaces">
+        <button type="button" onClick={() => setOpen(true)} className="group flex h-10 min-w-0 max-w-[820px] flex-1 items-center gap-2.5 rounded-[7px] border border-border bg-bg-inset px-3.5 text-left text-sm text-fg-tertiary transition-[border-color,background-color] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised focus-visible:border-accent sm:ml-4" aria-label="Search brands and pages, or ask Drishti">
           <Search aria-hidden className="size-4 shrink-0" />
-          <span className="min-w-0 flex-1 truncate">Search brands, claims, or ask Drishti…</span>
+          <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Drishti…</span>
           <kbd className="hidden shrink-0 rounded border border-border-strong bg-bg-raised px-1.5 py-0.5 font-mono text-[10px] text-fg-tertiary sm:inline-flex">⌘K</kbd>
         </button>
         <Button asChild size="sm" className="ml-auto hidden h-9 shrink-0 rounded-[6px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"><Link href="/onboarding"><Plus aria-hidden /> Add brand</Link></Button>
@@ -74,18 +87,53 @@ export function Masthead() {
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
-      <CommandDialog open={open} onOpenChange={setOpen} title="Search Drishti" description="Jump to a research surface or tracked brand.">
-        <Command>
-          <CommandInput placeholder="Search brands, claims, or pages…" />
+      <CommandDialog
+        open={open}
+        onOpenChange={(next) => {
+          setOpen(next);
+          if (!next) setQuery("");
+        }}
+        title="Search Drishti"
+        description="Jump to a tracked brand or a page, or ask Drishti a question."
+      >
+        <Command
+          onKeyDown={(event) => {
+            if ((event.metaKey || event.ctrlKey) && event.key === "Enter") {
+              event.preventDefault();
+              navigateToAsk(query);
+            }
+          }}
+        >
+          <CommandInput
+            value={query}
+            onValueChange={setQuery}
+            placeholder="Search brands and pages, or ask Drishti…"
+          />
           <CommandList>
-            <CommandEmpty>No matching research surface.</CommandEmpty>
+            <CommandEmpty>No matching brand or page.</CommandEmpty>
             <CommandGroup heading="Navigate">
-              {NAV.map((item) => { const Icon = item.icon; return <CommandItem key={item.href} onSelect={() => { setOpen(false); router.push(item.href); }}><Icon /><span>{item.label}</span>{item.href === "/ask" ? <CommandShortcut>⌘↵</CommandShortcut> : null}</CommandItem>; })}
+              {NAV.map((item) => { const Icon = item.icon; return <CommandItem key={item.href} onSelect={() => { setOpen(false); router.push(item.href); }}><Icon /><span>{item.label}</span></CommandItem>; })}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Tracked brands">
               {brands.slice(0, 8).map((brand) => <CommandItem key={brand._id} value={`${brand.name} ${brand.domain}`} onSelect={() => { setOpen(false); router.push(`/brands/${brand._id}`); }}><span className="flex size-5 items-center justify-center rounded bg-accent-dim text-[10px] font-semibold text-accent">{brand.name.slice(0, 1).toUpperCase()}</span><span>{brand.name}</span></CommandItem>)}
             </CommandGroup>
+            {query.trim() !== "" ? (
+              <>
+                <CommandSeparator />
+                <CommandGroup heading="Ask Drishti">
+                  {/* `value` is the typed query itself, so this item always
+                      matches cmdk's own filter no matter what was typed --
+                      it is the fallback that replaces the former dead-end
+                      "No matching research surface" state. */}
+                  <CommandItem value={query} onSelect={() => navigateToAsk(query)}>
+                    <MessageSquare />
+                    <span className="truncate">Ask Drishti: &ldquo;{query.trim()}&rdquo;</span>
+                    <CommandShortcut>⌘↵</CommandShortcut>
+                  </CommandItem>
+                </CommandGroup>
+              </>
+            ) : null}
           </CommandList>
         </Command>
       </CommandDialog>

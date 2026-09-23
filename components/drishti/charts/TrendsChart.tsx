@@ -19,6 +19,7 @@ import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
 import { ABSENT, LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
 import { canConnectWithLine, groupByChunk, type ChunkGroup, type TrendsChunkRow } from "./groupByChunk";
+import { compareTrendsDates } from "@/convex/lib/trendsDate";
 
 export type TrendsChartResult = {
   rows: TrendsChunkRow[];
@@ -63,7 +64,7 @@ function buildChunkSeries(rows: readonly TrendsChunkRow[]): {
   data: ChunkChartPoint[];
 } {
   const brandIds = [...new Set(rows.map((r) => r.brandId))];
-  const dates = [...new Set(rows.map((r) => r.date))].sort();
+  const dates = [...new Set(rows.map((r) => r.date))].sort(compareTrendsDates);
   const data = dates.map((date) => {
     const point: ChunkChartPoint = { date };
     for (const brandId of brandIds) {

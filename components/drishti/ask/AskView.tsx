@@ -389,6 +389,11 @@ export function AskView({
     if (autoSubmitted.current === initialQuestion) return;
     autoSubmitted.current = initialQuestion;
     void submitRef.current(initialQuestion);
+    const strippedParams = new URLSearchParams(searchParams.toString());
+    strippedParams.delete("q");
+    strippedParams.delete("prompt");
+    const nextQuery = strippedParams.toString();
+    router.replace(nextQuery === "" ? pathname : `${pathname}?${nextQuery}`, { scroll: false });
     return () => {
       autoSubmitted.current = null;
     };

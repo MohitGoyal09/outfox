@@ -27,7 +27,7 @@ import type { ClaimTextById } from "./agentChat-model";
 import { AnswerActions } from "./AnswerActions";
 import { AnswerMarkdown } from "./AnswerMarkdown";
 import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
-import type { ToolCallCardView } from "./ask-model";
+import { persistedTrendsResultsOf, type ToolCallCardView } from "./ask-model";
 import { descriptiveToolLabel } from "./ToolCallCard";
 import { FollowUpList } from "./FollowUpList";
 import { AnswerCharts } from "./AnswerCharts";
@@ -80,6 +80,7 @@ export function AgentMessage({
   const streamedThisSession = hasStreamedThisSession(message as unknown as { parts?: unknown });
   const liveCards = toolCallCardsOf(message as unknown as { parts?: unknown });
   const cards = streamedThisSession ? liveCards : (persistedCards ?? liveCards);
+  const persistedTrends = streamedThisSession ? [] : persistedTrendsResultsOf(persistedCards ?? []);
   const approvals = approvalPartsOf(message as unknown as { parts?: unknown });
   const provenance = answerProvenanceOf([message as unknown as { parts?: unknown }]);
   const failedCards = cards.filter((card) => card.status === "failed");
@@ -115,7 +116,10 @@ export function AgentMessage({
         {/* Bound to the tool result, not to model text: the chart reads
             get_trends' own returned rows, so a plotted point cannot be
             fabricated. Renders nothing when no trends tool ran. */}
-        <AnswerCharts message={message as unknown as { parts?: unknown }} />
+        <AnswerCharts
+          message={message as unknown as { parts?: unknown }}
+          persistedResults={persistedTrends}
+        />
 
         {approvals.map((part) => {
           const approvalSummary = addBrandProposalOf(part);

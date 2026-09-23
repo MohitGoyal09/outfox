@@ -27,11 +27,14 @@ export function trendsResultsOf(message: { parts?: unknown }): TrendsChartResult
 export function AnswerCharts({
   message,
   brandLabel,
+  persistedResults,
 }: {
   message: { parts?: unknown };
   brandLabel?: (brandId: string) => string;
+  persistedResults?: TrendsChartResult[];
 }) {
-  const results = trendsResultsOf(message);
+  const liveResults = trendsResultsOf(message);
+  const results = liveResults.length > 0 ? liveResults : (persistedResults ?? []);
   if (results.length === 0) return null;
   return (
     <div className="mt-3 flex flex-col gap-3">

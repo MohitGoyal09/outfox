@@ -1,5 +1,7 @@
 import type { AnswerQuestionResult } from "@/lib/askTypes";
+import type { Coverage } from "@/lib/agentTypes";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
+import type { TrendsChartResult } from "@/components/drishti/charts";
 import type { Tone } from "../tokens";
 import {
   findGoogleNewsRawItem,
@@ -113,6 +115,50 @@ export function buildToolCallCards(events: PersistedEvent[]): ToolCallCardView[]
     const running = queue?.shift();
   }
   return cards;
+}
+
+type PersistedTrendsRow = TrendsChartResult["rows"][number];
+
+type PersistedTrendsGroup = {
+  brandId: string;
+  chunkKey: string;
+  evidenceUrl: string;
+  granularity: "point" | "window";
+  fetchedAt: string;
+  points: Array<[string, string | number | null]>;
+};
+
+function isPersistedTrendsGroup(value: unknown): value is PersistedTrendsGroup {
+  if (typeof value !== "object" || value === null) return false;
+  const g = value as Record<string, unknown>;
+  return (
+    typeof g.brandId === "string" &&
+    typeof g.chunkKey === "string" &&
+    typeof g.evidenceUrl === "string" &&
+    typeof g.fetchedAt === "string" &&
+    (g.granularity === "point" || g.granularity === "window") &&
+    Array.isArray(g.points) &&
+    g.points.every(
+      (p) =>
+        Array.isArray(p) &&
+        p.length === 2 &&
+        typeof p[0] === "string" &&
+        (p[1] === null || typeof p[1] === "string" || typeof p[1] === "number"),
+    )
+  );
+}
+
+function rowsFromPersistedGroup(group: PersistedTrendsGroup): PersistedTrendsRow[] {
+  return group.points.map(([date, value]) => ({
+    id: `${group.brandId}:${group.chunkKey}:${date}`,
+    brandId: group.brandId,
+    chunkKey: group.chunkKey,
+    date,
+    ...(value !== null ? { value } : {}),
+    evidenceUrl: group.evidenceUrl,
+    fetchedAt: group.fetchedAt,
+    granularity: group.granularity,
+  }));
 }
 
 export type AskTurn = {

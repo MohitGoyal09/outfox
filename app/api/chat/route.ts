@@ -43,3 +43,8 @@ function convexClient(token: string): ConvexHttpClient | null {
 
 function isPureGreeting(text: string): boolean {
 }
+
+function toolErrorTextFor(error: unknown): string {
+  const message = error instanceof Error ? error.message : String(error);
+  const match = FAILURE_PREFIX_RE.exec(message);
+}
