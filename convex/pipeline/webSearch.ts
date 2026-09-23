@@ -8,8 +8,8 @@ import type { Doc, Id } from "../_generated/dataModel";
 import { requireUserId } from "../lib/auth";
 import { serpapiFetch } from "../lib/serpapiClient";
 import { fetchSerpApiAccount } from "../lib/serpApiAccount";
-import { extractGoogleClaims } from "./extractClaims";
-import type { ExtractCtx } from "./extractClaims";
+import { extractGoogleClaims, countGoogleRelevanceDrops } from "./extractClaims";
+import type { ExtractCtx, BrandIdentity } from "./extractClaims";
 import { buildCohortKey } from "./brandProfile";
 import { WEB_SEARCH_MAX_REQUESTS_PER_CALL } from "./plan";
 import type { Coverage } from "../../lib/agentTypes";
@@ -105,6 +105,7 @@ export const webSearch = action({
       total: v.number(),
       coverage: webSearchCoverageValidator,
       asOf: v.union(v.string(), v.null()),
+      droppedIrrelevantCount: v.number(),
     }),
     v.object({
       ok: v.literal(true),
@@ -114,6 +115,7 @@ export const webSearch = action({
       total: v.number(),
       coverage: webSearchCoverageValidator,
       asOf: v.union(v.string(), v.null()),
+      droppedIrrelevantCount: v.number(),
     }),
   ),
   handler: async (ctx, args) => {
@@ -169,6 +171,7 @@ export const webSearch = action({
         total: 0,
         coverage: { google: "missing" } as Coverage,
         asOf: null,
+        droppedIrrelevantCount: 0,
       };
     }
 
@@ -179,7 +182,21 @@ export const webSearch = action({
       query: parsed.value.query,
       fetchedAt,
     };
-    const extracted = extractGoogleClaims(result.data, extractCtx).slice(0, MAX_RESULT_CLAIMS);
+    // Deterministic relevance gate: web_search's query is free text the
+    // model chooses, unlike the brand-scoped fetchGoogleSearch pipeline, so
+    // an off-topic Google result (e.g. a "discount" dictionary definition
+    // for a "<brand> discount hooks" query) must never reach the claims
+    // table. See extractClaims.ts's isRelevantToBrand for the rule.
+    const brandIdentity: BrandIdentity = {
+      name: brand.name,
+      aliases: brand.aliases,
+      domain: brand.domain,
+    };
+    const droppedIrrelevantCount = countGoogleRelevanceDrops(result.data, brandIdentity);
+    const extracted = extractGoogleClaims(result.data, extractCtx, brandIdentity).slice(
+      0,
+      MAX_RESULT_CLAIMS,
+    );
     const claimIds = (await ctx.runMutation(internal.claims.insertClaims, {
       claims: extracted,
     })) as Id<"claims">[];
@@ -203,6 +220,7 @@ export const webSearch = action({
       total: rows.length,
       coverage: { google: "ok" } as Coverage,
       asOf: fetchedAt,
+      droppedIrrelevantCount,
     };
   },
 });

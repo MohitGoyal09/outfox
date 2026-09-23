@@ -29,6 +29,7 @@ import {
   type RunHistoryRow,
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
+import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
 import { shortDate } from "./format";
 import { useBrandFilters } from "./filters/useBrandFilters";
 import { OverviewTab } from "./tabs/OverviewTab";
@@ -87,7 +88,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const claims = useQuery(api.claims.byBrand, { brandId });
   const { runs, isLoading: runsLoading } = useAllRuns();
   const { filters, setFilter, resetFilters } = useBrandFilters();
-  const now = Date.now();
+  const [now] = useState(() => Date.now());
 
   const latestRun = useMemo(() => {
     const related = runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId)));
@@ -229,6 +230,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               <Tag className="mr-1.5 size-3.5" />
               {Intl.NumberFormat("en-US").format(tags.length)} tagged findings
             </Badge>
+            <SimilarBrandsPanel brandId={brandId} />
           </div>
         </div>
       </header>

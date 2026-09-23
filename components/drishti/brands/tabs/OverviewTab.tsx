@@ -7,7 +7,6 @@ import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanel
 import { PlatformLogo } from "../PlatformLogo";
 import { sourceAccent } from "../EvidenceCard";
 import { EvidenceSection } from "../EvidenceSection";
-import { SimilarBrandsPanel } from "../SimilarBrandsPanel";
 import type { BrandFilters } from "../filters/filters-model";
 import { shortDate } from "../format";
 import type { DistributionItem } from "../../DistributionPanel";
@@ -121,11 +120,17 @@ export function OverviewTab({
         <SummaryPanel title="Top hooks" subtitle={fallbackLabel}>
           <HookChart items={hookItems} />
         </SummaryPanel>
-        <SummaryPanel title="Funnel stage" subtitle={fallbackLabel}>
+        {/* Renamed from "Funnel stage": funnelStage is a tag distribution across five
+            categories, not a measured conversion sequence, so the panel name and its
+            chart (EvidencePanels.tsx's FunnelPanel, left-aligned bars, never a
+            tapering funnel silhouette) both avoid implying attrition we never measured. */}
+        <SummaryPanel title="Stage mix" subtitle={fallbackLabel}>
           <FunnelPanel items={funnelItems} />
         </SummaryPanel>
       </div>
-      <SimilarBrandsPanel />
+      {/* SimilarBrandsPanel moved to the brand header as a chip (BrandProfile.tsx),
+          next to the evidence-signal and tagged-findings badges — a whole row for
+          one chip was too much page for the data it held. */}
       <EvidenceSection
         latestClaims={latestClaims}
         tags={tags}
@@ -138,7 +143,16 @@ export function OverviewTab({
         googleSnapshot={googleSnapshot}
         heading={(count) => (
           <div className="flex flex-wrap items-end justify-between gap-3">
-            <h2 className="text-base font-semibold tracking-[-0.02em]">{Intl.NumberFormat("en-US").format(count)} pieces of evidence</h2>
+            <div>
+              <h2 className="text-base font-semibold tracking-[-0.02em]">{Intl.NumberFormat("en-US").format(count)} evidence cards</h2>
+              {/* Reconciles the header's broader "N evidence signals" badge (BrandProfile.tsx,
+                  counts every stored signal claim, including pure-count metrics like view/like
+                  counts that never render as their own card) against this narrower count (only
+                  claims with something to actually read — see brand-model.ts's isContentClaim).
+                  Two real, differently-scoped numbers, both labelled, instead of one page stating
+                  two different figures as if they measured the same thing. */}
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Browsable claims below — the header&apos;s evidence-signal count also includes measured counts (views, likes, rank) shown in the panels above, not as standalone cards.</p>
+            </div>
             <span className="text-xs text-muted-foreground">Stored claims from {shortDate(latestRunAt)}</span>
           </div>
         )}

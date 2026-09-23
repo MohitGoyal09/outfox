@@ -1,12 +1,13 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowUpRight, Bookmark, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlatformLogo } from "./PlatformLogo";
-import { engineLabel, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
-import { displayClaimText, shortDate } from "./format";
+import { EngineTag, PlatformLogo } from "./PlatformLogo";
+import { adCreativeWindow, engineLabel, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
+import { displayClaimText, periodWindow, shortDate } from "./format";
 
 export const sourceAccent: Record<string, string> = {
   google: "#0f766e",
@@ -40,7 +41,12 @@ export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrga
   const lane = LANE_STYLE[claim.sourceEngine] ?? LANE_STYLE.google;
   const cardBg = claim.sourceEngine === "google_trends" ? "bg-blue-50/40" : "bg-card";
   const rank = organicRank(claim);
-  const favicon = raw?.faviconUrl ?? null;
+  const [faviconFailed, setFaviconFailed] = useState(false);
+  const favicon = faviconFailed ? null : (raw?.faviconUrl ?? null);
+  const isAdsCreative = claim.metric === "ads_transparency_creative";
+  const adWindow = isAdsCreative ? adCreativeWindow(claim) : null;
+  const runWindowLabel = isAdsCreative ? periodWindow(claim.period) : null;
+  const trendPeriodLabel = lane.largeStat ? periodWindow(claim.period) : null;
   return (
     <article
       className={cn(
@@ -60,7 +66,13 @@ export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrga
                 suffix above) — one step past a flat neutral chip, short of
                 a colored border or glow either of which DESIGN.md bans. */}
             {favicon !== null ? (
-              <img src={favicon} alt="" loading="lazy" className="size-4 rounded-sm object-contain" />
+              <img
+                src={favicon}
+                alt=""
+                loading="lazy"
+                className="size-4 rounded-sm object-contain"
+                onError={() => setFaviconFailed(true)}
+              />
             ) : (
               <PlatformLogo engine={claim.sourceEngine} className={lane.iconClass} />
             )}
@@ -74,20 +86,32 @@ export function EvidenceCard({ claim, raw }: { claim: ClaimDoc; raw?: GoogleOrga
             ) : null}
           </span>
           <div className="min-w-0">
-            <p className="truncate text-[13px] font-bold text-foreground">{raw?.sourceName ?? source}</p>
+            <p className="truncate text-[13px] font-bold text-foreground">{raw?.sourceName ?? hostnameOf(claim.evidenceUrl) ?? source}</p>
             <p className="mt-0.5 text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</p>
           </div>
         </div>
-        <div className="flex items-center gap-1 text-muted-foreground">
-          <button type="button" aria-label="Save evidence" className="rounded-md p-1 hover:bg-muted"><Bookmark className="size-3.5" /></button>
-          <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" aria-label="Open evidence" className="rounded-md p-1 hover:bg-muted"><ExternalLink className="size-3.5" /></a>
+        <div className="flex flex-col items-end gap-1.5">
+          <EngineTag engine={claim.sourceEngine} />
+          <div className="flex items-center gap-1 text-muted-foreground">
+            <button type="button" aria-label="Save evidence" className="rounded-md p-1 hover:bg-muted"><Bookmark className="size-3.5" /></button>
+            <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" aria-label="Open evidence" className="rounded-md p-1 hover:bg-muted"><ExternalLink className="size-3.5" /></a>
+          </div>
         </div>
       </div>
       <div className="mt-4">
         <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{displayClaimText(claim.text)}</a>
         {raw?.snippet ? <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-muted-foreground">{raw.snippet}</p> : null}
         {lane.largeStat && claim.value !== undefined ? (
-          <div className="mt-2 flex items-baseline gap-1.5"><span className="text-2xl font-bold tabular-nums text-foreground">{String(claim.value)}</span><span className="text-[10px] text-muted-foreground">relative interest{claim.unit ? ` (${claim.unit})` : ""}</span></div>
+          <div className="mt-2 flex flex-wrap items-baseline gap-1.5">
+            <span className="text-2xl font-bold tabular-nums text-foreground">{String(claim.value)}</span>
+            <span className="text-[10px] text-muted-foreground">relative interest{claim.unit ? ` (${claim.unit})` : ""}</span>
+            {trendPeriodLabel ? <span className="w-full font-mono text-[10px] tabular-nums text-muted-foreground">{trendPeriodLabel}</span> : null}
+          </div>
+        ) : adWindow ? (
+          <div className="mt-2 flex flex-col gap-1">
+            <span className="font-mono text-[11px] font-semibold uppercase tracking-wide text-foreground">{adWindow.format} creative</span>
+            {runWindowLabel ? <span className="font-mono text-[11px] tabular-nums text-muted-foreground">Ran {runWindowLabel}</span> : null}
+          </div>
         ) : claim.metric ? (
           <p className="mt-2 font-mono text-[11px] text-muted-foreground">{claim.metric}{claim.value !== undefined ? ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}</p>
         ) : null}

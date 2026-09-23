@@ -3,19 +3,16 @@
 import { useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
-import { Plus, ShieldCheck } from "lucide-react";
+import { Mic, Paperclip, Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputButton,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputTools,
-} from "@/components/ai-elements/prompt-input";
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import {
   MAX_ASK_BRANDS,
   askHref,
@@ -34,6 +31,9 @@ import { VALUE_CLASS } from "@/components/drishti/tokens";
 const NO_SCOPE: AskScope = { cohortKey: null, brandIds: [], runId: null };
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 
+const PILL_BUTTON_CLASS =
+  "flex size-11 shrink-0 items-center justify-center rounded-full transition-colors duration-150 ease-out";
+
 export function DockedAsk() {
   const [scope, setScope] = useState<AskScope>(NO_SCOPE);
   const [value, setValue] = useState("");
@@ -45,7 +45,7 @@ export function DockedAsk() {
   const [mentionToken, setMentionToken] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
   const [mentionNotice, setMentionNotice] = useState<string | null>(null);
-  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
   const mentionBrands: MentionBrand[] = useMemo(
     () => (trackedBrands ?? []).map((brand) => ({ id: brand._id, name: brand.name })),
@@ -110,7 +110,7 @@ export function DockedAsk() {
     inputRef.current?.focus();
   }
 
-  function handleValueChange(event: ChangeEvent<HTMLTextAreaElement>) {
+  function handleValueChange(event: ChangeEvent<HTMLInputElement>) {
     const nextValue = event.target.value;
     setValue(nextValue);
     const cursor = event.target.selectionStart ?? nextValue.length;
@@ -124,7 +124,7 @@ export function DockedAsk() {
     }
   }
 
-  function handleInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
+  function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (!mentionMenuOpen) return;
     if (event.key === "ArrowDown") {
       event.preventDefault();
@@ -221,60 +221,89 @@ export function DockedAsk() {
                 onSelect={selectMentionBrand}
               />
             ) : null}
-            <PromptInput
-              onSubmit={submit}
-              onFocus={() => {
-                setFocused(true);
-                refreshScope();
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                submit();
               }}
-              onBlur={() => setFocused(false)}
-              className="rounded-3xl border border-border-strong bg-white shadow-[0_12px_32px_rgba(16,24,40,0.14)] transition-[border-color,box-shadow] duration-150 ease-out focus-within:border-accent focus-within:shadow-[0_16px_38px_rgba(16,24,40,0.18)]"
+              className="flex items-center gap-1 rounded-full border border-border bg-bg-raised px-1.5 py-1.5 transition-colors duration-150 ease-out focus-within:border-border-strong sm:gap-1.5 sm:px-2"
             >
-              <PromptInputBody>
-                <label htmlFor="docked-ask" className="sr-only">
-                  Ask about these rivals
-                </label>
-                <PromptInputTextarea
-                  id="docked-ask"
-                  name="ask"
-                  ref={inputRef}
-                  value={value}
-                  onChange={handleValueChange}
-                  onKeyDown={handleInputKeyDown}
-                  autoComplete="off"
-                  role="combobox"
-                  aria-autocomplete="list"
-                  aria-expanded={mentionMenuOpen}
-                  aria-controls={mentionMenuOpen ? listboxId : undefined}
-                  aria-activedescendant={
-                    mentionMenuOpen && activeOption !== undefined
-                      ? mentionOptionId(listboxId, activeOption.id)
-                      : undefined
-                  }
-                  placeholder="Ask about your rivals, or type @ to reference a brand."
-                  className="min-h-10 max-h-[200px] overflow-y-auto bg-transparent text-[14px] text-fg placeholder:text-fg-placeholder"
-                />
-              </PromptInputBody>
-              <PromptInputFooter>
-                <PromptInputTools>
-                  <PromptInputButton
-                    aria-label="Add a brand to this question"
-                    aria-pressed={mentionSource === "plus"}
-                    onClick={togglePlusMenu}
-                  >
-                    <Plus aria-hidden className="size-4" />
-                  </PromptInputButton>
-                  <span className="hidden items-center gap-1.5 text-xs text-fg-tertiary sm:flex">
-                    <ShieldCheck className="size-3.5 text-ok" /> Every answer cites a tool result
-                  </span>
-                </PromptInputTools>
-                <PromptInputSubmit
-                  disabled={!canSend}
-                  aria-label="Send"
-                  className="rounded-full bg-accent text-accent-ink hover:bg-accent-strong disabled:bg-bg-inset disabled:text-fg-tertiary"
-                />
-              </PromptInputFooter>
-            </PromptInput>
+              <button
+                type="button"
+                aria-label="Add a brand to this question"
+                aria-pressed={mentionSource === "plus"}
+                onClick={togglePlusMenu}
+                className={cn(
+                  PILL_BUTTON_CLASS,
+                  "text-fg-tertiary hover:bg-bg-inset hover:text-fg-secondary",
+                )}
+              >
+                <Paperclip aria-hidden className="size-[18px]" />
+              </button>
+
+              <label htmlFor="docked-ask" className="sr-only">
+                Ask about these rivals
+              </label>
+              <input
+                id="docked-ask"
+                name="ask"
+                ref={inputRef}
+                value={value}
+                onChange={handleValueChange}
+                onKeyDown={handleInputKeyDown}
+                onFocus={() => {
+                  setFocused(true);
+                  refreshScope();
+                }}
+                onBlur={() => setFocused(false)}
+                autoComplete="off"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-expanded={mentionMenuOpen}
+                aria-controls={mentionMenuOpen ? listboxId : undefined}
+                aria-activedescendant={
+                  mentionMenuOpen && activeOption !== undefined
+                    ? mentionOptionId(listboxId, activeOption.id)
+                    : undefined
+                }
+                placeholder="Ask about your rivals, or type @ to reference a brand."
+                className="min-w-0 flex-1 bg-transparent px-1 text-[14px] text-fg placeholder:text-fg-placeholder focus:outline-none"
+              />
+
+              <TooltipProvider>
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      aria-label="Voice input"
+                      aria-disabled="true"
+                      onClick={(event) => event.preventDefault()}
+                      className={cn(
+                        PILL_BUTTON_CLASS,
+                        "text-fg-tertiary hover:bg-transparent",
+                      )}
+                    >
+                      <Mic aria-hidden className="size-[18px]" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">
+                    Voice input isn&apos;t available yet
+                  </TooltipContent>
+                </Tooltip>
+              </TooltipProvider>
+
+              <button
+                type="submit"
+                disabled={!canSend}
+                aria-label="Send"
+                className={cn(
+                  PILL_BUTTON_CLASS,
+                  "bg-accent text-accent-ink hover:bg-accent-strong disabled:bg-bg-inset disabled:text-fg-tertiary",
+                )}
+              >
+                <Send aria-hidden className="size-[18px]" />
+              </button>
+            </form>
           </div>
         </div>
       </div>

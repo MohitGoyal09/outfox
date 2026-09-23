@@ -2,7 +2,7 @@
 
 import { ChevronDown, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
-import { Cell, Pie, PieChart, Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Cell, Pie, PieChart } from "recharts";
 import { cn } from "@/lib/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -42,25 +42,68 @@ export function SummaryPanel({ title, subtitle, children, className }: { title: 
   );
 }
 
+export const DONUT_MIN_DISTINCT = 3;
+
+function hookRow(row: DistributionItem): DistributionItem & { count: number } {
+  return { label: row.label, count: row.count ?? 0, sharePct: null, delta: row.delta };
+}
+
+function HookFallback({ rows, total }: { rows: DistributionItem[]; total: number }) {
+  if (rows.length === 1) {
+    const row = rows[0];
+    return (
+      <div className="flex items-center gap-3">
+        <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }} />
+        <div>
+          <p className="font-mono text-2xl font-semibold leading-none tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</p>
+          <p className="mt-1 text-[11px] capitalize text-muted-foreground">{row.label.replaceAll("_", " ")}</p>
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="space-y-2">
+      {rows.map((row) => (
+        <div key={row.label} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-[11px]">
+          <span className="flex min-w-0 items-center gap-2 capitalize">
+            <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }} />
+            <span className="truncate">{row.label.replaceAll("_", " ")}</span>
+          </span>
+          <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</span>
+          <span className="font-mono text-[10px] text-muted-foreground">{total ? `${Math.round(((row.count ?? 0) / total) * 100)}%` : "—"}</span>
+          <DeltaTag delta={row.delta} />
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export function HookChart({ items }: { items: DistributionItem[] }) {
-  const rows = [...items].sort((a, b) => (b.count ?? 0) - (a.count ?? 0)).slice(0, 9);
-  const total = rows.reduce((sum, row) => sum + (row.count ?? 0), 0);
-  if (rows.length === 0 || total === 0) return <p className="text-sm text-muted-foreground">No hook tags in this run.</p>;
+  const rows = [...items].map(hookRow).filter((row) => row.count > 0).sort((a, b) => b.count - a.count).slice(0, 9);
+  const total = rows.reduce((sum, row) => sum + row.count, 0);
+  if (rows.length === 0) return <p className="text-sm text-muted-foreground">No hook tags in this run.</p>;
+  if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} />;
   const chartConfig = Object.fromEntries(
     rows.map((row) => [row.label, { label: row.label.replaceAll("_", " "), color: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }]),
   ) satisfies ChartConfig;
   return (
     <div className="grid grid-cols-[92px_1fr] items-center gap-4">
-      <ChartContainer config={chartConfig} className="mx-auto aspect-square size-[92px]">
-        <PieChart>
-          <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="label" />} />
-          <Pie data={rows} dataKey="count" nameKey="label" innerRadius={26} outerRadius={44} strokeWidth={1}>
-            {rows.map((row) => (
-              <Cell key={row.label} fill={HOOK_COLOR[row.label as HookType] ?? "#6b7280"} />
-            ))}
-          </Pie>
-        </PieChart>
-      </ChartContainer>
+      <div className="relative mx-auto size-[92px]">
+        <ChartContainer config={chartConfig} className="aspect-square size-[92px]">
+          <PieChart>
+            <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="label" />} />
+            <Pie data={rows} dataKey="count" nameKey="label" innerRadius={26} outerRadius={44} strokeWidth={1}>
+              {rows.map((row) => (
+                <Cell key={row.label} fill={HOOK_COLOR[row.label as HookType] ?? "#6b7280"} />
+              ))}
+            </Pie>
+          </PieChart>
+        </ChartContainer>
+        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
+          <span className="font-mono text-sm font-semibold tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(total)}</span>
+          <span className="text-[7px] uppercase tracking-wide text-muted-foreground">evidence</span>
+        </div>
+      </div>
       <div className="space-y-2">
         {rows.map((row) => (
           <div key={row.label} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[11px]">
@@ -68,7 +111,7 @@ export function HookChart({ items }: { items: DistributionItem[] }) {
               <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }} />
               <span className="truncate">{row.label.replaceAll("_", " ")}</span>
             </span>
-            <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</span>
+            <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
             <DeltaTag delta={row.delta} />
           </div>
         ))}
@@ -85,6 +128,8 @@ const FUNNEL_ORDER: readonly [FunnelStage, string][] = [
   ["most_aware", "Most aware"],
 ];
 
+const FUNNEL_EMPTY_BAND_PCT = 4;
+
 export function FunnelPanel({ items }: { items: DistributionItem[] }) {
   const byLabel = new Map(items.map((item) => [item.label, item]));
   const rows = FUNNEL_ORDER.map(([stage, label]) => ({
@@ -94,34 +139,27 @@ export function FunnelPanel({ items }: { items: DistributionItem[] }) {
     delta: byLabel.get(stage)?.delta ?? null,
   }));
   const total = rows.reduce((sum, row) => sum + row.count, 0);
-  if (total === 0) return <p className="text-sm text-muted-foreground">Funnel tags will appear after an enriched run.</p>;
-  const chartConfig = { count: { label: "Tagged claims" } } satisfies ChartConfig;
+  if (total === 0) return <p className="text-sm text-muted-foreground">Stage tags will appear after an enriched run.</p>;
   return (
-    <div className="space-y-2">
-      <ChartContainer config={chartConfig} className="h-[132px] w-full aspect-auto">
-        <BarChart accessibilityLayer data={rows} layout="vertical" margin={{ left: 0, right: 12, top: 0, bottom: 0 }}>
-          <CartesianGrid horizontal={false} />
-          <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-          <YAxis dataKey="label" type="category" width={92} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-          <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent hideLabel />} />
-          <Bar dataKey="count" radius={3} barSize={14}>
-            {rows.map((row) => (
-              <Cell key={row.stage} fill={FUNNEL_COLOR[row.stage]} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ChartContainer>
-      <div className="space-y-1">
-        {rows.map((row) => (
-          <div key={row.stage} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[11px]">
+    <div className="space-y-1.5" role="img" aria-label="Awareness-stage distribution, one bar per stage from a shared left baseline">
+      {rows.map((row) => {
+        const sharePct = total ? Math.round((row.count / total) * 100) : 0;
+        const widthPct = row.count > 0 ? Math.max(2, sharePct) : FUNNEL_EMPTY_BAND_PCT;
+        return (
+          <div key={row.stage} className="grid grid-cols-[100px_1fr_auto_auto] items-center gap-2 text-[11px]">
             <span className="truncate">{FUNNEL_STAGE_INDEX[row.stage] + 1}. {row.label}</span>
-            <span className="font-mono tabular-nums text-muted-foreground">
-              {total ? `${Math.round((row.count / total) * 100)}%` : "—"}
+            <span className="h-4 w-full overflow-hidden rounded-[3px] bg-muted/40">
+              {row.count > 0 ? (
+                <span className="block h-full rounded-[3px]" style={{ width: `${widthPct}%`, backgroundColor: FUNNEL_COLOR[row.stage] }} />
+              ) : (
+                <span className="block h-full rounded-[3px] border border-dashed border-border-strong/70" style={{ width: `${widthPct}%` }} />
+              )}
             </span>
+            <span className="font-mono tabular-nums text-muted-foreground">{total ? `${sharePct}%` : "—"}</span>
             <DeltaTag delta={row.delta} />
           </div>
-        ))}
-      </div>
+        );
+      })}
     </div>
   );
 }

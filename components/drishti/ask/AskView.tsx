@@ -10,10 +10,10 @@ import {
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
 import { motion, useReducedMotion } from "motion/react";
-import { CircleAlert, Plus, Users, X } from "lucide-react";
+import { ArrowUp, ChevronDown, CircleAlert, Paperclip, Square, Users, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
-import type { Id } from "@/convex/_generated/dataModel";
+import type { Doc, Id } from "@/convex/_generated/dataModel";
 import {
   Conversation,
   ConversationContent,
@@ -28,8 +28,10 @@ import {
   PromptInputSubmit,
   PromptInputTextarea,
   PromptInputTools,
+  usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
+import { Spinner } from "@/components/ui/spinner";
 import { Sidebar } from "@/components/drishti/chrome/Sidebar";
 import { Button } from "../Button";
 import { LABEL_CLASS, STATE_TRANSITION_CLASS, iconProps } from "../tokens";
@@ -48,13 +50,28 @@ import {
   type AskScope,
   type ToolCallCardView,
 } from "./ask-model";
-import { sourcesOf } from "./agentChat-model";
+import { precedingUserTextOf, sourcesOf } from "./agentChat-model";
+import { CitationDrawer } from "./CitationDrawer";
 import { PromptCategories } from "./PromptCategories";
 import { SourcesDrawer } from "./SourcesDrawer";
 import { useAgentChat } from "./useAgentChat";
 import { toolCardsByAssistantTurn, useAskTraceEvents } from "./useAskTrace";
 
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
+const ASK_MAX_CHARS = 2000;
+
+function ComposerAttachButton({ disabled }: { disabled: boolean }) {
+  const attachments = usePromptInputAttachments();
+  return (
+    <PromptInputButton
+      aria-label="Attach a file"
+      disabled={disabled}
+      onClick={() => attachments.openFileDialog()}
+    >
+      <Paperclip className="size-4" aria-hidden="true" />
+    </PromptInputButton>
+  );
+}
 
 function greetingWord(hour: number): string {
   if (hour < 5) return "night";
@@ -84,6 +101,8 @@ export function AskView({
     return map;
   }, [brands]);
 
+  const [openClaimId, setOpenClaimId] = useState<string | null>(null);
+
   const scope: AskScope = useMemo(
     () => ({
       cohortKey,
@@ -99,11 +118,24 @@ export function AskView({
     sendMessage,
     setMessages,
     busy: asking,
+    status: chatStatus,
+    stop,
     authReady,
     error,
     clearError,
     addToolApprovalResponse,
   } = useAgentChat({ brandIds: scope.brandIds, cohortKey: scope.cohortKey ?? "" });
+
+  const claimBrandIds = useMemo(
+    () => (brands ?? []).map((brand) => brand._id).slice(0, MAX_ASK_BRANDS),
+    [brands],
+  );
+  const claims = useQuery(api.claims.byBrands, { brandIds: claimBrandIds });
+  const claimsById = useMemo(() => {
+    const map = new Map<string, Doc<"claims">>();
+    for (const claim of claims ?? []) map.set(String(claim._id), claim);
+    return map;
+  }, [claims]);
 
   const history = useQuery(api.messages.listRecent, { threadKey, limit: 50 });
   const traceEvents = useAskTraceEvents(threadKey);
@@ -121,18 +153,41 @@ export function AskView({
   }, [history, traceEvents]);
   const hydratedThreadRef = useRef<string | null>(null);
   useEffect(() => {
-    if (history === undefined || traceEvents === undefined) return;
+    if (history === undefined || traceEvents === undefined || claims === undefined) return;
     if (hydratedThreadRef.current === threadKey) return;
     hydratedThreadRef.current = threadKey;
     if (history.length === 0) return;
     setMessages(
-      history.map((row) => ({
-        id: row.id,
-        role: row.role,
-        parts: [{ type: "text" as const, text: row.text }],
-      })),
+      history.map((row) => {
+        const textPart = { type: "text" as const, text: row.text };
+        if (row.role !== "assistant" || row.citations.length === 0) {
+          return { id: row.id, role: row.role, parts: [textPart] };
+        }
+        const citationSources: Record<string, { url: string; engine: string }> = {};
+        const sourcesByUrl = new Map<string, { url: string; engine: string }>();
+        for (const claimId of row.citations) {
+          const claim = claimsById.get(claimId);
+          if (claim === undefined) continue;
+          citationSources[claimId] = { url: claim.evidenceUrl, engine: claim.sourceEngine };
+          sourcesByUrl.set(claim.evidenceUrl, { url: claim.evidenceUrl, engine: claim.sourceEngine });
+        }
+        if (Object.keys(citationSources).length === 0) {
+          return { id: row.id, role: row.role, parts: [textPart] };
+        }
+        return {
+          id: row.id,
+          role: row.role,
+          parts: [
+            textPart,
+            {
+              type: "data-hydrated-citations" as const,
+              data: { sources: [...sourcesByUrl.values()], citationSources },
+            },
+          ],
+        };
+      }),
     );
-  }, [history, traceEvents, threadKey, setMessages]);
+  }, [history, traceEvents, claims, claimsById, threadKey, setMessages]);
 
   const [value, setValue] = useState("");
   const [lastQuestion, setLastQuestion] = useState<string | null>(null);
@@ -318,8 +373,19 @@ export function AskView({
     [messages],
   );
   const hasTranscript = messages.length > 0;
+  const focusedEmptyState = useRef(false);
+  useEffect(() => {
+    if (focusedEmptyState.current) return;
+    if (hasTranscript || history === undefined || history.length > 0) return;
+    focusedEmptyState.current = true;
+    textareaRef.current?.focus();
+  }, [hasTranscript, history]);
   const scopeText = askScopeLabel(scope, brandNames);
-  const canSend = value.trim().length > 0 && !asking;
+  const draftLength = value.length;
+  const overCap = draftLength > ASK_MAX_CHARS;
+  const nearCap = draftLength >= ASK_MAX_CHARS * 0.9;
+  const canSend = value.trim().length > 0 && !asking && !overCap;
+  const isGenerating = chatStatus === "submitted" || chatStatus === "streaming";
   const mentionBrandViews = mentionedBrandIds
     .map((id) => mentionBrands.find((brand) => brand.id === id))
     .filter((brand): brand is MentionBrand => brand !== undefined);
@@ -382,21 +448,18 @@ export function AskView({
                   ? mentionOptionId(listboxId, activeMentionOption.id)
                   : undefined
               }
-              className="max-h-[300px] overflow-y-auto bg-transparent text-fg placeholder:text-fg-placeholder"
+              className="min-h-[72px] max-h-[300px] overflow-y-auto bg-transparent text-fg placeholder:text-fg-placeholder"
             />
           </PromptInputBody>
           <PromptInputFooter className="items-center gap-x-2 rounded-b-[28px] border-t border-border bg-bg-inset/60">
-            <PromptInputTools className="gap-2">
-              <PromptInputButton
-                aria-label="Add a brand to this question"
-                aria-pressed={mentionSource === "plus"}
-                onClick={togglePlusMenu}
-              >
-                <Plus className="size-4" />
-              </PromptInputButton>
-              {/* Brand scope: which tracked brands this question may read.
-                  Same picker as the "+" attach control — this is a second,
-                  always-visible entry point into it, not separate state. */}
+            <PromptInputTools className="gap-1.5">
+              <ComposerAttachButton disabled={asking} />
+              {/* Brand scope, in the reference's model-picker slot: which
+                  tracked brands this question may read. A manual depth/effort
+                  selector was deliberately removed elsewhere in this app and
+                  must not come back here -- this chevron control opens the
+                  same brand picker as the mention menu, never a complexity
+                  override (the agent classifies its own complexity). */}
               <button
                 type="button"
                 aria-label="Choose which tracked brands this question can read"
@@ -404,7 +467,7 @@ export function AskView({
                 onClick={togglePlusMenu}
                 disabled={asking}
                 className={cn(
-                  "inline-flex h-6 items-center gap-1.5 rounded-full border px-2.5 text-[11px] font-medium",
+                  "inline-flex h-7 items-center gap-1 rounded-full border px-2.5 text-[11px] font-medium",
                   STATE_TRANSITION_CLASS,
                   "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent focus-visible:ring-[3px] focus-visible:ring-accent/20",
                   "disabled:cursor-not-allowed disabled:opacity-60",
@@ -417,13 +480,45 @@ export function AskView({
                 {totalScopeBrandCount > 0
                   ? `${totalScopeBrandCount} brand${totalScopeBrandCount === 1 ? "" : "s"} in scope`
                   : "Add brands to scope"}
+                <ChevronDown className="size-3" aria-hidden="true" />
               </button>
             </PromptInputTools>
-            <PromptInputSubmit
-              status={asking ? "submitted" : undefined}
-              disabled={!canSend}
-              className="rounded-full bg-accent text-accent-ink hover:bg-accent-strong disabled:bg-bg-inset disabled:text-fg-tertiary"
-            />
+            <div className="flex items-center gap-2.5">
+              <span
+                className={cn(
+                  "font-mono text-[11px] tabular-nums",
+                  overCap ? "text-danger" : nearCap ? "text-warn" : "text-fg-tertiary",
+                )}
+              >
+                {draftLength}/{ASK_MAX_CHARS}
+              </span>
+              <PromptInputSubmit
+                status={chatStatus}
+                onStop={() => {
+                  void stop();
+                  requestAnimationFrame(() => textareaRef.current?.focus());
+                }}
+                disabled={isGenerating ? false : !canSend}
+                aria-label={isGenerating ? "Stop" : "Send"}
+                className={cn(
+                  "size-8 rounded-full",
+                  isGenerating || (value.trim().length > 0 && !overCap)
+                    ? "bg-accent text-accent-ink hover:bg-accent-strong"
+                    : "bg-bg-inset text-fg-tertiary",
+                  "disabled:cursor-not-allowed disabled:bg-bg-inset disabled:text-fg-tertiary disabled:opacity-60",
+                )}
+              >
+                {chatStatus === "submitted" ? (
+                  <Spinner />
+                ) : chatStatus === "streaming" ? (
+                  <Square className="size-3.5" aria-hidden="true" />
+                ) : chatStatus === "error" ? (
+                  <CircleAlert className="size-4" aria-hidden="true" />
+                ) : (
+                  <ArrowUp className="size-4" aria-hidden="true" />
+                )}
+              </PromptInputSubmit>
+            </div>
           </PromptInputFooter>
         </PromptInput>
       </div>
@@ -536,14 +631,29 @@ export function AskView({
               </ConversationEmptyState>
             ) : null}
 
-            {messages.map((message) => (
-              <AgentMessage
-                key={message.id}
-                message={message}
-                persistedCards={persistedCardsByMessageId[message.id]}
-                onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
-              />
-            ))}
+            {messages.map((message, index) => {
+              const isLastMessage = index === messages.length - 1;
+              const precedingUserText = precedingUserTextOf(
+                messages as unknown as { role: string; parts?: unknown }[],
+                index,
+              );
+              return (
+                <AgentMessage
+                  key={message.id}
+                  message={message}
+                  brandNames={brandNames}
+                  isStreaming={isLastMessage && chatStatus === "streaming"}
+                  isBusy={isLastMessage && isGenerating}
+                  persistedCards={persistedCardsByMessageId[message.id]}
+                  onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
+                  onOpenCitation={setOpenClaimId}
+                  onSelectFollowUp={(question) => void submit(question)}
+                  onRetry={
+                    precedingUserText !== null && !asking ? () => void submit(precedingUserText) : undefined
+                  }
+                />
+              );
+            })}
           </ConversationContent>
           <ConversationScrollButton />
         </Conversation>
@@ -559,6 +669,13 @@ export function AskView({
           </motion.div>
         ) : null}
       </div>
+      <CitationDrawer
+        open={openClaimId !== null}
+        claim={openClaimId !== null ? claimsById.get(openClaimId) : undefined}
+        onOpenChange={(open) => {
+          if (!open) setOpenClaimId(null);
+        }}
+      />
       </SidebarInset>
     </SidebarProvider>
   );

@@ -53,7 +53,11 @@ export function Masthead() {
         <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Drishti home">
           <span className="flex size-8 items-center justify-center rounded-[7px] bg-fg text-sm font-semibold text-bg">D</span>
           <span className="text-[15px] font-semibold tracking-[-0.03em]">Drishti</span>
-          <span className="hidden border-l border-border pl-3 font-mono text-[10px] uppercase tracking-[0.16em] text-fg-tertiary md:inline-flex">Evidence atlas</span>
+          {/* Was visible from md (768px). The sidebar's expanded width grew to
+              match the Karax port (18rem instead of 15rem), which no longer
+              leaves room for this label at 768px without overflowing -- push
+              it to lg so the header stays within the viewport there. */}
+          <span className="hidden border-l border-border pl-3 font-mono text-[10px] uppercase tracking-[0.16em] text-fg-tertiary lg:inline-flex">Evidence atlas</span>
         </Link>
         <button type="button" onClick={() => setOpen(true)} className="group flex h-10 min-w-0 max-w-[820px] flex-1 items-center gap-2.5 rounded-[7px] border border-border bg-bg-inset px-3.5 text-left text-sm text-fg-tertiary transition-[border-color,background-color] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised focus-visible:border-accent sm:ml-4" aria-label="Search brands, claims, and research surfaces">
           <Search aria-hidden className="size-4 shrink-0" />

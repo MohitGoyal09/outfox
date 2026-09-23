@@ -16,23 +16,48 @@ import {
   answerProvenanceOf,
   approvalPartsOf,
   citationSourcesOf,
+  followUpsOf,
+  hasStreamedThisSession,
+  sourcesOf,
   textOf,
   toolCallCardsOf,
   untrackedBrandMentionOf,
 } from "./agentChat-model";
+import { AnswerActions } from "./AnswerActions";
 import { AnswerMarkdown } from "./AnswerMarkdown";
+import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
 import type { ToolCallCardView } from "./ask-model";
-import { StepTrace } from "./StepTrace";
+import { descriptiveToolLabel } from "./ToolCallCard";
+import { FollowUpList } from "./FollowUpList";
+import { ThoughtLine, type ThoughtStep, type ThoughtStepStatus } from "./ThoughtLine";
 import { TrackBrandChip } from "./TrackBrandChip";
 import { UnavailableBlock } from "./UnavailableBlock";
+
+function thoughtStatusOf(status: ToolCallCardView["status"]): ThoughtStepStatus {
+  if (status === "complete") return "complete";
+  if (status === "failed") return "failed";
+  return "running";
+}
 
 export function AgentMessage({
   message,
   onRespondToApproval,
+  onOpenCitation,
+  onSelectFollowUp,
+  onRetry,
+  brandNames = {},
+  isStreaming = false,
+  isBusy = true,
   persistedCards,
 }: {
   message: UIMessage;
   onRespondToApproval: (approvalId: string, approved: boolean) => void;
+  onOpenCitation: (claimId: string) => void;
+  onSelectFollowUp: (question: string) => void;
+  onRetry?: () => void;
+  brandNames?: Record<string, string>;
+  isStreaming?: boolean;
+  isBusy?: boolean;
   persistedCards?: ToolCallCardView[];
 }) {
   const text = textOf(message as unknown as { parts?: unknown });
@@ -47,17 +72,32 @@ export function AgentMessage({
     );
   }
 
-  const cards = persistedCards ?? toolCallCardsOf(message as unknown as { parts?: unknown });
+  const streamedThisSession = hasStreamedThisSession(message as unknown as { parts?: unknown });
+  const liveCards = toolCallCardsOf(message as unknown as { parts?: unknown });
+  const cards = streamedThisSession ? liveCards : (persistedCards ?? liveCards);
   const approvals = approvalPartsOf(message as unknown as { parts?: unknown });
   const provenance = answerProvenanceOf([message as unknown as { parts?: unknown }]);
   const failedCards = cards.filter((card) => card.status === "failed");
   const citationSources = citationSourcesOf([message as unknown as { parts?: unknown }]);
   const untrackedBrand = untrackedBrandMentionOf(message as unknown as { parts?: unknown });
+  const sources = sourcesOf([message as unknown as { parts?: unknown }]);
+  const followUps = followUpsOf([message as unknown as { parts?: unknown }]);
+  const isRunning = text === "";
+  const isLive = streamedThisSession;
+
+  const steps: ThoughtStep[] = cards.map((card) => ({
+    id: card.id,
+    text: descriptiveToolLabel(card.name, card.rawPayload, brandNames),
+    status: thoughtStatusOf(card.status),
+  }));
+  const persistedElapsedSeconds = !isLive
+    ? cards.reduce((sum, card) => sum + (card.durationMs ?? 0), 0) / 1000
+    : undefined;
 
   return (
     <Message from="assistant">
       <MessageContent>
-        <StepTrace cards={cards} isRunning={text === ""} isLive={persistedCards === undefined} />
+        <ThoughtLine steps={steps} working={isLive && isRunning && isBusy} elapsedSeconds={persistedElapsedSeconds} />
 
         {approvals.map((part) => (
           <Confirmation
@@ -108,12 +148,30 @@ export function AgentMessage({
           />
         ) : null}
 
-        {text !== "" ? <AnswerMarkdown text={text} citationSources={citationSources} /> : null}
+        {text !== "" ? (
+          <AnswerMarkdown
+            text={text}
+            citationSources={citationSources}
+            isStreaming={isStreaming}
+            onOpenCitation={onOpenCitation}
+          />
+        ) : null}
+
+        {text !== "" ? (
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <AnswerSourcesPanel sources={sources} />
+            <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
+          </div>
+        ) : null}
 
         {untrackedBrand !== null ? (
           <div className="mt-1">
             <TrackBrandChip brandName={untrackedBrand.name} />
           </div>
+        ) : null}
+
+        {text !== "" && !isStreaming ? (
+          <FollowUpList followUps={followUps} onSelect={onSelectFollowUp} />
         ) : null}
       </MessageContent>
     </Message>

@@ -2,6 +2,7 @@
 
 
 import { TrendsChart, type TrendsChartResult } from "@/components/drishti/charts";
+import type { TrendsChunkRow } from "@/components/drishti/charts/groupByChunk";
 
 const BRAND_NAMES: Record<string, string> = {
   brand_mamaearth: "Mamaearth",
@@ -14,39 +15,65 @@ function label(brandId: string): string {
   return BRAND_NAMES[brandId] ?? brandId;
 }
 
+function weeklyDates(startIso: string, count: number): string[] {
+  const start = new Date(startIso);
+  return Array.from({ length: count }, (_, i) => {
+    const d = new Date(start);
+    d.setUTCDate(d.getUTCDate() + i * 7);
+    return d.toISOString().slice(0, 10);
+  });
+}
+
+let nextRowId = 1;
+
+function timelineRows(
+  brandId: string,
+  chunkKey: string,
+  dates: string[],
+  values: number[],
+  fetchedAt: string,
+): TrendsChunkRow[] {
+  return dates.map((date, i) => ({
+    id: String(nextRowId++),
+    brandId,
+    chunkKey,
+    date,
+    value: values[i % values.length],
+    evidenceUrl: `https://trends.google.com/trends/explore?q=${encodeURIComponent(label(brandId))}`,
+    fetchedAt,
+  }));
+}
+
+const FETCHED_AT = "2026-09-20T09:15:00.000Z";
+const DATES_13W = weeklyDates("2026-06-22", 13);
+
 const twoChunkResult: TrendsChartResult = {
-  total: 4,
+  total: 4 * DATES_13W.length,
   coverage: { google_trends: "ok" },
-  asOf: "2026-09-20T09:15:00.000Z",
+  asOf: FETCHED_AT,
   rows: [
-    { id: "1", brandId: "brand_mamaearth", chunkKey: "chunk-a", value: 62, period: "2026-08-20..2026-09-19", evidenceUrl: "https://trends.google.com/trends/explore?q=Mamaearth", fetchedAt: "2026-09-20T09:15:00.000Z" },
-    { id: "2", brandId: "brand_wow", chunkKey: "chunk-a", value: 41, period: "2026-08-20..2026-09-19", evidenceUrl: "https://trends.google.com/trends/explore?q=WOW", fetchedAt: "2026-09-20T09:15:00.000Z" },
-    { id: "3", brandId: "brand_plum", chunkKey: "chunk-b", value: 28, period: "2026-08-20..2026-09-19", evidenceUrl: "https://trends.google.com/trends/explore?q=Plum", fetchedAt: "2026-09-20T09:15:00.000Z" },
-    { id: "4", brandId: "brand_sugar", chunkKey: "chunk-b", value: 77, period: "2026-08-20..2026-09-19", evidenceUrl: "https://trends.google.com/trends/explore?q=SUGAR", fetchedAt: "2026-09-20T09:15:00.000Z" },
+    ...timelineRows("brand_mamaearth", "chunk-a", DATES_13W, [40, 44, 47, 50, 53, 55, 58, 57, 60, 59, 61, 60, 62], FETCHED_AT),
+    ...timelineRows("brand_wow", "chunk-a", DATES_13W, [30, 31, 33, 35, 34, 36, 38, 37, 39, 40, 41, 40, 41], FETCHED_AT),
+    ...timelineRows("brand_plum", "chunk-b", DATES_13W, [20, 21, 19, 22, 24, 23, 25, 26, 25, 27, 28, 27, 28], FETCHED_AT),
+    ...timelineRows("brand_sugar", "chunk-b", DATES_13W, [65, 68, 70, 72, 69, 71, 74, 73, 75, 76, 74, 77, 77], FETCHED_AT),
   ],
 };
 
 const oneChunkOverTimeResult: TrendsChartResult = {
-  total: 6,
+  total: 2 * DATES_13W.length,
   coverage: { google_trends: "ok" },
-  asOf: "2026-09-20T09:15:00.000Z",
+  asOf: FETCHED_AT,
   rows: [
-    { id: "10", brandId: "brand_mamaearth", chunkKey: "chunk-a", value: 55, period: "2026-07-01..2026-07-31", evidenceUrl: "https://trends.google.com/trends/explore?q=Mamaearth", fetchedAt: "2026-08-01T09:00:00.000Z" },
-    { id: "11", brandId: "brand_wow", chunkKey: "chunk-a", value: 38, period: "2026-07-01..2026-07-31", evidenceUrl: "https://trends.google.com/trends/explore?q=WOW", fetchedAt: "2026-08-01T09:00:00.000Z" },
-    { id: "12", brandId: "brand_mamaearth", chunkKey: "chunk-a", value: 60, period: "2026-08-01..2026-08-31", evidenceUrl: "https://trends.google.com/trends/explore?q=Mamaearth", fetchedAt: "2026-09-01T09:00:00.000Z" },
-    { id: "13", brandId: "brand_wow", chunkKey: "chunk-a", value: 44, period: "2026-08-01..2026-08-31", evidenceUrl: "https://trends.google.com/trends/explore?q=WOW", fetchedAt: "2026-09-01T09:00:00.000Z" },
-    { id: "14", brandId: "brand_mamaearth", chunkKey: "chunk-a", value: 62, period: "2026-08-20..2026-09-19", evidenceUrl: "https://trends.google.com/trends/explore?q=Mamaearth", fetchedAt: "2026-09-20T09:15:00.000Z" },
-    { id: "15", brandId: "brand_wow", chunkKey: "chunk-a", value: 41, period: "2026-08-20..2026-09-19", evidenceUrl: "https://trends.google.com/trends/explore?q=WOW", fetchedAt: "2026-09-20T09:15:00.000Z" },
+    ...timelineRows("brand_mamaearth", "chunk-a", DATES_13W, [42, 45, 48, 52, 55, 54, 57, 56, 59, 60, 61, 62, 62], FETCHED_AT),
+    ...timelineRows("brand_wow", "chunk-a", DATES_13W, [28, 30, 33, 32, 35, 36, 34, 37, 38, 39, 40, 41, 41], FETCHED_AT),
   ],
 };
 
 const oneBrandResult: TrendsChartResult = {
-  total: 1,
+  total: DATES_13W.length,
   coverage: { google_trends: "ok" },
-  asOf: "2026-09-20T09:15:00.000Z",
-  rows: [
-    { id: "20", brandId: "brand_mamaearth", chunkKey: "chunk-a", value: 62, period: "2026-08-20..2026-09-19", evidenceUrl: "https://trends.google.com/trends/explore?q=Mamaearth", fetchedAt: "2026-09-20T09:15:00.000Z" },
-  ],
+  asOf: FETCHED_AT,
+  rows: timelineRows("brand_mamaearth", "chunk-a", DATES_13W, [42, 45, 48, 52, 55, 54, 57, 56, 59, 60, 61, 62, 62], FETCHED_AT),
 };
 
 const emptyResult: TrendsChartResult = {
@@ -83,8 +110,8 @@ export default function DevChartsPage() {
       <p className="text-[13px] text-[var(--text-secondary,#667085)]">
         Not a product route. For browser verification of components/drishti/charts/TrendsChart.tsx only.
       </p>
-      <Demo title="1. Two brands, two chunks -> two panels" result={twoChunkResult} />
-      <Demo title="2. Two brands, one chunk, three fetches -> one panel, real line" result={oneChunkOverTimeResult} />
+      <Demo title="1. Two brands, two chunks -> two panels, each a real multi-point line" result={twoChunkResult} />
+      <Demo title="2. Two brands, one chunk, one fetch -> one panel, full 13-point timeline" result={oneChunkOverTimeResult} />
       <Demo title="3. One brand -> single panel, no small-multiple chrome" result={oneBrandResult} />
       <Demo title="4. Empty rows -> no trends data state" result={emptyResult} />
       <Demo title="5. coverage.google_trends === missing -> named engine" result={missingEngineResult} />

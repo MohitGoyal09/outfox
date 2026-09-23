@@ -26,18 +26,47 @@ export const STATUS_LABEL: Record<ToolCallCardView["status"], string> = {
 };
 
 const TOOL_META: Record<string, { icon: LucideIcon; title: string }> = {
-  resolve_brand: { icon: Compass, title: "Resolving brand" },
+  resolve_brand: { icon: Compass, title: "Finding a brand" },
   search_claims: { icon: Database, title: "Reading claims" },
-  get_claims: { icon: Database, title: "Reading claims" },
+  get_claims: { icon: Database, title: "Reading stored evidence" },
   get_tags: { icon: Tag, title: "Reading content tags" },
-  get_coverage: { icon: ListChecks, title: "Checking coverage" },
-  get_trends: { icon: TrendingUp, title: "Reading trends" },
+  get_coverage: { icon: ListChecks, title: "Checking what data exists" },
+  get_trends: { icon: TrendingUp, title: "Reading search interest" },
   compare_brands: { icon: GitCompare, title: "Comparing brands" },
   web_search: { icon: Search, title: "Searching the web" },
-  fetch_brand: { icon: RefreshCw, title: "Fetching a new brand" },
+  fetch_brand: { icon: RefreshCw, title: "Fetching a brand" },
   refresh_cohort: { icon: RefreshCw, title: "Requesting a live refresh" },
 };
 const DEFAULT_TOOL_META = { icon: MessageSquareText, title: "Running a step" };
+
+function brandNamesOf(ids: unknown, brandNames: Record<string, string>): string | null {
+  if (!Array.isArray(ids) || ids.length === 0) return null;
+  const named = ids.map((id) => brandNames[String(id)]).filter((name): name is string => typeof name === "string");
+  if (named.length > 0) return named.join(", ");
+  return `${ids.length} brand${ids.length === 1 ? "" : "s"}`;
+}
+
+export function descriptiveToolLabel(
+  name: string,
+  rawPayload: unknown,
+  brandNames: Record<string, string>,
+): string {
+  const input = (typeof rawPayload === "object" && rawPayload !== null ? rawPayload : {}) as Record<string, unknown>;
+  if (name === "resolve_brand" && typeof input.query === "string" && input.query.trim() !== "") {
+    return `Finding ${input.query}`;
+  }
+  if (name === "web_search" && typeof input.query === "string" && input.query.trim() !== "") {
+    return `Searching the web for "${input.query}"`;
+  }
+  if (name === "fetch_brand" && typeof input.name === "string" && input.name.trim() !== "") {
+    return `Fetching ${input.name}`;
+  }
+  if (name === "get_trends") {
+    const names = brandNamesOf(input.brandIds, brandNames);
+    if (names !== null) return `Reading search interest for ${names}`;
+  }
+  return toolTitle(name);
+}
 
 export function toolTitle(name: string): string {
   return (TOOL_META[name] ?? DEFAULT_TOOL_META).title;

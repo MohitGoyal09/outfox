@@ -153,6 +153,10 @@ const ENGINE_LABELS: Record<string, string> = {
   llm_tag: "content tags",
 };
 
+export function engineLabel(engine: string): string {
+  return ENGINE_LABELS[engine] ?? engine.replaceAll("_", " ");
+}
+
 export function buildFollowUpSuggestions(
   brandNames: string[],
   citedEngines: string[],

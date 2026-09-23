@@ -11,6 +11,7 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
+import { hostnameOf } from "./agentChat-model";
 import type { SourceView } from "./agentChat-model";
 
 const ENGINE_META: Record<string, { label: string; icon: LucideIcon }> = {
@@ -26,12 +27,8 @@ function engineMeta(engine: string): { label: string; icon: LucideIcon } {
   return ENGINE_META[engine] ?? { label: engine, icon: Globe };
 }
 
-function hostnameOf(url: string): string {
-  try {
-    return new URL(url).hostname.replace(/^www\./, "");
-  } catch {
-    return url;
-  }
+export function engineGlyph(engine: string): LucideIcon {
+  return engineMeta(engine).icon;
 }
 
 function groupByEngine(sources: SourceView[]): { engine: string; sources: SourceView[] }[] {

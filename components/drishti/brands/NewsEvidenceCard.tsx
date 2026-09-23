@@ -1,21 +1,34 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { EvidenceCard, sourceAccent } from "./EvidenceCard";
+import { EngineTag } from "./PlatformLogo";
 import { readGoogleNewsRawItem, type ClaimDoc } from "./brand-model";
-import { displayClaimText, shortDate } from "./format";
+import { displayClaimText, periodWindow, shortDate } from "./format";
 
 export function NewsEvidenceCard({ claim, raw }: { claim: ClaimDoc; raw: unknown }) {
   const info = readGoogleNewsRawItem(raw);
-  if (info.thumbnailUrl === null) return <EvidenceCard claim={claim} />;
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  if (info.thumbnailUrl === null || thumbnailFailed) return <EvidenceCard claim={claim} />;
+  const publishedLabel = periodWindow(claim.period) ?? shortDate(claim.fetchedAt);
   return (
     <article
       className="flex flex-col overflow-hidden rounded-xl border border-border border-t-2 bg-card transition-colors hover:border-accent/50 hover:bg-accent/[0.02]"
       style={{ borderTopColor: sourceAccent.google_news }}
     >
       <div className="relative aspect-video w-full shrink-0 bg-muted">
-        <img src={info.thumbnailUrl} alt="" loading="lazy" className="size-full object-cover" />
+        <img
+          src={info.thumbnailUrl}
+          alt=""
+          loading="lazy"
+          className="size-full object-cover"
+          onError={() => setThumbnailFailed(true)}
+        />
+        <span className="absolute left-2 top-2 rounded-md bg-black/70 px-1.5 py-0.5">
+          <EngineTag engine="google_news" className="text-white" />
+        </span>
       </div>
       <div className="flex flex-col gap-2 p-4">
         <a
@@ -26,9 +39,10 @@ export function NewsEvidenceCard({ claim, raw }: { claim: ClaimDoc; raw: unknown
         >
           {displayClaimText(claim.text)}
         </a>
+        {info.snippet !== null ? <p className="line-clamp-2 text-[11px] leading-5 text-muted-foreground">{info.snippet}</p> : null}
         <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
-          {info.publisherName !== null ? <span className="truncate">{info.publisherName}</span> : <span />}
-          <span className="font-mono">{shortDate(claim.fetchedAt)}</span>
+          {info.publisherName !== null ? <span className="truncate font-semibold text-foreground">{info.publisherName}</span> : <span />}
+          <span className="font-mono tabular-nums">{publishedLabel}</span>
         </div>
         <Button asChild variant="outline" size="sm" className="h-7 w-full justify-center rounded-md text-[11px]">
           <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">

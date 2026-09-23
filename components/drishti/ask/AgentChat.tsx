@@ -2,7 +2,10 @@
 
 
 import { useMemo, useState } from "react";
+import { useQuery } from "convex/react";
 import { ShieldCheck } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import type { Doc } from "@/convex/_generated/dataModel";
 import {
   Conversation,
   ConversationContent,
@@ -21,7 +24,9 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Chip } from "../Chip";
 import { AgentMessage } from "./AgentMessage";
-import { answerProvenanceOf, sourcesOf } from "./agentChat-model";
+import { answerProvenanceOf, precedingUserTextOf, sourcesOf } from "./agentChat-model";
+import { MAX_ASK_BRANDS } from "./ask-model";
+import { CitationDrawer } from "./CitationDrawer";
 import { SourcesDrawer } from "./SourcesDrawer";
 import { useAgentChat } from "./useAgentChat";
 
@@ -46,6 +51,24 @@ export function AgentChat({
   } = useAgentChat({ brandIds, cohortKey });
 
   const [draft, setDraft] = useState("");
+  const [openClaimId, setOpenClaimId] = useState<string | null>(null);
+
+  const brands = useQuery(api.brands.listBrands);
+  const brandNames = useMemo(() => {
+    const map: Record<string, string> = {};
+    for (const brand of brands ?? []) map[String(brand._id)] = brand.name;
+    return map;
+  }, [brands]);
+  const claimBrandIds = useMemo(
+    () => (brands ?? []).map((brand) => brand._id).slice(0, MAX_ASK_BRANDS),
+    [brands],
+  );
+  const claims = useQuery(api.claims.byBrands, { brandIds: claimBrandIds });
+  const claimsById = useMemo(() => {
+    const map = new Map<string, Doc<"claims">>();
+    for (const claim of claims ?? []) map.set(String(claim._id), claim);
+    return map;
+  }, [claims]);
 
   const sources = useMemo(
     () => sourcesOf(messages as unknown as { parts?: unknown }[]),
@@ -91,13 +114,28 @@ export function AgentChat({
               description="Tool calls and sources show up here as the agent works."
             />
           ) : (
-            messages.map((message) => (
-              <AgentMessage
-                key={message.id}
-                message={message}
-                onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
-              />
-            ))
+            messages.map((message, index) => {
+              const isLastMessage = index === messages.length - 1;
+              const precedingUserText = precedingUserTextOf(
+                messages as unknown as { role: string; parts?: unknown }[],
+                index,
+              );
+              return (
+                <AgentMessage
+                  key={message.id}
+                  message={message}
+                  brandNames={brandNames}
+                  isStreaming={isLastMessage && status === "streaming"}
+                  isBusy={isLastMessage && (status === "streaming" || status === "submitted")}
+                  onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
+                  onOpenCitation={setOpenClaimId}
+                  onSelectFollowUp={(question) => void submit(question)}
+                  onRetry={
+                    precedingUserText !== null && !busy ? () => void submit(precedingUserText) : undefined
+                  }
+                />
+              );
+            })
           )}
           {provenance?.mode === "template" ? (
             <Chip tone="warn" label="Model unavailable — showing raw claims" />
@@ -146,6 +184,13 @@ export function AgentChat({
           </PromptInputFooter>
         </PromptInput>
       </div>
+      <CitationDrawer
+        open={openClaimId !== null}
+        claim={openClaimId !== null ? claimsById.get(openClaimId) : undefined}
+        onOpenChange={(open) => {
+          if (!open) setOpenClaimId(null);
+        }}
+      />
     </section>
   );
 }

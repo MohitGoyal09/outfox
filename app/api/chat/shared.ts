@@ -51,3 +51,21 @@ export function isTextChunk(chunk: unknown): boolean {
   if (typeof chunk !== "object" || chunk === null) return false;
   return type === "text-start" || type === "text-delta" || type === "text-end";
 }
+
+export type FailureKind = "no_data" | "unavailable" | "error";
+export type ClassifiedFailure = { kind: FailureKind; message: string };
+
+export function encodeFailure(failure: ClassifiedFailure): string {
+  return `[${failure.kind}] ${failure.message}`;
+}
+
+export function classifyToolFailure(toolName: string, error: unknown): ClassifiedFailure {
+  const raw = error instanceof Error ? error.message : String(error);
+  const matched = UNAVAILABLE_PATTERNS.find((pattern) => pattern.test.test(raw));
+  if (matched !== undefined) return { kind: "unavailable", message: matched.message };
+  return { kind: "error", message: `Could not ${actionFor(toolName)}.` };
+}
+
+export function classifyNoData(engine: string, window: string): ClassifiedFailure {
+  return { kind: "no_data", message: `${engine} returned no data for ${window}.` };
+}

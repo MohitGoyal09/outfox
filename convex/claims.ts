@@ -2,6 +2,7 @@ import { internalMutation, query } from "./_generated/server";
 import { v, ConvexError } from "convex/values";
 import { requireUserId } from "./lib/auth";
 import { MAX_BRANDS_PER_RUN } from "./pipeline/plan";
+import { isRelevantToBrand } from "./pipeline/extractClaims";
 
 const sourceEngine = v.union(
   v.literal("google"),

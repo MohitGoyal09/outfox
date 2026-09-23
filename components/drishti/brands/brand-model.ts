@@ -284,6 +284,7 @@ export type YoutubeVideoGroup = {
   publishedDate: string | null;
   viewCount: number | null;
   likeCount: number | null;
+  length: string | null;
   claims: ClaimDoc[];
 };
 
@@ -301,6 +302,17 @@ export function groupYoutubeVideoClaims(claims: ClaimDoc[]): YoutubeVideoGroup[]
     .map(([evidenceUrl, groupClaims]) => {
       const find = (metric: string) =>
         groupClaims.find((claim) => claim.metric === metric);
+      return {
+        videoId: youtubeVideoIdOf(groupClaims[0]),
+        evidenceUrl,
+        title: stringValue(find("youtube_video_title")),
+        description: stringValue(find("youtube_video_description")),
+        publishedDate: stringValue(find("youtube_video_published_date")),
+        viewCount: numberValue(find("youtube_video_view_count")),
+        likeCount: numberValue(find("youtube_video_like_count")),
+        length: stringValue(find("youtube_video_length")),
+        claims: groupClaims,
+      };
     })
     .sort(
       (a, b) =>
@@ -363,6 +375,7 @@ export function findGoogleNewsRawItem(
 export type GoogleNewsRawItem = {
   thumbnailUrl: string | null;
   publisherName: string | null;
+  snippet: string | null;
 };
 
 export function readGoogleNewsRawItem(raw: unknown): GoogleNewsRawItem {
@@ -370,6 +383,8 @@ export function readGoogleNewsRawItem(raw: unknown): GoogleNewsRawItem {
   const source = asRecord(record?.source);
   const thumbnailUrl = typeof record?.thumbnail === "string" ? record.thumbnail : null;
   const publisherName = typeof source?.name === "string" ? source.name : null;
+  const snippet = typeof record?.snippet === "string" ? record.snippet : null;
+  return { thumbnailUrl, publisherName, snippet };
 }
 
 
@@ -499,7 +514,7 @@ export function productListingClaims(claims: ClaimDoc[]): ClaimDoc[] {
   return claims.filter((claim) => claim.metric === "google_product_listing");
 }
 
-function hostnameOf(url: string): string | null {
+export function hostnameOf(url: string): string | null {
   try {
     return new URL(url).hostname.replace(/^www\./, "");
   } catch {
@@ -585,6 +600,12 @@ function parseAdPeriod(period: string | undefined): { firstShown: string | null;
 function daysBetween(a: string, b: string): number | null {
   const end = Date.parse(b);
   return Math.max(0, Math.round((end - start) / (24 * 60 * 60 * 1000)));
+}
+
+export function adRuntimeLeaderboard(claims: ClaimDoc[]): AdRuntimeRow[] {
+  return adCreativeClaims(claims)
+    .map(adCreativeWindow)
+    .sort((a, b) => (b.runDays ?? -1) - (a.runDays ?? -1));
 }
 
 

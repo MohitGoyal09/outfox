@@ -162,7 +162,19 @@
   --color-destructive: var(--danger);
   --color-destructive-foreground: var(--text-primary);
   --color-input: var(--border-strong);
-  --color-ring: var(--accent);
+  /*
+   * NO focus halo on controls.
+   *
+   * This token fed every shadcn primitive's `ring-[3px]`, painting a heavy
+   * 3px halo around the composer, the filters and every input. It was teal,
+   * then ink; the user does not want a boundary in either colour.
+   *
+   * The ring is transparent, and focus is shown by a border-colour shift
+   * instead (rule further down). Keyboard users still get a visible
+   * indicator -- dropping it entirely would fail focus visibility -- but it
+   * reads as the control tightening, not as a box drawn around it.
+   */
+  --color-ring: transparent;
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -205,6 +217,36 @@
   }
 
   :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+    box-shadow: 0 0 0 3px var(--accent-dim);
+  }
+
+  /*
+   * Form controls never draw their own focus ring.
+   *
+   * Every input in this app sits inside a wrapper that already shows focus
+   * with `focus-within:border-accent` plus a 3px glow. Without this rule the
+   * control matched `:focus-visible` as well, so focusing a filter or the
+   * prompt box painted TWO nested teal rings -- one on the wrapper, a second
+   * inside it. The wrapper owns the ring; the control stays invisible.
+   *
+   * A control placed outside such a wrapper must carry `.focus-ring` so it
+   * still shows focus. Never add a bare control without one.
+   */
+  :is(input, textarea, select):focus-visible {
+    outline: none;
+    box-shadow: none;
+  }
+
+  /* Focus = the border tightens. No halo. Pairs with --color-ring above. */
+  :is(input, textarea, select):focus-visible,
+  :has(> :is(input, textarea, select):focus-visible),
+  :has(> * > :is(input, textarea, select):focus-visible) {
+    border-color: var(--border-strong);
+  }
+
+  :is(input, textarea, select).focus-ring:focus-visible {
     outline: 2px solid var(--accent);
     outline-offset: 2px;
     box-shadow: 0 0 0 3px var(--accent-dim);

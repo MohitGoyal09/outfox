@@ -32,12 +32,12 @@ import { cn } from "@/lib/utils";
 const LIGHT_SIDEBAR_VARS = {
   "--sidebar": "var(--bg-raised)",
   "--sidebar-foreground": "var(--text-primary)",
-  "--sidebar-primary": "var(--accent)",
-  "--sidebar-primary-foreground": "var(--accent-ink)",
+  "--sidebar-primary": "var(--text-primary)",
+  "--sidebar-primary-foreground": "var(--bg-raised)",
   "--sidebar-accent": "var(--bg-inset)",
   "--sidebar-accent-foreground": "var(--text-primary)",
   "--sidebar-border": "var(--border)",
-  "--sidebar-ring": "var(--accent)",
+  "--sidebar-ring": "var(--text-primary)",
 } as CSSProperties;
 
 const NAV = [
@@ -64,9 +64,9 @@ export function Sidebar() {
 
   return (
     <SidebarPrimitive collapsible="icon" className="border-sidebar-border" style={LIGHT_SIDEBAR_VARS}>
-      <SidebarHeader className="gap-3 p-4 group-data-[collapsible=icon]:p-2">
-        <Link href="/" className="flex min-h-10 items-center gap-3 overflow-hidden group-data-[collapsible=icon]:justify-center" aria-label="Drishti home">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground group-data-[collapsible=icon]:size-9">
+      <SidebarHeader className="h-16 flex-row items-center gap-3 px-4 py-0 group-data-[collapsible=icon]:justify-center group-data-[collapsible=icon]:px-2">
+        <Link href="/" className="flex h-full min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-md transition-colors duration-150 ease-out hover:opacity-80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring group-data-[collapsible=icon]:flex-none group-data-[collapsible=icon]:justify-center" aria-label="Drishti home">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
             D
           </span>
           <span className="flex min-w-0 flex-col group-data-[collapsible=icon]:hidden">
@@ -94,12 +94,12 @@ export function Sidebar() {
                       tooltip={item.label}
                       size="lg"
                       className={cn(
-                        "h-11 text-sidebar-foreground/72 hover:bg-sidebar-accent hover:text-sidebar-foreground group-data-[collapsible=icon]:h-10",
-                        active && "bg-sidebar-accent text-sidebar-accent-foreground shadow-[inset_2px_0_0_var(--sidebar-primary)]",
+                        "h-11 rounded-full text-sidebar-foreground/72 transition-colors duration-200 ease-out hover:bg-sidebar-accent hover:text-sidebar-foreground group-data-[collapsible=icon]:h-10",
+                        active && "bg-sidebar-accent text-sidebar-accent-foreground",
                       )}
                     >
                       <Link href={item.href} aria-current={active ? "page" : undefined}>
-                        <Icon aria-hidden strokeWidth={1.8} />
+                        <Icon aria-hidden className={cn("transition-transform duration-200 ease-out", active && "scale-110")} />
                         <span className="group-data-[collapsible=icon]:hidden">{item.label}</span>
                       </Link>
                     </SidebarMenuButton>
@@ -113,9 +113,22 @@ export function Sidebar() {
         <SidebarSeparator className="mx-4 w-auto bg-sidebar-border/70" />
 
         <SidebarGroup className="px-3 py-2 group-data-[collapsible=icon]:hidden">
-          <SidebarGroupLabel className="px-2 font-mono text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/45">
-            Recent chats
-          </SidebarGroupLabel>
+          <div className="flex items-center justify-between px-2">
+            <SidebarGroupLabel className="p-0 font-mono text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/45">
+              Recent chats
+            </SidebarGroupLabel>
+            {/* /ask with no query params is already a clean slate: fresh thread
+                key, empty history. Same treatment as the Tracked brands "+" so
+                the two read as one pattern. Neutral only -- this surface
+                deliberately carries no accent. */}
+            <Link
+              href="/ask"
+              className="rounded-md p-1 text-sidebar-foreground/50 transition-colors duration-150 ease-out hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              aria-label="New chat"
+            >
+              <Plus aria-hidden className="size-3.5" />
+            </Link>
+          </div>
           <SidebarGroupContent className="mt-1">
             <SidebarMenu>
               {threads === undefined || threads.length === 0 ? (
@@ -130,7 +143,7 @@ export function Sidebar() {
                       size="sm"
                       isActive={activeThreadKey === thread.threadKey}
                       tooltip={thread.title}
-                      className="text-sidebar-foreground/60 hover:text-sidebar-foreground"
+                      className="rounded-full text-sidebar-foreground/60 transition-colors duration-200 ease-out hover:text-sidebar-foreground"
                     >
                       <Link href={hrefForThread(thread.threadKey)}>
                         <MessageSquare aria-hidden className="size-3.5" />
@@ -157,7 +170,7 @@ export function Sidebar() {
             <SidebarMenu>
               {brands.slice(0, 5).map((brand) => (
                 <SidebarMenuItem key={brand._id}>
-                  <SidebarMenuButton asChild size="sm" className="text-sidebar-foreground/60 hover:text-sidebar-foreground">
+                  <SidebarMenuButton asChild size="sm" className="rounded-full text-sidebar-foreground/60 transition-colors duration-200 ease-out hover:text-sidebar-foreground">
                     <Link href={`/brands/${brand._id}`}>
                       <span className="flex size-5 shrink-0 items-center justify-center rounded-md bg-sidebar-accent text-[10px] font-semibold text-sidebar-foreground/70">
                         {brand.name.slice(0, 1).toUpperCase()}
@@ -185,7 +198,7 @@ export function Sidebar() {
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
-            <SidebarMenuButton asChild tooltip="Add a brand" className="text-sidebar-foreground/70 hover:text-sidebar-foreground">
+            <SidebarMenuButton asChild tooltip="Add a brand" className="rounded-full text-sidebar-foreground/70 transition-colors duration-200 ease-out hover:text-sidebar-foreground">
               <Link href="/brands#brand-form" aria-label="Add a brand">
                 <Plus aria-hidden />
                 <span className="group-data-[collapsible=icon]:hidden">Add a brand</span>

@@ -3,6 +3,7 @@ export type TrendsChunkRow = {
   id: string;
   brandId: string;
   chunkKey: string;
+  date: string;
   value?: string | number;
   period?: string;
   evidenceUrl: string;
@@ -38,8 +39,10 @@ export function groupByChunk(
 
   return order.map((chunkKey) => ({
     chunkKey,
-    rows: [...(byChunk.get(chunkKey) ?? [])].sort((a, b) =>
-      a.fetchedAt < b.fetchedAt ? -1 : a.fetchedAt > b.fetchedAt ? 1 : 0,
-    ),
+    rows: [...(byChunk.get(chunkKey) ?? [])].sort((a, b) => {
+      const dateA = a.date ?? a.fetchedAt;
+      const dateB = b.date ?? b.fetchedAt;
+      return dateA < dateB ? -1 : dateA > dateB ? 1 : 0;
+    }),
   }));
 }

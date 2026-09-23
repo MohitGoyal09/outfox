@@ -56,20 +56,18 @@ function numericOf(value: string | number | undefined): number | null {
   return Number.isFinite(parsed) ? parsed : null;
 }
 
-type ChunkChartPoint = { fetchedAt: string } & Record<string, unknown>;
+type ChunkChartPoint = { date: string } & Record<string, unknown>;
 
 function buildChunkSeries(rows: readonly TrendsChunkRow[]): {
   brandIds: string[];
   data: ChunkChartPoint[];
 } {
   const brandIds = [...new Set(rows.map((r) => r.brandId))];
-  const timestamps = [...new Set(rows.map((r) => r.fetchedAt))].sort();
-  const data = timestamps.map((fetchedAt) => {
-    const point: ChunkChartPoint = { fetchedAt };
+  const dates = [...new Set(rows.map((r) => r.date))].sort();
+  const data = dates.map((date) => {
+    const point: ChunkChartPoint = { date };
     for (const brandId of brandIds) {
-      const match = rows.find(
-        (r) => r.brandId === brandId && r.fetchedAt === fetchedAt,
-      );
+      const match = rows.find((r) => r.brandId === brandId && r.date === date);
       point[brandId] = numericOf(match?.value);
       point[`${brandId}__period`] = match?.period ?? null;
     }
@@ -116,7 +114,7 @@ function ChunkPanel({
         <LineChart data={data} margin={{ left: -12, right: 12, top: 8, bottom: 0 }}>
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border,#e4e7ec)" />
           <XAxis
-            dataKey="fetchedAt"
+            dataKey="date"
             tickLine={false}
             axisLine={false}
             tickMargin={10}

@@ -1,9 +1,10 @@
 "use client";
 
+import { useState } from "react";
 import { ArrowUpRight, Play } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { PlatformLogo } from "./PlatformLogo";
+import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { tagBearingClaims, type YoutubeRawVideoInfo, type YoutubeVideoGroup } from "./brand-model";
 
 function compactCount(value: number): string {
@@ -17,16 +18,32 @@ export function YouTubeVideoCard({
   group: YoutubeVideoGroup;
   raw: YoutubeRawVideoInfo | null;
 }) {
-  const hasThumbnail = Boolean(raw?.thumbnailUrl);
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const hasThumbnail = Boolean(raw?.thumbnailUrl) && !thumbnailFailed;
+  const [channelThumbFailed, setChannelThumbFailed] = useState(false);
   const tag = tagBearingClaims(group.claims)[0] ?? null;
   return (
     <article className="flex flex-col overflow-hidden rounded-xl border border-border bg-card transition-colors hover:border-accent/50 hover:bg-accent/[0.02]">
       <div className="relative aspect-video w-full shrink-0 bg-muted">
         {hasThumbnail ? (
-          <img src={raw!.thumbnailUrl!} alt="" loading="lazy" className="size-full object-cover" />
+          <img
+            src={raw!.thumbnailUrl!}
+            alt=""
+            loading="lazy"
+            className="size-full object-cover"
+            onError={() => setThumbnailFailed(true)}
+          />
         ) : (
           <div className="grid size-full place-items-center"><PlatformLogo engine="youtube_video" className="size-9" /></div>
         )}
+        <span className="absolute left-2 top-2 rounded-md bg-black/70 px-1.5 py-0.5">
+          <EngineTag engine="youtube_video" className="text-white" />
+        </span>
+        {group.length !== null ? (
+          <span className="absolute bottom-2 left-2 inline-flex items-center rounded-md bg-black/75 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white tabular-nums">
+            {group.length}
+          </span>
+        ) : null}
         {group.viewCount !== null ? (
           <span className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded-md bg-black/75 px-1.5 py-0.5 font-mono text-[10px] font-semibold text-white tabular-nums">
             <Play className="size-2.5 fill-white" />
@@ -42,8 +59,13 @@ export function YouTubeVideoCard({
         )}
         {raw?.channelName ? (
           <div className="flex items-center gap-2 text-[11px] text-muted-foreground">
-            {raw.channelThumbnailUrl ? (
-              <img src={raw.channelThumbnailUrl} alt="" className="size-4 shrink-0 rounded-full object-cover" />
+            {raw.channelThumbnailUrl && !channelThumbFailed ? (
+              <img
+                src={raw.channelThumbnailUrl}
+                alt=""
+                className="size-4 shrink-0 rounded-full object-cover"
+                onError={() => setChannelThumbFailed(true)}
+              />
             ) : null}
             <span className="truncate">{raw.channelName}</span>
             {raw.subscribers !== null ? (
