@@ -77,7 +77,7 @@ export function Masthead() {
           <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Drishti…</span>
           <kbd className="hidden shrink-0 rounded border border-border-strong bg-bg-raised px-1.5 py-0.5 font-mono text-[10px] text-fg-tertiary sm:inline-flex">⌘K</kbd>
         </button>
-        <Button asChild size="sm" className="ml-auto hidden h-9 shrink-0 rounded-[6px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"><Link href="/onboarding"><Plus aria-hidden /> Add brand</Link></Button>
+        <Button asChild size="sm" className="ml-auto hidden h-9 shrink-0 rounded-[6px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"><Link href="/brands?add=1"><Plus aria-hidden /> Add brand</Link></Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="rounded-full text-fg-secondary hover:bg-bg-inset hover:text-fg" aria-label="Account menu"><Avatar size="sm"><AvatarFallback className="border border-border bg-bg-raised text-xs font-semibold text-fg">M</AvatarFallback></Avatar></Button></DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">

@@ -6,11 +6,11 @@ import { usePathname, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import {
   BarChart3,
+  Building2,
   BookOpen,
   Bookmark,
   MessageSquare,
   Plus,
-  Tag,
 } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
@@ -41,7 +41,7 @@ const LIGHT_SIDEBAR_VARS = {
 } as CSSProperties;
 
 const NAV = [
-  { href: "/brands", label: "Brands", icon: Tag },
+  { href: "/brands", label: "Brands", icon: Building2 },
   { href: "/signals", label: "Signals", icon: BarChart3 },
   { href: "/boards", label: "Boards", icon: Bookmark },
   { href: "/ask", label: "Ask", icon: MessageSquare },
@@ -163,7 +163,23 @@ export function Sidebar() {
         <SidebarGroup className="px-3 py-3 group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between px-2">
             <SidebarGroupLabel className="p-0 font-mono text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/45">Tracked brands</SidebarGroupLabel>
-            <Link href="/onboarding" className="rounded-md p-1 text-sidebar-foreground/50 transition-colors duration-150 ease-out hover:bg-sidebar-accent hover:text-sidebar-foreground" aria-label="Add brand">
+            {/* `#brand-form` opens the add-rival form on the brands page. This
+                used to point at /onboarding, which asks "what brand do you work
+                on?" -- the FIRST-RUN question, and the wrong one for a control
+                that sits under "Tracked brands". The button worked; its
+                destination did not match its label. */}
+            {/* `?add=1` opens the add-rival form on the brands page. This used
+                to point at /onboarding, which asks "what brand do you work on?"
+                -- the FIRST-RUN question, and the wrong one for a control that
+                sits under "Tracked brands". The button worked; its destination
+                did not match its label. A search param, not a `#hash`: the
+                router publishes it, so the page hears the click even when it is
+                already on /brands. */}
+            <Link
+              href="/brands?add=1"
+              className="rounded-md p-1 text-sidebar-foreground/50 transition-colors duration-150 ease-out hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              aria-label="Add a brand"
+            >
               <Plus aria-hidden className="size-3.5" />
             </Link>
           </div>

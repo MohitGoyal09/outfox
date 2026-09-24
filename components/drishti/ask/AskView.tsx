@@ -33,6 +33,7 @@ import {
 } from "@/components/ai-elements/prompt-input";
 import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
+import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Sidebar } from "@/components/drishti/chrome/Sidebar";
 import { Button } from "../Button";
 import { LABEL_CLASS, STATE_TRANSITION_CLASS, iconProps } from "../tokens";
@@ -65,12 +66,13 @@ function ComposerAttachButton({ disabled }: { disabled: boolean }) {
   return (
     <PromptInputButton
       aria-label="Attach a file"
+      tooltip="Attach a file"
       disabled={disabled}
       onClick={() => attachments.openFileDialog()}
       className={cn(
-        "size-8 rounded-full border border-transparent bg-bg-inset text-fg-secondary",
+        "size-8 rounded-full text-fg-tertiary",
         STATE_TRANSITION_CLASS,
-        "hover:border-border-strong hover:bg-bg-raised-2 hover:text-fg",
+        "hover:bg-bg-inset hover:text-fg",
         "disabled:cursor-not-allowed disabled:opacity-60",
       )}
     >
@@ -469,7 +471,7 @@ export function AskView({
           onSubmit={(message) => {
             void submit(message.text);
           }}
-          className="rounded-[20px] border border-border/70 bg-bg-raised shadow-[var(--shadow-drawer),0_2px_0_rgba(255,255,255,0.6)_inset] transition-[box-shadow,border-color] duration-200 ease-out focus-within:border-accent/50 focus-within:shadow-[var(--shadow-drawer),0_1px_2px_rgba(16,24,40,0.08)]"
+          className="rounded-[10px] border border-border-strong bg-bg-raised shadow-[var(--shadow-lift)] transition-[box-shadow,border-color] duration-200 ease-out focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25"
         >
           <PromptInputBody>
             <PromptInputTextarea
@@ -489,13 +491,13 @@ export function AskView({
                   ? mentionOptionId(listboxId, activeMentionOption.id)
                   : undefined
               }
-              className="min-h-[76px] max-h-[300px] overflow-y-auto bg-transparent pt-3.5 pl-1 text-fg placeholder:text-fg-placeholder"
+              className="min-h-[44px] max-h-[300px] overflow-y-auto bg-transparent pt-2.5 pl-1 text-fg placeholder:text-fg-placeholder"
             />
           </PromptInputBody>
           {/* Bottom control row: one continuous card with the textarea above it
               (no divider line, no tinted well) -- Karax's composer reads as a
               single card, never two stacked panels. */}
-          <PromptInputFooter className="items-center gap-x-2 rounded-b-[20px] border-t-0 pb-1">
+          <PromptInputFooter className="items-center gap-x-2 rounded-b-[10px] border-t-0 pb-1">
             <PromptInputTools className="gap-2">
               <ComposerAttachButton disabled={asking} />
               {/* No brand-scope control here, on purpose: the agent picks the
@@ -504,40 +506,62 @@ export function AskView({
                   the message. Do not add a manual scope picker back. */}
             </PromptInputTools>
             <div className="flex items-center gap-2.5">
-              <span
-                className={cn(
-                  "font-mono text-[11px] tabular-nums",
-                  overCap ? "text-danger" : nearCap ? "text-warn" : "text-fg-tertiary",
-                )}
-              >
-                {draftLength}/{ASK_MAX_CHARS}
-              </span>
-              <PromptInputSubmit
-                status={chatStatus}
-                onStop={() => {
-                  void stop();
-                  requestAnimationFrame(() => textareaRef.current?.focus());
-                }}
-                disabled={isGenerating ? false : !canSend}
-                aria-label={isGenerating ? "Stop" : "Send"}
-                className={cn(
-                  "size-8 rounded-full",
-                  isGenerating || (value.trim().length > 0 && !overCap)
-                    ? "bg-accent text-accent-ink hover:bg-accent-strong"
-                    : "bg-bg-inset text-fg-tertiary",
-                  "disabled:cursor-not-allowed disabled:bg-bg-inset disabled:text-fg-tertiary disabled:opacity-60",
-                )}
-              >
-                {chatStatus === "submitted" ? (
-                  <Spinner />
-                ) : chatStatus === "streaming" ? (
-                  <Square className="size-3.5" aria-hidden="true" />
-                ) : chatStatus === "error" ? (
-                  <CircleAlert className="size-4" aria-hidden="true" />
-                ) : (
-                  <ArrowUp className="size-4" aria-hidden="true" />
-                )}
-              </PromptInputSubmit>
+              {/* A live budget, not a label: shown once there is a draft to
+                  budget, or once the cap is close enough to matter. A "0/2000"
+                  at rest was the faintest thing on screen and told nobody
+                  anything. */}
+              {draftLength > 0 || nearCap ? (
+                <span
+                  className={cn(
+                    "font-mono text-[11px] tabular-nums",
+                    overCap ? "text-danger" : nearCap ? "text-warn" : "text-fg-secondary",
+                  )}
+                >
+                  {draftLength}/{ASK_MAX_CHARS}
+                </span>
+              ) : null}
+              {/* The reference composer swaps this control to a Microphone
+                  while the box is empty. There is no voice input in this
+                  product, so an empty box keeps an arrow and the tooltip
+                  carries the one thing a user needs to know about it: there is
+                  nothing to send yet. `asChild` on a span, not on the button,
+                  because the wrapper needs no ref forwarding from the submit
+                  control for the tooltip to open. */}
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <span className="inline-flex">
+                    <PromptInputSubmit
+                      status={chatStatus}
+                      onStop={() => {
+                        void stop();
+                        requestAnimationFrame(() => textareaRef.current?.focus());
+                      }}
+                      disabled={isGenerating ? false : !canSend}
+                      aria-label={isGenerating ? "Stop" : "Send"}
+                      className={cn(
+                        "size-8 rounded-full",
+                        isGenerating || (value.trim().length > 0 && !overCap)
+                          ? "bg-accent text-accent-ink hover:bg-accent-strong"
+                          : "bg-bg-inset text-fg-tertiary",
+                        "disabled:cursor-not-allowed disabled:bg-bg-inset disabled:text-fg-tertiary",
+                      )}
+                    >
+                      {chatStatus === "submitted" ? (
+                        <Spinner />
+                      ) : chatStatus === "streaming" ? (
+                        <Square className="size-3.5" aria-hidden="true" />
+                      ) : chatStatus === "error" ? (
+                        <CircleAlert className="size-4" aria-hidden="true" />
+                      ) : (
+                        <ArrowUp className="size-4" aria-hidden="true" />
+                      )}
+                    </PromptInputSubmit>
+                  </span>
+                </TooltipTrigger>
+                <TooltipContent side="top">
+                  {isGenerating ? "Stop" : canSend ? "Send" : "Type a question to send"}
+                </TooltipContent>
+              </Tooltip>
             </div>
           </PromptInputFooter>
         </PromptInput>

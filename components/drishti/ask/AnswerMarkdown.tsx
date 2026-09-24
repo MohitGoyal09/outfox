@@ -48,6 +48,12 @@ function numberLabelOf(children: unknown): string {
   return typeof children === "string" ? children : "#";
 }
 
+const TABLE_WRAPPER_CLASS =
+  "my-2 w-0 min-w-full overflow-x-auto rounded-[8px] border border-border";
+const TABLE_HEAD_CLASS =
+  "whitespace-nowrap px-3 py-2 text-left align-middle font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-secondary tabular-nums";
+const TABLE_CELL_CLASS = "px-3 py-2 align-top text-fg tabular-nums";
+
 const CHIP_CLASS =
   "inline-flex h-[18px] cursor-pointer items-center gap-1 rounded-[5px] border border-border bg-bg-inset pl-[3px] pr-1.5 align-baseline font-mono text-[10.5px] text-fg-secondary shadow-[var(--shadow-lift)] transition-colors duration-150 ease-out hover:bg-bg-raised-2 hover:text-fg";
 
@@ -174,7 +180,11 @@ export function AnswerMarkdown({
           }
           const claimId = claimIdFromHref(href);
           if (claimId === null) {
-            return <a {...props} target="_blank" rel="noreferrer noopener" />;
+            return (
+              <a href={props.href} target="_blank" rel="noreferrer noopener">
+                {props.children}
+              </a>
+            );
           }
           return (
             <CitationChip
@@ -187,12 +197,24 @@ export function AnswerMarkdown({
           );
         },
         table: (props) => (
-          <div className="my-2 w-0 min-w-full overflow-x-auto rounded-[8px] border border-border">
-            <table {...props} className={cn(props.className, "w-full tabular-nums")} />
+          <div className={TABLE_WRAPPER_CLASS}>
+            <table
+              className={cn("w-full border-collapse text-[13px] tabular-nums", props.className)}
+            >
+              {props.children}
+            </table>
           </div>
         ),
-        td: (props) => <td {...props} className={cn(props.className, "tabular-nums")} />,
-        th: (props) => <th {...props} className={cn(props.className, "tabular-nums")} />,
+        thead: (props) => <thead className="bg-bg-inset">{props.children}</thead>,
+        tr: (props) => (
+          <tr className="border-b border-border last:border-b-0">{props.children}</tr>
+        ),
+        th: (props) => (
+          <th className={cn(TABLE_HEAD_CLASS, props.className)}>{props.children}</th>
+        ),
+        td: (props) => (
+          <td className={cn(TABLE_CELL_CLASS, props.className)}>{props.children}</td>
+        ),
       }}
     >
       {renderedText}

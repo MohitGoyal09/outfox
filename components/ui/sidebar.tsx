@@ -26,6 +26,27 @@ import { PanelLeftIcon } from "lucide-react"
 
 const SIDEBAR_COOKIE_NAME = "sidebar_state"
 const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7
+
+const SIDEBAR_COOKIE_RE = /(?:^|;\s*)sidebar_state=(true|false)/
+const sidebarCookieListeners = new Set<() => void>()
+
+function readSidebarCookie(): string | null {
+  if (typeof document === "undefined") return null
+  return document.cookie.match(SIDEBAR_COOKIE_RE)?.[1] ?? null
+}
+
+function writeSidebarCookie(open: boolean): void {
+  if (typeof document === "undefined") return
+  document.cookie = `${SIDEBAR_COOKIE_NAME}=${open}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+  for (const listener of sidebarCookieListeners) listener()
+}
+
+function subscribeSidebarCookie(listener: () => void): () => void {
+  sidebarCookieListeners.add(listener)
+  return () => {
+    sidebarCookieListeners.delete(listener)
+  }
+}
 const SIDEBAR_WIDTH = "18rem"
 const SIDEBAR_WIDTH_MOBILE = "18rem"
 const SIDEBAR_WIDTH_ICON = "4rem"
@@ -69,7 +90,12 @@ function SidebarProvider({
   const [openMobile, setOpenMobile] = React.useState(false)
 
   const [_open, _setOpen] = React.useState(defaultOpen)
-  const open = openProp ?? _open
+  const persistedOpen = React.useSyncExternalStore(
+    subscribeSidebarCookie,
+    readSidebarCookie,
+    () => null,
+  )
+  const open = openProp ?? (persistedOpen === null ? _open : persistedOpen === "true")
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
       const openState = typeof value === "function" ? value(open) : value
@@ -79,7 +105,7 @@ function SidebarProvider({
         _setOpen(openState)
       }
 
-      document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`
+      writeSidebarCookie(openState)
     },
     [setOpenProp, open]
   )

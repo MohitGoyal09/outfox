@@ -82,35 +82,47 @@ export const createBrand = mutation({
 });
 
 export const deleteBrandInternal = internalMutation({
-  args: { name: v.string(), confirm: v.boolean() },
+  args: { brandIds: v.array(v.id("brands")), confirm: v.boolean() },
   returns: v.object({
-    deleted: v.boolean(),
-    brandId: v.optional(v.string()),
-    claims: v.number(),
-    snapshots: v.number(),
+    deleted: v.array(
+      v.object({
+        brandId: v.id("brands"),
+        name: v.string(),
+        claims: v.number(),
+        snapshots: v.number(),
+      }),
+    ),
     runs: v.number(),
+    briefs: v.number(),
+    retained: v.object({
+      briefs: v.number(),
+      brandInsights: v.number(),
+      boardItems: v.number(),
+    }),
   }),
   handler: async (ctx, args) => {
     if (!args.confirm) {
       throw new ConvexError("deleteBrandInternal requires confirm: true");
     }
-    if (brand === undefined) {
-      return { deleted: false, claims: 0, snapshots: 0, runs: 0 };
-    }
-    for (const claim of await ctx.db
-      .query("claims")
-      .withIndex("by_brand", (q) => q.eq("brandId", brand._id))
-      .collect()) {
-    }
+    const doomed = new Set(args.brandIds.map(String));
+    const doomedClaimIds = new Set<string>();
+    const deleted: Array<{
+      brandId: import("./_generated/dataModel").Id<"brands">;
+      name: string;
+      claims: number;
+      snapshots: number;
+    }> = [];
 
-    let snapshots = 0;
-    for (const run of await ctx.db.query("runs").collect()) {
-      if (run.brandIds.length !== 1 || run.brandIds[0] !== brand._id) continue;
-      await ctx.db.delete(run._id);
-    }
+    let briefs = 0;
 
-    await ctx.db.delete(brand._id);
-    return { deleted: true, brandId: String(brand._id), claims, snapshots, runs };
+    const sharedBriefs = (await ctx.db.query("briefs").collect()).filter((brief) =>
+      brief.brandIds.some((id) => doomed.has(String(id))),
+    ).length;
+    const brandInsights = (await ctx.db.query("brandInsights").collect()).filter(
+      (insight) => doomed.has(String(insight.brandId)),
+    ).length;
+
+    return { deleted, runs, briefs, retained: { briefs: sharedBriefs, brandInsights, boardItems } };
   },
 });
 

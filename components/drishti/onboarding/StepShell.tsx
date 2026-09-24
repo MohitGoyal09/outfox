@@ -2,6 +2,7 @@
 
 
 import type { ReactNode } from "react";
+import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { Button, iconProps } from "@/components/drishti";
 import { cn } from "@/lib/utils";
@@ -54,6 +55,15 @@ export function StepShell({
                 />
               ))}
             </ol>
+            {/* A way out. Without it the first step was a dead end: a user who
+                landed here by mistake -- or who only wanted to add a rival --
+                could finish the flow or close the tab, nothing else. */}
+            <Link
+              href="/"
+              className="rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors duration-150 ease-out hover:bg-bg-inset hover:text-foreground"
+            >
+              Back to Drishti
+            </Link>
           </div>
           <div className="flex flex-col gap-2">
             <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary,#98A2B3)]">

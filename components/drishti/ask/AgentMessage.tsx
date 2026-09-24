@@ -31,6 +31,8 @@ import { persistedTrendsResultsOf, type ToolCallCardView } from "./ask-model";
 import { descriptiveToolLabel, toolTitle } from "./ToolCallCard";
 import { FollowUpList } from "./FollowUpList";
 import { AnswerCharts } from "./AnswerCharts";
+import { A2UISurface } from "../a2ui/A2UISurface";
+import { splitA2UIBlock, surfaceResults } from "../a2ui/protocol";
 import { ThoughtLine, type ThoughtStep, type ThoughtStepStatus } from "./ThoughtLine";
 import { TrackBrandChip } from "./TrackBrandChip";
 import { AddBrandConfirmation, addBrandProposalOf } from "./AddBrandConfirmation";
@@ -71,7 +73,8 @@ export function AgentMessage({
   persistedCards?: ToolCallCardView[];
   persistedDurationMs?: number | null;
 }) {
-  const text = textOf(message as unknown as { parts?: unknown });
+  const messageText = textOf(message as unknown as { parts?: unknown });
+  const { text, a2ui } = splitA2UIBlock(messageText);
 
   if (message.role === "user") {
     return (
@@ -94,7 +97,7 @@ export function AgentMessage({
   const untrackedBrand = untrackedBrandMentionOf(message as unknown as { parts?: unknown });
   const sourceRows = sourceRowsOf([message as unknown as { parts?: unknown }], claimsById);
   const followUps = followUpsOf([message as unknown as { parts?: unknown }]);
-  const isRunning = text === "";
+  const isRunning = messageText === "";
   const isLive = streamedThisSession;
 
   const steps: ThoughtStep[] = cards.map((card) => ({
@@ -181,14 +184,14 @@ export function AgentMessage({
           );
         })}
 
-        {text !== "" ? (
+        {messageText !== "" ? (
           <UnavailableBlock
             failedSteps={failedCards}
             noGroundedEvidence={provenance?.mode === "template"}
           />
         ) : null}
 
-        {text !== "" ? (
+        {messageText !== "" ? (
           <AnswerMarkdown
             text={text}
             citationSources={citationSources}
@@ -197,7 +200,14 @@ export function AgentMessage({
           />
         ) : null}
 
-        {text !== "" ? (
+        {a2ui !== null ? (
+          <A2UISurface
+            text={a2ui}
+            results={surfaceResults(message as unknown as { parts?: unknown }, cards)}
+          />
+        ) : null}
+
+        {messageText !== "" ? (
           <div className="flex flex-wrap items-center justify-between gap-2">
             <AnswerSourcesPanel sources={sourceRows} claimsById={claimsById} question={question} threadKey={threadKey} />
             <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
