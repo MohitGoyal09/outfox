@@ -6,6 +6,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatStamp } from "../../cohorts/cohorts-model";
+import { hookName, stageName } from "@/components/drishti/labels";
 import type { RunHistoryRow } from "../brand-model";
 
 function statusBadge(status: string) {
@@ -24,7 +25,7 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <History className="size-4 text-accent" />
-          Run history
+          Check history
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -38,9 +39,9 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
                     {statusBadge(row.status)}
                   </div>
                   <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
-                    <span>{row.claimCount} claims</span>
-                    <span>{row.topHook ? `Top hook: ${row.topHook.replaceAll("_", " ")}` : "No hook tags"}</span>
-                    <span>{row.topFunnel ? `Top funnel: ${row.topFunnel.replaceAll("_", " ")}` : "No funnel tags"}</span>
+                    <span>{row.claimCount} findings</span>
+                    <span>{row.topHook ? `Top hook: ${hookName(row.topHook)}` : "No hook tags"}</span>
+                    <span>{row.topFunnel ? `Top funnel: ${stageName(row.topFunnel)}` : "No funnel tags"}</span>
                     {row.llmTokenCount !== null || row.llmCostUsd !== null ? (
                       <span className="font-mono">
                         {row.llmTokenCount !== null ? `${row.llmTokenCount.toLocaleString()} tokens` : ""}
@@ -57,7 +58,7 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">No runs stored for this brand yet.</div>
+          <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">No checks yet for this brand.</div>
         )}
       </CardContent>
     </Card>

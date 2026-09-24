@@ -151,7 +151,7 @@ export function AgentChat({
             })
           )}
           {provenance?.mode === "template" ? (
-            <Chip tone="warn" label="Model unavailable — showing raw claims" />
+            <Chip tone="warn" label="Model unavailable — showing raw findings" />
           ) : null}
           {error ? (
             <div className="rounded-[8px] border border-danger p-3 text-sm text-danger">

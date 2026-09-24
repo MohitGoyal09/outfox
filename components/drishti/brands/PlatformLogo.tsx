@@ -1,6 +1,6 @@
 import { Newspaper, TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { engineLabel } from "./brand-model";
+import { sourceName } from "@/components/drishti/labels";
 
 export function PlatformLogo({
   engine,
@@ -55,7 +55,7 @@ export function EngineTag({ engine, className }: { engine: string; className?: s
       )}
     >
       <PlatformLogo engine={engine} className="size-3" />
-      {engineLabel(engine)}
+      {sourceName(engine)}
     </span>
   );
 }

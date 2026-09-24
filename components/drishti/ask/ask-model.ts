@@ -3,6 +3,7 @@ import type { Coverage } from "@/lib/agentTypes";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import type { TrendsChartResult } from "@/components/drishti/charts";
 import type { Tone } from "../tokens";
+import { sourceName } from "@/components/drishti/labels";
 import {
   findGoogleNewsRawItem,
   findYoutubeRawVideo,
@@ -97,13 +98,6 @@ export type ToolCallCardView = {
   seq: number;
 };
 
-const PAYLOAD_COUNT_FIELDS: { key: string; noun: string }[] = [
-  { key: "resultCount", noun: "result" },
-  { key: "claimCount", noun: "claim" },
-  { key: "brandCount", noun: "brand" },
-  { key: "tokens", noun: "token" },
-];
-
 function phrasedResultSummary(payload: Record<string, unknown>): string | null {
   return null;
 }
@@ -187,30 +181,7 @@ type AnswerEventPayload = {
   durationMs?: number;
 };
 
-const ENGINE_LABELS: Record<string, string> = {
-  google: "Google Search",
-  google_news: "Google News",
-  youtube_video: "YouTube",
-  google_trends: "Google Trends",
-  llm_tag: "content tags",
-};
-
-export function engineLabel(engine: string): string {
-  return ENGINE_LABELS[engine] ?? engine.replaceAll("_", " ");
-}
-
-export function buildFollowUpSuggestions(
-  brandNames: string[],
-  citedEngines: string[],
-): string[] {
-  if (brandNames.length >= 2) {
-    suggestions.push(`How does ${brandNames[0]} compare to ${brandNames[1]} here?`);
-  }
-  for (const engine of citedEngines.slice(0, 1)) {
-    suggestions.push(`Show more evidence from ${engineLabel(engine)}.`);
-  }
-  return [...new Set(suggestions)].slice(0, 3);
-}
+export const engineLabel = sourceName;
 
 export function buildTagIndex(claims: Doc<"claims">[]): Map<string, AskTagView> {
   for (const claim of claims) {
@@ -247,5 +218,17 @@ export function citationViews(
 ): CitationCardView[] {
   return citations.map((id, position) => {
     const label = `#${position + 1}`;
+    if (claim === undefined) {
+      return {
+        id,
+        label,
+        href: null,
+        brandName: "",
+        sourceEngine: "",
+        displayText: "This citation isn't part of what's currently in view.",
+        thumbnailUrl: null,
+        tag: null,
+      };
+    }
   });
 }

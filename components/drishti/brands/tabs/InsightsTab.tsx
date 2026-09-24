@@ -14,7 +14,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "../../EmptyState";
 import { HOOK_COLOR, iconProps, type HookType } from "../../tokens";
+import { hookName } from "@/components/drishti/labels";
 import { countClaimsByEngine, hookTypeFrequency, signalClaims, type ClaimDoc } from "../brand-model";
+import { displayClaimText } from "../format";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 
 
@@ -77,9 +79,9 @@ function InsightsStatRow({ latestClaims, tags }: { latestClaims: ClaimDoc[]; tag
   const signalCount = useMemo(() => signalClaims(latestClaims).length, [latestClaims]);
   const engineCount = useMemo(() => countClaimsByEngine(latestClaims).length, [latestClaims]);
   const stats = [
-    { label: "Evidence signals", value: signalCount, icon: BarChart3 },
+    { label: "Findings", value: signalCount, icon: BarChart3 },
     { label: "Tagged findings", value: tags.length, icon: Tag },
-    { label: "Engines represented", value: engineCount, icon: Layers },
+    { label: "Sources represented", value: engineCount, icon: Layers },
   ];
   return (
     <Card className="shadow-none">
@@ -130,13 +132,13 @@ function DnaSectionCard({
             size="sm"
             icon={<Icon {...iconProps} size={16} />}
             title="Not enough evidence yet."
-            description={templateMode ? "This run fell back to the template read, which only covers positioning. A refresh with the model available will fill this in once there's real tagged evidence." : emptyDescription}
+            description={templateMode ? "The last read fell back to the template, which only covers positioning. A refresh with the model available will fill this in once there's real tagged evidence." : emptyDescription}
           />
         ) : (
           <ul className="space-y-2.5">
             {sentences.map((sentence, index) => (
               <li key={index}>
-                <p className="text-[13px] leading-5 text-foreground">{sentence.text}</p>
+                <p className="text-[13px] leading-5 text-foreground">{displayClaimText(sentence.text)}</p>
                 <CitationLinks citedClaimIds={sentence.citedClaimIds} claimsById={claimsById} />
               </li>
             ))}
@@ -190,18 +192,18 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
           <EmptyState
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
-            title="No previous run to compare."
-            description="Only one run is stored for this brand. Change needs a second run — never a guessed baseline."
+            title="No earlier check to compare."
+            description="Only one check exists for this brand yet. Change needs a second check — never a guessed baseline."
           />
         ) : movers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No measurable change in hook mix since the previous run.</p>
+          <p className="text-sm text-muted-foreground">No measurable change in hook mix since the earlier check.</p>
         ) : (
           <ul className="space-y-2">
             {movers.map((row) => (
               <li key={row.hook} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[12px]">
                 <span className="flex min-w-0 items-center gap-2 capitalize">
                   <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.hook as HookType] }} />
-                  <span className="truncate">{row.hook.replaceAll("_", " ")}</span>
+                  <span className="truncate">{hookName(row.hook)}</span>
                 </span>
                 <span className="font-mono tabular-nums text-muted-foreground">
                   {row.before} → {row.after}
@@ -307,12 +309,12 @@ export function InsightsTab({
                   size="sm"
                   icon={<Sparkles {...iconProps} size={16} />}
                   title="Not enough evidence yet."
-                  description="This brand doesn't have enough tagged theme, value-proposition, or hook-type claims yet for a real positioning pattern."
+                  description="This brand doesn't have enough tagged theme, value-proposition, or hook-type findings yet for a real positioning pattern."
                 />
               ) : (
                 <>
                   <div>
-                    <p className="text-lg font-semibold leading-6 tracking-[-0.01em] text-foreground">{buckets.positioning[0].text}</p>
+                    <p className="text-lg font-semibold leading-6 tracking-[-0.01em] text-foreground">{displayClaimText(buckets.positioning[0].text)}</p>
                     <CitationLinks citedClaimIds={buckets.positioning[0].citedClaimIds} claimsById={claimsById} />
                   </div>
                   {buckets.positioning.length > 1 ? (
@@ -321,7 +323,7 @@ export function InsightsTab({
                         <li key={index} className="flex gap-2.5">
                           <span className="mt-0.5 font-mono text-[11px] text-muted-foreground">{index + 1}</span>
                           <div className="min-w-0">
-                            <p className="text-[13px] leading-5 text-foreground">{sentence.text}</p>
+                            <p className="text-[13px] leading-5 text-foreground">{displayClaimText(sentence.text)}</p>
                             <CitationLinks citedClaimIds={sentence.citedClaimIds} claimsById={claimsById} />
                           </div>
                         </li>
@@ -339,7 +341,7 @@ export function InsightsTab({
               title="Who it's talking to"
               sentences={buckets.audience}
               claimsById={claimsById}
-              emptyDescription="No claim carries a real audienceHint yet — this fills in once an enriched, tagged run captures who the content targets."
+              emptyDescription="No finding carries a real audience hint yet — this fills in once an enriched, tagged check captures who the content targets."
               templateMode={templateMode}
             />
             <DnaSectionCard
@@ -363,8 +365,9 @@ export function InsightsTab({
           <RankedCatalogChart
             title="Top hooks"
             rows={hookRows}
+            formatLabel={hookName}
             emptyTitle="No tagged hooks yet."
-            emptyDescription="Ranks the real hookType an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+            emptyDescription="Ranks the real hook type an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
           />
         </div>
       </div>
@@ -378,7 +381,7 @@ export function InsightsTab({
               return (
                 <li key={String(entry._id)} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
                   <span className="shrink-0 text-muted-foreground">{relativeTime(entry.generatedAt, now)}</span>
-                  <span className="min-w-0 truncate text-foreground">{entryPositioning[0]?.text ?? "—"}</span>
+                  <span className="min-w-0 truncate text-foreground">{entryPositioning[0] ? displayClaimText(entryPositioning[0].text) : "—"}</span>
                 </li>
               );
             })}

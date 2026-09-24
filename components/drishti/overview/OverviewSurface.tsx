@@ -4,6 +4,7 @@ import { useQuery } from "convex/react";
 import { ArrowUpRight, Radar, Search } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import { EmptyState, Panel, StatReadout, iconProps } from "@/components/drishti";
 import { useAllRuns } from "@/components/drishti/cohorts/useAllRuns";
@@ -14,17 +15,20 @@ import { NeedsAttention } from "./NeedsAttention";
 import { NewestEvidence } from "./NewestEvidence";
 import { OverviewErrorBoundary } from "./OverviewErrorBoundary";
 import { PickUpWhereYouLeftOff } from "./PickUpWhereYouLeftOff";
+import { WhatChanged } from "./WhatChanged";
 import {
   brandCoverage,
   composeEmerging,
   composeNeedsAttention,
   composeNewestEvidence,
+  composeWhatChanged,
   recentBoards,
   recentThreads,
   type BrandLike,
   type BrandNameById,
   type FeedClaim,
   type RunLike,
+  type RunSourceCount,
 } from "./overview-model";
 
 export function OverviewSurface() {
@@ -121,6 +125,41 @@ function OverviewBody() {
   const evidenceFeed = useMemo(() => composeNewestEvidence(claims, brandNameById), [claims, brandNameById]);
   const emerging = useMemo(() => composeEmerging(claims, coverage, brandNameById), [claims, coverage, brandNameById]);
 
+  const compareRunIds = useMemo(() => {
+    const ids = new Set<string>();
+    for (const brand of brandLikes) {
+      const cov = coverage.get(brand.id);
+      if (cov?.lastFinishedRun && cov.previousFinishedRun) {
+        ids.add(cov.lastFinishedRun.id);
+        ids.add(cov.previousFinishedRun.id);
+      }
+    }
+    return [...ids];
+  }, [brandLikes, coverage]);
+
+  const sourceCountsQuery = useQuery(
+    api.claims.runSourceCounts,
+    compareRunIds.length > 0 ? { runIds: compareRunIds as Id<"runs">[] } : "skip",
+  );
+  const sourceCountsLoading = compareRunIds.length > 0 && sourceCountsQuery === undefined;
+  const sourceCounts: RunSourceCount[] = useMemo(
+    () =>
+      (sourceCountsQuery ?? []).map((row) => ({
+        runId: String(row.runId),
+        brandId: String(row.brandId),
+        sourceEngine: row.sourceEngine,
+        count: row.count,
+      })),
+    [sourceCountsQuery],
+  );
+  const whatChangedFeed = useMemo(
+    () =>
+      panelsLoading || sourceCountsLoading
+        ? null
+        : composeWhatChanged(brandLikes, runLikes, sourceCounts, brandNameById, nowMs),
+    [panelsLoading, sourceCountsLoading, brandLikes, runLikes, sourceCounts, brandNameById, nowMs],
+  );
+
   const threads = useMemo(() => recentThreads(threadsQuery ?? []), [threadsQuery]);
   const boards = useMemo(
     () => recentBoards((boardsQuery ?? []).map((board) => ({ id: String(board._id), name: board.name, createdAt: board.createdAt }))),
@@ -136,13 +175,13 @@ function OverviewBody() {
         <div className="space-y-2">
           <h1 className="type-display text-fg">{`Good ${greeting}.`}</h1>
           <p className="type-body max-w-2xl text-fg-secondary">
-            A grounded read of the latest stored evidence across your tracked brands.
+            A grounded read of the newest evidence across your tracked brands.
           </p>
         </div>
         <div className="flex flex-wrap items-center gap-4">
           <StatReadout label="Tracked brands" value={brands.length} layout="inline" loading={brandsLoading} />
           <StatReadout
-            label="Stored claims"
+            label="Findings"
             value={totalClaimCount}
             layout="inline"
             loading={brandsLoading || feedLoading}
@@ -170,7 +209,13 @@ function OverviewBody() {
 
       <NeedsAttention rows={attentionRows} />
 
-      {/* Section 3 — Newest Evidence, the part that is alive every day, plus
+      {/* Section 3 — What changed since your last check. A better lead than
+          Newest Evidence, but Needs Attention still comes first. Absent
+          while loading and absent entirely if no brand has two finished
+          checks to diff. */}
+      <WhatChanged feed={whatChangedFeed} />
+
+      {/* Section 4 — Newest Evidence, the part that is alive every day, plus
           the pooled pattern across the brands that do have data beside it. */}
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-8">
@@ -196,7 +241,7 @@ function Onboarding() {
         description="Add a brand, then Drishti builds a source-backed profile across Search, YouTube, Trends, and Ads Transparency where data is available."
         action={
           <>
-            <ActionLink href="/brands" variant="primary">
+            <ActionLink href="/onboarding" variant="primary">
               Add your first brand
             </ActionLink>
             <ActionLink

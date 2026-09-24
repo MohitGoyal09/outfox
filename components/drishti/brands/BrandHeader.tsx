@@ -60,7 +60,7 @@ export function BrandHeader({
           <FreshnessStamp
             at={latestAt ?? brand.lastRefreshedAt}
             {...(latestStatus !== null
-              ? { status: latestStatus, caption: "latest run" }
+              ? { status: latestStatus, caption: "latest check" }
               : { caption: "last refreshed" })}
           />
         </div>

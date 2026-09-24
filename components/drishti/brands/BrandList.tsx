@@ -14,7 +14,8 @@ import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import type { BrandDoc } from "./brand-model";
 import { formatStamp, profileStatusLabel } from "../cohorts/cohorts-model";
-import { engineLabel, FETCH_ENGINES } from "./brand-model";
+import { FETCH_ENGINES } from "./brand-model";
+import { sourceName } from "@/components/drishti/labels";
 import { BrandMark } from "./BrandMark";
 
 export type BrandListProps = {
@@ -41,11 +42,11 @@ function BrandRow({ brand }: { brand: BrandDoc }) {
               <p className="mt-1 truncate text-xs text-muted-foreground">{brand.domain} · {brand.vertical}</p>
             </div>
           </div>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-xs sm:grid-cols-1"><span className="text-muted-foreground">Evidence <strong className="font-mono font-medium text-foreground">{claimCount ?? "—"}</strong></span><span className="text-muted-foreground">Latest <strong className="font-mono font-medium text-foreground">{latestRun ? formatStamp(latestRun.requestedAt).split(" · ")[0] : "Not run"}</strong></span></div>
+          <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-xs sm:grid-cols-1"><span className="text-muted-foreground">Evidence <strong className="font-mono font-medium text-foreground">{claimCount ?? "—"}</strong></span><span className="text-muted-foreground">Latest <strong className="font-mono font-medium text-foreground">{latestRun ? formatStamp(latestRun.requestedAt).split(" · ")[0] : "Not checked yet"}</strong></span></div>
           <div className="flex flex-wrap items-center gap-2 sm:justify-end"><Badge variant={brand.profileStatus === "ready" ? "secondary" : "outline"} className={cn("gap-1.5 rounded-full px-2.5 font-medium", brand.profileStatus === "ready" && "bg-emerald-50 text-emerald-700 hover:bg-emerald-50")}>{brand.profileStatus === "ready" ? <CircleCheck className="size-3" /> : <Clock3 className="size-3" />}{profileStatusLabel(brand.profileStatus)}</Badge><span className="hidden font-mono text-[10px] text-muted-foreground lg:inline">{brand.lastRefreshedAt ? formatStamp(brand.lastRefreshedAt).split(" · ")[0] : "never refreshed"}</span></div>
         </CardContent>
       </Link>
-      <div className="flex items-center gap-1 border-t border-border/70 px-5 py-2.5 text-[10px] text-muted-foreground"><span className="mr-2 uppercase tracking-[0.14em]">Coverage</span>{FETCH_ENGINES.map((engine) => <span key={engine} title={engineLabel(engine)} className={cn("size-1.5 rounded-full", latestRun ? "bg-emerald-500" : "bg-muted-foreground/30")} />)}<span className="ml-auto font-mono">{brand.createdAt ? `Added ${formatStamp(brand.createdAt).split(" · ")[0]}` : ""}</span></div>
+      <div className="flex items-center gap-1 border-t border-border/70 px-5 py-2.5 text-[10px] text-muted-foreground"><span className="mr-2 uppercase tracking-[0.14em]">Checked</span>{FETCH_ENGINES.map((engine) => <span key={engine} title={sourceName(engine)} className={cn("size-1.5 rounded-full", latestRun ? "bg-emerald-500" : "bg-muted-foreground/30")} />)}<span className="ml-auto font-mono">{brand.createdAt ? `Added ${formatStamp(brand.createdAt).split(" · ")[0]}` : ""}</span></div>
     </Card>
   );
 }

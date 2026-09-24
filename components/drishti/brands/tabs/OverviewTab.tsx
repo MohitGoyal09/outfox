@@ -2,7 +2,8 @@
 
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
-import { engineLabel, FETCH_ENGINES, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
+import { checkedStateLabel, sourceName } from "@/components/drishti/labels";
+import { FETCH_ENGINES, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
 import { sourceAccent } from "../EvidenceCard";
@@ -17,7 +18,7 @@ function EvidenceMix({ claims, previousClaims }: { claims: ClaimDoc[]; previousC
       FETCH_ENGINES.map((engine) => {
         const count = claims.filter((claim) => claim.sourceEngine === engine).length;
         const delta = previousClaims ? count - previousClaims.filter((claim) => claim.sourceEngine === engine).length : null;
-        return { engine, label: engineLabel(engine).replace("Google ", ""), count, delta };
+        return { engine, label: sourceName(engine).replace("Google ", ""), count, delta };
       }).filter((row) => row.count > 0),
     [claims, previousClaims],
   );
@@ -66,7 +67,7 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
               />
               {row.label}
             </span>
-            <span className="font-mono tabular-nums text-muted-foreground">{row.status === "ok" ? Intl.NumberFormat("en-US").format(count) : row.status}</span>
+            <span className="font-mono tabular-nums text-muted-foreground">{row.status === "ok" ? Intl.NumberFormat("en-US").format(count) : checkedStateLabel(row.status)}</span>
             <DeltaTag delta={delta} />
           </div>
         );
@@ -114,7 +115,7 @@ export function OverviewTab({
         <SummaryPanel title="Evidence mix">
           <EvidenceMix claims={latestClaims} previousClaims={previousClaims} />
         </SummaryPanel>
-        <SummaryPanel title="Engine coverage">
+        <SummaryPanel title="What we checked">
           <EngineCoverageList rows={coverage} latestClaims={latestClaims} previousClaims={previousClaims} />
         </SummaryPanel>
         <SummaryPanel title="Top hooks" subtitle={fallbackLabel}>
@@ -145,15 +146,15 @@ export function OverviewTab({
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
               <h2 className="text-base font-semibold tracking-[-0.02em]">{Intl.NumberFormat("en-US").format(count)} evidence cards</h2>
-              {/* Reconciles the header's broader "N evidence signals" badge (BrandProfile.tsx,
-                  counts every stored signal claim, including pure-count metrics like view/like
+              {/* Reconciles the header's broader "N findings" badge (BrandProfile.tsx,
+                  counts every real signal, including pure-count metrics like view/like
                   counts that never render as their own card) against this narrower count (only
-                  claims with something to actually read — see brand-model.ts's isContentClaim).
+                  findings with something to actually read — see brand-model.ts's isContentClaim).
                   Two real, differently-scoped numbers, both labelled, instead of one page stating
                   two different figures as if they measured the same thing. */}
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Browsable claims below — the header&apos;s evidence-signal count also includes measured counts (views, likes, rank) shown in the panels above, not as standalone cards.</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Browsable findings below — the header&apos;s findings count also includes measured values (views, likes, rank) shown in the panels above, not as standalone cards.</p>
             </div>
-            <span className="text-xs text-muted-foreground">Stored claims from {shortDate(latestRunAt)}</span>
+            <span className="text-xs text-muted-foreground">Findings as of {shortDate(latestRunAt)}</span>
           </div>
         )}
         tabLabel="Overview"

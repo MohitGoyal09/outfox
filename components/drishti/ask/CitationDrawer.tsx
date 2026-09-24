@@ -10,6 +10,7 @@ import {
   SheetTitle,
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { measureName } from "@/components/drishti/labels";
 import type { Id } from "@/convex/_generated/dataModel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import type { BoardItemContext } from "../boards/boards-model";
@@ -58,8 +59,8 @@ export function CitationDrawer({
           </div>
           <SheetDescription>
             {claim !== undefined
-              ? "The stored claim this citation points at."
-              : "This claim is not in the current scope's view."}
+              ? "The finding this citation points to."
+              : "This citation isn't part of what's currently in view."}
           </SheetDescription>
         </SheetHeader>
         {claim !== undefined ? (
@@ -68,7 +69,7 @@ export function CitationDrawer({
 
             {!isStoredClaim ? (
               <p className="text-xs text-fg-tertiary">
-                This source was read live and was never stored as a claim, so it can&rsquo;t be added to a board yet.
+                This source was read live and was never stored as a finding, so it can&rsquo;t be added to a board yet.
               </p>
             ) : null}
 
@@ -77,7 +78,7 @@ export function CitationDrawer({
                 <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Value</span>
                 <span className="font-mono tabular-nums text-sm text-fg">
                   {claim.value}
-                  {claim.unit !== undefined ? ` ${claim.unit}` : ""}
+                  {claim.unit !== undefined ? ` ${measureName(claim.unit)}` : ""}
                 </span>
               </div>
             ) : null}

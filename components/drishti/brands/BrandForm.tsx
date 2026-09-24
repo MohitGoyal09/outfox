@@ -235,7 +235,7 @@ export function BrandForm({
           </h3>
           <p className="mt-1 max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#667085)]">
             Paste a URL, type a handle, or search a name. The domain it resolves
-            to is shown before anything is stored.
+            to is shown before anything is saved.
           </p>
         </div>
       </div>
@@ -436,8 +436,8 @@ export function BrandForm({
         </div>
         <p className="max-w-[68ch] text-[12px] leading-[1.45] text-[var(--text-secondary,#667085)]">
           {path === "shared"
-            ? "Same path the agent uses. Stores the profile ready to compare."
-            : "Stores a pending record the next run hydrates. Both paths write the same brands table."}
+            ? "Same path the agent uses. Saves the profile ready to compare."
+            : "Saves a pending record the next check fills in. Both paths create the same kind of record."}
         </p>
       </fieldset>
 

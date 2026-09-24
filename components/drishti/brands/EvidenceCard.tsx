@@ -7,8 +7,9 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
-import { adCreativeWindow, engineLabel, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
+import { adCreativeWindow, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
 import { displayClaimText, periodWindow, shortDate } from "./format";
+import { hookName, measureName, sourceName } from "@/components/drishti/labels";
 
 export const sourceAccent: Record<string, string> = {
   google: "#0f766e",
@@ -45,7 +46,7 @@ export function EvidenceCard({
   raw?: GoogleOrganicRawItem | null;
   pageLabel?: string;
 }) {
-  const source = engineLabel(claim.sourceEngine).replace(" Search", "");
+  const source = sourceName(claim.sourceEngine).replace(" Search", "");
   const accent = sourceAccent[claim.sourceEngine] ?? "#0f766e";
   const lane = LANE_STYLE[claim.sourceEngine] ?? LANE_STYLE.google;
   const cardBg = claim.sourceEngine === "google_trends" ? "bg-blue-50/40" : "bg-card";
@@ -122,12 +123,19 @@ export function EvidenceCard({
             {runWindowLabel ? <span className="font-mono text-[11px] tabular-nums text-muted-foreground">Ran {runWindowLabel}</span> : null}
           </div>
         ) : claim.metric ? (
-          <p className="mt-2 font-mono text-[11px] text-muted-foreground">{claim.metric}{claim.value !== undefined ? ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}</p>
+          <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+            {measureName(claim.metric)}
+            {claim.value !== undefined
+              ? claim.unit === "rank"
+                ? ` · ranked #${String(claim.value)}`
+                : ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}`
+              : ""}
+          </p>
         ) : null}
       </div>
       <div className="mt-4 flex items-center gap-2 border-t border-border/70 pt-3">
-        <Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{claim.hookType?.replaceAll("_", " ") ?? "Signal"}</Badge>
-        <Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{claim.confidence ?? "Stored"}</Badge>
+        <Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{claim.hookType ? hookName(claim.hookType) : "Signal"}</Badge>
+        <Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{claim.confidence ?? "Unrated"}</Badge>
         <Button asChild variant="outline" size="sm" className="ml-auto h-7 rounded-md px-2 text-[11px]"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button>
       </div>
     </article>

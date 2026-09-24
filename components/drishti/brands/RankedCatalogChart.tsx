@@ -8,8 +8,8 @@ import { EmptyState } from "../EmptyState";
 import { iconProps } from "../tokens";
 import type { LabeledCount } from "./brand-model";
 
-export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription, colorFor }: { title: string; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string }) {
-  const top = rows.slice(0, 8);
+export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription, colorFor, formatLabel }: { title: string; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string; /** Display-only transform for a raw stored label (e.g. a fixed hookType id) — `colorFor`/the chart's own grouping still key off the raw `label`, only the rendered text changes. */ formatLabel?: (label: string) => string }) {
+  const top = rows.slice(0, 8).map((row) => ({ ...row, displayLabel: formatLabel ? formatLabel(row.label) : row.label }));
   const chartConfig = { count: { label: "Times assigned", color: "#0f766e" } } satisfies ChartConfig;
   return (
     <Card className="shadow-none">
@@ -25,7 +25,7 @@ export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription, 
             <BarChart accessibilityLayer data={top} layout="vertical" margin={{ left: 8, right: 16, top: 4, bottom: 4 }}>
               <CartesianGrid horizontal={false} />
               <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-              <YAxis dataKey="label" type="category" width={160} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
+              <YAxis dataKey="displayLabel" type="category" width={160} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent hideLabel />} />
               <Bar dataKey="count" fill="var(--color-count)" radius={3} barSize={16}>
                 {colorFor ? top.map((row) => <Cell key={row.label} fill={colorFor(row.label)} />) : null}

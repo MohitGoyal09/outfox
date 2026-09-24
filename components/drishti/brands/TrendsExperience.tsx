@@ -73,10 +73,10 @@ function EmptyTrend({
     <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-border bg-muted/20 px-6 text-center">
       <div>
         <PlatformLogo engine="google_trends" className="mx-auto size-7" />
-        <p className="mt-4 text-sm font-medium">No timeline stored for {brandName}</p>
+        <p className="mt-4 text-sm font-medium">No timeline yet for {brandName}</p>
         <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">
           {message ??
-            "Run a Google Trends refresh to store dated interest points. The average score alone cannot produce a chart."}
+            "Refreshing Google Trends captures dated interest points. The average score alone cannot produce a chart."}
         </p>
         {hideAction ? null : (
           <Button
@@ -91,7 +91,7 @@ function EmptyTrend({
             ) : (
               <TrendingUp className="size-3.5" />
             )}
-            Run refresh
+            Refresh Trends
           </Button>
         )}
       </div>
@@ -154,9 +154,9 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
     }
   }
   return <section className="space-y-4" aria-label="Google Trends intelligence">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><PlatformLogo engine="google_trends" className="size-4" /><h2 className="text-base font-semibold">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest stored Google Trends run{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2 rounded-lg", noStoredData && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" />Refresh {regionLabel(region)}</Button></div>
-    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion} pending={noStoredData}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" />Geography switches instantly between already-stored regions. Date range filters the stored chart locally.</span></div>
-    {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Run a live Google Trends fetch?</p><p className="mt-1 text-xs text-muted-foreground">This makes one live SerpApi Google Trends call for {regionLabel(region)} and stores it for next time. It does not touch any other evidence engine, and costs far less than a full brand refresh.</p>{error ? <p role="alert" className="mt-2 text-xs text-red-600">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Run refresh</Button></div></div> : null}
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><PlatformLogo engine="google_trends" className="size-4" /><h2 className="text-base font-semibold">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest Google Trends check{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2 rounded-lg", noStoredData && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" />Refresh {regionLabel(region)}</Button></div>
+    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion} pending={noStoredData}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" />Geography switches instantly between regions we&apos;ve already checked. Date range filters the chart locally.</span></div>
+    {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Fetch live Google Trends data?</p><p className="mt-1 text-xs text-muted-foreground">This makes one live SerpApi Google Trends call for {regionLabel(region)} and saves it for next time. It does not touch any other evidence source, and costs far less than a full brand refresh.</p>{error ? <p role="alert" className="mt-2 text-xs text-red-600">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Refresh now</Button></div></div> : null}
     {regionLoading ? (
       <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-border bg-muted/20">
         <Loader2 className="size-5 animate-spin text-muted-foreground" />
@@ -164,7 +164,7 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
     ) : filtered.length < 2 ? (
       <EmptyTrend
         brandName={brandName}
-        message={noStoredData ? `No stored Google Trends data for ${regionLabel(region)} yet.` : undefined}
+        message={noStoredData ? `No Google Trends data yet for ${regionLabel(region)}.` : undefined}
         onRefresh={() => setConfirming(true)}
         refreshing={refreshing}
         hideAction={confirming}
@@ -176,7 +176,7 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
             <p className={cn(LABEL_CLASS, "text-muted-foreground")}>
               {rows.names.length > 1 ? "Within-chunk comparison" : "Brand interest"}
             </p>
-            <p className="mt-1 text-xs text-muted-foreground">Google Trends scores are relative within this query chunk, not search volume.</p>
+            <p className="mt-1 text-xs text-muted-foreground">Google Trends scores are relative within this comparison group, not search volume.</p>
           </div>
           <div className="grid grid-cols-2 border-t border-border sm:border-l sm:border-t-0">
             <div className="px-4 py-3">
@@ -216,9 +216,9 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
     <div aria-live="polite" className={cn("rounded-lg border px-4 py-3 text-xs leading-5", noStoredData ? "border-accent/30 bg-accent/[0.05] text-foreground" : "border-border bg-muted/30 text-muted-foreground")}>
       <MapIcon className="mr-1 inline size-3.5" />
       {noStoredData
-        ? `No live Google Trends fetch has been run for ${regionLabel(region)} yet. Refresh ${regionLabel(region)} to store one.`
-        : `The chart shows stored ${regionLabel(region)} data${activeSnapshot?.fetchedAt ? `, captured ${formatStamp(activeSnapshot.fetchedAt)}` : ""}. Comparison lines appear only when Google returned the same dated query chunk.`}
+        ? `We haven't checked Google Trends for ${regionLabel(region)} yet. Refresh ${regionLabel(region)} to get one.`
+        : `The chart shows ${regionLabel(region)} data${activeSnapshot?.fetchedAt ? `, captured ${formatStamp(activeSnapshot.fetchedAt)}` : ""}. Comparison lines appear only when Google returned the same dated comparison group.`}
     </div>
-    {claims.length > 0 ? <p className="text-[11px] text-muted-foreground">{claims.filter((claim) => claim.metric === "google_trends_avg_interest").length} stored trend claims support this view.</p> : null}
+    {claims.length > 0 ? <p className="text-[11px] text-muted-foreground">{claims.filter((claim) => claim.metric === "google_trends_avg_interest").length} trend findings support this view.</p> : null}
   </section>;
 }

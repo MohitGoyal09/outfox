@@ -5,6 +5,7 @@ import { AlertTriangle, HelpCircle, Search } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "../../EmptyState";
 import { iconProps } from "../../tokens";
+import { stageName } from "@/components/drishti/labels";
 import {
   funnelCoverageGaps,
   funnelDistribution,
@@ -83,7 +84,7 @@ function FunnelCoveragePanel({ items }: { items: ReturnType<typeof funnelDistrib
         <FunnelPanel items={items} />
         {gaps.length > 0 ? (
           <p className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
-            No tagged evidence yet for: <span className="font-medium text-foreground">{gaps.map((stage) => stage.replaceAll("_", " ")).join(", ")}</span>.
+            No tagged evidence yet for: <span className="font-medium text-foreground">{gaps.map((stage) => stageName(stage)).join(", ")}</span>.
           </p>
         ) : null}
       </CardContent>
@@ -125,14 +126,14 @@ export function ProblemTab({
           title="Related questions"
           icon={<HelpCircle className="size-4 text-accent" />}
           claims={relatedQuestionClaims(filtered)}
-          emptyTitle="No related questions stored yet."
+          emptyTitle="No related questions yet."
           emptyDescription={'Google\'s "People also ask" questions for this brand fill this in once that metric ships.'}
         />
         <RelatedListPanel
           title="Related searches"
           icon={<Search className="size-4 text-accent" />}
           claims={relatedSearchClaims(filtered)}
-          emptyTitle="No related searches stored yet."
+          emptyTitle="No related searches yet."
           emptyDescription="Google's related-search suggestions for this brand fill this in once that metric ships."
         />
       </div>
@@ -143,7 +144,7 @@ export function ProblemTab({
         <EvidenceGrid
           claims={problemEvidenceClaims}
           sort={filters.sort}
-          emptyMessage="No tagged problem evidence stored yet. Real claims with a hook/funnel tag will fill this in once a tagged run completes."
+          emptyMessage="No tagged problem evidence yet. Real findings with a hook/funnel tag will fill this in once a tagged check completes."
           pageLabel={evidencePageLabel("Problem tab", filters)}
         />
       </div>

@@ -6,6 +6,7 @@ import { useReducedMotion } from "motion/react";
 import { MessageResponse } from "@/components/ai-elements/message";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { sourceName } from "@/components/drishti/labels";
 import { collapseAdjacentSameHostCitations, engineDomain } from "./agentChat-model";
 import type { SourceView } from "./agentChat-model";
 import { engineGlyph, engineHue } from "./SourcesDrawer";
@@ -68,7 +69,7 @@ function CitationChip({
     <button
       type="button"
       onClick={() => onOpenCitation(claimId)}
-      title={source !== undefined ? `${source.engine} · view the evidence behind this` : "View the evidence behind this"}
+      title={source !== undefined ? `${sourceName(source.engine)} · view the evidence behind this` : "View the evidence behind this"}
       className={cn(
         animateIn && "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200",
         CHIP_CLASS,

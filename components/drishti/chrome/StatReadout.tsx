@@ -54,7 +54,7 @@ export function StatReadout({
         "num text-xs text-fg-secondary",
         className,
       )}
-      aria-label="Searches used and last run cost"
+      aria-label="Searches used and the last check's cost"
     >
       {searches}
       <span aria-hidden className="px-1.5 text-fg-tertiary">

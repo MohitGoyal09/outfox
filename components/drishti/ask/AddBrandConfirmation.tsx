@@ -87,7 +87,7 @@ export function AddBrandConfirmation({
         ) : (
           <p className="text-sm text-muted-foreground">
             {hasDomain
-              ? "Accepting fetches this brand from the five engines and adds it to your workspace. Check the name and website are the brand you meant."
+              ? "Accepting fetches this brand from the five sources and adds it to your workspace. Check the name and website are the brand you meant."
               : "No website was found for this name, so it cannot be told apart from anything else with the same name. Accepting still adds it."}
           </p>
         )}

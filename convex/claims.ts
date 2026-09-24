@@ -101,6 +101,39 @@ export const overviewFeed = query({
   },
 });
 
+export const runSourceCounts = query({
+  args: { runIds: v.array(v.id("runs")) },
+  returns: v.array(
+    v.object({
+      runId: v.id("runs"),
+      brandId: v.id("brands"),
+      sourceEngine,
+      count: v.number(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    if (args.runIds.length > MAX_SOURCE_COUNT_RUNS) {
+      throw new ConvexError(
+        `Too many runs: ${args.runIds.length}, limit is ${MAX_SOURCE_COUNT_RUNS}`,
+      );
+    }
+    const out: Array<{
+      runId: import("./_generated/dataModel").Id<"runs">;
+      brandId: import("./_generated/dataModel").Id<"brands">;
+      sourceEngine: import("./_generated/dataModel").Doc<"claims">["sourceEngine"];
+      count: number;
+    }> = [];
+    for (const runId of args.runIds) {
+      const run = await ctx.db.get(runId);
+      if (run?.ownerId !== ownerId) continue;
+      for (const row of rows) {
+        const byEngine = counts.get(row.brandId) ?? new Map();
+        byEngine.set(row.sourceEngine, (byEngine.get(row.sourceEngine) ?? 0) + 1);
+      }
+    }
+  },
+});
+
 export const byBrandAndMetric = query({
   args: { brandId: v.id("brands"), metric: v.string() },
   returns: v.array(claimDocValidator),

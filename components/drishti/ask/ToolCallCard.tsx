@@ -29,7 +29,7 @@ export const STATUS_LABEL: Record<ToolCallCardView["status"], string> = {
 const TOOL_META: Record<string, { icon: LucideIcon; title: string }> = {
   list_brands: { icon: ListChecks, title: "Listing tracked brands" },
   resolve_brand: { icon: Compass, title: "Finding a brand" },
-  search_claims: { icon: Database, title: "Reading claims" },
+  search_claims: { icon: Database, title: "Reading findings" },
   get_claims: { icon: Database, title: "Reading stored evidence" },
   get_tags: { icon: Tag, title: "Reading content tags" },
   get_coverage: { icon: ListChecks, title: "Checking what data exists" },
@@ -39,7 +39,7 @@ const TOOL_META: Record<string, { icon: LucideIcon; title: string }> = {
   fetch_brand: { icon: RefreshCw, title: "Fetching a brand" },
   add_brand: { icon: Plus, title: "Adding a brand" },
   refresh_cohort: { icon: RefreshCw, title: "Requesting a live refresh" },
-  diff_runs: { icon: GitCompare, title: "Comparing the last two runs" },
+  diff_runs: { icon: GitCompare, title: "Comparing the last two checks" },
 };
 const DEFAULT_TOOL_META = { icon: MessageSquareText, title: "Running a step" };
 
@@ -136,7 +136,7 @@ export function ToolCallCard({ card }: { card: ToolCallCardView }) {
           {subject !== null ? <span className="text-fg-secondary"> · {subject}</span> : null}
         </p>
         <div className={cn(LABEL_CLASS, "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-fg-tertiary")}>
-          <span>{card.name}</span>
+          <span>{toolTitle(card.name)}</span>
           <span aria-hidden="true">·</span>
           <span>{STATUS_LABEL[card.status]}</span>
           {duration !== null ? (
@@ -148,7 +148,7 @@ export function ToolCallCard({ card }: { card: ToolCallCardView }) {
           {card.resultCount !== null ? (
             <>
               <span aria-hidden="true">·</span>
-              {/* Already a full phrase (e.g. "42 claims, 2 engines" or "no
+              {/* Already a full phrase (e.g. "42 findings, 2 sources" or "no
                   rows") — see `resultSummaryOfOutput`/`buildToolCallCards`,
                   never a bare count appended with a generic "result(s)". */}
               <span>{card.resultCount}</span>

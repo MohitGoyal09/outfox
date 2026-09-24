@@ -1,4 +1,5 @@
 import { cn } from "@/lib/utils";
+import { hookName, stageName } from "@/components/drishti/labels";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { Chip } from "../Chip";
 import { LABEL_CLASS } from "../tokens";
@@ -64,10 +65,10 @@ export function CitationCard({
         <div className="flex flex-col gap-1.5 border-t border-border pt-2">
           <div className="flex flex-wrap gap-1">
             <Chip value={citation.tag.hookType} scale="hook" size="sm">
-              {citation.tag.hookType.replaceAll("_", " ")}
+              {hookName(citation.tag.hookType)}
             </Chip>
             <Chip value={citation.tag.funnelStage} scale="funnel" size="sm">
-              {citation.tag.funnelStage.replaceAll("_", " ")}
+              {stageName(citation.tag.funnelStage)}
             </Chip>
           </div>
           {citation.tag.theme || citation.tag.valueProp || citation.tag.cta ? (

@@ -4,6 +4,7 @@ import { ChevronDown, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { Cell, Pie, PieChart } from "recharts";
 import { cn } from "@/lib/utils";
+import { hookName } from "@/components/drishti/labels";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, type FunnelStage, type HookType } from "../tokens";
@@ -56,7 +57,7 @@ function HookFallback({ rows, total }: { rows: DistributionItem[]; total: number
         <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }} />
         <div>
           <p className="font-mono text-2xl font-semibold leading-none tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</p>
-          <p className="mt-1 text-[11px] capitalize text-muted-foreground">{row.label.replaceAll("_", " ")}</p>
+          <p className="mt-1 text-[11px] capitalize text-muted-foreground">{hookName(row.label)}</p>
         </div>
       </div>
     );
@@ -67,7 +68,7 @@ function HookFallback({ rows, total }: { rows: DistributionItem[]; total: number
         <div key={row.label} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-[11px]">
           <span className="flex min-w-0 items-center gap-2 capitalize">
             <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }} />
-            <span className="truncate">{row.label.replaceAll("_", " ")}</span>
+            <span className="truncate">{hookName(row.label)}</span>
           </span>
           <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</span>
           <span className="font-mono text-[10px] text-muted-foreground">{total ? `${Math.round(((row.count ?? 0) / total) * 100)}%` : "—"}</span>
@@ -81,10 +82,10 @@ function HookFallback({ rows, total }: { rows: DistributionItem[]; total: number
 export function HookChart({ items }: { items: DistributionItem[] }) {
   const rows = [...items].map(hookRow).filter((row) => row.count > 0).sort((a, b) => b.count - a.count).slice(0, 9);
   const total = rows.reduce((sum, row) => sum + row.count, 0);
-  if (rows.length === 0) return <p className="text-sm text-muted-foreground">No hook tags in this run.</p>;
+  if (rows.length === 0) return <p className="text-sm text-muted-foreground">No hook tags in this check.</p>;
   if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} />;
   const chartConfig = Object.fromEntries(
-    rows.map((row) => [row.label, { label: row.label.replaceAll("_", " "), color: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }]),
+    rows.map((row) => [row.label, { label: hookName(row.label), color: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }]),
   ) satisfies ChartConfig;
   return (
     <div className="grid grid-cols-[92px_1fr] items-center gap-4">
@@ -109,7 +110,7 @@ export function HookChart({ items }: { items: DistributionItem[] }) {
           <div key={row.label} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[11px]">
             <span className="flex min-w-0 items-center gap-2 capitalize">
               <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? "#6b7280" }} />
-              <span className="truncate">{row.label.replaceAll("_", " ")}</span>
+              <span className="truncate">{hookName(row.label)}</span>
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
             <DeltaTag delta={row.delta} />
@@ -139,7 +140,7 @@ export function FunnelPanel({ items }: { items: DistributionItem[] }) {
     delta: byLabel.get(stage)?.delta ?? null,
   }));
   const total = rows.reduce((sum, row) => sum + row.count, 0);
-  if (total === 0) return <p className="text-sm text-muted-foreground">Stage tags will appear after an enriched run.</p>;
+  if (total === 0) return <p className="text-sm text-muted-foreground">Stage tags will appear after an enriched check.</p>;
   return (
     <div className="space-y-1.5" role="img" aria-label="Awareness-stage distribution, one bar per stage from a shared left baseline">
       {rows.map((row) => {

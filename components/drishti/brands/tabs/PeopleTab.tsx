@@ -62,8 +62,8 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
           <EmptyState
             size="sm"
             icon={<Trophy {...iconProps} size={16} />}
-            title="No real channel data stored yet."
-            description="Ranks real YouTube channels by real total view count once a run captures video or search evidence with a channel name."
+            title="No real channel data yet."
+            description="Ranks real YouTube channels by real total view count once a check captures video or search evidence with a channel name."
           />
         ) : (
           <ul className="space-y-2">
@@ -110,7 +110,7 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
             size="sm"
             icon={<Users {...iconProps} size={16} />}
             title="Not enough channel data yet."
-            description="Splits real view totals between the brand's own channel (matched by name) and third-party creators once video evidence with a channel name is stored."
+            description="Splits real view totals between the brand's own channel (matched by name) and third-party creators once video evidence with a channel name is available."
           />
         ) : (
           <div className="grid grid-cols-[92px_1fr] items-center gap-4">
@@ -135,7 +135,7 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
             </div>
           </div>
         )}
-        <p className="mt-3 text-[10.5px] leading-4 text-muted-foreground">&quot;Owned&quot; is a name match against the brand&apos;s own name, not a stored classification.</p>
+        <p className="mt-3 text-[10.5px] leading-4 text-muted-foreground">&quot;Owned&quot; is a name match against the brand&apos;s own name, computed here — not a category from the source data.</p>
       </CardContent>
     </Card>
   );
@@ -158,8 +158,8 @@ function BreakoutVideos({ claims, youtubeSnapshot }: { claims: ClaimDoc[]; youtu
           <EmptyState
             size="sm"
             icon={<Video {...iconProps} size={16} />}
-            title="No YouTube videos stored yet."
-            description="Ranks the brand's real stored YouTube videos by real view count, likes shown alongside where stored, once video evidence is captured."
+            title="No YouTube videos yet."
+            description="Ranks the brand's real YouTube videos by real view count, likes shown alongside where available, once video evidence is captured."
           />
         ) : (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
@@ -201,8 +201,8 @@ function PublisherListPanel({ claims }: { claims: ClaimDoc[] }) {
           <EmptyState
             size="sm"
             icon={<Newspaper {...iconProps} size={16} />}
-            title="No publisher evidence stored yet."
-            description="Ranks real Google News publisher names once that metric is stored."
+            title="No publisher evidence yet."
+            description="Ranks real Google News publisher names once that data is available."
           />
         ) : (
           <ul className="space-y-2">
@@ -265,7 +265,7 @@ export function PeopleTab({
         title="Audience hints"
         rows={audienceHintRows}
         emptyTitle="No tagged audience hints yet."
-        emptyDescription="Ranks the real audienceHint text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+        emptyDescription="Ranks the real audience-hint text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
       />
       <PublisherListPanel claims={filtered} />
       <div>
@@ -274,7 +274,7 @@ export function PeopleTab({
           claims={peopleEvidenceClaims}
           youtubeSnapshot={youtubeSnapshot}
           sort={filters.sort}
-          emptyMessage="No creator, video, or audience-hint evidence stored yet. This fills in once a run captures YouTube videos or a tagged run assigns a real audienceHint."
+          emptyMessage="No creator, video, or audience-hint evidence yet. This fills in once a check captures YouTube videos or a tagged check assigns a real audience hint."
           pageLabel={evidencePageLabel("People tab", filters)}
         />
       </div>

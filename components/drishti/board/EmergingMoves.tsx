@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "../EmptyState";
+import { hookName } from "../labels";
 import { SkeletonRows } from "../Skeleton";
 import { TONE_COLOR, VALUE_CLASS, iconProps } from "../tokens";
 import {
@@ -53,8 +54,8 @@ export function EmergingMoves({
             size="sm"
             bounded
             icon={<TrendingUp {...iconProps} size={16} />}
-            title="Emerging needs two runs for this cohort."
-            description="Change is measured against the previous run. After the next run lands, the hooks that gained or lost share appear here."
+            title="Emerging needs two checks for these brands."
+            description="Change is measured against the previous check. After the next check lands, the hooks that gained or lost share appear here."
           />
         </div>
       ) : !changed ? (
@@ -63,8 +64,8 @@ export function EmergingMoves({
             size="sm"
             bounded
             icon={<TrendingUp {...iconProps} size={16} />}
-            title="No hook share moved between the two most recent runs."
-            description="A flat result is information: the cohort held its creative mix. The next run will show any shift."
+            title="No hook share moved between the two most recent checks."
+            description="A flat result is information: these brands held their creative mix. The next check will show any shift."
           />
         </div>
       ) : (
@@ -75,7 +76,7 @@ export function EmergingMoves({
               className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2"
             >
               <span className="min-w-0 flex-1">
-                <Badge variant="secondary" className="font-normal">{move.hook}</Badge>
+                <Badge variant="secondary" className="font-normal">{hookName(move.hook)}</Badge>
               </span>
               <span
                 className={cn(

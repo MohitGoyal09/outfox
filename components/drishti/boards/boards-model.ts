@@ -28,15 +28,6 @@ export type BulkSaveOutcome = {
   overCap: number;
 };
 
-export function bulkSaveOutcomeMessage(outcome: BulkSaveOutcome, boardName: string): string {
-  const reasons: string[] = [];
-  if (overCap > 0) {
-    reasons.push(`${overCap} didn't fit — ${boardName} is full at ${MAX_ITEMS_PER_BOARD} items`);
-  }
-  const head = `Saved ${saved} of ${requested} to ${boardName}.`;
-  return reasons.length === 0 ? head : `${head} ${reasons.join(", ")}.`;
-}
-
 export type SaveOutcome =
   | { kind: "saved"; boardName: string }
   | { kind: "duplicate"; boardName: string }

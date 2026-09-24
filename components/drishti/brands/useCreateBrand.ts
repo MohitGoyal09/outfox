@@ -6,7 +6,7 @@ import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { BrandCreatePath, BrandFormValues } from "./BrandForm";
 
-const CREATE_ERROR_FALLBACK = "The rival could not be stored.";
+const CREATE_ERROR_FALLBACK = "The rival could not be saved.";
 
 export type UseCreateBrand = {
   submit: (
@@ -50,7 +50,7 @@ export function useCreateBrand(): UseCreateBrand {
         const outcome = result.needsConfirmation
           ? "needs confirmation"
           : result.status;
-        setSuccess(`Stored "${values.name}" as ${outcome}.`);
+        setSuccess(`Saved "${values.name}" as ${outcome}.`);
         return true;
       } catch (caught) {
         setError(

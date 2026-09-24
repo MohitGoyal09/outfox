@@ -75,7 +75,7 @@ export function AnswerSourcesPanel({
       <SheetContent className="bg-bg-raised">
         <SheetHeader>
           <SheetTitle className="text-fg">Sources</SheetTitle>
-          <SheetDescription>Every claim this answer cited, grouped by engine.</SheetDescription>
+          <SheetDescription>Every finding this answer cited, grouped by source.</SheetDescription>
         </SheetHeader>
         <div className="px-4">
           <SaveAllToBoardButton claimIds={storedClaimIds} totalCount={sources.length} context={context} />

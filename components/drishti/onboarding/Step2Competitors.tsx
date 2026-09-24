@@ -1,0 +1,272 @@
+"use client";
+
+
+import { useMemo, useState } from "react";
+import { useAction, useQuery } from "convex/react";
+import { ArrowRight, CircleAlert, Loader2, Plus, Search, X } from "lucide-react";
+import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
+import { Button, Chip, EmptyState, Panel, iconProps } from "@/components/drishti";
+import { Field } from "./Field";
+import {
+  MAX_ONBOARDING_COMPETITORS,
+  atCompetitorCap,
+  suggestCompetitors,
+  validateBrandDraft,
+  type BrandDraft,
+  type CatalogEntry,
+} from "./onboarding-model";
+
+export type SelectedCompetitor = { id: string; name: string; domain: string };
+
+export function Step2Competitors({
+  ownBrandName,
+  ownDomain,
+  vertical,
+  selected,
+  onAdd,
+  onRemove,
+  onContinue,
+  onBack,
+}: {
+  ownBrandName: string;
+  ownDomain: string;
+  vertical: string;
+  selected: SelectedCompetitor[];
+  onAdd: (competitor: SelectedCompetitor) => void;
+  onRemove: (id: string) => void;
+  onContinue: () => void;
+  onBack: () => void;
+}) {
+  const catalog = useQuery(api.brandCatalog.byVertical, { vertical });
+  const follow = useAction(api.brandCatalog.follow);
+  const createBrandProfile = useAction(api.pipeline.brandProfile.createBrandProfile);
+
+  const [query, setQuery] = useState("");
+  const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [followError, setFollowError] = useState<string | null>(null);
+  const [customOpen, setCustomOpen] = useState(false);
+  const [customDraft, setCustomDraft] = useState<BrandDraft>({ name: "", domain: "" });
+  const [customTouched, setCustomTouched] = useState(false);
+  const [customSubmitting, setCustomSubmitting] = useState(false);
+  const [customError, setCustomError] = useState<string | null>(null);
+
+  const atCap = atCompetitorCap(selected.length);
+  const selectedDomains = useMemo(() => selected.map((row) => row.domain), [selected]);
+
+  const suggestions = useMemo(
+    () =>
+      catalog === undefined
+        ? []
+        : suggestCompetitors({ catalog, vertical, ownDomain, query, excludeDomains: selectedDomains }),
+    [catalog, vertical, ownDomain, query, selectedDomains],
+  );
+
+  const isLoading = catalog === undefined;
+  const catalogEmpty = catalog !== undefined && catalog.filter((entry) => entry.vertical === vertical).length === 0;
+  const noMatches = !isLoading && !catalogEmpty && query.trim() !== "" && suggestions.length === 0;
+
+  async function handleAdd(entry: CatalogEntry) {
+    if (atCap) return;
+    const id = String(entry._id);
+    setFollowError(null);
+    setPendingIds((prev) => new Set(prev).add(id));
+    try {
+      const result = await follow({ catalogId: entry._id as Id<"brandCatalog"> });
+      onAdd({ id: String(result.brandId), name: entry.name, domain: entry.domain });
+    } catch (caught) {
+      setFollowError(caught instanceof Error && caught.message !== "" ? caught.message : "This brand could not be added.");
+    } finally {
+      setPendingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
+    }
+  }
+
+  async function handleAddCustom() {
+    setCustomTouched(true);
+    const validation = validateBrandDraft(customDraft);
+    if (validation.name !== undefined || validation.domain !== undefined) return;
+    setCustomError(null);
+    setCustomSubmitting(true);
+    try {
+      const result = await createBrandProfile({
+        name: customDraft.name,
+        domain: customDraft.domain,
+        vertical,
+      });
+      onAdd({ id: String(result.brandId), name: customDraft.name.trim(), domain: customDraft.domain.trim() });
+      setCustomDraft({ name: "", domain: "" });
+      setCustomTouched(false);
+      setCustomOpen(false);
+    } catch (caught) {
+      setCustomError(caught instanceof Error && caught.message !== "" ? caught.message : "That brand could not be added.");
+    } finally {
+      setCustomSubmitting(false);
+    }
+  }
+
+  const customErrors = customTouched ? validateBrandDraft(customDraft) : {};
+
+  return (
+    <div className="flex flex-col gap-6">
+      {selected.length > 0 ? (
+        <Panel as="section" interactive={false} padded ariaLabel="Selected competitors">
+          <p className="mb-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary,#98A2B3)]">
+            Comparing against {selected.length} of {MAX_ONBOARDING_COMPETITORS}
+          </p>
+          <ul className="flex flex-wrap gap-2">
+            {selected.map((row) => (
+              <li key={row.id}>
+                <Chip size="md" dot={false}>
+                  <span className="inline-flex items-center gap-1.5">
+                    {row.name}
+                    <button
+                      type="button"
+                      aria-label={`Remove ${row.name}`}
+                      onClick={() => onRemove(row.id)}
+                      className="rounded-full p-0.5 text-[var(--text-tertiary,#98A2B3)] hover:text-[var(--danger,#DC2626)]"
+                    >
+                      <X {...iconProps} size={12} aria-hidden="true" className="size-3" />
+                    </button>
+                  </span>
+                </Chip>
+              </li>
+            ))}
+          </ul>
+        </Panel>
+      ) : null}
+
+      {atCap ? (
+        <p className="text-[13px] leading-[1.5] text-[var(--text-secondary,#667085)]">
+          You&rsquo;ve picked {MAX_ONBOARDING_COMPETITORS} competitors — the most a first check
+          compares at once, alongside {ownBrandName}. Remove one to swap it for another.
+        </p>
+      ) : (
+        <div className="relative">
+          <Search
+            {...iconProps}
+            size={14}
+            aria-hidden="true"
+            className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--text-tertiary,#98A2B3)]"
+          />
+          <input
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={`Search ${vertical.toLowerCase()} brands…`}
+            aria-label="Search competitors"
+            className="h-10 w-full rounded-[5px] border border-[var(--border-strong,#CBD2DC)] bg-[var(--bg-inset,#F1F3F0)] pl-9 pr-3 text-[14px] text-[var(--text-primary,#17191D)] outline-none placeholder:text-[var(--text-tertiary,#98A2B3)] focus:border-[var(--accent,#0F766E)] focus:shadow-[0_0_0_3px_rgba(15,118,110,0.22)]"
+          />
+        </div>
+      )}
+
+      {followError !== null ? (
+        <p role="alert" className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--danger,#DC2626)]">
+          <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+          {followError}
+        </p>
+      ) : null}
+
+      {!atCap ? (
+        isLoading ? (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {[1, 2, 3, 4].map((row) => (
+              <div key={row} className="h-14 animate-pulse rounded-[8px] bg-[var(--bg-inset,#F1F3F0)]" />
+            ))}
+          </div>
+        ) : catalogEmpty ? (
+          <EmptyState
+            size="sm"
+            title={`No catalog brands in ${vertical} yet`}
+            description="Add competitors by name and website instead — Drishti still runs the same check against them."
+          />
+        ) : noMatches ? (
+          <EmptyState
+            size="sm"
+            title={`No matches for "${query.trim()}"`}
+            description="Try a different spelling, or add the brand by name and website instead."
+          />
+        ) : (
+          <ul className="grid gap-2 sm:grid-cols-2">
+            {suggestions.map((entry) => {
+              const id = String(entry._id);
+              const pending = pendingIds.has(id);
+              return (
+                <li key={id}>
+                  <Panel interactive={false} padded className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="truncate text-[13.5px] font-medium text-[var(--text-primary,#17191D)]">{entry.name}</p>
+                      <p className="truncate text-[12px] text-[var(--text-secondary,#667085)]">{entry.domain}</p>
+                    </div>
+                    <Button
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      disabled={pending}
+                      onClick={() => void handleAdd(entry)}
+                      icon={pending ? <Loader2 {...iconProps} size={14} className="animate-spin" /> : <Plus {...iconProps} size={14} />}
+                    >
+                      Add
+                    </Button>
+                  </Panel>
+                </li>
+              );
+            })}
+          </ul>
+        )
+      ) : null}
+
+      {!atCap ? (
+        customOpen ? (
+          <Panel as="section" interactive={false} padded ariaLabel="Add a competitor by name and website">
+            <div className="flex flex-col gap-3">
+              <Field
+                id="custom-competitor-name"
+                label="Brand name"
+                value={customDraft.name}
+                onChange={(event) => setCustomDraft({ ...customDraft, name: event.target.value })}
+                error={customErrors.name}
+              />
+              <Field
+                id="custom-competitor-domain"
+                label="Website"
+                placeholder="e.g. example.com"
+                value={customDraft.domain}
+                onChange={(event) => setCustomDraft({ ...customDraft, domain: event.target.value })}
+                error={customErrors.domain}
+              />
+              {customError !== null ? (
+                <p role="alert" className="text-[13px] leading-[1.5] text-[var(--danger,#DC2626)]">
+                  {customError}
+                </p>
+              ) : null}
+              <div className="flex gap-2">
+                <Button type="button" size="sm" loading={customSubmitting} onClick={() => void handleAddCustom()}>
+                  Add competitor
+                </Button>
+                <Button type="button" size="sm" variant="ghost" onClick={() => setCustomOpen(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </div>
+          </Panel>
+        ) : (
+          <Button type="button" variant="ghost" size="sm" onClick={() => setCustomOpen(true)} icon={<Plus {...iconProps} size={14} />} className="self-start">
+            Add a brand not listed here
+          </Button>
+        )
+      ) : null}
+
+      <div className="flex items-center gap-2 border-t border-[var(--border,#E4E7EC)] pt-5">
+        <Button type="button" variant="ghost" onClick={onBack}>
+          Back
+        </Button>
+        <Button type="button" onClick={onContinue} iconRight={<ArrowRight {...iconProps} size={14} />}>
+          Continue
+        </Button>
+      </div>
+    </div>
+  );
+}

@@ -16,7 +16,7 @@ function severityOf(kind: FailureKind): "calm" | "fault" {
 }
 
 function decodeFailure(detail: string | null): { kind: FailureKind; text: string } {
-  if (detail === null) return { kind: "no_data", text: "returned no data for this turn." };
+  if (detail === null) return { kind: "no_data", text: "returned no data." };
   const match = FAILURE_TAG_RE.exec(detail);
   if (match !== null) return { kind: match[1] as FailureKind, text: detail.slice(match[0].length) };
   return { kind: "error", text: "Something went wrong running this step." };
@@ -68,7 +68,7 @@ export function UnavailableBlock({
         {noGroundedEvidence ? (
           <li className="flex items-start gap-1.5">
             <span aria-hidden="true" className="mt-[6px] size-1.5 shrink-0 rounded-full bg-weak" />
-            <span>No stored or live evidence backed a confident answer this turn.</span>
+            <span>No evidence, saved or freshly checked, was enough for a confident answer.</span>
           </li>
         ) : null}
       </ul>

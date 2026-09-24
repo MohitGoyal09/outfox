@@ -20,21 +20,6 @@ const SIMILAR_BRANDS_LIMIT = 8;
 
 const enrichmentStatus = v.union(v.literal("hydrating"), v.literal("ready"));
 
-const brandDocValidator = v.object({
-  _id: v.id("brands"),
-  _creationTime: v.number(),
-  ownerId: v.optional(v.id("users")),
-  name: v.string(),
-  domain: v.string(),
-  vertical: v.string(),
-  aliases: v.array(v.string()),
-  profileStatus,
-  adsTransparencyAdvertiserId: v.optional(v.string()),
-  createdAt: v.string(),
-  lastRefreshedAt: v.optional(v.string()),
-  enrichmentStatus: v.optional(enrichmentStatus),
-});
-
 function normalizeDomain(domain: string): string {
   return domain.trim().toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").replace(/\/$/, "");
 }
@@ -46,7 +31,34 @@ export const listBrands = query({
     const ownerId = await requireUserId(ctx);
     const brands = await ctx.db.query("brands").withIndex("by_owner", (q) => q.eq("ownerId", ownerId)).collect();
     brands.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+    brands.sort((a, b) => Number(b.isOwnBrand === true) - Number(a.isOwnBrand === true));
     return brands;
+  },
+});
+
+export const getOwnBrand = query({
+  args: {},
+  returns: v.union(brandDocValidator, v.null()),
+  handler: async (ctx) => {
+    const ownerId = await requireUserId(ctx);
+    const brands = await ctx.db.query("brands").withIndex("by_owner", (q) => q.eq("ownerId", ownerId)).collect();
+    return brands.find((brand) => brand.isOwnBrand === true) ?? null;
+  },
+});
+
+export const setOwnBrand = mutation({
+  args: { brandId: v.id("brands") },
+  returns: v.id("brands"),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    if (brand?.ownerId !== ownerId) throw new Error("Brand not found");
+    const owned = await ctx.db.query("brands").withIndex("by_owner", (q) => q.eq("ownerId", ownerId)).collect();
+    for (const other of owned) {
+      if (other._id !== args.brandId && other.isOwnBrand === true) {
+        await ctx.db.patch(other._id, { isOwnBrand: false });
+      }
+    }
+    return args.brandId;
   },
 });
 
@@ -127,5 +139,26 @@ export const updateBrandStatusInternal = internalMutation({
       lastRefreshedAt?: string;
     } = { profileStatus: args.profileStatus };
     return args.brandId;
+  },
+});
+
+export const similarBrands = query({
+  args: { brandId: v.id("brands") },
+  returns: v.array(
+    v.object({
+      _id: v.id("brands"),
+      name: v.string(),
+      domain: v.string(),
+      vertical: v.string(),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    if (brand?.ownerId !== ownerId) throw new Error("Brand not found");
+    return owned
+      .filter((row) => row._id !== brand._id && row.vertical === brand.vertical && row.isOwnBrand !== true)
+      .sort((a, b) => a.name.localeCompare(b.name))
+      .slice(0, SIMILAR_BRANDS_LIMIT)
+      .map((row) => ({ _id: row._id, name: row.name, domain: row.domain, vertical: row.vertical }));
   },
 });

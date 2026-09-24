@@ -14,7 +14,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "../EmptyState";
 import { useAllRuns } from "../cohorts/useAllRuns";
-import { formatStamp } from "../cohorts/cohorts-model";
+import { formatStamp, profileStatusLabel } from "../cohorts/cohorts-model";
 import {
   engineCoverage,
   funnelDistribution,
@@ -59,7 +59,7 @@ function statusBadge(status: string) {
   return (
     <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good && "border-emerald-200 bg-emerald-50 text-emerald-700")}>
       {good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}
-      {status}
+      {profileStatusLabel(status)}
     </Badge>
   );
 }
@@ -124,7 +124,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const hookFunnelPreviousClaims = hookFunnelPreviousRunId ? (claims ?? []).filter((claim) => String(claim.runId) === hookFunnelPreviousRunId) : null;
   const hookItems = hookDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
   const funnelItems = funnelDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
-  const fallbackLabel = fallbackRun ? <p className="mt-1 font-mono text-[10px] text-muted-foreground">from the run on {formatStamp(fallbackRun.requestedAt)}</p> : undefined;
+  const fallbackLabel = fallbackRun ? <p className="mt-1 font-mono text-[10px] text-muted-foreground">from the check on {formatStamp(fallbackRun.requestedAt)}</p> : undefined;
 
   const historyRows = useMemo(() => {
     const rows = runHistoryRows(runs, claims ?? []);
@@ -215,7 +215,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               {latestRun ? (
                 <Button asChild size="sm" className="h-8 gap-1.5">
                   <Link href={`/runs/${latestRun._id}`}>
-                    Latest run <ArrowUpRight className="size-3.5" />
+                    Latest check <ArrowUpRight className="size-3.5" />
                   </Link>
                 </Button>
               ) : null}
@@ -224,7 +224,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
           <div className="mt-4 flex flex-wrap items-center gap-2">
             <Badge variant="outline" className="h-7 rounded-full border-accent/25 bg-accent/[0.06] px-2.5 text-accent">
               <BarChart3 className="mr-1.5 size-3.5" />
-              {Intl.NumberFormat("en-US").format(signals.length)} evidence signals
+              {Intl.NumberFormat("en-US").format(signals.length)} findings
             </Badge>
             <Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground">
               <Tag className="mr-1.5 size-3.5" />

@@ -1,6 +1,7 @@
 
 import type { DistributionItem } from "../DistributionPanel";
 import type { Doc } from "@/convex/_generated/dataModel";
+import { sourceName } from "@/components/drishti/labels";
 import { ABSENT, FUNNEL_STAGES, type Tone } from "../tokens";
 
 export type BrandDoc = Doc<"brands">;
@@ -95,13 +96,6 @@ export function countClaimsByEngine(claims: ClaimDoc[]): EngineCount[] {
       (counts.get(claim.sourceEngine) ?? 0) + 1,
     );
   }
-  return [...counts.entries()]
-    .map(([engine, count]) => ({
-      engine,
-      label: engineLabel(engine),
-      count,
-    }))
-    .sort((a, b) => b.count - a.count || (a.engine < b.engine ? -1 : 1));
 }
 
 const CONFIDENCE_RANK: Record<string, number> = { high: 3, medium: 2, low: 1 };

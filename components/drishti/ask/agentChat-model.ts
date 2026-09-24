@@ -69,19 +69,6 @@ function toolCallStatusOf(state: string): ToolCallCardView["status"] {
   if (state === "output-error" || state === "output-denied") return "failed";
 }
 
-function resultSummaryOfOutput(output: unknown): string | null {
-  if (typeof output !== "object" || output === null) return null;
-  const record = output as Record<string, unknown>;
-  for (const key of ["claims", "matches", "rows", "points", "citations"]) {
-    const list = record[key];
-    const base = list.length === 0 ? `no ${noun}s` : `${list.length} ${noun}${list.length === 1 ? "" : "s"}`;
-    const coverage = record["coverage"];
-    const engineCount =
-      typeof coverage === "object" && coverage !== null ? Object.keys(coverage).length : 0;
-  }
-  return null;
-}
-
 export type AnswerProvenance = {
   mode: "llm" | "template";
 };

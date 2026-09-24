@@ -16,8 +16,8 @@ const REASON_TONE: Record<AttentionReason, Tone> = {
 };
 
 const REASON_LABEL: Record<AttentionReason, string> = {
-  never_run: "never run",
-  failed: "run failed",
+  never_run: "not checked",
+  failed: "check failed",
   stale: "stale",
 };
 

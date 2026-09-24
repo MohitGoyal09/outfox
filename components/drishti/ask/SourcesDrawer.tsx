@@ -89,7 +89,7 @@ function SourceRow({ row, isStoredClaim }: { row: SourceRowView; isStoredClaim: 
       >
         <div className="flex items-start justify-between gap-2">
           <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-[1.45] text-fg">
-            {row.text !== "" ? row.text : "This claim is not in the current scope's view."}
+            {row.text !== "" ? row.text : "This citation isn't part of what's currently in view."}
           </p>
           <ExternalLink
             className="mt-0.5 size-3 shrink-0 text-fg-tertiary opacity-0 group-hover:opacity-100"
@@ -163,7 +163,7 @@ export function SourcesDrawer({ rows, claimsById }: { rows: SourceRowView[]; cla
       <SheetContent className="bg-bg-raised">
         <SheetHeader>
           <SheetTitle className="text-fg">Sources</SheetTitle>
-          <SheetDescription>Every page this answer&rsquo;s claims are grounded in.</SheetDescription>
+          <SheetDescription>Every page this answer&rsquo;s findings are grounded in.</SheetDescription>
         </SheetHeader>
         <SourcesDrawerContent rows={rows} claimsById={claimsById} />
       </SheetContent>

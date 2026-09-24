@@ -75,8 +75,8 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
           <EmptyState
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
-            title="No organic results stored yet."
-            description="Buckets the real rank SerpApi reported for each stored Google organic result — fills in after a Google Search run."
+            title="No organic results yet."
+            description="Buckets the real rank SerpApi reported for each Google organic result — fills in after a Google Search check."
           />
         ) : (
           <ChartContainer config={chartConfig} className="h-[200px] w-full aspect-auto">
@@ -112,8 +112,8 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
           <EmptyState
             size="sm"
             icon={<Clapperboard {...iconProps} size={16} />}
-            title="No Ads Transparency data for this brand."
-            description="Many brands have no resolvable advertiser id, so this engine genuinely returns nothing for them — this is not an error, and it fills in once a run resolves one."
+            title="No Google Ads data for this brand."
+            description="Many brands have no resolvable advertiser id, so this source genuinely returns nothing for them — this is not an error, and it fills in once a check resolves one."
           />
         ) : (
           <>
@@ -231,22 +231,22 @@ export function PlacementTab({
           title="Ad formats"
           icon={<BadgeDollarSign className="size-4 text-accent" />}
           rows={adFormatRows}
-          emptyTitle="No ad creatives stored yet."
-          emptyDescription="Groups real Ads Transparency creatives by format once a run captures them."
+          emptyTitle="No ad creatives yet."
+          emptyDescription="Groups real Google Ads creatives by format once a check captures them."
         />
         <CountListPanel
           title="Retailers carrying this brand"
           icon={<Store className="size-4 text-accent" />}
           rows={retailerRows}
-          emptyTitle="No product listings stored yet."
-          emptyDescription="Ranks real retailer domains from stored SERP product listings — fills in once that engine lands."
+          emptyTitle="No product listings yet."
+          emptyDescription="Ranks real retailer domains from SERP product listings — fills in once that source lands."
         />
         <CountListPanel
           title="News outlets"
           icon={<Newspaper className="size-4 text-accent" />}
           rows={publisherRows}
-          emptyTitle="No publisher evidence stored yet."
-          emptyDescription="Ranks real Google News publisher names once that metric is stored."
+          emptyTitle="No publisher evidence yet."
+          emptyDescription="Ranks real Google News publisher names once that data is available."
         />
       </div>
       {shortsCount > 0 || youtubeAdCount > 0 ? (
@@ -259,7 +259,7 @@ export function PlacementTab({
         <EvidenceGrid
           claims={placementEvidenceClaims}
           sort={filters.sort}
-          emptyMessage="No placement evidence stored yet. Ad creatives, ranked organic results, product listings, and video placements will fill this in once a run captures them."
+          emptyMessage="No placement evidence yet. Ad creatives, ranked organic results, product listings, and video placements will fill this in once a check captures them."
           pageLabel={evidencePageLabel("Placement tab", filters)}
         />
       </div>

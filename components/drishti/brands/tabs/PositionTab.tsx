@@ -8,6 +8,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
 import { iconProps, HOOK_COLOR, type HookType } from "../../tokens";
+import { hookName } from "@/components/drishti/labels";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   aiOverviewClaims,
@@ -37,7 +38,7 @@ function KnowledgeGraphCard({ brand, latestClaims }: { brand: BrandDoc; latestCl
             size="sm"
             icon={<BookOpen {...iconProps} size={16} />}
             title="No knowledge-graph panel for this brand."
-            description="Google doesn't show a knowledge panel for every brand — this bonus card fills in only when one is stored, it is not required for the rest of this tab."
+            description="Google doesn't show a knowledge panel for every brand — this bonus card fills in only when one is available, it is not required for the rest of this tab."
           />
         </CardContent>
       </Card>
@@ -56,7 +57,9 @@ function KnowledgeGraphCard({ brand, latestClaims }: { brand: BrandDoc; latestCl
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
               {attributes.map((claim) => (
                 <div key={String(claim._id)} className="min-w-0">
-                  <dt className="truncate text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">{claim.metric ?? "Attribute"}</dt>
+                  {/* Every row here shares the same claim.metric ("brand_knowledge_attribute") — that told the reader nothing and leaked a raw
+                      identifier. claim.unit carries the real per-row attribute name (see extractClaims.ts's KNOWLEDGE_ATTRIBUTES), so use that instead. */}
+                  <dt className="truncate text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">{claim.unit ?? "Attribute"}</dt>
                   <dd className="truncate font-medium text-foreground">{String(claim.value ?? displayClaimText(claim.text))}</dd>
                 </div>
               ))}
@@ -85,8 +88,8 @@ function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
           <EmptyState
             size="sm"
             icon={<Sparkles {...iconProps} size={16} />}
-            title="No AI Overview stored yet."
-            description="Fills in once a run captures Google's AI Overview for this brand — not every query triggers one."
+            title="No AI Overview yet."
+            description="Fills in once a check captures Google's AI Overview for this brand — not every query triggers one."
           />
         ) : (
           <ul className="space-y-2.5">
@@ -124,8 +127,8 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
           <EmptyState
             size="sm"
             icon={<Layers {...iconProps} size={16} />}
-            title="No product listing prices stored yet."
-            description="Fills in once a run captures real SERP product listings for this brand — each price keeps the date it was observed, never shown as current truth."
+            title="No product listing prices yet."
+            description="Fills in once a check captures real SERP product listings for this brand — each price keeps the date it was observed, never shown as current truth."
           />
         ) : (
           <div className="space-y-3">
@@ -150,7 +153,7 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
 
 function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previous: ClaimDoc[] | null }) {
   const rows = useMemo(() => (previous === null ? [] : hookMixDrift(current, previous).slice(0, 9)), [current, previous]);
-  const chartConfig = { current: { label: "This run" }, previous: { label: "Previous run" } } satisfies ChartConfig;
+  const chartConfig = { current: { label: "This check" }, previous: { label: "Previous check" } } satisfies ChartConfig;
   return (
     <Card className="shadow-none">
       <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
@@ -162,29 +165,29 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
           <EmptyState
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
-            title="No previous run to compare."
-            description="Drift needs a second tagged run. Run a refresh again later and this chart will compare hook counts run over run — never a guessed baseline."
+            title="No earlier check to compare."
+            description="Drift needs a second tagged check. Check again later and this chart will compare hook counts check over check — never a guessed baseline."
           />
         ) : rows.every((row) => row.current === 0 && row.previous === 0) ? (
           <EmptyState
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
-            title="No hook tags in either run."
-            description="Neither this run nor the previous one has real hook tags to compare yet."
+            title="No hook tags in either check."
+            description="Neither this check nor the earlier one has real hook tags to compare yet."
           />
         ) : (
           <ChartContainer config={chartConfig} className="h-[240px] w-full aspect-auto">
             <BarChart accessibilityLayer data={rows} margin={{ left: -16, right: 12, top: 8 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 9 }} interval={0} angle={-28} textAnchor="end" height={56} tickFormatter={(value: string) => value.replaceAll("_", " ")} />
+              <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 9 }} interval={0} angle={-28} textAnchor="end" height={56} tickFormatter={(value: string) => hookName(value)} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} tick={{ fontSize: 10 }} />
-              <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent labelFormatter={(value: unknown) => String(value).replaceAll("_", " ")} />} />
-              <Bar dataKey="previous" name="Previous run" radius={[2, 2, 0, 0]} barSize={12}>
+              <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent labelFormatter={(value: unknown) => hookName(String(value))} />} />
+              <Bar dataKey="previous" name="Previous check" radius={[2, 2, 0, 0]} barSize={12}>
                 {rows.map((row) => (
                   <Cell key={`prev-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? "#6b7280"} fillOpacity={0.35} />
                 ))}
               </Bar>
-              <Bar dataKey="current" name="This run" radius={[2, 2, 0, 0]} barSize={12}>
+              <Bar dataKey="current" name="This check" radius={[2, 2, 0, 0]} barSize={12}>
                 {rows.map((row) => (
                   <Cell key={`cur-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? "#6b7280"} />
                 ))}
@@ -252,21 +255,22 @@ export function PositionTab({
           title="Hook type"
           rows={hookTypeRows}
           colorFor={(label) => HOOK_COLOR[label as HookType] ?? "#6b7280"}
+          formatLabel={hookName}
           emptyTitle="No tagged hook types yet."
-          emptyDescription="Ranks the real, fixed hookType vocabulary an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+          emptyDescription="Ranks the real, fixed hook-type vocabulary an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
         />
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <RankedCatalogChart
             title="Themes"
             rows={themeRows}
             emptyTitle="No tagged themes yet."
-            emptyDescription="Ranks the real theme text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+            emptyDescription="Ranks the real theme text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
           />
           <RankedCatalogChart
             title="Value propositions"
             rows={valuePropRows}
             emptyTitle="No tagged value propositions yet."
-            emptyDescription="Ranks the real valueProp text an enrichment run assigned to stored claims, most frequent first — fills in after a tagged run."
+            emptyDescription="Ranks the real value-proposition text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
           />
         </div>
       </div>

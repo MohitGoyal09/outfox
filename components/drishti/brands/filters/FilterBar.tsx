@@ -54,7 +54,7 @@ export function FilterBar({
       </label>
       <FilterSelect
         icon={BarChart3}
-        label="All engines"
+        label="All sources"
         value={filters.engine}
         onChange={(value) => setFilter("engine", value)}
         options={engineOptions}

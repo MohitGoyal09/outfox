@@ -11,6 +11,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { buttonClasses } from "../Button";
 import { DistributionPanel } from "../DistributionPanel";
 import { EmptyState } from "../EmptyState";
+import { stageName } from "../labels";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { VALUE_CLASS, iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
@@ -32,13 +33,13 @@ import {
 } from "./board-model";
 
 const EMPTY_DESCRIPTION =
-  "A run reads every brand it covers at one moment. Signals pools those brands together, so it appears once at least one run has finished.";
+  "A check reads every brand it covers at one moment. Signals pools those brands together, so it appears once at least one check has finished.";
 
 function BoardSkeleton() {
   return (
     <div className="flex flex-col gap-4">
       <div className="grid gap-4 lg:grid-cols-2">
-        <DistributionPanel items={[]} kind="hook" title="Top hooks across these brands" loading />
+        <DistributionPanel items={[]} kind="hook" title="Hook mix" loading />
         <DistributionPanel items={[]} kind="funnel" title="Funnel distribution" loading />
       </div>
       <SkeletonRegion label="Loading brand leaderboard" className="rounded-[10px] border border-[var(--border,#24242f)] p-4">
@@ -50,7 +51,7 @@ function BoardSkeleton() {
           <Skeleton variant="row" height={40} />
         </span>
       </SkeletonRegion>
-      <SkeletonRegion label="Loading engine coverage" className="rounded-[10px] border border-[var(--border,#24242f)] p-4">
+      <SkeletonRegion label="Loading what we checked" className="rounded-[10px] border border-[var(--border,#24242f)] p-4">
         <Skeleton variant="text" width="26%" height={12} />
         <span className="mt-4 block">
           <Skeleton variant="text" width="60%" />
@@ -128,7 +129,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     [claims, previousClaims],
   );
 
-  const coverageLine = brands !== undefined ? runCoverageLine(brands, finishedRuns) : null;
+  const coverageLine = brands !== undefined ? runCoverageLine(brands, finishedRuns, runs) : null;
 
   const gaps = coverageGaps(coverage);
   const isPartial = current?.status === "partial" || gaps.length > 0;
@@ -136,7 +137,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const cohortTitle =
     brandIds.length > 0
       ? brandIds.map((id) => brandNames[id] ?? id.slice(0, 8)).join(" · ")
-      : "No brands in this run";
+      : "No brands in this check";
 
   return (
     <div className="flex flex-col gap-5">
@@ -152,7 +153,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           <span className="font-medium text-fg">{cohortTitle}</span>
           {current !== null ? (
             <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
-              run of {formatStamp(current.requestedAt)} · {current.status}
+              checked {formatStamp(current.requestedAt)} · {current.status}
             </span>
           ) : null}
         </p>
@@ -166,19 +167,19 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
       {singleBrand ? (
         <p className="max-w-[68ch] type-caption text-fg-secondary">
-          This run covers one brand. A pooled read compares two or more, so
+          This check covers one brand. A pooled read compares two or more, so
           the mix below describes that brand alone.
         </p>
       ) : null}
 
       {isPartial ? (
         <p className="max-w-[68ch] type-caption text-fg-secondary">
-          {current?.status === "partial" ? "This run is partial. " : ""}
+          {current?.status === "partial" ? "This check is partial. " : ""}
           {gaps.length === 1
-            ? "1 engine check did not return; it is named per rival below."
+            ? "1 source check did not return; it is named per rival below."
             : gaps.length > 1
-              ? `${gaps.length} engine checks did not return; each is named per rival below.`
-              : "Some engines did not return for this run."}{" "}
+              ? `${gaps.length} source checks did not return; each is named per rival below.`
+              : "Some sources did not return for this check."}{" "}
           A gap is never counted as a zero.
         </p>
       ) : null}
@@ -186,9 +187,9 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       {current && claims !== undefined ? (
         <div className="grid gap-3 sm:grid-cols-3" aria-label="Board summary">
           {[
-            ["Brands in view", brandIds.length, "Rivals in the selected run"],
-            ["Claims held", claims.length, "Stored evidence, not performance"],
-            ["Engine coverage", `${coverage.reduce((total, brand) => total + brand.cells.filter((cell) => cell.status === "ok").length, 0)}/${coverage.reduce((total, brand) => total + brand.cells.length, 0)}`, "Successful checks in this run"],
+            ["Brands in view", brandIds.length, "Rivals in this check"],
+            ["Findings held", claims.length, "What we found, not performance"],
+            ["What we checked", `${coverage.reduce((total, brand) => total + brand.cells.filter((cell) => cell.status === "ok").length, 0)}/${coverage.reduce((total, brand) => total + brand.cells.length, 0)}`, "Checks that returned data"],
           ].map(([label, value, detail]) => (
             <Card key={String(label)} className="border-border/80 bg-card shadow-none">
               <CardContent className="p-4">
@@ -206,7 +207,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       ) : current === null ? (
         <EmptyState
           icon={<BarChart3 {...iconProps} size={20} />}
-          title="No finished runs yet."
+          title="No finished checks yet."
           description={EMPTY_DESCRIPTION}
           action={
             <Link href="/brands" className={buttonClasses({ variant: "ghost", size: "sm" })}>
@@ -222,9 +223,12 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
               items={funnelItems}
               kind="funnel"
               title="Funnel distribution"
+              formatLabel={(label) => stageName(label)}
               loading={claims === undefined}
-              summaryLabel={claims !== undefined ? `${claims.length} claims` : undefined}
-              previousLabel={previous ? `vs run of ${formatStamp(previous.requestedAt)}` : undefined}
+              summaryLabel={claims !== undefined ? `${claims.length} findings` : undefined}
+              previousLabel={previous ? `vs ${formatStamp(previous.requestedAt)}` : undefined}
+              emptyTitle="No funnel mix in this check yet."
+              emptyDescription="Every finding carries a funnel stage. The mix appears here once at least one source returns findings."
             />
           </div>
           <BrandLeaderboard
@@ -237,7 +241,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
             moves={emerging}
             hasPrevious={previous !== null}
             loading={previous !== null && previousClaims === undefined}
-            previousLabel={previous ? `vs run of ${formatStamp(previous.requestedAt)}` : undefined}
+            previousLabel={previous ? `vs ${formatStamp(previous.requestedAt)}` : undefined}
           />
         </>
       )}

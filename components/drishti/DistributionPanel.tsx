@@ -183,6 +183,7 @@ export type DistributionPanelProps = {
   order?: DistributionOrder;
   summaryLabel?: string;
   previousLabel?: string;
+  formatLabel?: (label: string, kind: DistributionKind) => string;
   loading?: boolean;
   error?: string | null;
   onRetry?: () => void;
@@ -201,6 +202,7 @@ export function DistributionPanel({
   order,
   summaryLabel,
   previousLabel,
+  formatLabel,
   loading = false,
   error = null,
   onRetry,
@@ -316,7 +318,7 @@ export function DistributionPanel({
                       "break-words text-[var(--text-primary,#eeeef2)]",
                     )}
                   >
-                    {row.label}
+                    {formatLabel ? formatLabel(row.label, kind) : row.label}
                   </span>
                 </span>
                 {row.gap ? (

@@ -73,7 +73,7 @@ export function EvidenceSection({
         newsSnapshot={newsSnapshot}
         googleSnapshot={googleSnapshot}
         sort={filters.sort}
-        emptyMessage={contentClaims.length === 0 ? "No signal claims have been stored for the latest run." : "No stored evidence matches these filters."}
+        emptyMessage={contentClaims.length === 0 ? "No findings yet for the latest check." : "No evidence matches these filters."}
         pageLabel={evidencePageLabel(tabLabel, filters)}
       />
     </div>

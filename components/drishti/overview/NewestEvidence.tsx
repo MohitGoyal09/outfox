@@ -6,7 +6,7 @@ import { Chip, EmptyState, Panel, Skeleton, SkeletonRegion, VALUE_CLASS, iconPro
 import { cn } from "@/lib/utils";
 
 import { SectionLabel } from "./SectionLabel";
-import { relativeTime, type EvidenceFeed } from "./overview-model";
+import { hookLabel, relativeTime, type EvidenceFeed } from "./overview-model";
 
 export type NewestEvidenceProps = {
   loading: boolean;
@@ -48,14 +48,14 @@ export function NewestEvidence({ loading, hasBrands, feed, nowMs }: NewestEviden
             bounded
             icon={<Quote {...iconProps} size={16} aria-hidden="true" />}
             title="No brands to show evidence for yet"
-            description="Add a tracked brand, and its newest stored claims appear here with the exact source they came from."
+            description="Add a tracked brand, and its newest findings appear here with the exact source they came from."
           />
         ) : feed === null || feed.total === 0 ? (
           <EmptyState
             size="sm"
             bounded
-            title="No claims stored yet"
-            description="Every claim stores the exact text a source returned. When the first one is stored for any tracked brand, it is listed here word for word, with a working link to its source."
+            title="No findings yet"
+            description="Every finding keeps the exact text a source returned. When the first one arrives for any tracked brand, it is listed here word for word, with a working link to its source."
           />
         ) : (
           <ul className="flex flex-col">
@@ -71,7 +71,7 @@ export function NewestEvidence({ loading, hasBrands, feed, nowMs }: NewestEviden
                   <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
                     {relativeTime(item.fetchedAt, nowMs)}
                   </span>
-                  {item.hookType ? <Chip label={item.hookType} value={item.hookType} scale="hook" /> : null}
+                  {item.hookType ? <Chip label={hookLabel(item.hookType)} value={item.hookType} scale="hook" /> : null}
                   <a
                     href={item.evidenceUrl}
                     target="_blank"

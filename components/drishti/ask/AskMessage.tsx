@@ -69,7 +69,7 @@ function AskAnswerContent({
               "No model gateway key is configured on this deployment, so no answer was generated."}
           </p>
           <p>
-            Stored claims are still readable elsewhere. Ask never invents an
+            Findings are still readable elsewhere. Ask never invents an
             answer to fill the gap.
           </p>
         </AlertDescription>
@@ -85,18 +85,18 @@ function AskAnswerContent({
           <p className="font-medium text-fg">
             {turn.brandCount === 0
               ? "No brand was selected for this question."
-              : "The stored claims do not cover these brands yet."}
+              : "Findings do not cover these brands yet."}
           </p>
           <p>
             {turn.brandCount === 0
-              ? "Type @ to reference a brand, or open a cohort, then ask again."
-              : result.message ?? "Run a comparison to fetch real evidence for these brands."}
+              ? "Type @ to reference a brand, or open a comparison, then ask again."
+              : result.message ?? "Start a comparison to fetch real evidence for these brands."}
           </p>
           {result.liveRefresh?.attempted === true ? (
             <p className="text-[11px] text-fg-tertiary">
               {refreshFailed
-                ? `A live refresh ran automatically and failed: ${result.liveRefresh.error}`
-                : "A live refresh ran automatically and found nothing new."}
+                ? `A live refresh started automatically and failed: ${result.liveRefresh.error}`
+                : "A live refresh started automatically and found nothing new."}
             </p>
           ) : null}
         </AlertDescription>
@@ -109,11 +109,11 @@ function AskAnswerContent({
       <Alert>
         <AlertDescription className="flex flex-col gap-2 text-fg-secondary">
           <p className="font-medium text-fg">
-            The stored claims do not answer this question.
+            The findings do not answer this question.
           </p>
           <p>
             No sentence survived the citation check, so no answer is stated. Ask
-            only answers from stored claims, and it drops any sentence that does
+            only answers from findings, and it drops any sentence that does
             not cite one.
           </p>
           {result.error ? (

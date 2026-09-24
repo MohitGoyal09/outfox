@@ -1,6 +1,7 @@
 
 import { FUNNEL_STAGES, HOOK_TYPES } from "../../tokens";
-import { engineLabel, FETCH_ENGINES, type ClaimDoc } from "../brand-model";
+import { hookName, sourceName, stageName } from "@/components/drishti/labels";
+import { FETCH_ENGINES, type ClaimDoc } from "../brand-model";
 
 export type FreshnessValue = "all" | "24h" | "7d" | "30d" | "90d";
 export type SortValue = "newest" | "oldest" | "confidence" | "highest_rank" | "most_views" | "most_likes" | "longest_run";
@@ -45,13 +46,6 @@ export const SORT_LABEL: Record<SortValue, string> = {
   most_likes: "Most likes",
   longest_run: "Longest run",
 };
-
-export function evidencePageLabel(tabLabel: string, filters: Pick<BrandFilters, "engine" | "sort">): string {
-  const enginePart = filters.engine === "all" ? null : engineLabel(filters.engine);
-  return [tabLabel, enginePart, SORT_LABEL[filters.sort]]
-    .filter((part): part is string => part !== null)
-    .join(" · ");
-}
 
 export function parseBrandFilters(params: URLSearchParams): BrandFilters {
   const engine = params.get("engine") ?? DEFAULT_BRAND_FILTERS.engine;
@@ -106,21 +100,17 @@ export function engineOptionsFrom(claims: ClaimDoc[]): FilterOption[] {
   const present = new Set(claims.map((claim) => claim.sourceEngine));
   return FETCH_ENGINES.filter((engine) => present.has(engine)).map((engine) => ({
     value: engine,
-    label: engineLabel(engine),
+    label: sourceName(engine),
   }));
 }
 
-function realTagOptionsFrom(tags: ClaimDoc[], values: readonly string[], pick: (tag: ClaimDoc) => string | undefined): FilterOption[] {
+function realTagOptionsFrom(tags: ClaimDoc[], values: readonly string[], pick: (tag: ClaimDoc) => string | undefined, labelFor: (value: string) => string): FilterOption[] {
   const present = new Set(tags.map(pick).filter((value): value is string => value !== undefined && value !== "not_applicable"));
-  return values.filter((value) => present.has(value)).map((value) => ({ value, label: value.replaceAll("_", " ") }));
+  return values.filter((value) => present.has(value)).map((value) => ({ value, label: labelFor(value) }));
 }
 
 export function hookOptionsFrom(tags: ClaimDoc[]): FilterOption[] {
-  return realTagOptionsFrom(tags, HOOK_TYPES, (tag) => tag.hookType);
-}
-
-export function funnelOptionsFrom(tags: ClaimDoc[]): FilterOption[] {
-  return realTagOptionsFrom(tags, FUNNEL_STAGES, (tag) => tag.funnelStage);
+  return realTagOptionsFrom(tags, HOOK_TYPES, (tag) => tag.hookType, hookName);
 }
 
 export const SORT_OPTIONS: FilterOption[] = [

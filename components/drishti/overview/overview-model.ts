@@ -1,5 +1,6 @@
 
 import { displayClaimText } from "../brands/format";
+import { sourceName } from "../labels";
 import { HOOK_TYPES, isHookType, isValidEvidenceHref, type HookType } from "../tokens";
 
 
@@ -48,17 +49,18 @@ export const TRACKED_ENGINES = [
 
 const TRACKED_ENGINE_SET: ReadonlySet<string> = new Set<string>(TRACKED_ENGINES);
 
-export function engineLabel(engine: string): string {
-  return ENGINE_LABELS[engine] ?? engine;
-}
-
 
 export type BrandCoverage = {
   brandId: string;
   lastRunAny: RunLike | null;
   lastFinishedRun: RunLike | null;
+  previousFinishedRun: RunLike | null;
   hasData: boolean;
 };
+
+function sortedByRequestedAtDesc(runs: readonly RunLike[]): RunLike[] {
+  return [...runs].sort((a, b) => (a.requestedAt < b.requestedAt ? 1 : a.requestedAt > b.requestedAt ? -1 : 0));
+}
 
 export function brandCoverage(
   brands: readonly BrandLike[],
@@ -67,7 +69,13 @@ export function brandCoverage(
   for (const brand of brands) {
     const related = runs.filter((run) => run.brandIds.includes(brand.id));
     const lastRunAny = latestByRequestedAt(related);
-    const lastFinishedRun = latestByRequestedAt(finished);
+    out.set(brand.id, {
+      brandId: brand.id,
+      lastRunAny,
+      lastFinishedRun: finished[0] ?? null,
+      previousFinishedRun: finished[1] ?? null,
+      hasData: finished.length > 0,
+    });
   }
   return out;
 }
@@ -105,6 +113,65 @@ export function composeNeedsAttention(input: {
     const rank = REASON_RANK[a.reason] - REASON_RANK[b.reason];
     return rank !== 0 ? rank : a.brandName.localeCompare(b.brandName);
   });
+}
+
+
+export type RunSourceCount = {
+  runId: string;
+  brandId: string;
+  sourceEngine: string;
+  count: number;
+};
+
+export type SourceChange = {
+  source: string;
+  sourceLabel: string;
+  delta: number;
+};
+
+export type BrandChange = {
+  brandId: string;
+  brandName: string;
+  sentence: string;
+  actionHref: string;
+};
+
+export type WhatChangedFeed = {
+  changes: BrandChange[];
+  comparableBrandCount: number;
+};
+
+function describeSourceChange(change: SourceChange): string {
+  const count = Math.abs(change.delta);
+  const noun = pluralize(count, "finding");
+  return change.delta > 0
+    ? `${count} new ${noun} from ${change.sourceLabel}`
+    : `${count} fewer ${noun} from ${change.sourceLabel}`;
+}
+
+export function composeWhatChanged(
+  brands: readonly BrandLike[],
+  runs: readonly RunLike[],
+  sourceCounts: readonly RunSourceCount[],
+  brandNameById: BrandNameById,
+  nowMs: number,
+): WhatChangedFeed | null {
+  const coverage = brandCoverage(brands, runs);
+  let comparableBrandCount = 0;
+  const dated: Array<{ change: BrandChange; checkedAt: string }> = [];
+
+  for (const brand of brands) {
+    if (cov === undefined || cov.lastFinishedRun === null || cov.previousFinishedRun === null) continue;
+    comparableBrandCount += 1;
+    const sources = new Set([...latest.keys(), ...prior.keys()]);
+
+    const sourceChanges: SourceChange[] = [];
+
+    const brandName = brandNameById[brand.id] ?? brand.name;
+    const sinceIso = cov.previousFinishedRun.completedAt ?? cov.previousFinishedRun.requestedAt;
+  }
+
+  return { changes: dated.map((row) => row.change), comparableBrandCount };
 }
 
 
@@ -151,17 +218,6 @@ export function composeNewestEvidence(
       overflow.push(claim);
     }
   }
-  const items = [...spread, ...overflow].slice(0, Math.max(0, limit)).map((claim) => ({
-    id: claim.id,
-    brandId: claim.brandId,
-    brandName: brandNameById[claim.brandId] ?? claim.brandId,
-    text: displayClaimText(claim.text),
-    engine: claim.sourceEngine,
-    engineLabelText: engineLabel(claim.sourceEngine),
-    hookType: claim.hookType !== null && isHookType(claim.hookType) ? claim.hookType : null,
-    fetchedAt: claim.fetchedAt,
-    evidenceUrl: claim.evidenceUrl.trim(),
-  }));
   return { items, total: eligible.length, bounded: eligible.length > items.length };
 }
 

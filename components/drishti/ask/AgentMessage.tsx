@@ -28,7 +28,7 @@ import { AnswerActions } from "./AnswerActions";
 import { AnswerMarkdown } from "./AnswerMarkdown";
 import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
 import { persistedTrendsResultsOf, type ToolCallCardView } from "./ask-model";
-import { descriptiveToolLabel } from "./ToolCallCard";
+import { descriptiveToolLabel, toolTitle } from "./ToolCallCard";
 import { FollowUpList } from "./FollowUpList";
 import { AnswerCharts } from "./AnswerCharts";
 import { ThoughtLine, type ThoughtStep, type ThoughtStepStatus } from "./ThoughtLine";
@@ -145,13 +145,13 @@ export function AgentMessage({
             state="approval-requested"
           >
             <ConfirmationTitle>
-              {part.toolName} needs your approval
-              {part.toolName.includes("refresh") ? " before any live fetch runs" : ""}.
+              {toolTitle(part.toolName)} needs your approval
+              {part.toolName.includes("refresh") ? " before any live fetch happens" : ""}.
             </ConfirmationTitle>
             <ConfirmationRequest>
               <p className="text-sm text-muted-foreground">
-                Approve once to let this step run
-                {part.toolName.includes("refresh") ? " a single live refresh" : ""}.
+                Approve once to let this step happen
+                {part.toolName.includes("refresh") ? " as a single live refresh" : ""}.
               </p>
             </ConfirmationRequest>
             <ConfirmationActions>
@@ -169,7 +169,7 @@ export function AgentMessage({
             </ConfirmationActions>
             <ConfirmationAccepted>
               <p className="text-sm text-muted-foreground">
-                Approved. The agent runs this refresh once.
+                Approved. The agent performs this refresh once.
               </p>
             </ConfirmationAccepted>
             <ConfirmationRejected>

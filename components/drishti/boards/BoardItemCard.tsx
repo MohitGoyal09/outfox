@@ -8,9 +8,9 @@ import type { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { sourceAccent } from "../brands/EvidenceCard";
-import { engineLabel } from "../brands/brand-model";
 import { displayClaimText, periodWindow, shortDate } from "../brands/format";
 import { EngineTag, PlatformLogo } from "../brands/PlatformLogo";
+import { hookName, measureName, sourceName } from "../labels";
 import { boardItemThreadHref } from "./boards-model";
 
 export type BoardItem = FunctionReturnType<typeof api.boards.listItems>[number];
@@ -22,7 +22,7 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
     return (
       <article className="flex flex-col gap-3 rounded-xl border border-dashed border-border bg-muted/40 p-4">
         <p className="text-[13px] leading-5 text-muted-foreground">
-          This evidence no longer exists. The claim was deleted, or its brand was removed.
+          This evidence no longer exists. The finding was deleted, or its brand was removed.
         </p>
         <div className="flex items-center justify-between gap-2">
           <span className="font-mono text-[11px] text-muted-foreground">Saved {shortDate(item.createdAt)}</span>
@@ -47,7 +47,7 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
           <PlatformLogo engine={claim.sourceEngine} className="size-4" />
         </span>
         <div className="min-w-0 flex-1">
-          <p className="truncate text-[12px] font-semibold text-foreground">{engineLabel(claim.sourceEngine)}</p>
+          <p className="truncate text-[12px] font-semibold text-foreground">{sourceName(claim.sourceEngine)}</p>
           <p className="mt-0.5 font-mono text-[11px] text-muted-foreground">Saved {shortDate(item.createdAt)}</p>
         </div>
         <Button
@@ -72,7 +72,7 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
 
       {claim.metric ? (
         <p className="mt-2 font-mono text-[11px] text-muted-foreground">
-          {claim.metric}
+          {measureName(claim.metric)}
           {claim.value !== undefined ? ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}
           {windowLabel ? ` · ${windowLabel}` : ""}
         </p>
@@ -89,7 +89,7 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
       <div className="mt-4 flex items-center gap-2 border-t border-border/70 pt-3">
         {claim.hookType ? (
           <Badge variant="outline" className="h-6 max-w-[140px] truncate rounded-full px-2 text-[10px] text-muted-foreground">
-            {claim.hookType.replaceAll("_", " ")}
+            {hookName(claim.hookType)}
           </Badge>
         ) : (
           <EngineTag engine={claim.sourceEngine} />

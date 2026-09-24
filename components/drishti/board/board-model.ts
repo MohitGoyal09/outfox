@@ -1,5 +1,6 @@
 import type { Doc } from "@/convex/_generated/dataModel";
 import type { DistributionItem } from "../DistributionPanel";
+import { checkedStateLabel, sourceName } from "../labels";
 import {
   FUNNEL_STAGES,
   HOOK_TYPES,
@@ -15,13 +16,10 @@ export type BoardClaim = Doc<"claims">;
 export type BoardSnapshot = Doc<"snapshots">;
 export type BoardBrand = Doc<"brands">;
 
-export const BOARD_HONESTY_LINE =
-  "Every ranking here is by evidence, never by performance. Public search shows what a rival publishes, not what sells, so this board weighs how much we hold and what mix it carries, and never scores a campaign by its results.";
-
 export const LEADERBOARD_RULE_LINE = "Ranked by evidence volume and mix, not performance.";
 
 export const EMERGING_BASIS_LINE =
-  "Hook share change between the two most recent runs for this cohort.";
+  "Hook share change between the last two checks for these brands.";
 
 export const DATA_ENGINES = [
   "google",
@@ -33,13 +31,6 @@ export const DATA_ENGINES = [
 
 export type DataEngine = (typeof DATA_ENGINES)[number];
 
-const ENGINE_LABEL: Record<string, string> = {
-  google: "google",
-  google_ads_transparency_center: "ads_transparency",
-  youtube: "youtube",
-  youtube_video: "youtube_video",
-  google_trends: "trends",
-};
 
 export type CohortScope = {
   cohortKey: string | null;
@@ -162,6 +153,19 @@ export type BrandCoverage = {
   cells: EngineCell[];
 };
 
+export function engineStatusLabel(status: EngineStatus): string {
+  switch (status) {
+    case "ok":
+      return checkedStateLabel("ok");
+    case "absent":
+      return checkedStateLabel("not_run");
+    case "failed":
+      return "Check failed";
+    case "unavailable":
+      return "Not available";
+  }
+}
+
 export type CoverageGap = {
   brandName: string;
   label: string;
@@ -175,7 +179,7 @@ export function coverageGaps(coverage: BrandCoverage[]): CoverageGap[] {
         gaps.push({
           brandName: brand.brandName,
           label: cell.label,
-          reason: cell.reason ?? cell.status,
+          reason: cell.reason ?? engineStatusLabel(cell.status),
         });
       }
     }
@@ -192,3 +196,26 @@ export type EmergingMove = {
   deltaText: string;
   tone: Tone;
 };
+
+export function runCoverageLine(
+  brands: BoardBrand[],
+  finishedRuns: BoardRun[],
+  allRuns: BoardRun[] = finishedRuns,
+): string | null {
+  const checked = new Set<string>();
+  for (const run of finishedRuns) {
+    for (const brandId of run.brandIds) checked.add(String(brandId));
+  }
+
+  const missing = brands.filter((brand) => !checked.has(String(brand._id)));
+  const never = missing.filter((brand) => !attempted.has(String(brand._id)));
+
+  const covered = brands.length - missing.length;
+  const coveredHave = covered === 1 ? "has" : "have";
+
+  const parts: string[] = [];
+  if (never.length > 0) {
+    const it = never.length === 1 ? "it" : "them";
+    parts.push(`${joinNames(never.map((b) => b.name))} ${has} not been checked yet — check ${it} to include ${it} here.`);
+  }
+}

@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { tagBearingClaims, type YoutubeRawVideoInfo, type YoutubeVideoGroup } from "./brand-model";
+import { hookName } from "@/components/drishti/labels";
 
 function compactCount(value: number): string {
   return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
@@ -77,8 +78,8 @@ export function YouTubeVideoCard({
         ) : null}
         {group.publishedDate ? <p className="text-[11px] text-muted-foreground">Published {group.publishedDate}</p> : null}
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <Badge variant="outline" className="h-6 max-w-[140px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{tag?.hookType?.replaceAll("_", " ") ?? "Signal"}</Badge>
-          <Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{tag?.confidence ?? "Stored"}</Badge>
+          <Badge variant="outline" className="h-6 max-w-[140px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{tag?.hookType ? hookName(tag.hookType) : "Signal"}</Badge>
+          <Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{tag?.confidence ?? "Unrated"}</Badge>
           {group.likeCount !== null ? <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">{group.likeCount.toLocaleString()} likes</span> : null}
         </div>
         <Button asChild variant="outline" size="sm" className="mt-auto h-7 w-full justify-center rounded-md text-[11px]"><a href={group.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button>

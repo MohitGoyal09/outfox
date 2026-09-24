@@ -17,6 +17,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
+import { hookName } from "../labels";
 import { SkeletonRows } from "../Skeleton";
 import { VALUE_CLASS, iconProps } from "../tokens";
 import { LEADERBOARD_RULE_LINE, type BrandLeader } from "./board-model";
@@ -41,7 +42,7 @@ export function BrandLeaderboard({
             <CardDescription className="mt-1">{LEADERBOARD_RULE_LINE}</CardDescription>
           </div>
           {loading ? null : (
-            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{rows.length} brands · {totalClaims} claims</Badge>
+            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{rows.length} brands · {totalClaims} findings</Badge>
           )}
         </div>
       </CardHeader>
@@ -57,15 +58,15 @@ export function BrandLeaderboard({
             size="sm"
             bounded
             icon={<Users {...iconProps} size={16} />}
-            title="No brand has claims in this run yet."
-            description="A brand appears here once at least one engine returns a claim for it. Ranking is by claim volume, then engine breadth."
+            title="No brand has findings in this check yet."
+            description="A brand appears here once at least one source returns a finding for it. Ranking is by finding volume, then source breadth."
           />
         </div>
       ) : (
         <div className="mt-3">
             <Table>
-            <TableHeader><TableRow className="hover:bg-transparent"><TableHead className="w-16 pl-5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Rank</TableHead><TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Brand</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Claims</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Engines</TableHead><TableHead className="hidden pr-5 text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground md:table-cell">Leading hook</TableHead></TableRow></TableHeader>
-            <TableBody>{rows.map((row) => <TableRow key={row.brandId}><TableCell className={cn(VALUE_CLASS, "pl-5 text-muted-foreground")}>{String(row.rank).padStart(2, "0")}</TableCell><TableCell className="max-w-[18rem] whitespace-normal font-medium text-foreground">{row.brandName}</TableCell><TableCell className={cn(VALUE_CLASS, "text-right text-foreground")}>{row.claimCount}</TableCell><TableCell className={cn(VALUE_CLASS, "text-right text-muted-foreground")}>{row.engineCount}</TableCell><TableCell className="hidden pr-5 text-right md:table-cell">{row.topHook ? <Badge variant="secondary" className="font-normal">{row.topHook} · {row.topHookCount}</Badge> : <span className="text-muted-foreground">Not tagged</span>}</TableCell></TableRow>)}</TableBody>
+            <TableHeader><TableRow className="hover:bg-transparent"><TableHead className="w-16 pl-5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Rank</TableHead><TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Brand</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Findings</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Sources</TableHead><TableHead className="hidden pr-5 text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground md:table-cell">Leading hook</TableHead></TableRow></TableHeader>
+            <TableBody>{rows.map((row) => <TableRow key={row.brandId}><TableCell className={cn(VALUE_CLASS, "pl-5 text-muted-foreground")}>{String(row.rank).padStart(2, "0")}</TableCell><TableCell className="max-w-[18rem] whitespace-normal font-medium text-foreground">{row.brandName}</TableCell><TableCell className={cn(VALUE_CLASS, "text-right text-foreground")}>{row.claimCount}</TableCell><TableCell className={cn(VALUE_CLASS, "text-right text-muted-foreground")}>{row.engineCount}</TableCell><TableCell className="hidden pr-5 text-right md:table-cell">{row.topHook ? <Badge variant="secondary" className="font-normal">{hookName(row.topHook)} · {row.topHookCount}</Badge> : <span className="text-muted-foreground">Not tagged</span>}</TableCell></TableRow>)}</TableBody>
           </Table>
         </div>
       )}

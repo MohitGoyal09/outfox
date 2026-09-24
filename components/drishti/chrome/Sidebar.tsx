@@ -195,7 +195,7 @@ export function Sidebar() {
             <BookOpen aria-hidden className="size-3.5 text-sidebar-primary" />
             Your evidence desk
           </div>
-          <p className="mt-1 text-[11px] leading-4 text-sidebar-foreground/55">Public signals, stored with provenance.</p>
+          <p className="mt-1 text-[11px] leading-4 text-sidebar-foreground/55">Public signals, each one linked back to where it came from.</p>
         </div>
         <SidebarMenu>
           <SidebarMenuItem>
