@@ -1,6 +1,6 @@
 import type { Doc } from "@/convex/_generated/dataModel";
 import type { DistributionItem } from "../DistributionPanel";
-import { checkedStateLabel, sourceName } from "../labels";
+import { checkedStateLabel, hookName, sourceName } from "../labels";
 import {
   FUNNEL_STAGES,
   HOOK_TYPES,
@@ -103,12 +103,23 @@ export type BrandLeader = {
   hookBreadth: number;
   topHook: string | null;
   topHookCount: number;
+  isOwnBrand: boolean;
 };
+
+function rankByEvidence(rows: Omit<BrandLeader, "rank">[]): BrandLeader[] {
+  const sorted = [...rows].sort(
+    (a, b) =>
+      b.claimCount - a.claimCount ||
+      b.engineCount - a.engineCount ||
+      a.brandName.localeCompare(b.brandName),
+  );
+}
 
 export function deriveLeaderboard(
   claims: BoardClaim[],
   brandIds: string[],
   brandNames: Record<string, string>,
+  ownBrandId: string | null = null,
 ): BrandLeader[] {
   const byBrand = new Map<string, BoardClaim[]>();
   for (const brandId of brandIds) byBrand.set(brandId, []);
@@ -133,9 +144,14 @@ export function deriveLeaderboard(
       hookBreadth: hooks.size,
       topHook,
       topHookCount,
+      isOwnBrand: brandId === ownBrandId,
     };
   });
-  return rows.map((row, index) => ({ ...row, rank: index + 1 }));
+
+  const ownRow = rows.find((row) => row.isOwnBrand) ?? null;
+  const rivalRows = rows.filter((row) => !row.isOwnBrand);
+  const rankedRivals = rankByEvidence(rivalRows);
+  return [{ ...ownRow, rank: 0 }, ...rankedRivals];
 }
 
 export type EngineStatus = "ok" | "failed" | "unavailable" | "absent";
@@ -150,6 +166,7 @@ export type EngineCell = {
 export type BrandCoverage = {
   brandId: string;
   brandName: string;
+  isOwnBrand: boolean;
   cells: EngineCell[];
 };
 
@@ -218,4 +235,42 @@ export function runCoverageLine(
     const it = never.length === 1 ? "it" : "them";
     parts.push(`${joinNames(never.map((b) => b.name))} ${has} not been checked yet — check ${it} to include ${it} here.`);
   }
+}
+
+export type HookComparisonLine = {
+  hook: string;
+  rivalsWithEvidence: number;
+  rivalsChecked: number;
+  ownHasEvidence: boolean;
+  text: string;
+};
+
+export function deriveOwnBrandHookComparison(
+  claims: BoardClaim[],
+  brandIds: string[],
+  ownBrandId: string | null,
+): HookComparisonLine | null {
+  if (ownBrandId === null) return null;
+  if (!brandIds.includes(ownBrandId)) return null;
+  const rivalIds = brandIds.filter((id) => id !== ownBrandId);
+  for (const claim of claims) {
+    if (claim.hookType === undefined || claim.hookType === "not_applicable") continue;
+    hooksByBrand.get(String(claim.brandId))?.add(claim.hookType);
+  }
+  for (const hook of HOOK_TYPES) {
+    const rivalsWithEvidence = rivalIds.filter((id) => hooksByBrand.get(id)?.has(hook)).length;
+    if (rivalsWithEvidence === 0) continue;
+  }
+  if (best === null) return null;
+
+  const ownHasEvidence = hooksByBrand.get(ownBrandId)?.has(best.hook) ?? false;
+  const rivalWord = rivalIds.length === 1 ? "rival" : "rivals";
+
+  return {
+    hook: best.hook,
+    rivalsWithEvidence: best.rivalsWithEvidence,
+    rivalsChecked: rivalIds.length,
+    ownHasEvidence,
+    text: `${hookName(best.hook)}: ${best.rivalsWithEvidence} of ${rivalIds.length} ${rivalWord} show it. ${ownClause}`,
+  };
 }

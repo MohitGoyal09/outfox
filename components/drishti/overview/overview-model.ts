@@ -98,22 +98,8 @@ export type AttentionRow = {
   detail: string;
   actionHref: string;
   actionLabel: string;
+  isOwnBrand: boolean;
 };
-
-export function composeNeedsAttention(input: {
-  brands: readonly BrandLike[];
-  runs: readonly RunLike[];
-  claims: readonly FeedClaim[];
-  brandNameById: BrandNameById;
-  nowMs: number;
-}): AttentionRow[] {
-  const rows: AttentionRow[] = [];
-
-  return rows.sort((a, b) => {
-    const rank = REASON_RANK[a.reason] - REASON_RANK[b.reason];
-    return rank !== 0 ? rank : a.brandName.localeCompare(b.brandName);
-  });
-}
 
 
 export type RunSourceCount = {
@@ -134,6 +120,7 @@ export type BrandChange = {
   brandName: string;
   sentence: string;
   actionHref: string;
+  isOwnBrand: boolean;
 };
 
 export type WhatChangedFeed = {
@@ -155,21 +142,10 @@ export function composeWhatChanged(
   sourceCounts: readonly RunSourceCount[],
   brandNameById: BrandNameById,
   nowMs: number,
+  ownBrandId: string | null = null,
 ): WhatChangedFeed | null {
   const coverage = brandCoverage(brands, runs);
   let comparableBrandCount = 0;
-  const dated: Array<{ change: BrandChange; checkedAt: string }> = [];
-
-  for (const brand of brands) {
-    if (cov === undefined || cov.lastFinishedRun === null || cov.previousFinishedRun === null) continue;
-    comparableBrandCount += 1;
-    const sources = new Set([...latest.keys(), ...prior.keys()]);
-
-    const sourceChanges: SourceChange[] = [];
-
-    const brandName = brandNameById[brand.id] ?? brand.name;
-    const sinceIso = cov.previousFinishedRun.completedAt ?? cov.previousFinishedRun.requestedAt;
-  }
 
   return { changes: dated.map((row) => row.change), comparableBrandCount };
 }
@@ -187,6 +163,7 @@ export type EvidenceItem = {
   hookType: HookType | null;
   fetchedAt: string;
   evidenceUrl: string;
+  isOwnBrand: boolean;
 };
 
 export type EvidenceFeed = {
@@ -199,6 +176,7 @@ export function composeNewestEvidence(
   claims: readonly FeedClaim[],
   brandNameById: BrandNameById,
   limit = MAX_NEWEST_EVIDENCE,
+  ownBrandId: string | null = null,
 ): EvidenceFeed {
   const eligible = claims.filter(
     (claim) =>
@@ -218,6 +196,18 @@ export function composeNewestEvidence(
       overflow.push(claim);
     }
   }
+  const items = [...spread, ...overflow].slice(0, Math.max(0, limit)).map((claim) => ({
+    id: claim.id,
+    brandId: claim.brandId,
+    brandName: brandNameById[claim.brandId] ?? claim.brandId,
+    text: displayClaimText(claim.text),
+    engine: claim.sourceEngine,
+    engineLabelText: sourceName(claim.sourceEngine),
+    hookType: claim.hookType !== null && isHookType(claim.hookType) ? claim.hookType : null,
+    fetchedAt: claim.fetchedAt,
+    evidenceUrl: claim.evidenceUrl.trim(),
+    isOwnBrand: claim.brandId === ownBrandId,
+  }));
   return { items, total: eligible.length, bounded: eligible.length > items.length };
 }
 

@@ -29,6 +29,7 @@ import {
   type RunHistoryRow,
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
+import { OwnBrandToggle } from "./OwnBrandToggle";
 import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
 import { shortDate } from "./format";
 import { useBrandFilters } from "./filters/useBrandFilters";
@@ -197,6 +198,11 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 <div className="flex flex-wrap items-center gap-2">
                   <h1 className="truncate text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{brand.name}</h1>
                   {statusBadge(brand.profileStatus)}
+                  {brand.isOwnBrand === true ? (
+                    <Badge variant="outline" className="h-6 rounded-full border-accent/35 bg-accent/[0.08] px-2.5 text-[11px] font-medium text-accent">
+                      Your brand
+                    </Badge>
+                  ) : null}
                 </div>
                 <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <span>{brand.vertical}</span>
@@ -211,6 +217,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               </div>
             </div>
             <div className="flex items-center gap-2">
+              <OwnBrandToggle brandId={brandId} isOwn={brand.isOwnBrand === true} size="sm" className="h-8" />
               <ShareButton />
               {latestRun ? (
                 <Button asChild size="sm" className="h-8 gap-1.5">

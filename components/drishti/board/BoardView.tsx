@@ -28,6 +28,7 @@ import {
   deriveFunnelDistribution,
   deriveHookDistribution,
   deriveLeaderboard,
+  deriveOwnBrandHookComparison,
   runCoverageLine,
   scopeCohortRuns,
 } from "./board-model";
@@ -67,6 +68,8 @@ function BoardSkeleton() {
 export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const { runs, isLoading: runsLoading } = useAllRuns();
   const brands = useQuery(api.brands.listBrands);
+  const ownBrand = useQuery(api.brands.getOwnBrand);
+  const ownBrandId = ownBrand ? String(ownBrand._id) : null;
 
   const finishedRuns = useMemo(
     () => runs.filter((run) => run.status === "complete" || run.status === "partial"),
@@ -114,12 +117,19 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     [claims, priorClaims],
   );
   const leaders = useMemo(
-    () => (claims !== undefined ? deriveLeaderboard(claims, brandIds, brandNames) : []),
-    [claims, brandIds, brandNames],
+    () => (claims !== undefined ? deriveLeaderboard(claims, brandIds, brandNames, ownBrandId) : []),
+    [claims, brandIds, brandNames, ownBrandId],
   );
   const coverage = useMemo(
-    () => (snapshots !== undefined ? deriveEngineCoverage(snapshots, brandIds, brandNames) : []),
-    [snapshots, brandIds, brandNames],
+    () =>
+      snapshots !== undefined
+        ? deriveEngineCoverage(snapshots, brandIds, brandNames, ownBrandId)
+        : [],
+    [snapshots, brandIds, brandNames, ownBrandId],
+  );
+  const hookComparison = useMemo(
+    () => (claims !== undefined ? deriveOwnBrandHookComparison(claims, brandIds, ownBrandId) : null),
+    [claims, brandIds, ownBrandId],
   );
   const emerging = useMemo(
     () =>
@@ -134,10 +144,14 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const gaps = coverageGaps(coverage);
   const isPartial = current?.status === "partial" || gaps.length > 0;
   const singleBrand = brandIds.length === 1;
-  const cohortTitle =
-    brandIds.length > 0
-      ? brandIds.map((id) => brandNames[id] ?? id.slice(0, 8)).join(" · ")
-      : "No brands in this check";
+  const cohortBrands = brandIds.map((id) => ({
+    id,
+    name: brandNames[id] ?? id.slice(0, 8),
+    isOwn: id === ownBrandId,
+  }));
+  const ownBrandInView = ownBrandId !== null && brandIds.includes(ownBrandId);
+  const ownBrandNotInView = ownBrand != null && ownBrandId !== null && !ownBrandInView;
+  const rivalCountInView = brandIds.length - (ownBrandInView ? 1 : 0);
 
   return (
     <div className="flex flex-col gap-5">
@@ -150,7 +164,16 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           {current ? <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{current.status} · {formatStamp(current.requestedAt)}</Badge> : null}
         </div>
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
-          <span className="font-medium text-fg">{cohortTitle}</span>
+          <span className="font-medium text-fg">
+            {cohortBrands.length > 0
+              ? cohortBrands.map((brand, index) => (
+                  <span key={brand.id}>
+                    {index > 0 ? " · " : ""}
+                    {brand.isOwn ? <>You — {brand.name}</> : brand.name}
+                  </span>
+                ))
+              : "No brands in this check"}
+          </span>
           {current !== null ? (
             <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
               checked {formatStamp(current.requestedAt)} · {current.status}
@@ -160,6 +183,12 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         <p className="max-w-[68ch] type-body text-fg-secondary">
           {BOARD_HONESTY_LINE}
         </p>
+        {ownBrandNotInView ? (
+          <p className="max-w-[68ch] type-caption text-fg-secondary">
+            {ownBrand?.name} is set as your brand, but it has not appeared in a finished
+            check yet — nothing to compare it against until it has.
+          </p>
+        ) : null}
         {coverageLine !== null ? (
           <p className="max-w-[68ch] type-caption text-fg-secondary">{coverageLine}</p>
         ) : null}
@@ -187,7 +216,13 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       {current && claims !== undefined ? (
         <div className="grid gap-3 sm:grid-cols-3" aria-label="Board summary">
           {[
-            ["Brands in view", brandIds.length, "Rivals in this check"],
+            [
+              "Brands in view",
+              brandIds.length,
+              ownBrandInView
+                ? `You plus ${rivalCountInView} ${rivalCountInView === 1 ? "rival" : "rivals"}`
+                : "Rivals in this check",
+            ],
             ["Findings held", claims.length, "What we found, not performance"],
             ["What we checked", `${coverage.reduce((total, brand) => total + brand.cells.filter((cell) => cell.status === "ok").length, 0)}/${coverage.reduce((total, brand) => total + brand.cells.length, 0)}`, "Checks that returned data"],
           ].map(([label, value, detail]) => (
@@ -234,6 +269,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           <BrandLeaderboard
             rows={leaders}
             totalClaims={claims?.length ?? 0}
+            comparison={hookComparison}
             loading={claims === undefined}
           />
           <EngineCoverage coverage={coverage} loading={snapshots === undefined} />

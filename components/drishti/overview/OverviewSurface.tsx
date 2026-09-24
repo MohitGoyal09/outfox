@@ -63,6 +63,10 @@ function OverviewBody() {
     [brandLikes],
   );
   const brandIds = useMemo(() => brands.map((brand) => brand._id), [brands]);
+  const ownBrandId = useMemo(() => {
+    const own = brands.find((brand) => brand.isOwnBrand === true);
+    return own ? String(own._id) : null;
+  }, [brands]);
 
   const { runs, isLoading: runsLoading } = useAllRuns();
   const runLikes: RunLike[] = useMemo(
@@ -119,10 +123,13 @@ function OverviewBody() {
     () =>
       panelsLoading
         ? []
-        : composeNeedsAttention({ brands: brandLikes, runs: runLikes, claims, brandNameById, nowMs }),
-    [panelsLoading, brandLikes, runLikes, claims, brandNameById, nowMs],
+        : composeNeedsAttention({ brands: brandLikes, runs: runLikes, claims, brandNameById, nowMs, ownBrandId }),
+    [panelsLoading, brandLikes, runLikes, claims, brandNameById, nowMs, ownBrandId],
   );
-  const evidenceFeed = useMemo(() => composeNewestEvidence(claims, brandNameById), [claims, brandNameById]);
+  const evidenceFeed = useMemo(
+    () => composeNewestEvidence(claims, brandNameById, undefined, ownBrandId),
+    [claims, brandNameById, ownBrandId],
+  );
   const emerging = useMemo(() => composeEmerging(claims, coverage, brandNameById), [claims, coverage, brandNameById]);
 
   const compareRunIds = useMemo(() => {
@@ -156,8 +163,8 @@ function OverviewBody() {
     () =>
       panelsLoading || sourceCountsLoading
         ? null
-        : composeWhatChanged(brandLikes, runLikes, sourceCounts, brandNameById, nowMs),
-    [panelsLoading, sourceCountsLoading, brandLikes, runLikes, sourceCounts, brandNameById, nowMs],
+        : composeWhatChanged(brandLikes, runLikes, sourceCounts, brandNameById, nowMs, ownBrandId),
+    [panelsLoading, sourceCountsLoading, brandLikes, runLikes, sourceCounts, brandNameById, nowMs, ownBrandId],
   );
 
   const threads = useMemo(() => recentThreads(threadsQuery ?? []), [threadsQuery]);

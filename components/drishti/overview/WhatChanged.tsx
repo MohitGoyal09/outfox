@@ -3,6 +3,7 @@
 import { ArrowUpRight } from "lucide-react";
 
 import { EmptyState, Panel, iconProps } from "@/components/drishti";
+import { cn } from "@/lib/utils";
 
 import { ActionLink } from "./ActionLink";
 import { SectionLabel } from "./SectionLabel";
@@ -32,7 +33,10 @@ export function WhatChanged({ feed }: WhatChangedProps) {
           {feed.changes.map((change) => (
             <li
               key={change.brandId}
-              className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+              className={cn(
+                "flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
+                change.isOwnBrand && "border-l-2 border-l-[var(--accent,#e2a339)]",
+              )}
             >
               <p className="type-body max-w-[64ch] text-fg">{change.sentence}</p>
               <div className="shrink-0">

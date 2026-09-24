@@ -48,6 +48,13 @@ export function claimsForRun(claims: ClaimDoc[], runId: string): ClaimDoc[] {
   return claims.filter((claim) => String(claim.runId) === runId);
 }
 
+
+export type OwnBrandSplit = { own: BrandDoc | null; competitors: BrandDoc[] };
+
+export function splitOwnBrand(brands: readonly BrandDoc[]): OwnBrandSplit {
+  const competitors = brands.filter((brand) => brand.isOwnBrand !== true);
+}
+
 export function runsForBrand(runs: RunDoc[], brandId: string): RunDoc[] {
   return sortRunsDesc(
     runs.filter((run) => run.brandIds.some((id) => String(id) === brandId)),

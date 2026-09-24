@@ -67,6 +67,7 @@ export function NewestEvidence({ loading, hasBrands, feed, nowMs }: NewestEviden
                 <p className="type-body max-w-[68ch] text-fg [overflow-wrap:anywhere]">{item.text}</p>
                 <div className="flex flex-wrap items-center gap-x-3 gap-y-1.5">
                   <span className={cn(VALUE_CLASS, "text-[11px] text-fg-secondary")}>{item.brandName}</span>
+                  {item.isOwnBrand ? <Chip label="Your brand" dot={false} /> : null}
                   <span className="type-caption text-fg-tertiary">{item.engineLabelText}</span>
                   <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
                     {relativeTime(item.fetchedAt, nowMs)}

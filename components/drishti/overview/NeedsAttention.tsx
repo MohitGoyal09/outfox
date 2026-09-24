@@ -49,6 +49,7 @@ export function NeedsAttention({ rows }: NeedsAttentionProps) {
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex flex-wrap items-center gap-2">
                 <span className={cn(LABEL_CLASS, "text-fg")}>{row.brandName}</span>
+                {row.isOwnBrand ? <Chip label="Your brand" dot={false} /> : null}
                 <Chip label={REASON_LABEL[row.reason]} tone={REASON_TONE[row.reason]} />
               </div>
               <p className="type-body max-w-[64ch] text-fg-secondary">{row.detail}</p>
