@@ -154,3 +154,7 @@ export function deriveCheckTrailRows(
       ...(event.detail !== undefined ? { detail: event.detail } : {}),
     }));
 }
+
+export function hasFailedSource(rows: readonly CheckTrailRow[]): boolean {
+  return rows.some((row) => row.status === "failed");
+}

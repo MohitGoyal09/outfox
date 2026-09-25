@@ -7,7 +7,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button, EmptyState, Panel, Trail, iconProps, type TrailStep } from "@/components/drishti";
 import { sourceName, hookName } from "@/components/drishti/labels";
-import { deriveCheckTrailRows, deriveComparisonSummary, hasComparisonToShow } from "./onboarding-model";
+import { deriveCheckTrailRows, deriveComparisonSummary, hasComparisonToShow, hasFailedSource } from "./onboarding-model";
 import type { SelectedCompetitor } from "./Step2Competitors";
 
 const SOURCES_CHECKED = "Google, YouTube, Google Trends, Google News, and Ads Transparency (where available)";
@@ -114,6 +114,7 @@ export function Step3FirstCheck({
     );
   }
 
+  const showPartialWarning = run.status === "partial" && hasFailedSource(trailRows);
   const competitorIds = competitors.map((row) => row.id);
   const nameById = new Map<string, string>([[ownBrandId, ownBrandName], ...competitors.map((row): [string, string] => [row.id, row.name])]);
   const summary =
@@ -131,10 +132,10 @@ export function Step3FirstCheck({
 
   return (
     <div className="flex flex-col gap-6">
-      {run.status === "partial" ? (
+      {showPartialWarning ? (
         <p className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--warn,#B45309)]">
           <TriangleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-          Some sources didn&rsquo;t come back this time. Here&rsquo;s what we did find.
+          Some sources couldn&rsquo;t be checked this time. Here&rsquo;s what we did find.
         </p>
       ) : null}
 

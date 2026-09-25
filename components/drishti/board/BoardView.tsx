@@ -205,10 +205,10 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         <p className="max-w-[68ch] type-caption text-fg-secondary">
           {current?.status === "partial" ? "This check is partial. " : ""}
           {gaps.length === 1
-            ? "1 source check did not return; it is named per rival below."
+            ? "1 source could not be checked; it is named per rival below."
             : gaps.length > 1
-              ? `${gaps.length} source checks did not return; each is named per rival below.`
-              : "Some sources did not return for this check."}{" "}
+              ? `${gaps.length} sources could not be checked; each is named per rival below.`
+              : "Some sources could not be checked for this check."}{" "}
           A gap is never counted as a zero.
         </p>
       ) : null}

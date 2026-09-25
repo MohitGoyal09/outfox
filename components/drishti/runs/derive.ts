@@ -51,20 +51,22 @@ export function brandNameMap(
   return map;
 }
 
+export function brandDisplayName(id: string, names: Map<string, string>): string {
+  return names.get(id) ?? "a removed brand";
+}
+
 export function brandRefs(
   brandIds: readonly string[],
   names: Map<string, string>,
 ): BrandRef[] {
-  return brandIds.map((id) => ({ id, name: names.get(id) ?? id.slice(0, 8) }));
+  return brandIds.map((id) => ({ id, name: brandDisplayName(id, names) }));
 }
 
 export function cohortLabel(
   brandIds: readonly string[],
   names: Map<string, string>,
 ): string {
-  return brandIds
-    .map((id) => names.get(id) ?? id.slice(0, 8))
-    .join(" · ");
+  return brandIds.map((id) => brandDisplayName(id, names)).join(" · ");
 }
 
 export function sortRunsNewestFirst<T extends { _id: string; requestedAt: string }>(

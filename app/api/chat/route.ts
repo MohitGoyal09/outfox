@@ -25,6 +25,7 @@ import { appendTurn, clip, extractFollowUps, isTextChunk, logEvent, recordUsage,
 import { buildHistoryMessages, textOfParts } from "./history";
 import { buildTools } from "./tools";
 import type { TurnState } from "./tools";
+import { selectPromptRefs } from "./evidenceBudget";
 const ID_RE = /^[a-z0-9_]+$/i;
 const MAX_MESSAGE_CHARS = 4000;
 
