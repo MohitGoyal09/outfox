@@ -1,4 +1,6 @@
 
+import { DONUT_MIN_DISTINCT } from "../tokens";
+
 export const A2UI_VERSION = "v0.9.1";
 export const CATALOG_ID = "drishti/answers/v1";
 
@@ -324,8 +326,8 @@ export function resolveA2UI(
       } else {
         const real = bound.rows.filter((row) => row.count > 0);
         node =
-          real.length < 3
-            ? { kind: "unavailable", id, title, reason: `a share chart needs at least 3 categories with a count; this view has ${real.length}` }
+          real.length < DONUT_MIN_DISTINCT
+            ? { kind: "unavailable", id, title, reason: `a share chart needs at least ${DONUT_MIN_DISTINCT} categories with a count; this view has ${real.length}` }
             : { kind: "donut", id, title, rows: real };
       }
     } else if (component.component === "StackedBar") {

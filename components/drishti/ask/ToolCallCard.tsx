@@ -77,10 +77,6 @@ export function toolTitle(name: string): string {
   return (TOOL_META[name] ?? DEFAULT_TOOL_META).title;
 }
 
-export function toolIcon(name: string): LucideIcon {
-  return (TOOL_META[name] ?? DEFAULT_TOOL_META).icon;
-}
-
 const TOOL_ENGINE: Record<string, string> = {
   get_trends: "google_trends",
   web_search: "google",

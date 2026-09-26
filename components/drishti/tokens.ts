@@ -74,6 +74,8 @@ export const FUNNEL_STAGE_INDEX: Record<FunnelStage, number> = {
   not_applicable: 5,
 };
 
+export const DONUT_MIN_DISTINCT = 3;
+
 export type ScaleKind = "hook" | "funnel";
 
 

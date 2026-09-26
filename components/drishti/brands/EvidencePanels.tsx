@@ -9,7 +9,8 @@ import { hookName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, FOCUS_RING_CLASS, VALUE_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
+import { DONUT_MIN_DISTINCT, FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, FOCUS_RING_CLASS, VALUE_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
+export { DONUT_MIN_DISTINCT };
 import type { DistributionItem } from "../DistributionPanel";
 
 
@@ -45,7 +46,6 @@ export function SummaryPanel({ title, subtitle, children, className }: { title: 
   );
 }
 
-export const DONUT_MIN_DISTINCT = 3;
 
 function hookRow(row: DistributionItem): DistributionItem & { count: number } {
   return { label: row.label, count: row.count ?? 0, sharePct: null, delta: row.delta };
