@@ -188,7 +188,7 @@ function AskAnswerContent({
               type="button"
               onClick={() => onRetry(question)}
               disabled={retrying}
-              className="rounded-full border border-border bg-bg-raised px-2.5 py-1 text-[11.5px] text-fg-secondary transition-colors duration-150 ease-out hover:border-accent/50 hover:bg-accent-dim hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
+              className="rounded-md border border-border px-2.5 py-1 text-[12px] text-fg-secondary transition-colors duration-150 ease-out hover:border-border-strong hover:bg-bg-inset hover:text-fg disabled:cursor-not-allowed disabled:opacity-50"
             >
               {question}
             </button>
@@ -249,7 +249,7 @@ export function AskMessage({
   return (
     <>
       <Message from="user">
-        <MessageContent className="rounded-[8px] bg-bg-inset px-4 py-3 text-fg">
+        <MessageContent className="rounded-2xl bg-accent px-4 py-3 text-accent-ink">
           {turn.question}
         </MessageContent>
       </Message>

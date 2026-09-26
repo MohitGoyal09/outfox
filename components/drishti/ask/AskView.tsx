@@ -10,8 +10,7 @@ import {
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { CircleAlert, Eraser } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { CircleAlert } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import {
@@ -19,8 +18,7 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import { Button } from "../Button";
-import { LABEL_CLASS, iconProps } from "../tokens";
+import { iconProps } from "../tokens";
 import { AgentMessage } from "./AgentMessage";
 import { AskComposer } from "./AskComposer";
 import { AskEmptyState } from "./AskEmptyState";
@@ -436,6 +434,12 @@ export function AskView({
       chips={mentionBrandViews.map((brand) => ({ id: String(brand.id), name: brand.name }))}
       onRemoveChip={(id) => removeMention(id as Id<"brands">)}
       onMention={openMentionPicker}
+      onClear={hasTranscript ? () => setMessages([]) : undefined}
+      trailing={
+        hasTranscript && sourceRows.length > 0 ? (
+          <SourcesDrawer rows={sourceRows} claimsById={claimsById} />
+        ) : undefined
+      }
       overlay={
         mentionMenuOpen ? (
           <BrandMentionMenu
@@ -483,26 +487,6 @@ export function AskView({
 
   return (
     <div className="-mb-24 -mt-6 flex h-[calc(100dvh-4rem)] min-h-[32rem] w-full flex-col overflow-hidden sm:-mt-8 lg:-mt-10">
-      {hasTranscript ? (
-        <div className="shrink-0 border-b border-border px-4 sm:px-6">
-          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 py-2.5">
-            <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Conversation</span>
-            <div className="flex items-center gap-1.5">
-              {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} claimsById={claimsById} /> : null}
-              <Button
-                variant="ghost"
-                size="sm"
-                className="rounded-sm"
-                icon={<Eraser {...iconProps} size={14} aria-hidden="true" />}
-                onClick={() => setMessages([])}
-              >
-                Clear
-              </Button>
-            </div>
-          </div>
-        </div>
-      ) : null}
-
       {!hasTranscript ? (
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-6 sm:px-6">
           <AskEmptyState

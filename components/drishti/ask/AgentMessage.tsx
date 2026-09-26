@@ -143,6 +143,7 @@ export function AgentMessage({
         <AnswerCharts
           message={message as unknown as { parts?: unknown }}
           persistedResults={persistedTrends}
+          brandLabel={(brandId) => brandNames[brandId] ?? brandId}
         />
 
         {approvals.map((part) => {
@@ -202,7 +203,11 @@ export function AgentMessage({
 
         {messageText !== "" ? (
           <>
-            <div className="flex w-full flex-col gap-3 rounded-lg border border-border bg-bg-raised p-4 shadow-[var(--shadow-xs)]">
+            {/* No card: the answer reads as plain text on the page ground,
+                not a raised panel (see the reference chat this ports). The
+                one exception is `UnavailableBlock`, which owns its own
+                status surface -- a failed step must not look like prose. */}
+            <div className="flex w-full flex-col gap-3">
               <UnavailableBlock
                 failedSteps={failedCards}
                 noGroundedEvidence={provenance?.mode === "template"}

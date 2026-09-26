@@ -4,7 +4,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animate, useReducedMotion } from "motion/react";
-import { Check, ChevronDown, Sparkles, X } from "lucide-react";
+import { ChevronDown, Sparkles } from "lucide-react";
 import { iconProps } from "../tokens";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import "./thought-line.css";
@@ -56,9 +56,18 @@ export function ThoughtLine({
   className?: string;
 }) {
   const reduce = useReducedMotion();
+  const stepCount = steps.length;
+  const failedCount = steps.filter((step) => step.status === "failed").length;
+  const actionWord = stepCount === 1 ? "action" : "actions";
+  const settledSummary =
+    failedCount > 0
+      ? `${stepCount} ${actionWord} · ${failedCount} failed`
+      : `${stepCount} ${actionWord} completed`;
+  const workingSummary = `Running ${stepCount} ${actionWord}…`;
+
   const [autoSettled, setAutoSettled] = useState(false);
-  const [open, setOpen] = useState(true);
-  const [announce, setAnnounce] = useState("Thinking…");
+  const [open, setOpen] = useState(working);
+  const [announce, setAnnounce] = useState(working ? workingSummary : settledSummary);
   const [frozenDeciseconds, setFrozenDeciseconds] = useState<number | null>(null);
   const dsRef = useRef(0);
 
@@ -79,11 +88,8 @@ export function ThoughtLine({
   if (isWorking !== prevIsWorking) {
     setPrevIsWorking(isWorking);
     setOpen(isWorking);
-    setAnnounce(isWorking ? "Thinking…" : "Thought");
+    setAnnounce(isWorking ? workingSummary : settledSummary);
   }
-
-  const hasMeasuredDuration = (elapsedSeconds ?? 0) > 0 || (frozenDeciseconds ?? 0) > 0;
-  const doneLabel = hasMeasuredDuration ? "Thought for" : "Done thinking";
 
   const glyphRef = useRef<HTMLSpanElement | null>(null);
   const breathRef = useRef<HTMLSpanElement | null>(null);
@@ -193,7 +199,7 @@ export function ThoughtLine({
       <span ref={stackRef} className="thought-line__label" aria-hidden="true">
         <span ref={workRef} className="thought-line__text" data-active={isWorking ? "" : undefined}>
           <span ref={breathRef} className="thought-line__breath" data-shimmer={sheen ? "" : undefined}>
-            Thinking…
+            {workingSummary}
           </span>
         </span>
         <span
@@ -201,7 +207,7 @@ export function ThoughtLine({
           className="thought-line__text thought-line__text--done"
           data-active={isWorking ? undefined : ""}
         >
-          {doneLabel}
+          {settledSummary}
         </span>
       </span>
       {/* Mounted for the whole live turn (working through settled) so the
@@ -215,8 +221,9 @@ export function ThoughtLine({
           mounted once `frozenDeciseconds` holds a real self-measured value
           even if the caller's `showTimer` has already dropped back to false
           by settle time (a turn stopped or that errored before ever going
-          live) -- otherwise the label reads "Thought for" with no number
-          beside it, the exact dangling-label bug this line exists to avoid. */}
+          live) -- otherwise the timer would vanish while the settled summary
+          still stood, the dangling-measurement bug this line exists to
+          avoid. */}
       {showTimer || frozenDeciseconds !== null ? (
         <span ref={timerRef} className="thought-line__timer" data-done={isWorking ? undefined : ""} aria-hidden="true">
           {isWorking ? "0.0s" : settledText}
@@ -276,16 +283,16 @@ export function ThoughtLine({
                   data-running={running ? "" : undefined}
                 >
                   <span className="thought-line__mark" aria-hidden="true">
-                    {failed ? (
-                      <X {...iconProps} strokeWidth={2.5} />
-                    ) : done ? (
-                      <Check {...iconProps} strokeWidth={2.5} />
-                    ) : (
-                      <i className="thought-line__pulse" />
-                    )}
+                    <i className="thought-line__dot" />
                   </span>
                   {step.engine ? <PlatformLogo engine={step.engine} className="size-3.5" /> : null}
                   <span className="thought-line__step-text">{step.text}</span>
+                  {/* The dot's shape and hue are the visual status cue; this
+                      is the same state for a screen reader, since the mark
+                      itself is aria-hidden. */}
+                  <span className="thought-line__sr">
+                    {failed ? "failed" : done ? "complete" : "running"}
+                  </span>
                 </div>
               );
             })}

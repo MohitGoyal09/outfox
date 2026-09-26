@@ -36,6 +36,8 @@ export function AskComposer({
   chips = [],
   onRemoveChip,
   onMention,
+  onClear,
+  trailing,
   overlay,
   note,
   className,
@@ -56,6 +58,8 @@ export function AskComposer({
   chips?: AskContextChip[];
   onRemoveChip?: (id: string) => void;
   onMention?: () => void;
+  onClear?: () => void;
+  trailing?: ReactNode;
   overlay?: ReactNode;
   note?: ReactNode;
   className?: string;
@@ -144,6 +148,21 @@ export function AskComposer({
               ))}
             </PromptInputTools>
             <div className="flex items-center gap-2.5">
+              {onClear ? (
+                <button
+                  type="button"
+                  onClick={onClear}
+                  aria-label="Clear this conversation"
+                  className={cn(
+                    "rounded-full px-2.5 py-1 text-[11.5px] font-medium text-fg-tertiary",
+                    STATE_TRANSITION_CLASS,
+                    "hover:bg-bg-inset hover:text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                  )}
+                >
+                  Clear
+                </button>
+              ) : null}
+              {trailing}
               {overCap ? (
                 <span
                   role="alert"

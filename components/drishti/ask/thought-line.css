@@ -104,6 +104,13 @@
     opacity var(--tl-settle) ease,
     transform var(--tl-settle) var(--tl-ease-in-out);
 }
+/* A separator only when there is a duration to separate: an empty settled
+   timer draws no dangling dot. */
+.thought-line__timer:not(:empty)::before {
+  content: "·";
+  margin-right: 0.4em;
+  opacity: 0.5;
+}
 .thought-line__timer[data-done] {
   opacity: var(--tl-done);
 }
@@ -153,6 +160,7 @@
   overflow: clip;
 }
 .thought-line__steps {
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: 0.55em;
@@ -162,6 +170,18 @@
   font-size: 0.95em;
   font-weight: 400;
   white-space: normal;
+}
+/* The connector rail: one hairline from the first dot's centre to the last
+   dot's centre, at the dot column's x (padding-left + half the mark). Only
+   drawn with 2+ steps, so a single step never shows a stray line. */
+.thought-line__steps:has(> .thought-line__step:nth-child(2))::before {
+  content: "";
+  position: absolute;
+  left: calc(1.95em - 0.5px);
+  top: 1.3em;
+  bottom: 0.87em;
+  width: 1px;
+  background: var(--border, #e4e7ec);
 }
 .thought-line__step {
   display: flex;
@@ -186,24 +206,22 @@
   place-items: center;
   width: 1em;
   height: 1em;
-  opacity: 0.55;
 }
-.thought-line__mark svg {
-  width: 100%;
-  height: 100%;
-}
-.thought-line__pulse {
+/* The status dot. Shape and hue carry the state together, so a colourblind
+   reader reads the same thing: a filled disc (complete), a hollow pulsing
+   ring (running), a small square (failed) -- never hue alone. */
+.thought-line__dot {
   display: block;
-  width: 0.4em;
-  height: 0.4em;
+  width: 0.5em;
+  height: 0.5em;
   border-radius: 50%;
-  background: currentColor;
-  animation: thought-line-pulse 1.6s var(--tl-ease-in-out) infinite;
+  background: var(--tl-glyph);
+  transition: background var(--tl-settle) var(--tl-ease-out);
 }
 @keyframes thought-line-pulse {
   0%,
   100% {
-    opacity: 0.55;
+    opacity: 0.5;
   }
   50% {
     opacity: 1;
@@ -218,21 +236,24 @@
 .thought-line__step[data-done] .thought-line__step-text {
   opacity: 0.55;
 }
-/* Status colour lives on the mark; the icon shape (check / X / pulse) is the
+/* Status colour lives on the dot; its shape (disc / ring / square) is the
    non-colour cue, so a colourblind reader still reads the same state. */
-.thought-line__step[data-done] .thought-line__mark {
-  opacity: 0.85;
-  color: var(--ok, #059669);
+.thought-line__step[data-done] .thought-line__dot {
+  background: var(--ok, #059669);
 }
-.thought-line__step[data-running] .thought-line__mark {
-  opacity: 0.85;
-  color: var(--warn, #b45309);
+.thought-line__step[data-running] .thought-line__dot {
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--warn, #b45309);
+  animation: thought-line-pulse 1.6s var(--tl-ease-in-out) infinite;
 }
 /* A failed step never reads as completed: full opacity, danger ink, no dim. */
 .thought-line__step[data-failed] {
   opacity: 1;
 }
-.thought-line__step[data-failed] .thought-line__mark,
+.thought-line__step[data-failed] .thought-line__dot {
+  background: var(--tl-danger);
+  border-radius: 1px;
+}
 .thought-line__step[data-failed] .thought-line__step-text {
   opacity: 1;
   color: var(--tl-danger);
@@ -250,7 +271,7 @@
     transform: none !important;
     transition: opacity 200ms ease;
   }
-  .thought-line__pulse {
+  .thought-line__step[data-running] .thought-line__dot {
     animation-duration: 2.4s;
   }
 }
