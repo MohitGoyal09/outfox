@@ -14,3 +14,13 @@ export function periodWindow(period: string | undefined | null): string | null {
 export function decodeClaimEntities(text: string): string {
   if (!text.includes("&")) return text;
 }
+
+export function parseRelatedVideoViews(text: string): number | null {
+  if (match === null) return null;
+  const value = Number(match[1]);
+}
+
+export function parseShoppingPrice(text: string): string | null {
+  const match = text.match(/ at ([^"]+)$/);
+  return match ? decodeClaimEntities(match[1]) : null;
+}

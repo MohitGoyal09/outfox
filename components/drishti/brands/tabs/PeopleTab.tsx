@@ -8,6 +8,8 @@ import { EmptyState } from "../../EmptyState";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { categoricalColorFor, iconProps } from "../../tokens";
+import { CountListPanel } from "../CountListPanel";
+import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   audienceHintFrequency,
@@ -17,8 +19,9 @@ import {
   groupYoutubeVideoClaims,
   isContentClaim,
   mergeCreatorRows,
-  newsPublisherClaims,
+  newsPublisherRanking,
   readYoutubeRawVideo,
+  relatedVideoCatalogRows,
   tagBearingClaims,
   tagsForClaim,
   youtubeSearchResultRows,
@@ -27,8 +30,10 @@ import {
   type SnapshotDoc,
 } from "../brand-model";
 import { EvidenceGrid } from "../EvidenceGrid";
+import { PlatformLogo } from "../PlatformLogo";
 import { YouTubeVideoCard } from "../YouTubeVideoCard";
 import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import { compactCount } from "../format";
 
 function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): ClaimDoc[] {
   const byId = new Map(claims.map((claim) => [String(claim._id), claim]));
@@ -38,10 +43,6 @@ function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): Cl
     if (target !== undefined && isContentClaim(target)) resolved.set(String(target._id), target);
   }
   return [...resolved.values()];
-}
-
-function compactCount(value: number): string {
-  return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
 }
 
 function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, brand }: { claims: ClaimDoc[]; youtubeSnapshot?: SnapshotDoc; youtubeSearchSnapshot?: SnapshotDoc; brand: BrandDoc }) {
@@ -204,49 +205,6 @@ function BreakoutVideos({ claims, youtubeSnapshot }: { claims: ClaimDoc[]; youtu
   );
 }
 
-function PublisherListPanel({ claims }: { claims: ClaimDoc[] }) {
-  const rows = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const claim of newsPublisherClaims(claims)) {
-      const label = typeof claim.value === "string" ? claim.value : claim.text;
-      counts.set(label, (counts.get(label) ?? 0) + 1);
-    }
-    return [...counts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
-  }, [claims]);
-  return (
-    <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <Newspaper className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo
-            label="Publishers talking about this brand"
-            definition="How many real news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage of the brand."
-          />
-        </h3>
-      </div>
-      <div className="p-4">
-        {rows.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<Newspaper {...iconProps} size={16} />}
-            title="No publisher evidence yet."
-            description="Ranks real Google News publisher names once that data is available."
-          />
-        ) : (
-          <ul className="space-y-2">
-            {rows.map((row) => (
-              <li key={row.label} className="flex items-center justify-between gap-3 text-xs">
-                <span className="truncate">{row.label}</span>
-                <span className="font-mono tabular-nums text-muted-foreground">{row.count}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </Panel>
-  );
-}
-
 export function PeopleTab({
   brand,
   latestClaims,
@@ -270,6 +228,8 @@ export function PeopleTab({
   );
   const filteredTags = useMemo(() => tagBearingClaims(filtered), [filtered]);
   const audienceHintRows = useMemo(() => audienceHintFrequency(filteredTags), [filteredTags]);
+  const relatedVideoRows = useMemo(() => relatedVideoCatalogRows(filtered), [filtered]);
+  const publisherRows = useMemo(() => newsPublisherRanking(filtered), [filtered]);
 
   const peopleVideoClaims = useMemo(() => filtered.filter((claim) => claim.sourceEngine === "youtube_video"), [filtered]);
   const peopleAudienceHintClaims = useMemo(() => {
@@ -289,6 +249,15 @@ export function PeopleTab({
         <OwnedVsCreatorSplit claims={filtered} youtubeSnapshot={youtubeSnapshot} brand={brand} />
       </div>
       <BreakoutVideos claims={filtered} youtubeSnapshot={youtubeSnapshot} />
+      <EvidenceCatalogPanel
+        title="Related videos"
+        definition="Other channels' videos YouTube surfaces as related to this brand's own videos — a free creator-and-competitor discovery graph: who else YouTube associates with this brand, not a ranked or complete list."
+        icon={<PlatformLogo engine="youtube_video" className="size-4" />}
+        rows={relatedVideoRows}
+        emptyTitle="No related videos yet."
+        emptyDescription="Lists other channels' videos YouTube associates with this brand's own videos, once a check captures YouTube video detail evidence."
+        capNote="Up to 10 related videos per video we checked, as YouTube itself surfaced them — never the brand's full competitive graph."
+      />
       <RankedCatalogChart
         title="Audience hints"
         definition="How often an enrichment check assigned each audience hint to a finding. The tag is free text, so two rows can mean the same audience in different words."
@@ -296,7 +265,14 @@ export function PeopleTab({
         emptyTitle="No tagged audience hints yet."
         emptyDescription="Ranks the real audience-hint text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
       />
-      <PublisherListPanel claims={filtered} />
+      <CountListPanel
+        title="Publishers talking about this brand"
+        definition="How many real news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage of the brand."
+        icon={<Newspaper className="size-4 text-fg" aria-hidden />}
+        rows={publisherRows}
+        emptyTitle="No publisher evidence yet."
+        emptyDescription="Ranks real Google News publisher names once that data is available."
+      />
       <div>
         <h2 className="type-headline text-fg">Real people evidence</h2>
         <EvidenceGrid

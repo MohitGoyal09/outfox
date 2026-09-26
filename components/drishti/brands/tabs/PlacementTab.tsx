@@ -11,60 +11,26 @@ import { categoricalColor, iconProps } from "../../tokens";
 import {
   adCreativeClaims,
   adRuntimeLeaderboard,
-  newsPublisherClaims,
+  descriptionLinkCatalogRows,
+  newsPublisherRanking,
   organicRankBuckets,
   productListingClaims,
   retailerListingRanking,
+  shoppingResultCatalogRows,
   tagsForClaim,
   youtubeAdResultClaims,
+  youtubeDescriptionLinkClaims,
+  youtubeShoppingResultClaims,
   youtubeShortResultClaims,
   type ClaimDoc,
 } from "../brand-model";
+import { CountListPanel } from "../CountListPanel";
 import { DestinationsPanel } from "../DestinationsPanel";
+import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
 import { EvidenceGrid } from "../EvidenceGrid";
 import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { shortDate } from "../format";
-
-function CountListPanel({
-  title,
-  definition,
-  icon,
-  rows,
-  emptyTitle,
-  emptyDescription,
-}: {
-  title: string;
-  definition: string;
-  icon: React.ReactNode;
-  rows: { label: string; count: number }[];
-  emptyTitle: string;
-  emptyDescription: string;
-}) {
-  return (
-    <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        {icon}
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo label={title} definition={definition} />
-        </h3>
-      </div>
-      <div className="p-4">
-        {rows.length === 0 ? (
-          <EmptyState size="sm" icon={icon} title={emptyTitle} description={emptyDescription} />
-        ) : (
-          <ul className="space-y-2">
-            {rows.map((row) => (
-              <li key={row.label} className="flex items-center justify-between gap-3 text-xs">
-                <span className="truncate">{row.label}</span>
-                <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-    </Panel>
-  );
-}
+import { PlatformLogo } from "../PlatformLogo";
 
 function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
   const buckets = useMemo(() => organicRankBuckets(claims), [claims]);
@@ -224,14 +190,9 @@ export function PlacementTab({
   const shortsCount = useMemo(() => youtubeShortResultClaims(filtered).length, [filtered]);
   const youtubeAdCount = useMemo(() => youtubeAdResultClaims(filtered).length, [filtered]);
   const retailerRows = useMemo(() => retailerListingRanking(filtered).map((row) => ({ label: row.hostname, count: row.count })), [filtered]);
-  const publisherRows = useMemo(() => {
-    const counts = new Map<string, number>();
-    for (const claim of newsPublisherClaims(filtered)) {
-      const label = typeof claim.value === "string" ? claim.value : claim.text;
-      counts.set(label, (counts.get(label) ?? 0) + 1);
-    }
-    return [...counts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
-  }, [filtered]);
+  const publisherRows = useMemo(() => newsPublisherRanking(filtered), [filtered]);
+  const shoppingResultRows = useMemo(() => shoppingResultCatalogRows(filtered), [filtered]);
+  const descriptionLinkRows = useMemo(() => descriptionLinkCatalogRows(filtered), [filtered]);
 
   const placementEvidenceClaims = useMemo(() => {
     const rankedOrganicClaims = filtered.filter(
@@ -243,6 +204,8 @@ export function PlacementTab({
       ...productListingClaims(filtered),
       ...youtubeAdResultClaims(filtered),
       ...youtubeShortResultClaims(filtered),
+      ...youtubeShoppingResultClaims(filtered),
+      ...youtubeDescriptionLinkClaims(filtered),
     ];
   }, [filtered]);
 
@@ -275,6 +238,26 @@ export function PlacementTab({
           rows={publisherRows}
           emptyTitle="No publisher evidence yet."
           emptyDescription="Ranks real Google News publisher names once that data is available."
+        />
+      </div>
+      <div className="grid gap-4 lg:grid-cols-2">
+        <EvidenceCatalogPanel
+          title="In-video shopping results"
+          definition="Real products the source surfaced for sale on this brand's videos — title, vendor, and price folded from the video page. Not the brand's whole catalog, and not proof of a sale: it is what the source showed."
+          icon={<PlatformLogo engine="youtube_video" className="size-4" />}
+          rows={shoppingResultRows}
+          emptyTitle="No shopping results yet."
+          emptyDescription="Lists real products the source surfaced for sale on this brand's videos, once a check captures shopping-result evidence."
+          capNote="Up to 10 shopping results per video, as the source surfaced them — never the brand's full product catalog."
+        />
+        <EvidenceCatalogPanel
+          title="Description link destinations"
+          definition="Real outbound links the brand placed in its own video descriptions — where its videos push traffic. This is a sample of those links, not the brand's full link roster."
+          icon={<PlatformLogo engine="youtube_video" className="size-4" />}
+          rows={descriptionLinkRows}
+          emptyTitle="No description links yet."
+          emptyDescription="Lists real outbound links found in this brand's video descriptions, once a check captures that evidence."
+          capNote="Up to 10 description links per video, as stored by the pipeline — never the brand's full link roster."
         />
       </div>
       {shortsCount > 0 || youtubeAdCount > 0 ? (

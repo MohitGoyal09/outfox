@@ -3,6 +3,13 @@ import type { DistributionItem } from "../DistributionPanel";
 import type { Doc } from "@/convex/_generated/dataModel";
 import { sourceName } from "@/components/drishti/labels";
 import { ABSENT, FUNNEL_STAGES, type Tone } from "../tokens";
+import {
+  compactCount,
+  decodeClaimEntities,
+  parseDescriptionLinkAnchor,
+  parseRelatedVideoViews,
+  parseShoppingPrice,
+} from "./format";
 
 export type BrandDoc = Doc<"brands">;
 export type RunDoc = Doc<"runs">;
@@ -505,6 +512,61 @@ export function youtubeShortResultClaims(claims: ClaimDoc[]): ClaimDoc[] {
 
 export function newsPublisherClaims(claims: ClaimDoc[]): ClaimDoc[] {
   return claims.filter((claim) => claim.metric === "google_news_publisher");
+}
+
+export function newsPublisherRanking(claims: ClaimDoc[]): LabeledCount[] {
+  const counts = new Map<string, number>();
+  return [...counts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
+}
+
+export function youtubeShoppingResultClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "youtube_shopping_result");
+}
+
+export function youtubeDescriptionLinkClaims(claims: ClaimDoc[]): ClaimDoc[] {
+  return claims.filter((claim) => claim.metric === "youtube_description_link");
+}
+
+export type EvidenceCatalogRow = {
+  key: string;
+  primary: string;
+  meta: string | null;
+  evidenceUrl: string;
+};
+
+export function relatedVideoCatalogRows(claims: ClaimDoc[]): EvidenceCatalogRow[] {
+  return youtubeRelatedVideoClaims(claims).map((claim) => {
+    const title = typeof claim.value === "string" ? claim.value : claim.text;
+    const views = parseRelatedVideoViews(claim.text);
+    const channel = typeof claim.unit === "string" ? claim.unit : null;
+    return {
+      key: String(claim._id),
+      primary: decodeClaimEntities(title),
+      meta: joinMeta([channel, views !== null ? `${compactCount(views)} views` : null]),
+      evidenceUrl: claim.evidenceUrl,
+    };
+  });
+}
+
+export function shoppingResultCatalogRows(claims: ClaimDoc[]): EvidenceCatalogRow[] {
+  return youtubeShoppingResultClaims(claims).map((claim) => {
+    const title = typeof claim.value === "string" ? claim.value : claim.text;
+    const vendor = typeof claim.unit === "string" ? claim.unit : null;
+    const price = parseShoppingPrice(claim.text);
+    return {
+      key: String(claim._id),
+      primary: decodeClaimEntities(title),
+      meta: joinMeta([vendor, price]),
+      evidenceUrl: claim.evidenceUrl,
+    };
+  });
+}
+
+export function descriptionLinkCatalogRows(claims: ClaimDoc[]): EvidenceCatalogRow[] {
+  return youtubeDescriptionLinkClaims(claims).map((claim) => {
+    const url = typeof claim.value === "string" ? claim.value : claim.evidenceUrl;
+    const anchor = parseDescriptionLinkAnchor(claim.text);
+  });
 }
 
 export function aiOverviewClaims(claims: ClaimDoc[]): ClaimDoc[] {
