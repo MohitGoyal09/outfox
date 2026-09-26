@@ -1,4 +1,4 @@
-import { internalMutation, query } from "./_generated/server";
+import { internalMutation, internalQuery, query } from "./_generated/server";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { requireUserId } from "./lib/auth";
@@ -16,31 +16,10 @@ const brandInsightValidator = v.object({
     }),
   ),
   claimIds: v.array(v.id("claims")),
-  mode: v.union(v.literal("llm"), v.literal("template")),
+  mode: v.union(v.literal("llm"), v.literal("template"), v.literal("failed")),
+  failureReason: v.optional(v.string()),
   claimCountAtGeneration: v.number(),
-});
-
-export const insertBrandInsightInternal = internalMutation({
-  args: {
-    brandId: v.id("brands"),
-    ownerId: v.optional(v.id("users")),
-    generatedAt: v.string(),
-    sentences: v.array(
-      v.object({
-        text: v.string(),
-        citedClaimIds: v.array(v.id("claims")),
-      }),
-    ),
-    claimIds: v.array(v.id("claims")),
-    mode: v.union(v.literal("llm"), v.literal("template")),
-    claimCountAtGeneration: v.number(),
-  },
-  returns: brandInsightValidator,
-  handler: async (ctx, args) => {
-    const id = await ctx.db.insert("brandInsights", args);
-    const inserted = await ctx.db.get(id);
-    if (inserted === null) throw new Error("brandInsights row disappeared after insert");
-  },
+  sourceRunId: v.optional(v.id("runs")),
 });
 
 export const latestForBrand = query({

@@ -1,6 +1,6 @@
 "use node";
 
-import { action } from "../_generated/server";
+import { action, internalAction } from "../_generated/server";
 import type { ActionCtx } from "../_generated/server";
 import { api, internal } from "../_generated/api";
 import { v, ConvexError } from "convex/values";
@@ -14,6 +14,7 @@ import {
   fetchYoutubeSearch,
   fetchYoutubeVideos,
   fetchGoogleTrends,
+  resolveAdsTransparencyAdvertiser,
 } from "./fetchEngines";
 import type { EngineFetchResult } from "./fetchEngines";
 import {
@@ -32,6 +33,17 @@ import { deriveDomainFromGoogleResults } from "../lib/brandDomain";
 import { SEARCH_RESERVE_FLOOR } from "./webSearch";
 import { TRENDS_TIMELINE_POINT_CAP, YOUTUBE_VIDEO_DETAIL_COUNT } from "../../lib/constants";
 import type { Coverage, Engine } from "../../lib/agentTypes";
+import { tagAndPersistClaims } from "./tag";
+import type { TaggableClaimRef } from "./tag";
+import { generateBriefTemplate, generateBriefWithLLM } from "./brief";
+import type { BriefClaimInput, EngineStatusMap } from "./brief";
+import { hasLLMKey } from "../lib/llmClient";
+import {
+  appendAgentEvent,
+  scheduleBrandInsight,
+  statusFromOkCount,
+} from "./pipelineShared";
+import type { MinimalCtx } from "./pipelineShared";
 
 /**
  * fetch_brand: the escape hatch for a brand absent from the catalog.
@@ -461,13 +473,47 @@ export const fetchBrand = action({
     const engineSet = new Set(engines);
     const coverage: Coverage = {};
     const rows: ReturnType<typeof toRow>[] = [];
+    /**
+     * Every persisted claim, brief-input shaped plus its snapshotId -- the
+     * "claims already fetched" TASK 1 hands to the post-fetch chain
+     * (tag/brief) so it never re-fetches. Built alongside `rows` from the
+     * same positional `claims`/`ids` correlation `persist()` already
+     * guarantees; kept separate from `rows` because `rows` is the action's
+     * own public return shape (unchanged here) and must not grow fields the
+     * caller (app/api/chat/tools.ts) does not validate for.
+     */
+    const chainClaims: BriefClaimInput[] = [];
+    const chainRefs: TaggableClaimRef[] = [];
 
-    /** Persist claims, then append their real ids paired with each claim to `rows`. */
+    /** Persist claims, then append their real ids paired with each claim to `rows`/`chainClaims`/`chainRefs`. */
     async function persistRows(claims: ExtractedClaim[]): Promise<Id<"claims">[]> {
       const ids = await persist(ctx, claims);
       claims.forEach((claim, index) => {
         const id = ids[index];
-        if (id !== undefined) rows.push(toRow(id, claim));
+        if (id === undefined) return;
+        rows.push(toRow(id, claim));
+        chainClaims.push({
+          _id: String(id),
+          brandId: String(claim.brandId),
+          brandName: name,
+          text: claim.text,
+          metric: claim.metric,
+          value: claim.value,
+          sourceEngine: claim.sourceEngine,
+          evidenceUrl: claim.evidenceUrl,
+          fetchedAt: claim.fetchedAt,
+        });
+        chainRefs.push({
+          claimId: id,
+          runId,
+          snapshotId: claim.snapshotId,
+          brandId: claim.brandId,
+          brandName: name,
+          text: claim.text,
+          metric: claim.metric,
+          evidenceUrl: claim.evidenceUrl,
+          fetchedAt: claim.fetchedAt,
+        });
       });
       return ids;
     }
@@ -676,10 +722,48 @@ export const fetchBrand = action({
       }
     }
 
-    const anyOk = Object.values(coverage).some((status) => status === "ok");
+    // TASK 9: give add_brand parity with the manual/catalog brand-creation
+    // path (convex/pipeline/brandProfile.ts's maybeResolveAdvertiserId) --
+    // resolve an Ads Transparency advertiser id ONCE, here, at creation,
+    // never per run. Only when the brand doesn't already have one (it never
+    // does on this path, but this mirrors setAdvertiserIdInternal's own
+    // refuse-to-overwrite contract) and only once a REAL domain is known --
+    // a placeholder domain (`placeholderDomain` above) has nothing
+    // meaningful to search and would waste the one credit this costs. The
+    // reserve-floor check at the top of this action already ran before any
+    // spending in this call, including this one -- no separate gate needed.
+    // A failed or ambiguous lookup (see resolveAdvertiserIdFromSearch's own
+    // "never guess" contract) leaves the id unset; this must never fail the
+    // add.
+    if (brand.domain !== undefined && !brand.domain.endsWith(".unresolved")) {
+      try {
+        const resolved = await resolveAdsTransparencyAdvertiser({
+          name,
+          domain: brand.domain,
+          aliases: [],
+        });
+        if (resolved.status === "resolved") {
+          await ctx.runMutation(internal.brands.setAdvertiserIdInternal, {
+            brandId,
+            advertiserId: resolved.advertiserId,
+          });
+        }
+      } catch {
+        // Best effort: never fail brand creation over this.
+      }
+    }
+
+    const coverageValues = Object.values(coverage);
+    const okCount = coverageValues.filter((status) => status === "ok").length;
+    const anyOk = okCount > 0;
+    // TASK 3: "some engines worked" and "everything worked" used to both
+    // report `complete`, which lied about coverage the same way
+    // runComparison.ts's `runStatusFor` was fixed to stop lying. Same
+    // okCount/total arithmetic, shared via statusFromOkCount.
+    const runStatus = statusFromOkCount(okCount, coverageValues.length);
     await ctx.runMutation(internal.runs.internalCloseRun, {
       runId,
-      status: anyOk ? "complete" : "failed",
+      status: runStatus,
     });
     await ctx.runMutation(internal.brands.updateBrandStatusInternal, {
       brandId,
@@ -687,6 +771,40 @@ export const fetchBrand = action({
       profileStatus: anyOk ? "ready" : "needs_confirmation",
       ...(anyOk ? { lastRefreshedAt: fetchedAt } : {}),
     });
+
+    // TASK 1 + TASK 2: the run is already closed with an honest terminal
+    // status above -- a throw anywhere in the scheduled chain below can
+    // never leave it stuck at "running". Chain the tag/brief/insight stages
+    // over the claims already fetched, no re-fetch, no extra SerpApi spend.
+    // Scheduling itself is best-effort: a failure here is recorded, never
+    // left to silently mean "the brand just never gets tagged".
+    try {
+      await ctx.scheduler.runAfter(0, internal.pipeline.fetchBrand.runAddBrandPostFetch, {
+        runId,
+        brandId,
+        ownerId,
+        cohortKey,
+        chainClaims,
+        chainRefs,
+      });
+    } catch (error) {
+      // Same loose-signature wrapper runComparison.ts's own action handler
+      // builds around its real ActionCtx, so appendAgentEvent's MinimalCtx
+      // contract (args: Record<string, unknown>) can accept a real,
+      // strictly-typed runMutation call underneath.
+      const minimalForEvent: MinimalCtx = {
+        runQuery: (ref, refArgs) => ctx.runQuery(ref as never, refArgs as never) as Promise<unknown>,
+        runMutation: (ref, refArgs) => ctx.runMutation(ref as never, refArgs as never) as Promise<unknown>,
+      };
+      await appendAgentEvent(minimalForEvent, {
+        threadKey: cohortKey,
+        runId,
+        kind: "warning",
+        name: "schedule_post_fetch_chain",
+        status: "failed",
+        detail: error instanceof Error ? error.message.slice(0, 300) : "failed to schedule post-fetch chain",
+      });
+    }
 
     return {
       ok: true as const,
@@ -698,5 +816,137 @@ export const fetchBrand = action({
       coverage,
       asOf: fetchedAt,
     };
+  },
+});
+
+/**
+ * TASK 1's chain: after add_brand has stored its claims (above), tag them
+ * and generate the brief -- using ONLY the claims already fetched, passed
+ * through `chainClaims`/`chainRefs` (never re-queried, since a scheduled
+ * action carries no user identity and the `claims`/`snapshots` tables'
+ * public reads are auth-gated). TASK 2: schedules the brand's insight
+ * narrative once tag+brief are done, terminal-status or not.
+ *
+ * TASK 3 error boundaries: tag and brief are each wrapped independently --
+ * a failed tag does not block the brief (it just runs over untagged
+ * claims), and a failed brief does not block scheduling the insight. Every
+ * catch reports through appendAgentEvent, never swallowed.
+ *
+ * TASK 3 idempotency: safe to re-enter. Tagging is de-duplicated per
+ * content-claim id by pipelineInternal.ts's insertTaggedClaimsForSnapshot;
+ * the brief insert is skipped outright when one already exists for this run
+ * (pipelineInternal.ts's briefExistsForRun); re-scheduling the insight is a
+ * no-op via its own isInsightStale gate.
+ */
+export const runAddBrandPostFetch = internalAction({
+  args: {
+    runId: v.id("runs"),
+    brandId: v.id("brands"),
+    ownerId: v.id("users"),
+    cohortKey: v.string(),
+    chainClaims: v.array(
+      v.object({
+        _id: v.string(),
+        brandId: v.optional(v.string()),
+        brandName: v.optional(v.string()),
+        text: v.string(),
+        metric: v.optional(v.string()),
+        value: v.optional(v.union(v.string(), v.number())),
+        sourceEngine: v.string(),
+        evidenceUrl: v.string(),
+        fetchedAt: v.optional(v.string()),
+      }),
+    ),
+    chainRefs: v.array(
+      v.object({
+        claimId: v.id("claims"),
+        runId: v.id("runs"),
+        snapshotId: v.id("snapshots"),
+        brandId: v.id("brands"),
+        brandName: v.string(),
+        text: v.string(),
+        metric: v.optional(v.string()),
+        evidenceUrl: v.string(),
+        fetchedAt: v.string(),
+      }),
+    ),
+  },
+  returns: v.null(),
+  handler: async (ctx, args): Promise<null> => {
+    const minimal: MinimalCtx = {
+      runQuery: (ref, refArgs) => ctx.runQuery(ref as never, refArgs as never) as Promise<unknown>,
+      runMutation: (ref, refArgs) => ctx.runMutation(ref as never, refArgs as never) as Promise<unknown>,
+      scheduler: {
+        runAfter: (delayMs, ref, refArgs) =>
+          ctx.scheduler.runAfter(delayMs, ref as never, refArgs as never) as Promise<unknown>,
+      },
+    };
+
+    let briefInputs = args.chainClaims as BriefClaimInput[];
+    try {
+      const { taggedInputs } = await tagAndPersistClaims(
+        minimal,
+        args.runId,
+        args.cohortKey,
+        args.chainRefs as TaggableClaimRef[],
+        (await import("./tag")).tagManyWithLLM,
+      );
+      briefInputs = briefInputs.concat(taggedInputs);
+    } catch (error) {
+      await appendAgentEvent(minimal, {
+        threadKey: args.cohortKey,
+        runId: args.runId,
+        kind: "error",
+        name: "tag",
+        status: "failed",
+        detail: error instanceof Error ? error.message.slice(0, 300) : "tag stage failed",
+      });
+      // A failed tag stage must not block the brief -- it runs over the
+      // untagged claims instead (briefInputs already has them).
+    }
+
+    try {
+      const alreadyBriefed = (await ctx.runQuery(
+        internal.pipeline.pipelineInternal.briefExistsForRun,
+        { runId: args.runId },
+      )) as boolean;
+      if (!alreadyBriefed) {
+        const engineStatus: EngineStatusMap = {};
+        const useGateway = hasLLMKey();
+        const brief = useGateway
+          ? await generateBriefWithLLM(briefInputs, engineStatus)
+          : (() => {
+              const template = generateBriefTemplate(briefInputs, engineStatus);
+              return { briefText: template.briefText, claimIds: template.claimIds, mode: "template" as const };
+            })();
+        await ctx.runMutation(internal.briefs.insertBrief, {
+          runId: args.runId,
+          cohortKey: args.cohortKey,
+          brandIds: [args.brandId],
+          generatedAt: new Date().toISOString(),
+          briefText: brief.briefText,
+          claimIds: briefInputs.map((claim) => claim._id as Id<"claims">),
+          mode: brief.mode,
+        });
+      }
+    } catch (error) {
+      await appendAgentEvent(minimal, {
+        threadKey: args.cohortKey,
+        runId: args.runId,
+        kind: "error",
+        name: "brief",
+        status: "failed",
+        detail: error instanceof Error ? error.message.slice(0, 300) : "brief stage failed",
+      });
+    }
+
+    await scheduleBrandInsight(minimal, {
+      brandId: args.brandId,
+      ownerId: args.ownerId,
+      threadKey: args.cohortKey,
+      runId: args.runId,
+    });
+
+    return null;
   },
 });
