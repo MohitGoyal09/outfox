@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 import { checkedStateLabel, sourceName } from "@/components/drishti/labels";
 import { EmptyState } from "../../EmptyState";
 import { FETCH_ENGINES, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
-import { sourceColor } from "../../tokens";
+import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
@@ -131,6 +131,8 @@ export function OverviewTab({
   googleSnapshot?: SnapshotDoc;
   latestRunAt?: string | null;
 }) {
+  const handleSelectHook = (hookType: string) => setFilter("hook", filters.hook === hookType ? "all" : hookType);
+  const handleSelectFunnel = (stage: FunnelStage) => setFilter("funnel", filters.funnel === stage ? "all" : stage);
   return (
     <div className="space-y-5">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
@@ -163,7 +165,7 @@ export function OverviewTab({
           }
           subtitle={fallbackLabel}
         >
-          <HookChart items={hookItems} totalFindings={totalFindings} />
+          <HookChart items={hookItems} totalFindings={totalFindings} selectedHook={filters.hook} onSelectHook={handleSelectHook} />
         </SummaryPanel>
         {/* Renamed from "Funnel stage": funnelStage is a tag distribution across five
             categories, not a measured conversion sequence, so the panel name and its
@@ -178,7 +180,7 @@ export function OverviewTab({
           }
           subtitle={fallbackLabel}
         >
-          <FunnelPanel items={funnelItems} totalFindings={totalFindings} />
+          <FunnelPanel items={funnelItems} totalFindings={totalFindings} selectedStage={filters.funnel} onSelectStage={handleSelectFunnel} />
         </SummaryPanel>
       </div>
       {/* SimilarBrandsPanel moved to the brand header as a chip (BrandProfile.tsx),

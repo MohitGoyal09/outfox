@@ -2,13 +2,14 @@
 
 import { ChevronDown, Tag, Filter, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
+import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart } from "recharts";
 import { cn } from "@/lib/utils";
 import { hookName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, VALUE_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
+import { FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, FOCUS_RING_CLASS, VALUE_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
 import type { DistributionItem } from "../DistributionPanel";
 
 
@@ -50,6 +51,53 @@ function hookRow(row: DistributionItem): DistributionItem & { count: number } {
   return { label: row.label, count: row.count ?? 0, sharePct: null, delta: row.delta };
 }
 
+function isRowSelected(value: string, selected?: string): boolean {
+  return selected !== undefined && selected !== "all" && selected === value;
+}
+
+function HookRow({
+  row,
+  total,
+  selectedHook,
+  onSelectHook,
+}: {
+  row: DistributionItem & { count: number };
+  total: number;
+  selectedHook?: string;
+  onSelectHook?: (hookType: string) => void;
+}) {
+  const selected = isRowSelected(row.label, selectedHook);
+  const content = (
+    <>
+      <span className="flex min-w-0 items-center gap-2 capitalize">
+        <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
+        <span className="truncate">{hookName(row.label)}</span>
+      </span>
+      <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
+      <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "—"}</span>
+      <DeltaTag delta={row.delta} />
+    </>
+  );
+  if (!onSelectHook) {
+    return <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-[11px]">{content}</div>;
+  }
+  return (
+    <button
+      type="button"
+      aria-pressed={selected}
+      aria-label={selected ? `Clear ${hookName(row.label)} hook type filter` : `Filter evidence to ${hookName(row.label)} hook type`}
+      onClick={() => onSelectHook(row.label)}
+      className={cn(
+        "grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 rounded-sm text-left text-[11px] hover:bg-muted/40",
+        selected && "bg-accent/10",
+        FOCUS_RING_CLASS,
+      )}
+    >
+      {content}
+    </button>
+  );
+}
+
 function TaggedShareNote({ shown, totalFindings }: { shown: number; totalFindings?: number | null }) {
   const shownText = <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(shown)}</span>;
   return (
@@ -67,10 +115,23 @@ function TaggedShareNote({ shown, totalFindings }: { shown: number; totalFinding
   );
 }
 
-function HookFallback({ rows, total, totalFindings }: { rows: DistributionItem[]; total: number; totalFindings?: number | null }) {
+function HookFallback({
+  rows,
+  total,
+  totalFindings,
+  selectedHook,
+  onSelectHook,
+}: {
+  rows: DistributionItem[];
+  total: number;
+  totalFindings?: number | null;
+  selectedHook?: string;
+  onSelectHook?: (hookType: string) => void;
+}) {
   if (rows.length === 1) {
     const row = rows[0];
-    return (
+    const selected = isRowSelected(row.label, selectedHook);
+    const stat = (
       <div className="flex items-center gap-3">
         <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
         <div>
@@ -79,26 +140,41 @@ function HookFallback({ rows, total, totalFindings }: { rows: DistributionItem[]
         </div>
       </div>
     );
+    if (!onSelectHook) return stat;
+    return (
+      <button
+        type="button"
+        aria-pressed={selected}
+        aria-label={selected ? `Clear ${hookName(row.label)} hook type filter` : `Filter evidence to ${hookName(row.label)} hook type`}
+        onClick={() => onSelectHook(row.label)}
+        className={cn("rounded-sm p-1 text-left hover:bg-muted/40", selected && "bg-accent/10", FOCUS_RING_CLASS)}
+      >
+        {stat}
+      </button>
+    );
   }
   return (
     <div className="space-y-2">
       {rows.map((row) => (
-        <div key={row.label} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-[11px]">
-          <span className="flex min-w-0 items-center gap-2 capitalize">
-            <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
-            <span className="truncate">{hookName(row.label)}</span>
-          </span>
-          <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</span>
-          <span className="font-mono text-[10px] text-muted-foreground">{total ? `${Math.round(((row.count ?? 0) / total) * 100)}%` : "—"}</span>
-          <DeltaTag delta={row.delta} />
-        </div>
+        <HookRow key={row.label} row={hookRow(row)} total={total} selectedHook={selectedHook} onSelectHook={onSelectHook} />
       ))}
       {total > 0 ? <TaggedShareNote shown={total} totalFindings={totalFindings} /> : null}
     </div>
   );
 }
 
-export function HookChart({ items, totalFindings }: { items: DistributionItem[]; /** Real count of all findings in this check/tab's scope, for the "N of TOTAL findings tagged" note — omit only when the caller has no such total to hand down (see EvidencePanels.tsx's TaggedShareNote). */ totalFindings?: number | null }) {
+export function HookChart({
+  items,
+  totalFindings,
+  selectedHook,
+  onSelectHook,
+}: {
+  items: DistributionItem[];
+  totalFindings?: number | null;
+  selectedHook?: string;
+  onSelectHook?: (hookType: string) => void;
+}) {
+  const reduceMotion = useReducedMotion();
   const rows = [...items].map(hookRow).filter((row) => row.count > 0).sort((a, b) => b.count - a.count).slice(0, 9);
   const total = rows.reduce((sum, row) => sum + row.count, 0);
   if (rows.length === 0) return (
@@ -109,7 +185,7 @@ export function HookChart({ items, totalFindings }: { items: DistributionItem[];
       description="Hook types are assigned by an enrichment pass after a check runs. This check carries none yet."
     />
   );
-  if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} totalFindings={totalFindings} />;
+  if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} totalFindings={totalFindings} selectedHook={selectedHook} onSelectHook={onSelectHook} />;
   const chartConfig = Object.fromEntries(
     rows.map((row) => [row.label, { label: hookName(row.label), color: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }]),
   ) satisfies ChartConfig;
@@ -119,10 +195,20 @@ export function HookChart({ items, totalFindings }: { items: DistributionItem[];
         <ChartContainer config={chartConfig} className="aspect-square size-[92px]">
           <PieChart>
             <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="label" />} />
-            <Pie data={rows} dataKey="count" nameKey="label" innerRadius={26} outerRadius={44} strokeWidth={1}>
-              {rows.map((row) => (
-                <Cell key={row.label} fill={HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable} />
-              ))}
+            <Pie data={rows} dataKey="count" nameKey="label" innerRadius={26} outerRadius={44} strokeWidth={1} isAnimationActive={!reduceMotion}>
+              {rows.map((row) => {
+                const selected = isRowSelected(row.label, selectedHook);
+                return (
+                  <Cell
+                    key={row.label}
+                    fill={HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable}
+                    stroke={selected ? "var(--accent)" : undefined}
+                    strokeWidth={selected ? 3 : 1}
+                    className={onSelectHook ? "cursor-pointer" : undefined}
+                    onClick={onSelectHook ? () => onSelectHook(row.label) : undefined}
+                  />
+                );
+              })}
             </Pie>
           </PieChart>
         </ChartContainer>
@@ -137,15 +223,7 @@ export function HookChart({ items, totalFindings }: { items: DistributionItem[];
       </div>
       <div className="space-y-2">
         {rows.map((row) => (
-          <div key={row.label} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-[11px]">
-            <span className="flex min-w-0 items-center gap-2 capitalize">
-              <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
-              <span className="truncate">{hookName(row.label)}</span>
-            </span>
-            <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
-            <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "—"}</span>
-            <DeltaTag delta={row.delta} />
-          </div>
+          <HookRow key={row.label} row={row} total={total} selectedHook={selectedHook} onSelectHook={onSelectHook} />
         ))}
       </div>
       {total > 0 ? (
@@ -167,7 +245,17 @@ const FUNNEL_ORDER: readonly [FunnelStage, string][] = [
 
 const FUNNEL_EMPTY_BAND_PCT = 4;
 
-export function FunnelPanel({ items, totalFindings }: { items: DistributionItem[]; /** Real count of all findings in this check/tab's scope, for the "N of TOTAL findings tagged" note — omit only when the caller has no such total to hand down (see TaggedShareNote above). */ totalFindings?: number | null }) {
+export function FunnelPanel({
+  items,
+  totalFindings,
+  selectedStage,
+  onSelectStage,
+}: {
+  items: DistributionItem[];
+  totalFindings?: number | null;
+  selectedStage?: string;
+  onSelectStage?: (stage: FunnelStage) => void;
+}) {
   const byLabel = new Map(items.map((item) => [item.label, item]));
   const rows = FUNNEL_ORDER.map(([stage, label]) => ({
     stage,
@@ -185,23 +273,58 @@ export function FunnelPanel({ items, totalFindings }: { items: DistributionItem[
     />
   );
   return (
-    <div className="space-y-1.5" role="img" aria-label="Awareness-stage distribution, one bar per stage from a shared left baseline">
+    <div
+      className="space-y-1.5"
+      role={onSelectStage ? "group" : "img"}
+      aria-label={
+        onSelectStage
+          ? "Awareness-stage distribution — activate a stage to filter evidence to it"
+          : "Awareness-stage distribution, one bar per stage from a shared left baseline"
+      }
+    >
       {rows.map((row) => {
         const sharePct = total ? Math.round((row.count / total) * 100) : 0;
         const widthPct = row.count > 0 ? Math.max(2, sharePct) : FUNNEL_EMPTY_BAND_PCT;
-        return (
-          <div key={row.stage} className="grid grid-cols-[100px_1fr_auto_auto] items-center gap-2 text-[11px]">
+        const selected = isRowSelected(row.stage, selectedStage);
+        const bar = (
+          <>
             <span className="truncate">{FUNNEL_STAGE_INDEX[row.stage] + 1}. {row.label}</span>
             <span className="h-4 w-full overflow-hidden rounded-[3px] bg-muted/40">
               {row.count > 0 ? (
-                <span className="block h-full rounded-[3px]" style={{ width: `${widthPct}%`, backgroundColor: FUNNEL_COLOR[row.stage] }} />
+                <span
+                  className={cn("block h-full rounded-[3px]", selected && "ring-2 ring-inset ring-[var(--accent)]")}
+                  style={{ width: `${widthPct}%`, backgroundColor: FUNNEL_COLOR[row.stage] }}
+                />
               ) : (
                 <span className="block h-full rounded-[3px] border border-dashed border-border-strong/70" style={{ width: `${widthPct}%` }} />
               )}
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{total ? `${sharePct}%` : "—"}</span>
             <DeltaTag delta={row.delta} />
-          </div>
+          </>
+        );
+        if (row.count === 0 || !onSelectStage) {
+          return (
+            <div key={row.stage} className="grid grid-cols-[100px_1fr_auto_auto] items-center gap-2 text-[11px]">
+              {bar}
+            </div>
+          );
+        }
+        return (
+          <button
+            key={row.stage}
+            type="button"
+            aria-pressed={selected}
+            aria-label={selected ? `Clear ${row.label} funnel stage filter` : `Filter evidence to ${row.label} funnel stage`}
+            onClick={() => onSelectStage(row.stage)}
+            className={cn(
+              "grid grid-cols-[100px_1fr_auto_auto] items-center gap-2 rounded-sm text-left text-[11px] hover:bg-muted/40",
+              selected && "bg-accent/10",
+              FOCUS_RING_CLASS,
+            )}
+          >
+            {bar}
+          </button>
         );
       })}
       <TaggedShareNote shown={total} totalFindings={totalFindings} />

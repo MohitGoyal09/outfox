@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { ArrowLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, LayoutGrid, Link2, Layers, MapPin, Tag, Users } from "lucide-react";
-import { useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
@@ -54,6 +55,13 @@ const tabs = [
   ["people", "People", Users],
   ["evidence", "Evidence", Layers],
 ] as const;
+
+type TabValue = (typeof tabs)[number][0];
+const DEFAULT_TAB: TabValue = "overview";
+
+function isTabValue(value: string | null): value is TabValue {
+  return value !== null && tabs.some(([tabId]) => tabId === value);
+}
 
 type InsightSentence = { text: string; citedClaimIds: Id<"claims">[] };
 type NarrativeSection = "positioning" | "audience" | "problem";
@@ -156,7 +164,21 @@ function ShareButton() {
 }
 
 export function BrandProfile({ brandId, className }: BrandProfileProps) {
-  const [tab, setTab] = useState("overview");
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const tabParam = searchParams.get("tab");
+  const tab: TabValue = isTabValue(tabParam) ? tabParam : DEFAULT_TAB;
+  const setTab = useCallback(
+    (next: string) => {
+      const params = new URLSearchParams(searchParams);
+      if (next === DEFAULT_TAB) params.delete("tab");
+      else params.set("tab", next);
+      const query = params.toString();
+      router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+    },
+    [pathname, router, searchParams],
+  );
   const brand = useQuery(api.brands.getBrand, { brandId });
   const claims = useQuery(api.claims.byBrand, { brandId });
   const insight = useQuery(api.brandInsights.latestForBrand, { brandId });
