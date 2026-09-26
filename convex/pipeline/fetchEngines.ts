@@ -407,15 +407,13 @@ export function resolveAdvertiserIdFromSearch(
   // Unanimous: one advertiser owns every ad returned for this brand's domain.
   if (byId.size === 1) return [...byId.keys()][0];
 
-  // Several advertisers reference this domain. Only a name or alias match can
-  // say which one is the brand, and only if exactly one matches.
+  // Several advertisers reference this domain. A name or alias match settles it
+  // when there is exactly one.
   const wanted = new Set(
     [brandName, ...aliases]
       .map((value) => normalizeForAdvertiserMatch(value))
       .filter((value) => value !== ""),
   );
-  if (wanted.size === 0) return null;
-
   const matched: string[] = [];
   for (const [id, names] of byId) {
     for (const name of names) {
@@ -425,8 +423,37 @@ export function resolveAdvertiserIdFromSearch(
       }
     }
   }
-  return matched.length === 1 ? matched[0] : null;
+  if (matched.length === 1) return matched[0];
+
+  // No name match -- expected, since Google records the LEGAL ENTITY and a
+  // brand name rarely equals its registrant. Fall back to dominance: on a
+  // domain the brand owns, an advertiser running the overwhelming majority of
+  // the ads is the brand's own, and the stragglers are affiliates, coupon
+  // sites and individuals.
+  //
+  // Measured on sugarcosmetics.com: Vellvette Lifestyle Pvt. Ltd. ran 36 of 40
+  // creatives, against Blue Ocean Media 2, an individual 1, and Coupons Clouds
+  // 1. The threshold is deliberately high, and requires a real number of
+  // creatives, because a narrow plurality is a coin toss and a wrong id shows
+  // another company's ads under this brand's name.
+  const counts = new Map<string, number>();
+  for (const creative of creatives) {
+    if (typeof creative !== "object" || creative === null) continue;
+    const id = (creative as Record<string, unknown>)["advertiser_id"];
+    if (typeof id !== "string" || !ADVERTISER_ID_PATTERN.test(id)) continue;
+    counts.set(id, (counts.get(id) ?? 0) + 1);
+  }
+  const total = [...counts.values()].reduce((sum, n) => sum + n, 0);
+  if (total < ADVERTISER_DOMINANCE_MIN_CREATIVES) return null;
+  const ranked = [...counts.entries()].sort((a, b) => b[1] - a[1]);
+  const [topId, topCount] = ranked[0];
+  return topCount / total >= ADVERTISER_DOMINANCE_SHARE ? topId : null;
 }
+
+/** An advertiser must run at least this share of a domain's ads to be taken as the domain's owner. */
+const ADVERTISER_DOMINANCE_SHARE = 0.75;
+/** ...and the domain must return at least this many ads, so a 1-of-1 result never counts as dominance. */
+const ADVERTISER_DOMINANCE_MIN_CREATIVES = 8;
 
 export type AdsTransparencyResolveResult =
   | { status: "resolved"; advertiserId: string }
