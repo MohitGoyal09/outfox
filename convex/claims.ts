@@ -46,6 +46,8 @@ const claimFields = {
   tagMode: v.optional(v.union(v.literal("llm"), v.literal("template"))),
   taggedClaimId: v.optional(v.id("claims")),
   seller: v.optional(v.string()),
+  image: v.optional(v.string()),
+  totalDaysShown: v.optional(v.number()),
 };
 
 export const insertClaims = internalMutation({
