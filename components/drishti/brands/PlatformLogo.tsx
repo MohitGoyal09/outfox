@@ -9,8 +9,24 @@ import { Globe, Tag, TrendingUp, type LucideIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { iconProps, sourceColor } from "@/components/drishti/tokens";
 import { sourceName } from "@/components/drishti/labels";
+import {
+  GoogleAdsMark,
+  GoogleMark,
+  GoogleNewsMark,
+  GoogleTrendsMark,
+  YouTubeMark,
+} from "@/components/drishti/brands/brandMarks";
 
-const BRAND_MARKS: Record<string, IconType> = {
+const COLOR_MARKS: Record<string, typeof GoogleMark> = {
+  google: GoogleMark,
+  google_ads_transparency_center: GoogleAdsMark,
+  google_news: GoogleNewsMark,
+  google_trends: GoogleTrendsMark,
+  youtube: YouTubeMark,
+  youtube_video: YouTubeMark,
+};
+
+const MUTED_MARKS: Record<string, IconType> = {
   google: SiGoogle,
   google_ads_transparency_center: SiGoogleads,
   google_news: SiGooglenews,
@@ -33,15 +49,17 @@ export function PlatformLogo({
   muted?: boolean;
 }) {
   const color = muted ? undefined : sourceColor(engine);
-  const Brand = BRAND_MARKS[engine];
-  if (Brand) {
-    return (
-      <Brand
-        aria-hidden
-        {...(color !== undefined ? { color } : {})}
-        className={cn("size-4 shrink-0", className)}
-      />
-    );
+
+  if (!muted) {
+    const Color = COLOR_MARKS[engine];
+    if (Color) {
+      return <Color className={cn("size-4 shrink-0", className)} />;
+    }
+  }
+
+  const Muted = muted ? MUTED_MARKS[engine] : undefined;
+  if (Muted) {
+    return <Muted aria-hidden className={cn("size-4 shrink-0", className)} />;
   }
 
   const Ui = UI_MARKS[engine];
