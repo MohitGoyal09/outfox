@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { Bookmark, Loader2, Pencil, Trash2, X } from "lucide-react";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -11,10 +12,10 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../Button";
 import { EmptyState } from "../EmptyState";
-import { iconProps } from "../tokens";
+import { Skeleton, SkeletonRegion } from "../Skeleton";
+import { VALUE_CLASS, iconProps } from "../tokens";
 import { isAtItemCap, formatItemCount, MAX_ITEMS_PER_BOARD, type BoardSummary } from "./boards-model";
 import { BoardItemCard, type BoardItem } from "./BoardItemCard";
 
@@ -77,15 +78,17 @@ export function BoardDetail({
               }}
               className="flex items-center gap-1.5"
             >
-              <Input
+              <input
                 autoFocus
                 value={draftName}
                 onChange={(event) => setDraftName(event.target.value)}
                 onBlur={() => void submitRename()}
                 aria-label="Board name"
-                className="h-8 max-w-[260px] text-[15px] font-semibold"
+                className="focus-ring h-8 max-w-[260px] rounded-sm border border-border-strong bg-bg-raised px-2 text-[15px] font-semibold text-fg"
               />
-              {renaming ? <Loader2 className="size-4 animate-spin text-muted-foreground" /> : null}
+              {renaming ? (
+                <Loader2 {...iconProps} size={16} aria-hidden="true" className="size-4 animate-spin text-fg-tertiary motion-reduce:animate-none" />
+              ) : null}
             </form>
           ) : (
             <button
@@ -94,34 +97,53 @@ export function BoardDetail({
                 setDraftName(board.name);
                 setEditingName(true);
               }}
-              className="group flex items-center gap-1.5 text-left"
+              className="group flex items-center gap-1.5 rounded-sm text-left"
             >
-              <h1 className="truncate text-xl font-semibold tracking-[-0.02em] text-foreground">{board.name}</h1>
-              <Pencil className="size-3.5 shrink-0 text-muted-foreground opacity-0 group-hover:opacity-100" />
+              <h1 className="truncate type-title text-fg">{board.name}</h1>
+              <Pencil
+                {...iconProps}
+                size={14}
+                aria-hidden="true"
+                className="size-3.5 shrink-0 text-fg-tertiary opacity-0 transition-opacity group-hover:opacity-100 group-focus-visible:opacity-100"
+              />
             </button>
           )}
-          <p className="mt-1 font-mono text-[12px] text-muted-foreground">
+          <p className={cn(VALUE_CLASS, "mt-1 text-[12px] text-fg-tertiary")}>
             {items === undefined ? "Loading…" : formatItemCount(items.length)}
             {atCap ? ` · full at ${MAX_ITEMS_PER_BOARD}` : ""}
           </p>
         </div>
-        <Button variant="ghost" size="sm" className="gap-1.5 text-destructive hover:text-destructive" onClick={() => setConfirmDelete(true)}>
-          <Trash2 className="size-3.5" /> Delete board
+        <Button
+          variant="ghost"
+          size="sm"
+          className="text-danger hover:text-danger"
+          onClick={() => setConfirmDelete(true)}
+          icon={<Trash2 {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+        >
+          Delete board
         </Button>
       </header>
 
       {atCap ? (
-        <p className="max-w-[68ch] text-[12px] text-muted-foreground">
+        <p className="max-w-[68ch] text-[12px] leading-[1.5] text-fg-secondary">
           This board is full at {MAX_ITEMS_PER_BOARD} items — the most this surface holds. Remove one to save another here, or use a different board.
         </p>
       ) : null}
 
       {items === undefined ? (
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3" aria-label="Loading saved items">
+        <SkeletonRegion
+          label="Loading saved items"
+          className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3"
+        >
           {[0, 1, 2].map((i) => (
-            <div key={i} className="h-40 animate-pulse rounded-xl border border-border bg-muted/40" />
+            <div key={i} className="rounded-lg border border-border bg-bg-raised p-4 shadow-xs">
+              <Skeleton variant="text" width="46%" />
+              <span className="mt-4 block">
+                <Skeleton variant="block" height={104} />
+              </span>
+            </div>
           ))}
-        </div>
+        </SkeletonRegion>
       ) : items.length === 0 ? (
         <EmptyState
           icon={<Bookmark {...iconProps} size={16} />}
@@ -150,8 +172,18 @@ export function BoardDetail({
             <Button variant="ghost" onClick={() => setConfirmDelete(false)} disabled={deleting}>
               Cancel
             </Button>
-            <Button variant="destructive" onClick={() => void confirmAndDelete()} disabled={deleting} className="gap-1.5">
-              {deleting ? <Loader2 className="size-3.5 animate-spin" /> : <X className="size-3.5" />}
+            <Button
+              variant="danger"
+              onClick={() => void confirmAndDelete()}
+              disabled={deleting}
+              icon={
+                deleting ? (
+                  <Loader2 {...iconProps} size={14} aria-hidden="true" className="size-3.5 animate-spin motion-reduce:animate-none" />
+                ) : (
+                  <X {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+                )
+              }
+            >
               Delete board
             </Button>
           </DialogFooter>

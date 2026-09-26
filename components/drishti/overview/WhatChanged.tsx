@@ -2,11 +2,11 @@
 
 import { ArrowUpRight } from "lucide-react";
 
-import { EmptyState, Panel, iconProps } from "@/components/drishti";
+import { EmptyState, iconProps } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 
 import { ActionLink } from "./ActionLink";
-import { SectionLabel } from "./SectionLabel";
+import { Card } from "./Card";
 import { pluralize, type WhatChangedFeed } from "./overview-model";
 
 export type WhatChangedProps = {
@@ -17,25 +17,22 @@ export function WhatChanged({ feed }: WhatChangedProps) {
   if (feed === null) return null;
 
   return (
-    <section aria-label="What changed since your last check" className="flex flex-col gap-3">
-      <SectionLabel>What changed since your last check</SectionLabel>
+    <Card title="What changed since your last check" className="h-full">
       {feed.changes.length === 0 ? (
-        <Panel as="div" interactive={false} padded>
-          <EmptyState
-            size="sm"
-            bounded
-            title="Nothing changed since your last checks"
-            description={`Compared ${feed.comparableBrandCount} tracked ${pluralize(feed.comparableBrandCount, "brand")} against their previous check. No source added or dropped a finding.`}
-          />
-        </Panel>
+        <EmptyState
+          size="sm"
+          bounded
+          title="Nothing changed since your last checks"
+          description={`Compared ${feed.comparableBrandCount} tracked ${pluralize(feed.comparableBrandCount, "brand")} against their previous check. No source added or dropped a finding.`}
+        />
       ) : (
-        <ul className="flex flex-col divide-y divide-border rounded-md border border-border bg-bg-inset">
+        <ul className="flex flex-col divide-y divide-border">
           {feed.changes.map((change) => (
             <li
               key={change.brandId}
               className={cn(
-                "flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
-                change.isOwnBrand && "border-l-2 border-l-[var(--accent,#e2a339)]",
+                "flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
+                change.isOwnBrand && "border-l-2 border-l-accent pl-3",
               )}
             >
               <p className="type-body max-w-[64ch] text-fg">{change.sentence}</p>
@@ -52,6 +49,6 @@ export function WhatChanged({ feed }: WhatChangedProps) {
           ))}
         </ul>
       )}
-    </section>
+    </Card>
   );
 }

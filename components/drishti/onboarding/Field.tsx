@@ -22,7 +22,7 @@ export function Field({ id, label, error = null, hint, className, ...rest }: Fie
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={id} className={cn(LABEL_CLASS, "text-[var(--text-secondary,#667085)]")}>
+      <label htmlFor={id} className={cn(LABEL_CLASS, "text-[var(--text-secondary)]")}>
         {label}
       </label>
       <input
@@ -31,18 +31,18 @@ export function Field({ id, label, error = null, hint, className, ...rest }: Fie
         aria-invalid={invalid ? true : undefined}
         aria-describedby={describedBy.length > 0 ? describedBy.join(" ") : undefined}
         className={cn(
-          "h-10 w-full rounded-[5px] border bg-[var(--bg-inset,#F1F3F0)] px-3 text-[14px] text-[var(--text-primary,#17191D)] outline-none",
+          "h-10 w-full rounded-[5px] border bg-[var(--bg-inset)] px-3 text-[14px] text-[var(--text-primary)] outline-none",
           "motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-out",
-          "placeholder:text-[var(--text-tertiary,#98A2B3)]",
+          "placeholder:text-[var(--text-tertiary)]",
           invalid
-            ? "border-[var(--danger,#DC2626)]"
-            : "border-[var(--border-strong,#CBD2DC)] hover:border-[var(--text-tertiary,#98A2B3)]",
-          "focus:border-[var(--accent,#0F766E)] focus:shadow-[0_0_0_3px_rgba(15,118,110,0.22)]",
-          "disabled:cursor-not-allowed disabled:bg-[var(--bg-raised,#FFFFFF)] disabled:text-[var(--text-tertiary,#98A2B3)]",
+            ? "border-[var(--danger)]"
+            : "border-[var(--border-strong)] hover:border-[var(--text-tertiary)]",
+          "focus:border-[var(--border-strong)] focus:shadow-[0_0_0_3px_var(--accent-dim)]",
+          "disabled:cursor-not-allowed disabled:bg-[var(--bg-raised)] disabled:text-[var(--text-tertiary)]",
         )}
       />
       {hint !== undefined && !invalid ? (
-        <span id={`${id}-hint`} className="text-[12px] leading-[1.45] text-[var(--text-secondary,#667085)]">
+        <span id={`${id}-hint`} className="text-[12px] leading-[1.45] text-[var(--text-secondary)]">
           {hint}
         </span>
       ) : null}
@@ -50,7 +50,7 @@ export function Field({ id, label, error = null, hint, className, ...rest }: Fie
         <span
           id={`${id}-error`}
           role="alert"
-          className="flex items-center gap-1.5 text-[12px] leading-[1.45] text-[var(--danger,#DC2626)]"
+          className="flex items-center gap-1.5 text-[12px] leading-[1.45] text-[var(--danger)]"
         >
           <CircleAlert {...iconProps} size={14} aria-hidden="true" className="size-3.5 shrink-0" />
           {error}

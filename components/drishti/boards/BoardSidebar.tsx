@@ -2,11 +2,11 @@
 
 
 import { useState } from "react";
-import { Loader2, Plus } from "lucide-react";
+import { LayoutGrid, Loader2, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { Button } from "../Button";
+import { VALUE_CLASS, iconProps } from "../tokens";
 import { isAtBoardCap, pinDefaultBoardFirst, type BoardSummary } from "./boards-model";
 
 export function BoardSidebar({
@@ -47,28 +47,42 @@ export function BoardSidebar({
 
   return (
     <nav aria-label="Boards" className="flex min-w-0 flex-col gap-3">
+      <div className="flex items-center justify-between px-1">
+        <span className="type-label text-fg-tertiary">Boards</span>
+        <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>{ordered.length}</span>
+      </div>
+
       <ul className="flex flex-col gap-1">
-        {ordered.map((board) => (
-          <li key={board._id}>
-            <button
-              type="button"
-              onClick={() => onSelect(board._id as Id<"boards">)}
-              aria-current={board._id === selectedBoardId ? "true" : undefined}
-              className={cn(
-                "w-full truncate rounded-md px-3 py-2 text-left text-[13px] transition-colors",
-                board._id === selectedBoardId
-                  ? "bg-accent/10 font-medium text-accent"
-                  : "text-foreground hover:bg-muted",
-              )}
-            >
-              {board.name}
-            </button>
-          </li>
-        ))}
+        {ordered.map((board) => {
+          const selected = board._id === selectedBoardId;
+          return (
+            <li key={board._id}>
+              <button
+                type="button"
+                onClick={() => onSelect(board._id as Id<"boards">)}
+                aria-current={selected ? "true" : undefined}
+                className={cn(
+                  "flex w-full items-center gap-2 rounded-sm border px-2.5 py-2 text-left text-[13px] transition-colors",
+                  selected
+                    ? "border-accent bg-accent font-medium text-accent-ink shadow-xs hover:bg-accent-strong"
+                    : "border-transparent text-fg-secondary hover:border-border hover:bg-bg-raised hover:text-fg",
+                )}
+              >
+                <LayoutGrid
+                  {...iconProps}
+                  size={14}
+                  aria-hidden="true"
+                  className={cn("size-3.5 shrink-0", selected ? "text-accent-ink" : "text-fg-tertiary")}
+                />
+                <span className="truncate">{board.name}</span>
+              </button>
+            </li>
+          );
+        })}
       </ul>
 
       {atCap ? (
-        <p className="px-3 text-[11px] text-muted-foreground">
+        <p className="px-1 text-[11px] leading-[1.45] text-fg-tertiary">
           You have 50 boards, the limit. Delete one to make another.
         </p>
       ) : (
@@ -77,21 +91,32 @@ export function BoardSidebar({
             event.preventDefault();
             void submitCreate();
           }}
-          className="flex items-center gap-1.5 px-1"
+          className="flex items-center gap-1.5"
         >
-          <Input
+          <input
             value={name}
             onChange={(event) => setName(event.target.value)}
             placeholder="New board"
             aria-label="New board name"
-            className="h-8 text-[13px]"
+            className="focus-ring h-8 min-w-0 flex-1 rounded-sm border border-border-strong bg-bg-raised px-2.5 text-[13px] text-fg placeholder:text-fg-placeholder"
           />
-          <Button type="submit" size="icon-sm" variant="outline" disabled={name.trim() === "" || creating} aria-label="Create board">
-            {creating ? <Loader2 className="size-3.5 animate-spin" /> : <Plus className="size-3.5" />}
+          <Button
+            type="submit"
+            size="sm"
+            variant="ghost"
+            disabled={name.trim() === "" || creating}
+            aria-label="Create board"
+            className="w-8 shrink-0 px-0"
+          >
+            {creating ? (
+              <Loader2 {...iconProps} size={14} aria-hidden="true" className="size-3.5 animate-spin motion-reduce:animate-none" />
+            ) : (
+              <Plus {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+            )}
           </Button>
         </form>
       )}
-      {error !== null ? <p className="px-3 text-[11px] text-destructive">{error}</p> : null}
+      {error !== null ? <p className="px-1 text-[11px] text-danger">{error}</p> : null}
     </nav>
   );
 }

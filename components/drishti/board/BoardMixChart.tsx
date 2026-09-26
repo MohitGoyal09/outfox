@@ -1,14 +1,17 @@
 "use client";
 
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { BarChart3 } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
+import { cn } from "@/lib/utils";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { EmptyState } from "../EmptyState";
 import { hookName } from "../labels";
-import { HOOK_COLOR, VALUE_CLASS } from "../tokens";
+import { Panel } from "../Panel";
+import { HOOK_COLOR, VALUE_CLASS, iconProps } from "../tokens";
 import type { DistributionItem } from "../DistributionPanel";
 
 const config = {
-  findings: { label: "Findings", color: "var(--accent, #0f766e)" },
+  findings: { label: "Findings", color: "var(--accent)" },
 } satisfies ChartConfig;
 
 export function BoardMixChart({ items }: { items: DistributionItem[] }) {
@@ -17,35 +20,45 @@ export function BoardMixChart({ items }: { items: DistributionItem[] }) {
     .map((item) => ({
       label: hookName(item.label),
       findings: item.count,
-      fill: HOOK_COLOR[item.label as keyof typeof HOOK_COLOR] ?? "var(--accent, #0f766e)",
+      fill: HOOK_COLOR[item.label as keyof typeof HOOK_COLOR] ?? "var(--accent)",
     }));
 
   return (
-    <Card className="overflow-hidden border-border/80 bg-card shadow-none">
-      <CardHeader className="border-b border-border/70 px-5 py-4">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">Hook mix</CardTitle>
-            <CardDescription className="mt-1">How much evidence each hook has in this check.</CardDescription>
-          </div>
-          <span className={`${VALUE_CLASS} text-xs text-muted-foreground`}>{data.length} signals</span>
+    <Panel interactive={false} className="flex flex-col" ariaLabel="Hook mix">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="min-w-0">
+          <h3 className="type-headline text-fg">Hook mix</h3>
+          <p className="mt-1 type-caption text-fg-secondary">
+            How much evidence each hook has in this check.
+          </p>
         </div>
-      </CardHeader>
-      <CardContent className="px-4 pb-4 pt-5">
+        <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
+          {data.length} {data.length === 1 ? "hook" : "hooks"}
+        </span>
+      </header>
+      <div className="p-4">
         {data.length === 0 ? (
-          <div className="flex h-48 items-center justify-center text-sm text-muted-foreground">No hook evidence in this check.</div>
+          <EmptyState
+            size="sm"
+            bounded
+            icon={<BarChart3 {...iconProps} size={16} />}
+            title="No hook evidence in this check yet."
+            description="Every finding carries a hook. The mix appears here once at least one source returns a hook."
+          />
         ) : (
           <ChartContainer config={config} className="h-52 w-full aspect-auto">
             <BarChart accessibilityLayer data={data} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={46} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={30} />
-              <ChartTooltip cursor={{ fill: "var(--muted)", opacity: 0.35 }} content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="findings" radius={[4, 4, 0, 0]} fill="var(--color-findings)" />
+              <ChartTooltip cursor={{ fill: "var(--bg-inset)", opacity: 0.6 }} content={<ChartTooltipContent hideLabel />} />
+              <Bar dataKey="findings" radius={[4, 4, 0, 0]} fill="var(--color-findings)">
+                {data.map((row) => <Cell key={row.label} fill={row.fill} />)}
+              </Bar>
             </BarChart>
           </ChartContainer>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }

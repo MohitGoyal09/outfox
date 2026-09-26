@@ -3,10 +3,10 @@
 import { useMemo } from "react";
 import { Cell, Pie, PieChart } from "recharts";
 import { Newspaper, Trophy, Users, Video } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
-import { iconProps } from "../../tokens";
+import { Panel } from "../../Panel";
+import { categoricalColorFor, iconProps } from "../../tokens";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   audienceHintFrequency,
@@ -52,12 +52,12 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
   }, [groups, youtubeSnapshot?.rawResponse, youtubeSearchSnapshot?.rawResponse, brand.name]);
 
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <Trophy className="size-4 text-accent" />
-        <CardTitle className="text-sm">Creator leaderboard</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <Trophy className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Creator leaderboard</h3>
+      </div>
+      <div className="p-4">
         {rows.length === 0 ? (
           <EmptyState
             size="sm"
@@ -77,13 +77,13 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
                   ) : null}
                 </span>
                 <span className="rounded-full border border-border px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">{row.owned ? "owned" : "creator"}</span>
-                <span className="font-mono tabular-nums text-foreground">{compactCount(row.totalViews)}</span>
+                <span className="font-mono tabular-nums text-fg">{compactCount(row.totalViews)}</span>
               </li>
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -93,18 +93,18 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
   const ownedViews = rows.filter((row) => row.owned).reduce((sum, row) => sum + row.totalViews, 0);
   const creatorViews = rows.filter((row) => !row.owned).reduce((sum, row) => sum + row.totalViews, 0);
   const data = [
-    { label: "Owned channel", value: ownedViews, color: "#0f766e" },
-    { label: "Creator channels", value: creatorViews, color: "#7c3aed" },
+    { label: "Owned channel", value: ownedViews, color: categoricalColorFor("Owned channel") },
+    { label: "Creator channels", value: creatorViews, color: categoricalColorFor("Creator channels") },
   ].filter((row) => row.value > 0);
   const chartConfig = Object.fromEntries(data.map((row) => [row.label, { label: row.label, color: row.color }])) satisfies ChartConfig;
 
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <Users className="size-4 text-accent" />
-        <CardTitle className="text-sm">Owned vs. creator views</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <Users className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Owned vs. creator views</h3>
+      </div>
+      <div className="p-4">
         {data.length === 0 ? (
           <EmptyState
             size="sm"
@@ -136,8 +136,8 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
           </div>
         )}
         <p className="mt-3 text-[10.5px] leading-4 text-muted-foreground">&quot;Owned&quot; is a name match against the brand&apos;s own name, computed here — not a category from the source data.</p>
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -147,37 +147,36 @@ function BreakoutVideos({ claims, youtubeSnapshot }: { claims: ClaimDoc[]; youtu
     [claims],
   );
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <Video className="size-4 text-accent" />
-        <CardTitle className="text-sm">Breakout videos</CardTitle>
+    <section className="space-y-3">
+      <div className="flex flex-row items-center gap-2">
+        <Video className="size-4 text-fg" aria-hidden />
+        <h3 className="type-headline text-fg">Breakout videos</h3>
         {groups.length > 0 ? <span className="ml-auto font-mono text-[11px] text-muted-foreground">ranked by views</span> : null}
-      </CardHeader>
-      <CardContent className="pt-4">
-        {groups.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<Video {...iconProps} size={16} />}
-            title="No YouTube videos yet."
-            description="Ranks the brand's real YouTube videos by real view count, likes shown alongside where available, once video evidence is captured."
-          />
-        ) : (
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-            {groups.map((group, index) => {
-              const raw = readYoutubeRawVideo(findYoutubeRawVideo(youtubeSnapshot?.rawResponse, group.videoId));
-              return (
-                <div key={group.evidenceUrl} className="relative">
-                  <span className="absolute -left-1.5 -top-1.5 z-10 grid size-5 place-items-center rounded-full border border-border-strong bg-card font-mono text-[10px] font-semibold tabular-nums text-foreground">
-                    {index + 1}
-                  </span>
-                  <YouTubeVideoCard group={group} raw={raw} />
-                </div>
-              );
-            })}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+      </div>
+      {groups.length === 0 ? (
+        <EmptyState
+          bounded
+          size="sm"
+          icon={<Video {...iconProps} size={16} />}
+          title="No YouTube videos yet."
+          description="Ranks the brand's real YouTube videos by real view count, likes shown alongside where available, once video evidence is captured."
+        />
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {groups.map((group, index) => {
+            const raw = readYoutubeRawVideo(findYoutubeRawVideo(youtubeSnapshot?.rawResponse, group.videoId));
+            return (
+              <div key={group.evidenceUrl} className="relative">
+                <span className="absolute -left-1.5 -top-1.5 z-10 grid size-5 place-items-center rounded-full border border-border-strong bg-bg-raised font-mono text-[10px] font-semibold tabular-nums text-fg">
+                  {index + 1}
+                </span>
+                <YouTubeVideoCard group={group} raw={raw} />
+              </div>
+            );
+          })}
+        </div>
+      )}
+    </section>
   );
 }
 
@@ -191,12 +190,12 @@ function PublisherListPanel({ claims }: { claims: ClaimDoc[] }) {
     return [...counts.entries()].map(([label, count]) => ({ label, count })).sort((a, b) => b.count - a.count);
   }, [claims]);
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <Newspaper className="size-4 text-accent" />
-        <CardTitle className="text-sm">Publishers talking about this brand</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <Newspaper className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Publishers talking about this brand</h3>
+      </div>
+      <div className="p-4">
         {rows.length === 0 ? (
           <EmptyState
             size="sm"
@@ -214,8 +213,8 @@ function PublisherListPanel({ claims }: { claims: ClaimDoc[] }) {
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -269,7 +268,7 @@ export function PeopleTab({
       />
       <PublisherListPanel claims={filtered} />
       <div>
-        <h2 className="mb-3 text-sm font-semibold tracking-[-0.02em]">Real people evidence</h2>
+        <h2 className="type-headline text-fg">Real people evidence</h2>
         <EvidenceGrid
           claims={peopleEvidenceClaims}
           youtubeSnapshot={youtubeSnapshot}

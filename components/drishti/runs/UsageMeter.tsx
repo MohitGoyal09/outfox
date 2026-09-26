@@ -118,7 +118,7 @@ export function UsageMeter({
       title={segment.title}
       className={cn(
         VALUE_CLASS,
-        "text-[12px] leading-[1.4] text-[var(--text-secondary,#9797a3)]",
+        "text-[12px] leading-[1.4] text-[var(--text-secondary)]",
       )}
       style={segment.tone ? { color: TONE_COLOR[segment.tone] } : undefined}
     >
@@ -135,7 +135,7 @@ export function UsageMeter({
       {nodes.map((node, index) => (
         <Fragment key={index}>
           {index > 0 ? (
-            <span aria-hidden="true" className="text-[var(--text-tertiary,#64646f)]">
+            <span aria-hidden="true" className="text-[var(--text-tertiary)]">
               {READOUT_SEPARATOR}
             </span>
           ) : null}

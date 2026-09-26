@@ -6,7 +6,7 @@ import { TriangleAlert } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { EmptyState } from "../EmptyState";
 import { hookName } from "../labels";
-import { HOOK_TYPES, iconProps } from "../tokens";
+import { HOOK_TYPES, categoricalColorFor, iconProps } from "../tokens";
 import { RankedCatalogChart } from "../brands/RankedCatalogChart";
 import { TrendsChart, type TrendsChartResult } from "../charts";
 import { parseA2UI, resolveA2UI, type ResolvedNode, type SettledToolResult } from "./protocol";
@@ -54,6 +54,7 @@ function render(node: ResolvedNode): React.ReactNode {
         key={node.id}
         title={node.title}
         rows={node.rows}
+        colorFor={categoricalColorFor}
         emptyTitle="No rows to chart"
         emptyDescription="This turn returned no countable rows for that view."
       />
@@ -70,7 +71,7 @@ function render(node: ResolvedNode): React.ReactNode {
 
 function Cannot({ title, reason }: { title: string; reason: string }) {
   return (
-    <div className="rounded-[8px] border border-border bg-bg-raised-2 p-4">
+    <div className="rounded-lg border border-border bg-bg-raised-2 p-4 shadow-[var(--shadow-xs)]">
       <EmptyState size="sm" icon={<TriangleAlert {...iconProps} size={16} />} title={title} description={reason} />
     </div>
   );

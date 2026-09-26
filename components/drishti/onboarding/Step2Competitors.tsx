@@ -114,7 +114,7 @@ export function Step2Competitors({
     <div className="flex flex-col gap-6">
       {selected.length > 0 ? (
         <Panel as="section" interactive={false} padded ariaLabel="Selected competitors">
-          <p className="mb-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary,#98A2B3)]">
+          <p className="mb-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
             Comparing against {selected.length} of {MAX_ONBOARDING_COMPETITORS}
           </p>
           <ul className="flex flex-wrap gap-2">
@@ -127,7 +127,7 @@ export function Step2Competitors({
                       type="button"
                       aria-label={`Remove ${row.name}`}
                       onClick={() => onRemove(row.id)}
-                      className="rounded-full p-0.5 text-[var(--text-tertiary,#98A2B3)] hover:text-[var(--danger,#DC2626)]"
+                      className="rounded-full p-0.5 text-[var(--text-tertiary)] hover:text-[var(--danger)]"
                     >
                       <X {...iconProps} size={12} aria-hidden="true" className="size-3" />
                     </button>
@@ -140,7 +140,7 @@ export function Step2Competitors({
       ) : null}
 
       {atCap ? (
-        <p className="text-[13px] leading-[1.5] text-[var(--text-secondary,#667085)]">
+        <p className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
           You&rsquo;ve picked {MAX_ONBOARDING_COMPETITORS} competitors — the most a first check
           compares at once, alongside {ownBrandName}. Remove one to swap it for another.
         </p>
@@ -150,20 +150,20 @@ export function Step2Competitors({
             {...iconProps}
             size={14}
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--text-tertiary,#98A2B3)]"
+            className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--text-tertiary)]"
           />
           <input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={`Search ${vertical.toLowerCase()} brands…`}
             aria-label="Search competitors"
-            className="h-10 w-full rounded-[5px] border border-[var(--border-strong,#CBD2DC)] bg-[var(--bg-inset,#F1F3F0)] pl-9 pr-3 text-[14px] text-[var(--text-primary,#17191D)] outline-none placeholder:text-[var(--text-tertiary,#98A2B3)] focus:border-[var(--accent,#0F766E)] focus:shadow-[0_0_0_3px_rgba(15,118,110,0.22)]"
+            className="h-10 w-full rounded-sm border border-[var(--border-strong)] bg-[var(--bg-inset)] pl-9 pr-3 text-[14px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] focus:shadow-[0_0_0_3px_var(--accent-dim)]"
           />
         </div>
       )}
 
       {followError !== null ? (
-        <p role="alert" className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--danger,#DC2626)]">
+        <p role="alert" className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--danger)]">
           <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
           {followError}
         </p>
@@ -173,7 +173,7 @@ export function Step2Competitors({
         isLoading ? (
           <div className="grid gap-2 sm:grid-cols-2">
             {[1, 2, 3, 4].map((row) => (
-              <div key={row} className="h-14 animate-pulse rounded-[8px] bg-[var(--bg-inset,#F1F3F0)]" />
+              <div key={row} className="h-14 animate-pulse rounded-[8px] bg-[var(--bg-inset)]" />
             ))}
           </div>
         ) : catalogEmpty ? (
@@ -197,8 +197,8 @@ export function Step2Competitors({
                 <li key={id}>
                   <Panel interactive={false} padded className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-[13.5px] font-medium text-[var(--text-primary,#17191D)]">{entry.name}</p>
-                      <p className="truncate text-[12px] text-[var(--text-secondary,#667085)]">{entry.domain}</p>
+                      <p className="truncate text-[13.5px] font-medium text-[var(--text-primary)]">{entry.name}</p>
+                      <p className="truncate text-[12px] text-[var(--text-secondary)]">{entry.domain}</p>
                     </div>
                     <Button
                       type="button"
@@ -238,7 +238,7 @@ export function Step2Competitors({
                 error={customErrors.domain}
               />
               {customError !== null ? (
-                <p role="alert" className="text-[13px] leading-[1.5] text-[var(--danger,#DC2626)]">
+                <p role="alert" className="text-[13px] leading-[1.5] text-[var(--danger)]">
                   {customError}
                 </p>
               ) : null}
@@ -259,7 +259,7 @@ export function Step2Competitors({
         )
       ) : null}
 
-      <div className="flex items-center gap-2 border-t border-[var(--border,#E4E7EC)] pt-5">
+      <div className="flex items-center gap-2 border-t border-[var(--border)] pt-5">
         <Button type="button" variant="ghost" onClick={onBack}>
           Back
         </Button>

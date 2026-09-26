@@ -11,14 +11,13 @@ import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { motion, useReducedMotion } from "motion/react";
-import { ArrowUp, CircleAlert, Paperclip, Square, X } from "lucide-react";
+import { ArrowUp, CircleAlert, Eraser, Paperclip, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import {
   Conversation,
   ConversationContent,
-  ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
 import {
@@ -31,13 +30,12 @@ import {
   PromptInputTools,
   usePromptInputAttachments,
 } from "@/components/ai-elements/prompt-input";
-import { SidebarInset, SidebarProvider, SidebarTrigger } from "@/components/ui/sidebar";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { Sidebar } from "@/components/drishti/chrome/Sidebar";
 import { Button } from "../Button";
 import { LABEL_CLASS, STATE_TRANSITION_CLASS, iconProps } from "../tokens";
 import { AgentMessage } from "./AgentMessage";
+import { AskEmptyState } from "./AskEmptyState";
 import {
   BrandMentionMenu,
   filterMentionBrands,
@@ -53,7 +51,6 @@ import {
 } from "./ask-model";
 import { precedingUserTextOf, sourceRowsOf } from "./agentChat-model";
 import { CitationDrawer, type EvidenceDetail } from "./CitationDrawer";
-import { PromptCategories } from "./PromptCategories";
 import { SourcesDrawer } from "./SourcesDrawer";
 import { useAgentChat } from "./useAgentChat";
 import { tracesByAssistantMessageId, useAskTraceEvents } from "./useAskTrace";
@@ -81,13 +78,6 @@ function ComposerAttachButton({ disabled }: { disabled: boolean }) {
   );
 }
 
-function greetingWord(hour: number): string {
-  if (hour < 5) return "night";
-  if (hour < 12) return "morning";
-  if (hour < 18) return "afternoon";
-  return "evening";
-}
-
 export function AskView({
   initialChatId,
   cohortKey,
@@ -102,7 +92,6 @@ export function AskView({
   const brands = useQuery(api.brands.listBrands);
   const me = useQuery(api.users.me);
   const firstName = me?.name?.trim().split(/\s+/)[0] ?? null;
-  const [greeting] = useState(() => greetingWord(new Date().getHours()));
   const reduceMotion = useReducedMotion();
 
   const brandNames = useMemo(() => {
@@ -599,121 +588,81 @@ export function AskView({
   );
 
   return (
-    <SidebarProvider className="min-h-dvh" defaultOpen={true}>
-      <Sidebar />
-      <SidebarInset className="flex h-dvh flex-col bg-bg">
-      <header className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-3 sm:px-6">
-        <SidebarTrigger aria-label="Toggle chat history" />
-        <div className="flex min-w-0 items-center gap-3">
-          {hasTranscript ? (
-            <>
-              {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} claimsById={claimsById} /> : null}
-              <Button variant="ghost" size="sm" onClick={() => setMessages([])}>
-                Clear
-              </Button>
-            </>
-          ) : null}
+    <div className="mx-auto flex h-[calc(100dvh-14rem)] min-h-[30rem] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-bg-raised shadow-[var(--shadow-xs)]">
+      {hasTranscript ? (
+        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
+          <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Conversation</span>
+          <div className="flex items-center gap-1.5">
+            {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} claimsById={claimsById} /> : null}
+            <Button
+              variant="ghost"
+              size="sm"
+              className="rounded-sm"
+              icon={<Eraser {...iconProps} size={14} aria-hidden="true" />}
+              onClick={() => setMessages([])}
+            >
+              Clear
+            </Button>
+          </div>
         </div>
-      </header>
+      ) : null}
 
-      <div className="flex min-h-0 flex-1 flex-col">
-        <Conversation className="min-h-0 flex-1">
-          <ConversationContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
-            {!hasTranscript ? (
-              <ConversationEmptyState className="flex-1">
-                <div className="w-full max-w-2xl space-y-7 text-center">
-                  <div className="mx-auto max-w-md space-y-5">
-                    <motion.div
-                      aria-hidden="true"
-                      className="relative mx-auto flex size-24 items-center justify-center"
-                      initial={reduceMotion ? undefined : { opacity: 0, scale: 0.85 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ duration: 0.3, ease: "easeOut" }}
-                    >
-                      <span className="absolute inset-0 rounded-full bg-accent/60 blur-2xl" />
-                      <span className="absolute inset-3 rounded-full bg-accent-strong/50 blur-lg" />
-                      <span
-                        className="relative flex size-14 items-center justify-center rounded-full text-[16px] font-semibold text-bg shadow-[inset_0_-6px_10px_rgba(0,0,0,0.28),inset_0_3px_4px_rgba(255,255,255,0.3),0_6px_14px_rgba(15,118,110,0.35)]"
-                        style={{
-                          backgroundImage:
-                            "radial-gradient(circle at 32% 28%, var(--accent-strong) 0%, var(--accent) 55%, #0b3b37 100%)",
-                        }}
-                      >
-                        D
-                      </span>
-                    </motion.div>
-                    <div className="space-y-2">
-                      <h1 className="type-display text-fg">
-                        {firstName !== null ? (
-                          <>
-                            <span className="font-normal text-fg-secondary">Good {greeting}, </span>
-                            {firstName}
-                          </>
-                        ) : (
-                          `Good ${greeting}.`
-                        )}
-                      </h1>
-                      <p className="text-[15px] leading-6 text-fg-secondary">
-                        Ask about your rivals — a comparison, a trend, or the evidence
-                        behind any signal. Every useful sentence links back to a real
-                        tool result.
-                      </p>
-                    </div>
-                  </div>
-                  <div className="w-full text-left">{composer}</div>
-                  <PromptCategories
-                    disabled={asking}
-                    onSelect={(prompt) => {
-                      setValue(prompt);
-                      requestAnimationFrame(() => textareaRef.current?.focus());
-                    }}
-                  />
-                </div>
-              </ConversationEmptyState>
-            ) : null}
+      <Conversation className="min-h-0 flex-1">
+        <ConversationContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
+          {!hasTranscript ? (
+            <AskEmptyState
+              firstName={firstName}
+              composer={composer}
+              categoriesDisabled={asking}
+              onSelectPrompt={(prompt) => {
+                setValue(prompt);
+                requestAnimationFrame(() => textareaRef.current?.focus());
+              }}
+            />
+          ) : null}
 
-            {messages.map((message, index) => {
-              const isLastMessage = index === messages.length - 1;
-              const precedingUserText = precedingUserTextOf(
-                messages as unknown as { role: string; parts?: unknown }[],
-                index,
-              );
-              return (
-                <AgentMessage
-                  key={message.id}
-                  message={message}
-                  brandNames={brandNames}
-                  claimsById={claimsById}
-                  isStreaming={isLastMessage && chatStatus === "streaming"}
-                  isBusy={isLastMessage && isGenerating}
-                  persistedCards={persistedCardsByMessageId[message.id]}
-                  persistedDurationMs={tracesByMessageId[message.id]?.durationMs}
-                  question={precedingUserText}
-                  threadKey={threadKey}
-                  onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
-                  onOpenCitation={(claimId) => setOpenCitation({ claimId, question: precedingUserText })}
-                  onSelectFollowUp={(question) => void submit(question)}
-                  onRetry={
-                    precedingUserText !== null && !asking ? () => void submit(precedingUserText) : undefined
-                  }
-                />
-              );
-            })}
-          </ConversationContent>
-          <ConversationScrollButton />
-        </Conversation>
+          {messages.map((message, index) => {
+            const isLastMessage = index === messages.length - 1;
+            const precedingUserText = precedingUserTextOf(
+              messages as unknown as { role: string; parts?: unknown }[],
+              index,
+            );
+            return (
+              <AgentMessage
+                key={message.id}
+                message={message}
+                brandNames={brandNames}
+                claimsById={claimsById}
+                isStreaming={isLastMessage && chatStatus === "streaming"}
+                isBusy={isLastMessage && isGenerating}
+                persistedCards={persistedCardsByMessageId[message.id]}
+                persistedDurationMs={tracesByMessageId[message.id]?.durationMs}
+                question={precedingUserText}
+                threadKey={threadKey}
+                onRespondToApproval={(id, approved) => void respondToApproval(id, approved)}
+                onOpenCitation={(claimId) => setOpenCitation({ claimId, question: precedingUserText })}
+                onSelectFollowUp={(question) => void submit(question)}
+                onRetry={
+                  precedingUserText !== null && !asking ? () => void submit(precedingUserText) : undefined
+                }
+              />
+            );
+          })}
+        </ConversationContent>
+        <ConversationScrollButton />
+      </Conversation>
 
-        {hasTranscript ? (
-          <motion.div
-            className="mx-auto w-full max-w-3xl shrink-0 px-4 pb-4 sm:px-6"
-            initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
-          >
-            {composer}
-          </motion.div>
-        ) : null}
-      </div>
+      {hasTranscript ? (
+        <motion.div
+          className="shrink-0 border-t border-border bg-bg-raised px-4 pb-4 pt-3 sm:px-6"
+          initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
+        >
+          {composer}
+        </motion.div>
+      ) : null}
+
       <CitationDrawer
         open={openCitation !== null}
         claim={openCitation !== null ? evidenceById.get(openCitation.claimId) : undefined}
@@ -725,7 +674,6 @@ export function AskView({
           if (!open) setOpenCitation(null);
         }}
       />
-      </SidebarInset>
-    </SidebarProvider>
+    </div>
   );
 }

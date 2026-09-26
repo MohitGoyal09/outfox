@@ -27,19 +27,19 @@ export const SKELETON_SHAPE: Record<SkeletonVariant, SkeletonShape> = {
   },
   block: {
     height: 64,
-    radiusClass: "rounded-[10px]",
+    radiusClass: "rounded-lg",
     defaultLines: 1,
     fullWidth: true,
   },
   row: {
     height: 44,
-    radiusClass: "rounded-[10px]",
+    radiusClass: "rounded-md",
     defaultLines: 1,
     fullWidth: true,
   },
   stat: {
     height: 34,
-    radiusClass: "rounded-[5px]",
+    radiusClass: "rounded-sm",
     defaultLines: 1,
     fullWidth: false,
   },
@@ -101,7 +101,7 @@ export function Skeleton({
         key={index}
         aria-hidden="true"
         className={cn(
-          "block bg-[var(--bg-raised-2,#191922)] motion-safe:animate-pulse",
+          "block bg-bg-inset motion-safe:animate-pulse motion-safe:[animation-duration:1.4s]",
           shape.radiusClass,
           shape.lines === 1 && className,
         )}

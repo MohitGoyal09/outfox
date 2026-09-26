@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { AskView } from "@/components/drishti/ask/AskView";
+import { AppShell } from "@/components/drishti/chrome/AppShell";
 import type { Id } from "@/convex/_generated/dataModel";
 
 export const metadata: Metadata = {
@@ -30,11 +31,13 @@ export default async function AskPage({
 }) {
   const params = await searchParams;
   return (
-    <AskView
-      initialChatId={firstString(params.chat) ?? firstString(params.cohort)}
-      cohortKey={firstString(params.cohort)}
-      initialQuestion={firstString(params.q) ?? firstString(params.prompt)}
-      initialBrandIds={brandIdsFromParam(firstString(params.brands))}
-    />
+    <AppShell>
+      <AskView
+        initialChatId={firstString(params.chat) ?? firstString(params.cohort)}
+        cohortKey={firstString(params.cohort)}
+        initialQuestion={firstString(params.q) ?? firstString(params.prompt)}
+        initialBrandIds={brandIdsFromParam(firstString(params.brands))}
+      />
+    </AppShell>
   );
 }

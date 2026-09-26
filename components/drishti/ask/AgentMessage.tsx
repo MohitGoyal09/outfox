@@ -28,7 +28,7 @@ import { AnswerActions } from "./AnswerActions";
 import { AnswerMarkdown } from "./AnswerMarkdown";
 import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
 import { persistedTrendsResultsOf, type ToolCallCardView } from "./ask-model";
-import { descriptiveToolLabel, toolTitle } from "./ToolCallCard";
+import { descriptiveToolLabel, toolEngine, toolTitle } from "./ToolCallCard";
 import { FollowUpList } from "./FollowUpList";
 import { AnswerCharts } from "./AnswerCharts";
 import { A2UISurface } from "../a2ui/A2UISurface";
@@ -79,7 +79,7 @@ export function AgentMessage({
   if (message.role === "user") {
     return (
       <Message from="user">
-        <MessageContent className="rounded-[8px] bg-bg-inset px-4 py-3 text-fg">
+        <MessageContent className="rounded-lg border border-border bg-bg-inset px-4 py-3 text-fg">
           {text}
         </MessageContent>
       </Message>
@@ -104,6 +104,7 @@ export function AgentMessage({
     id: card.id,
     text: descriptiveToolLabel(card.name, card.rawPayload, brandNames),
     status: thoughtStatusOf(card.status),
+    engine: toolEngine(card.name),
   }));
   const persistedElapsedSeconds =
     !isLive && persistedDurationMs != null && persistedDurationMs > 0
@@ -113,7 +114,7 @@ export function AgentMessage({
 
   return (
     <Message from="assistant">
-      <MessageContent>
+      <MessageContent className="w-full">
         <ThoughtLine
           steps={steps}
           working={isRunning && isBusy}
@@ -185,19 +186,24 @@ export function AgentMessage({
         })}
 
         {messageText !== "" ? (
-          <UnavailableBlock
-            failedSteps={failedCards}
-            noGroundedEvidence={provenance?.mode === "template"}
-          />
-        ) : null}
+          <div className="flex w-full flex-col gap-3 rounded-lg border border-border bg-bg-raised p-4 shadow-[var(--shadow-xs)]">
+            <UnavailableBlock
+              failedSteps={failedCards}
+              noGroundedEvidence={provenance?.mode === "template"}
+            />
 
-        {messageText !== "" ? (
-          <AnswerMarkdown
-            text={text}
-            citationSources={citationSources}
-            isStreaming={isStreaming}
-            onOpenCitation={onOpenCitation}
-          />
+            <AnswerMarkdown
+              text={text}
+              citationSources={citationSources}
+              isStreaming={isStreaming}
+              onOpenCitation={onOpenCitation}
+            />
+
+            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
+              <AnswerSourcesPanel sources={sourceRows} claimsById={claimsById} question={question} threadKey={threadKey} />
+              <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
+            </div>
+          </div>
         ) : null}
 
         {a2ui !== null ? (
@@ -205,13 +211,6 @@ export function AgentMessage({
             text={a2ui}
             results={surfaceResults(message as unknown as { parts?: unknown }, cards)}
           />
-        ) : null}
-
-        {messageText !== "" ? (
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <AnswerSourcesPanel sources={sourceRows} claimsById={claimsById} question={question} threadKey={threadKey} />
-            <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
-          </div>
         ) : null}
 
         {untrackedBrand !== null ? (

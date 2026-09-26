@@ -6,8 +6,9 @@ import { useMutation, useQuery } from "convex/react";
 import { LayoutGrid, Plus } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button } from "@/components/ui/button";
+import { Button } from "../Button";
 import { EmptyState } from "../EmptyState";
+import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { iconProps } from "../tokens";
 import { pinDefaultBoardFirst } from "./boards-model";
 import { BoardSidebar } from "./BoardSidebar";
@@ -37,11 +38,16 @@ export function BoardsPageView() {
 
   if (boards === undefined) {
     return (
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+      <SkeletonRegion label="Loading your boards" className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
         {[0, 1, 2].map((i) => (
-          <div key={i} className="h-40 animate-pulse rounded-xl border border-border bg-muted/40" />
+          <div key={i} className="rounded-lg border border-border bg-bg-raised p-4 shadow-xs">
+            <Skeleton variant="text" width="42%" />
+            <span className="mt-4 block">
+              <Skeleton variant="block" height={104} />
+            </span>
+          </div>
         ))}
-      </div>
+      </SkeletonRegion>
     );
   }
 
@@ -123,10 +129,15 @@ function BoardCreateInline({ onCreate }: { onCreate: (name: string) => Promise<I
         onChange={(event) => setName(event.target.value)}
         placeholder="Board name, e.g. Discount hooks"
         aria-label="New board name"
-        className="h-9 w-56 rounded-lg border border-input bg-transparent px-3 text-sm outline-none focus-visible:border-ring"
+        className="focus-ring h-9 w-56 rounded-sm border border-border-strong bg-bg-raised px-3 text-[13px] text-fg placeholder:text-fg-placeholder"
       />
-      <Button type="submit" size="sm" disabled={name.trim() === "" || creating} className="gap-1.5">
-        <Plus className="size-3.5" /> Create board
+      <Button
+        type="submit"
+        size="sm"
+        disabled={name.trim() === "" || creating}
+        icon={<Plus {...iconProps} size={14} />}
+      >
+        Create board
       </Button>
     </form>
   );

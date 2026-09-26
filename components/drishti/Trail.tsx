@@ -188,15 +188,15 @@ function StepMarker({ view }: { view: TrailRowView }) {
   return (
     <span
       className={cn(
-        "relative z-10 flex size-[26px] shrink-0 items-center justify-center rounded-full border bg-[var(--bg-raised,#131319)]",
-        view.tone === "danger" ? "border-[var(--danger,#f87171)]/40" : "border-[var(--border,#24242f)]",
+        "relative z-10 flex size-[26px] shrink-0 items-center justify-center rounded-full border bg-[var(--bg-raised)]",
+        view.tone === "danger" ? "border-[var(--danger)]/40" : "border-[var(--border)]",
       )}
     >
-      <Icon {...iconProps} size={14} aria-hidden="true" className="text-[var(--text-secondary,#9797a3)]" />
+      <Icon {...iconProps} size={14} aria-hidden="true" className="text-[var(--text-secondary)]" />
       <span
         aria-hidden="true"
         className={cn(
-          "absolute -bottom-0.5 -right-0.5 size-2 rounded-full ring-2 ring-[var(--bg,#0a0a0f)]",
+          "absolute -bottom-0.5 -right-0.5 size-2 rounded-full ring-2 ring-[var(--bg)]",
           STATE_TRANSITION_CLASS,
         )}
         style={{ backgroundColor: view.dotColor }}
@@ -214,7 +214,7 @@ function StepLabel({
 }) {
   const base = cn(
     LABEL_CLASS,
-    "min-w-0 text-left text-[var(--text-secondary,#9797a3)]",
+    "min-w-0 text-left text-[var(--text-secondary)]",
   );
   if (!onStepFocus) {
     return <span className={cn(base, "break-words")}>{view.label}</span>;
@@ -225,10 +225,10 @@ function StepLabel({
       onClick={() => onStepFocus(view.id)}
       className={cn(
         base,
-        "-mx-1 rounded-[3px] px-1 hover:text-[var(--text-primary,#eeeef2)]",
+        "-mx-1 rounded-[3px] px-1 hover:text-[var(--text-primary)]",
         PRESS_CLASS,
         STATE_TRANSITION_CLASS,
-        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)] focus-visible:ring-[3px] focus-visible:ring-[rgba(226,163,57,0.22)]",
+        "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--accent-dim)]",
       )}
     >
       {view.label}
@@ -239,7 +239,7 @@ function StepLabel({
 function StepValue({ view }: { view: TrailRowView }) {
   const textClass = cn(
     VALUE_CLASS,
-    "text-[12.5px] leading-[1.45] text-[var(--text-primary,#eeeef2)]",
+    "text-[12.5px] leading-[1.45] text-[var(--text-primary)]",
     "[overflow-wrap:anywhere]",
   );
   if (!view.href) {
@@ -251,8 +251,8 @@ function StepValue({ view }: { view: TrailRowView }) {
       target="_blank"
       rel="noreferrer noopener"
       className={cn(
-        "group inline text-[var(--text-primary,#eeeef2)] underline decoration-[var(--border-strong,#35353f)] underline-offset-[3px] hover:decoration-[var(--accent,#e2a339)]",
-        "rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)] focus-visible:ring-[3px] focus-visible:ring-[rgba(226,163,57,0.22)]",
+        "group inline text-[var(--text-primary)] underline decoration-[var(--border-strong)] underline-offset-[3px] hover:decoration-[var(--accent)]",
+        "rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--accent-dim)]",
       )}
     >
       <span className={textClass}>{view.valueText}</span>
@@ -260,7 +260,7 @@ function StepValue({ view }: { view: TrailRowView }) {
         {...iconProps}
         size={14}
         aria-hidden="true"
-        className="ml-1 inline-block size-3.5 align-[-2px] text-[var(--text-tertiary,#64646f)] group-hover:text-[var(--accent,#e2a339)]"
+        className="ml-1 inline-block size-3.5 align-[-2px] text-[var(--text-tertiary)] group-hover:text-[var(--accent)]"
       />
       <span className="sr-only"> (opens in a new tab)</span>
     </a>
@@ -269,7 +269,7 @@ function StepValue({ view }: { view: TrailRowView }) {
 
 function StepMeta({ view }: { view: TrailRowView }) {
   if (!view.latency && !view.at && !view.statusLabel) return null;
-  const metaTextClass = cn(VALUE_CLASS, "text-[10.5px] text-[var(--text-tertiary,#64646f)]");
+  const metaTextClass = cn(VALUE_CLASS, "text-[10.5px] text-[var(--text-tertiary)]");
   return (
     <span className="flex flex-wrap items-center gap-x-2 gap-y-0.5">
       {view.statusLabel ? <span className={metaTextClass}>{view.statusLabel}</span> : null}
@@ -287,19 +287,19 @@ function TrailGaps({ gaps }: { gaps: TrailGap[] }) {
         <li
           key={gap.id}
           data-state="gap"
-          className="flex items-start gap-2 rounded-[5px] border border-dashed border-[var(--border,#24242f)] px-2 py-1.5"
+          className="flex items-start gap-2 rounded-[5px] border border-dashed border-[var(--border)] px-2 py-1.5"
         >
           <span
             aria-hidden="true"
-            className="mt-1 size-1.5 shrink-0 rounded-full border border-[var(--text-tertiary,#64646f)]"
+            className="mt-1 size-1.5 shrink-0 rounded-full border border-[var(--text-tertiary)]"
           />
           <span className="min-w-0">
             <span
-              className={cn(LABEL_CLASS, "block text-[var(--text-tertiary,#64646f)]")}
+              className={cn(LABEL_CLASS, "block text-[var(--text-tertiary)]")}
             >
               {gap.label}
             </span>
-            <span className="block text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+            <span className="block text-[13px] leading-[1.5] text-[var(--text-secondary)]">
               {gap.reason}
             </span>
           </span>
@@ -351,10 +351,10 @@ function StepHeadline({
   }
   return (
     <div className="min-w-0">
-      <p className="text-[13px] font-medium leading-5 text-[var(--text-primary,#eeeef2)]">
+      <p className="text-[13px] font-medium leading-5 text-[var(--text-primary)]">
         {view.sentence}
       </p>
-      <p className={cn(LABEL_CLASS, "mt-0.5 text-[var(--text-tertiary,#64646f)]")}>{view.label}</p>
+      <p className={cn(LABEL_CLASS, "mt-0.5 text-[var(--text-tertiary)]")}>{view.label}</p>
     </div>
   );
 }
@@ -370,7 +370,7 @@ function StepDetail({ detail }: { detail: NonNullable<TrailRowView["detail"]> })
       <summary
         className={cn(
           LABEL_CLASS,
-          "flex w-fit cursor-pointer select-none items-center gap-1 text-[var(--text-tertiary,#64646f)] hover:text-[var(--text-secondary,#9797a3)]",
+          "flex w-fit cursor-pointer select-none items-center gap-1 text-[var(--text-tertiary)] hover:text-[var(--text-secondary)]",
           STATE_TRANSITION_CLASS,
           "[&::-webkit-details-marker]:hidden",
         )}
@@ -385,10 +385,10 @@ function StepDetail({ detail }: { detail: NonNullable<TrailRowView["detail"]> })
       </summary>
       <div className="mt-1 flex flex-col gap-1.5">
         {detail.result !== null ? (
-          <p className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-secondary,#9797a3)]")}>{detail.result}</p>
+          <p className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-secondary)]")}>{detail.result}</p>
         ) : null}
         {argsText !== null ? (
-          <pre className="overflow-x-auto rounded-[4px] bg-[var(--bg-inset,#0e0e13)] p-2 text-[10.5px] leading-[1.5] text-[var(--text-tertiary,#64646f)]">
+          <pre className="overflow-x-auto rounded-[4px] bg-[var(--bg-inset)] p-2 text-[10.5px] leading-[1.5] text-[var(--text-tertiary)]">
             {argsText}
           </pre>
         ) : null}
@@ -424,7 +424,7 @@ export function TrailVertical({
         <span
           aria-hidden="true"
           className={cn(
-            "absolute bottom-0 w-px bg-[var(--border,#24242f)]",
+            "absolute bottom-0 w-px bg-[var(--border)]",
             hasIcon ? "left-[13px] top-[26px]" : "left-[3px] top-[11px]",
           )}
         />
@@ -441,7 +441,7 @@ export function TrailVertical({
       >
         <StepHeadline view={view} onStepFocus={onStepFocus} />
         {view.reasoningVisible && view.reasoning ? (
-          <p className="mt-1.5 max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+          <p className="mt-1.5 max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">
             {view.reasoning}
           </p>
         ) : null}

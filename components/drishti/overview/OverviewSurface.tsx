@@ -1,12 +1,12 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowUpRight, Radar, Search } from "lucide-react";
+import { ArrowUpRight, BarChart3, Building2, Quote, Radar, Search, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
-import { EmptyState, Panel, StatReadout, iconProps } from "@/components/drishti";
+import { EmptyState, Panel, iconProps } from "@/components/drishti";
 import { useAllRuns } from "@/components/drishti/cohorts/useAllRuns";
 
 import { ActionLink } from "./ActionLink";
@@ -15,6 +15,8 @@ import { NeedsAttention } from "./NeedsAttention";
 import { NewestEvidence } from "./NewestEvidence";
 import { OverviewErrorBoundary } from "./OverviewErrorBoundary";
 import { PickUpWhereYouLeftOff } from "./PickUpWhereYouLeftOff";
+import { SectionLabel } from "./SectionLabel";
+import { StatTile } from "./StatTile";
 import { WhatChanged } from "./WhatChanged";
 import {
   brandCoverage,
@@ -177,7 +179,7 @@ function OverviewBody() {
   if (brandsQuery !== undefined && brands.length === 0) return <Onboarding />;
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="flex flex-col gap-8 pb-12">
       <header className="flex flex-col justify-between gap-5 border-b border-border pb-6 sm:flex-row sm:items-end">
         <div className="space-y-2">
           <h1 className="type-display text-fg">{`Good ${greeting}.`}</h1>
@@ -185,46 +187,83 @@ function OverviewBody() {
             A grounded read of the newest evidence across your tracked brands.
           </p>
         </div>
-        <div className="flex flex-wrap items-center gap-4">
-          <StatReadout label="Tracked brands" value={brands.length} layout="inline" loading={brandsLoading} />
-          <StatReadout
-            label="Findings"
-            value={totalClaimCount}
-            layout="inline"
-            loading={brandsLoading || feedLoading}
-          />
-          <div className="flex gap-2">
-            <ActionLink
-              href="/brands"
-              variant="ghost"
-              size="sm"
-              icon={<Search {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
-            >
-              Browse brands
-            </ActionLink>
-            <ActionLink
-              href="/ask"
-              variant="primary"
-              size="sm"
-              icon={<ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
-            >
-              Ask Drishti
-            </ActionLink>
-          </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <ActionLink
+            href="/brands"
+            variant="ghost"
+            size="sm"
+            icon={<Search {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+          >
+            Browse brands
+          </ActionLink>
+          <ActionLink
+            href="/ask"
+            variant="primary"
+            size="sm"
+            icon={<ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+          >
+            Ask Drishti
+          </ActionLink>
         </div>
       </header>
 
-      <NeedsAttention rows={attentionRows} />
+      <section aria-label="At a glance" className="flex flex-col gap-3">
+        <SectionLabel>At a glance</SectionLabel>
+        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+          <StatTile
+            label="Tracked brands"
+            value={brands.length}
+            loading={brandsLoading}
+            hint="Brands on your desk."
+            icon={<Building2 {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+          />
+          <StatTile
+            label="Findings"
+            value={totalClaimCount}
+            accent="ok"
+            loading={panelsLoading}
+            hint="Stored findings across your brands."
+            icon={<Quote {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+          />
+          <StatTile
+            label="With evidence"
+            value={coveredBrandCount}
+            accent={coveredBrandCount > 0 ? "ok" : "neutral"}
+            loading={panelsLoading}
+            hint="Brands with a finished check."
+            icon={<BarChart3 {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+          />
+          <StatTile
+            label="Needs attention"
+            value={attentionRows.length}
+            accent={attentionRows.length > 0 ? "warn" : "ok"}
+            loading={panelsLoading}
+            hint={
+              attentionRows.length > 0 ? "Brands that need a look." : "Nothing needs a look."
+            }
+            icon={<TriangleAlert {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+          />
+        </div>
+      </section>
 
-      {/* Section 3 — What changed since your last check. A better lead than
-          Newest Evidence, but Needs Attention still comes first. Absent
-          while loading and absent entirely if no brand has two finished
-          checks to diff. */}
-      <WhatChanged feed={whatChangedFeed} />
+      {/* Needs attention and What changed sit side by side. Either can render
+          nothing; when only one survives it takes the full row. */}
+      {attentionRows.length > 0 || whatChangedFeed !== null ? (
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          {attentionRows.length > 0 ? (
+            <div className={whatChangedFeed === null ? "lg:col-span-2" : undefined}>
+              <NeedsAttention rows={attentionRows} />
+            </div>
+          ) : null}
+          {whatChangedFeed !== null ? (
+            <div className={attentionRows.length === 0 ? "lg:col-span-2" : undefined}>
+              <WhatChanged feed={whatChangedFeed} />
+            </div>
+          ) : null}
+        </div>
+      ) : null}
 
-      {/* Section 4 — Newest Evidence, the part that is alive every day, plus
-          the pooled pattern across the brands that do have data beside it. */}
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-12">
+      <section aria-label="Evidence and patterns" className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-8">
           <NewestEvidence loading={panelsLoading} hasBrands={brands.length > 0} feed={evidenceFeed} nowMs={nowMs} />
         </div>
@@ -240,7 +279,7 @@ function OverviewBody() {
 
 function Onboarding() {
   return (
-    <Panel as="section" interactive={false} padded ariaLabel="Start with your brands" className="mx-auto max-w-3xl p-8 sm:p-12">
+    <Panel as="section" interactive={false} padded ariaLabel="Start with your brands" className="mx-auto max-w-3xl rounded-lg p-8 shadow-xs sm:p-12">
       <EmptyState
         size="md"
         icon={<Radar {...iconProps} size={20} aria-hidden="true" />}

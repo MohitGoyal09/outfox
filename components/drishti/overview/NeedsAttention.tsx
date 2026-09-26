@@ -6,8 +6,8 @@ import { Chip, LABEL_CLASS, iconProps, type Tone } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 
 import { ActionLink } from "./ActionLink";
-import { SectionLabel } from "./SectionLabel";
-import type { AttentionReason, AttentionRow } from "./overview-model";
+import { Card } from "./Card";
+import { pluralize, type AttentionReason, type AttentionRow } from "./overview-model";
 
 const REASON_TONE: Record<AttentionReason, Tone> = {
   never_run: "neutral",
@@ -29,22 +29,17 @@ export function NeedsAttention({ rows }: NeedsAttentionProps) {
   if (rows.length === 0) return null;
 
   return (
-    <section aria-label="Needs attention" className="flex flex-col gap-3">
-      <SectionLabel
-        trailing={
-          <span className="flex items-center gap-1.5 text-[11px] font-mono text-fg-tertiary">
-            <TriangleAlert {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
-            {rows.length}
-          </span>
-        }
-      >
-        Needs attention
-      </SectionLabel>
-      <ul className="flex flex-col divide-y divide-border rounded-md border border-[var(--warn,#b45309)]/25 bg-[var(--bg-inset,#f1f3f0)]">
+    <Card
+      title="Needs attention"
+      description={`${rows.length} ${pluralize(rows.length, "brand")} need a look.`}
+      icon={<TriangleAlert {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+      className="h-full border-[color-mix(in_srgb,var(--warn)_30%,var(--border))]"
+    >
+      <ul className="flex flex-col divide-y divide-border">
         {rows.map((row) => (
           <li
             key={row.brandId}
-            className="flex flex-col gap-2 px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
+            className="flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4"
           >
             <div className="flex min-w-0 flex-col gap-1">
               <div className="flex flex-wrap items-center gap-2">
@@ -62,6 +57,6 @@ export function NeedsAttention({ rows }: NeedsAttentionProps) {
           </li>
         ))}
       </ul>
-    </section>
+    </Card>
   );
 }

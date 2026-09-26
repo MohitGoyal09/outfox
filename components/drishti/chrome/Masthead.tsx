@@ -23,6 +23,7 @@ import {
   CommandShortcut,
 } from "@/components/ui/command";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { iconProps } from "@/components/drishti";
 
 export function Masthead() {
   const router = useRouter();
@@ -62,28 +63,48 @@ export function Masthead() {
 
   return (
     <>
-      <div className="flex min-h-[68px] items-center gap-3 sm:gap-5">
-        <Link href="/" className="flex shrink-0 items-center gap-2.5" aria-label="Drishti home">
-          <span className="flex size-8 items-center justify-center rounded-[7px] bg-fg text-sm font-semibold text-bg">D</span>
-          <span className="text-[15px] font-semibold tracking-[-0.03em]">Drishti</span>
-          {/* Was visible from md (768px). The sidebar's expanded width grew to
-              match the Karax port (18rem instead of 15rem), which no longer
-              leaves room for this label at 768px without overflowing -- push
-              it to lg so the header stays within the viewport there. */}
-          <span className="hidden border-l border-border pl-3 font-mono text-[10px] uppercase tracking-[0.16em] text-fg-tertiary lg:inline-flex">Evidence atlas</span>
-        </Link>
-        <button type="button" onClick={() => setOpen(true)} className="group flex h-10 min-w-0 max-w-[820px] flex-1 items-center gap-2.5 rounded-[7px] border border-border bg-bg-inset px-3.5 text-left text-sm text-fg-tertiary transition-[border-color,background-color] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised focus-visible:border-accent sm:ml-4" aria-label="Search brands and pages, or ask Drishti">
-          <Search aria-hidden className="size-4 shrink-0" />
+      <div className="flex h-full min-w-0 items-center gap-2 sm:gap-3">
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-[8px] border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:h-10 sm:max-w-[720px]"
+          aria-label="Search brands and pages, or ask Drishti"
+        >
+          <Search {...iconProps} aria-hidden className="size-4 shrink-0 text-fg-secondary" />
           <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Drishti…</span>
-          <kbd className="hidden shrink-0 rounded border border-border-strong bg-bg-raised px-1.5 py-0.5 font-mono text-[10px] text-fg-tertiary sm:inline-flex">⌘K</kbd>
+          <kbd className="hidden shrink-0 rounded-[6px] border border-border bg-bg-inset px-1.5 py-0.5 font-mono text-[10px] text-fg-tertiary sm:inline-flex">
+            ⌘K
+          </kbd>
         </button>
-        <Button asChild size="sm" className="ml-auto hidden h-9 shrink-0 rounded-[6px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"><Link href="/brands?add=1"><Plus aria-hidden /> Add brand</Link></Button>
+        <Button
+          asChild
+          size="sm"
+          className="hidden h-9 shrink-0 rounded-[8px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"
+        >
+          <Link href="/brands?add=1">
+            <Plus {...iconProps} aria-hidden className="size-4" />
+            Add brand
+          </Link>
+        </Button>
         <DropdownMenu>
-          <DropdownMenuTrigger asChild><Button variant="ghost" size="icon" className="rounded-full text-fg-secondary hover:bg-bg-inset hover:text-fg" aria-label="Account menu"><Avatar size="sm"><AvatarFallback className="border border-border bg-bg-raised text-xs font-semibold text-fg">M</AvatarFallback></Avatar></Button></DropdownMenuTrigger>
+          <DropdownMenuTrigger asChild>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="shrink-0 rounded-full text-fg-secondary hover:bg-bg-inset hover:text-fg"
+              aria-label="Account menu"
+            >
+              <Avatar size="sm">
+                <AvatarFallback className="border border-border bg-bg-raised text-xs font-semibold text-fg">
+                  M
+                </AvatarFallback>
+              </Avatar>
+            </Button>
+          </DropdownMenuTrigger>
           <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="flex items-center gap-2"><UserRound className="size-4" /> Account</DropdownMenuLabel>
+            <DropdownMenuLabel className="flex items-center gap-2"><UserRound {...iconProps} className="size-4" /> Account</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={isSigningOut} onSelect={() => void handleSignOut()}><LogOut className="size-4" /> Sign out</DropdownMenuItem>
+            <DropdownMenuItem disabled={isSigningOut} onSelect={() => void handleSignOut()}><LogOut {...iconProps} className="size-4" /> Sign out</DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
       </div>
@@ -112,7 +133,7 @@ export function Masthead() {
           <CommandList>
             <CommandEmpty>No matching brand or page.</CommandEmpty>
             <CommandGroup heading="Navigate">
-              {NAV.map((item) => { const Icon = item.icon; return <CommandItem key={item.href} onSelect={() => { setOpen(false); router.push(item.href); }}><Icon /><span>{item.label}</span></CommandItem>; })}
+              {NAV.map((item) => { const Icon = item.icon; return <CommandItem key={item.href} onSelect={() => { setOpen(false); router.push(item.href); }}><Icon {...iconProps} className="size-4" /><span>{item.label}</span></CommandItem>; })}
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Tracked brands">
@@ -127,7 +148,7 @@ export function Masthead() {
                       it is the fallback that replaces the former dead-end
                       "No matching research surface" state. */}
                   <CommandItem value={query} onSelect={() => navigateToAsk(query)}>
-                    <MessageSquare />
+                    <MessageSquare {...iconProps} className="size-4" />
                     <span className="truncate">Ask Drishti: &ldquo;{query.trim()}&rdquo;</span>
                     <CommandShortcut>⌘↵</CommandShortcut>
                   </CommandItem>

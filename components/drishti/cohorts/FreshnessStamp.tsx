@@ -33,7 +33,7 @@ export function FreshnessStamp({
         className="size-1.5 shrink-0 rounded-full"
         style={{ backgroundColor: TONE_COLOR[absent ? "neutral" : tone] }}
       />
-      <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}>
+      <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>
         {label}
       </span>
       <span
@@ -41,8 +41,8 @@ export function FreshnessStamp({
           VALUE_CLASS,
           "text-[11.5px]",
           absent
-            ? "text-[var(--text-tertiary,#64646f)]"
-            : "text-[var(--text-secondary,#9797a3)]",
+            ? "text-[var(--text-tertiary)]"
+            : "text-[var(--text-secondary)]",
         )}
       >
         {stamp}

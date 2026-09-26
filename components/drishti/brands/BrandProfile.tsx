@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, HelpCircle, History as HistoryIcon, LayoutGrid, Link2, Layers, MapPin, Sparkles, Tag, Users } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, LayoutGrid, Link2, Layers, MapPin, Tag, Users } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 
@@ -10,9 +10,10 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "../EmptyState";
+import { Panel } from "../Panel";
+import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { useAllRuns } from "../cohorts/useAllRuns";
 import { formatStamp, profileStatusLabel } from "../cohorts/cohorts-model";
 import {
@@ -48,17 +49,14 @@ const tabs = [
   ["overview", "Overview", LayoutGrid],
   ["position", "Position", Compass],
   ["placement", "Placement", MapPin],
-  ["problem", "Problem", HelpCircle],
   ["people", "People", Users],
   ["evidence", "Evidence", Layers],
-  ["history", "History", HistoryIcon],
-  ["insights", "Insights", Sparkles],
 ] as const;
 
 function statusBadge(status: string) {
   const good = status === "ok" || status === "complete" || status === "ready";
   return (
-    <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good && "border-emerald-200 bg-emerald-50 text-emerald-700")}>
+    <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good ? "border-ok/30 bg-ok/10 text-ok" : "border-warn/30 bg-warn/10 text-warn")}>
       {good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}
       {profileStatusLabel(status)}
     </Badge>
@@ -167,9 +165,18 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   if (brand === undefined) {
     return (
       <div className="flex flex-col gap-6">
-        <Skeleton className="h-36 rounded-2xl" />
-        <Skeleton className="h-12 rounded-xl" />
-        <Skeleton className="h-64 rounded-2xl" />
+        <SkeletonRegion label="Loading this brand">
+          <div className="flex flex-col gap-5">
+            <Skeleton variant="block" height={120} />
+            <Skeleton variant="row" height={44} />
+            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+              <Skeleton variant="block" height={160} />
+              <Skeleton variant="block" height={160} />
+              <Skeleton variant="block" height={160} />
+              <Skeleton variant="block" height={160} />
+            </div>
+          </div>
+        </SkeletonRegion>
       </div>
     );
   }
@@ -189,14 +196,14 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
         </Link>
         <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Brand intelligence</span>
       </div>
-      <header className="border-b border-border pb-5">
-        <div className="rounded-2xl border border-border/60 bg-card/40 p-5">
+      <header className="pb-5">
+        <Panel interactive={false} className="p-5" ariaLabel="Brand identity">
           <div className="flex flex-wrap items-start justify-between gap-5">
             <div className="flex min-w-0 items-center gap-3">
               <BrandMark name={brand.name} domain={brand.domain} className="size-14" />
               <div className="min-w-0">
                 <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="truncate text-2xl font-semibold tracking-[-0.04em] sm:text-3xl">{brand.name}</h1>
+                  <h1 className="type-display truncate text-fg">{brand.name}</h1>
                   {statusBadge(brand.profileStatus)}
                   {brand.isOwnBrand === true ? (
                     <Badge variant="outline" className="h-6 rounded-full border-accent/35 bg-accent/[0.08] px-2.5 text-[11px] font-medium text-accent">
@@ -206,12 +213,12 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 </div>
                 <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
                   <span>{brand.vertical}</span>
-                  <span>•</span>
+                  <span aria-hidden>·</span>
                   <span className="inline-flex items-center gap-1">
                     <Globe2 className="size-3.5" />
                     {brand.domain}
                   </span>
-                  <span>•</span>
+                  <span aria-hidden>·</span>
                   <span>Last updated {shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}</span>
                 </p>
               </div>
@@ -242,11 +249,13 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                   tagged always has at least one tag-bearing claim, even one
                   the tagger marked `not_applicable`, so a real zero-finding
                   run can never land here. */}
-              {tags.length > 0 ? `${Intl.NumberFormat("en-US").format(tags.length)} tagged findings` : "Not tagged"}
+              {tags.length > 0
+                ? `${Intl.NumberFormat("en-US").format(tags.length)} tagged finding${tags.length === 1 ? "" : "s"}`
+                : "Not tagged"}
             </Badge>
             <SimilarBrandsPanel brandId={brandId} />
           </div>
-        </div>
+        </Panel>
       </header>
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
         <div className="overflow-x-auto border-b border-border">
@@ -261,14 +270,16 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
         </div>
         {isLoading ? (
           <div className="space-y-4 py-5">
-            <Skeleton className="h-10 w-full rounded-lg" />
-            <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-              <Skeleton className="h-40 rounded-xl" />
-              <Skeleton className="h-40 rounded-xl" />
-              <Skeleton className="h-40 rounded-xl" />
-              <Skeleton className="h-40 rounded-xl" />
-            </div>
-            <Skeleton className="h-64 rounded-2xl" />
+            <SkeletonRegion label="Loading this tab">
+              <Skeleton variant="row" height={40} />
+              <div className="mt-3 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+                <Skeleton variant="block" height={160} />
+                <Skeleton variant="block" height={160} />
+                <Skeleton variant="block" height={160} />
+                <Skeleton variant="block" height={160} />
+              </div>
+              <Skeleton className="mt-3" variant="block" height={256} />
+            </SkeletonRegion>
           </div>
         ) : (
           <>
@@ -290,24 +301,33 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 googleSnapshot={latestGoogleSnapshot}
                 latestRunAt={latestRun?.requestedAt}
               />
+              {/* Brand DNA: the model's cited read of this brand, kept on the
+                  landing tab so the answer and its evidence are never a tab
+                  apart (it used to be its own "Insights" tab). */}
+              <div className="mt-8 border-t border-border pt-6">
+                <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} now={now} />
+              </div>
             </TabsContent>
             <TabsContent value="position" className="mt-0 py-5">
               <PositionTab brand={brand} latestClaims={latestClaims} previousClaims={previousClaims} tags={tags} filters={filters} now={now} />
+              {/* Problem is a positioning lens — the pain points the brand
+                  frames itself against — so it lives under Position rather
+                  than as its own tab. */}
+              <div className="mt-8 border-t border-border pt-6">
+                <ProblemTab
+                  brand={brand}
+                  latestClaims={latestClaims}
+                  claims={claims ?? []}
+                  tags={tags}
+                  trendsSnapshot={latestTrendSnapshot}
+                  latestRunAt={latestRun?.requestedAt}
+                  filters={filters}
+                  now={now}
+                />
+              </div>
             </TabsContent>
             <TabsContent value="placement" className="mt-0 py-5">
               <PlacementTab latestClaims={latestClaims} tags={tags} filters={filters} now={now} />
-            </TabsContent>
-            <TabsContent value="problem" className="mt-0 py-5">
-              <ProblemTab
-                brand={brand}
-                latestClaims={latestClaims}
-                claims={claims ?? []}
-                tags={tags}
-                trendsSnapshot={latestTrendSnapshot}
-                latestRunAt={latestRun?.requestedAt}
-                filters={filters}
-                now={now}
-              />
             </TabsContent>
             <TabsContent value="people" className="mt-0 py-5">
               <PeopleTab
@@ -332,12 +352,9 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 newsSnapshot={latestGoogleNewsSnapshot}
                 googleSnapshot={latestGoogleSnapshot}
               />
-            </TabsContent>
-            <TabsContent value="history" className="mt-5">
-              <HistoryTab rows={historyRows} />
-            </TabsContent>
-            <TabsContent value="insights" className="mt-0 py-5">
-              <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} now={now} />
+              <div className="mt-8 border-t border-border pt-6">
+                <HistoryTab rows={historyRows} />
+              </div>
             </TabsContent>
           </>
         )}

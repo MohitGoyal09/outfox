@@ -1,3 +1,4 @@
+import { Skeleton } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 
 export type StatReadoutProps = {
@@ -31,15 +32,7 @@ export function StatReadout({
   const cost = finite(costUsd);
 
   if (isLoading) {
-    return (
-      <span
-        aria-hidden
-        className={cn(
-          "num inline-block h-3.5 w-28 animate-pulse rounded-sm bg-bg-raised-2",
-          className,
-        )}
-      />
-    );
+    return <Skeleton variant="stat" width={112} height={14} className={className} />;
   }
 
   const searches = used !== null && limit !== null ? `${used}/${limit}` : "—";

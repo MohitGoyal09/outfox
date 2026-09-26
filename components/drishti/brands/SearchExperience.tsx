@@ -2,10 +2,12 @@
 
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
-import { BarChart3, Filter, Search as SearchIcon, Tag } from "lucide-react";
+import { BarChart3, Filter, Layers, Search as SearchIcon, Tag } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
-import { HOOK_TYPES, FUNNEL_STAGES, LABEL_CLASS } from "../tokens";
+import { HOOK_TYPES, FUNNEL_STAGES, LABEL_CLASS, iconProps, sourceColor } from "../tokens";
+import { hookName, stageName } from "@/components/drishti/labels";
+import { EmptyState } from "../EmptyState";
 import {
   findGoogleNewsRawItem,
   funnelDistribution,
@@ -114,9 +116,9 @@ export function SearchExperience({
 
   const rows = useMemo(() => trendRows(searchClaims, runsDesc), [searchClaims, runsDesc]);
   const chartConfig = {
-    google: { label: "Google Search", color: "#0f766e" },
-    youtube: { label: "YouTube Search", color: "#0891b2" },
-    google_news: { label: "Google News", color: "#7c3aed" },
+    google: { label: "Google Search", color: sourceColor("google") },
+    youtube: { label: "YouTube Search", color: sourceColor("youtube") },
+    google_news: { label: "Google News", color: sourceColor("google_news") },
   } satisfies ChartConfig;
 
   const cardFilterTags = latestRunId ? tagsForEngineSubset(claims, latestRunId, TAB_ENGINES) : [];
@@ -139,13 +141,18 @@ export function SearchExperience({
       <div>
         <div className="mb-3 flex items-center gap-2"><SearchIcon className="size-4 text-accent" /><h2 className="text-base font-semibold">Search result volume over time</h2></div>
         {rows.length === 0 ? (
-          <div className="rounded-xl border border-dashed p-8 text-sm text-muted-foreground">No Google Search, YouTube Search, or Google News evidence is stored for this brand yet.</div>
+          <EmptyState
+            bounded
+            icon={<SearchIcon {...iconProps} size={16} />}
+            title="No search-volume history yet."
+            description="No Google Search, YouTube Search, or Google News evidence is stored for this brand yet. Run a check to start the series."
+          />
         ) : (
-          <div className="overflow-hidden rounded-xl border border-border bg-card px-3 pb-4 pt-5 sm:px-5">
+          <div className="overflow-hidden rounded-lg border border-border bg-bg-raised px-3 pb-4 pt-5 sm:px-5">
             <p className={cn(LABEL_CLASS, "mb-3 text-muted-foreground")}>{rows.length === 1 ? "Single stored run — one bar per engine" : "Across stored runs"}</p>
             <ChartContainer config={chartConfig} className="h-[280px] w-full aspect-auto">
               <BarChart accessibilityLayer data={rows} margin={{ left: -12, right: 12, top: 8 }}>
-                <CartesianGrid vertical={false} strokeDasharray="3 3" />
+                <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
                 <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} />
                 <YAxis tickLine={false} axisLine={false} width={56} allowDecimals={false} />
                 <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent />} />
@@ -165,13 +172,21 @@ export function SearchExperience({
 
       <div className="flex flex-wrap items-center gap-2">
         <FilterSelect icon={BarChart3} label="All engines" value={engineFilter} onChange={setEngineFilter} options={ENGINE_FILTER_OPTIONS.map((engine) => ({ value: engine, label: ENGINE_TAB_LABEL[engine] }))} />
-        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hook.replaceAll("_", " ") }))} />
-        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stage.replaceAll("_", " ") }))} />
+        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hookName(hook) }))} />
+        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stageName(stage) }))} />
       </div>
 
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground">Google</h3>
-        {googleRows.length ? <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">{googleRows.map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />)}</div> : <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">No Google Search evidence matches these filters.</div>}
+        {googleRows.length ? <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">{googleRows.map((claim) => <EvidenceCard key={String(claim._id)} claim={claim} />)}</div> : (
+          <EmptyState
+            size="sm"
+            bounded
+            icon={<SearchIcon {...iconProps} size={16} />}
+            title="No Google Search evidence matches these filters."
+            description="Clear a filter above, or run a check that captures organic Google results for this brand."
+          />
+        )}
       </div>
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground">Google News</h3>
@@ -182,7 +197,13 @@ export function SearchExperience({
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed p-6 text-sm text-muted-foreground">No Google News evidence matches these filters.</div>
+          <EmptyState
+            size="sm"
+            bounded
+            icon={<Layers {...iconProps} size={16} />}
+            title="No Google News evidence matches these filters."
+            description="Clear a filter above, or run a check that captures Google News coverage for this brand."
+          />
         )}
       </div>
     </div>

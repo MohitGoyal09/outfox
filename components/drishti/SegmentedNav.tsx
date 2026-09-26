@@ -32,13 +32,13 @@ export type SegmentedTabState = {
 };
 
 export const SEGMENTED_ACTIVE_CLASS =
-  "bg-[var(--accent,#e2a339)] text-[var(--accent-ink,#1a1204)]";
+  "bg-[var(--accent)] text-[var(--accent-ink)]";
 
 export const SEGMENTED_INACTIVE_CLASS =
-  "cursor-pointer bg-transparent text-[var(--text-secondary,#9797a3)] hover:text-[var(--text-primary,#eeeef2)]";
+  "cursor-pointer bg-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]";
 
 export const SEGMENTED_UNAVAILABLE_CLASS =
-  "cursor-not-allowed bg-transparent text-[var(--text-tertiary,#64646f)]";
+  "cursor-not-allowed bg-transparent text-[var(--text-tertiary)]";
 
 export function segmentedTabState(input: {
   id: string;
@@ -111,7 +111,7 @@ export function SegmentedNav({
         aria-busy={loading || undefined}
         aria-disabled={disabled || undefined}
         onKeyDown={handleKeyDown}
-        className="inline-flex max-w-full items-center gap-1 rounded-md bg-[var(--bg-inset,#f1f3f0)] p-[3px]"
+        className="inline-flex max-w-full items-center gap-1 rounded-md bg-[var(--bg-inset)] p-[3px]"
       >
         {loading
           ? Array.from({ length: Math.max(3, items.length) }, (_, index) => (
@@ -150,7 +150,7 @@ export function SegmentedNav({
                       : unavailable
                         ? SEGMENTED_UNAVAILABLE_CLASS
                         : cn(SEGMENTED_INACTIVE_CLASS, PRESS_CLASS, STATE_TRANSITION_CLASS),
-                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)] focus-visible:ring-[3px] focus-visible:ring-[rgba(226,163,57,0.22)]",
+                    "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--accent-dim)]",
                   )}
                 >
                   {item.icon}
@@ -162,7 +162,7 @@ export function SegmentedNav({
       {error ? (
         <p
           role="alert"
-          className="flex items-center gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger,#f87171)]"
+          className="flex items-center gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger)]"
         >
           <CircleAlert {...iconProps} size={14} aria-hidden="true" className="size-3.5 shrink-0" />
           {error}

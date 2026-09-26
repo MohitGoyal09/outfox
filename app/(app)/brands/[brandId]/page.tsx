@@ -31,7 +31,7 @@ export default function BrandProfilePage({
         action={
           <Link
             href="/brands"
-            className="inline-flex h-8 items-center rounded-[5px] border border-[var(--border-strong,#CBD2DC)] px-3 text-[13px] text-[var(--text-primary,#17191D)] hover:bg-[var(--bg-raised,#FFFFFF)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#0F766E)]"
+            className="inline-flex h-8 items-center rounded-sm border border-border-strong px-3 text-[13px] text-fg hover:bg-bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             All brands
           </Link>

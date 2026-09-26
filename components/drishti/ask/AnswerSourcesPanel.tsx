@@ -15,9 +15,10 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { SaveAllToBoardButton } from "../boards/SaveAllToBoardButton";
 import type { BoardItemContext } from "../boards/boards-model";
+import { PlatformLogo } from "../brands/PlatformLogo";
 import { STATE_TRANSITION_CLASS } from "../tokens";
 import type { ClaimTextById, SourceRowView } from "./agentChat-model";
-import { engineGlyph, engineHue, SourcesDrawerContent } from "./SourcesDrawer";
+import { SourcesDrawerContent } from "./SourcesDrawer";
 
 const MAX_AVATARS = 4;
 
@@ -53,19 +54,14 @@ export function AnswerSourcesPanel({
         )}
       >
         <span className="flex items-center -space-x-1" aria-hidden="true">
-          {avatarEngines.map((engine) => {
-            const Icon = engineGlyph(engine);
-            const hue = engineHue(engine);
-            return (
-              <span
-                key={engine}
-                className="flex size-3.5 items-center justify-center rounded-full ring-2 ring-bg"
-                style={{ backgroundColor: `color-mix(in srgb, ${hue} 18%, transparent)`, color: hue }}
-              >
-                <Icon className="size-2.5" />
-              </span>
-            );
-          })}
+          {avatarEngines.map((engine) => (
+            <span
+              key={engine}
+              className="flex size-4 items-center justify-center rounded-full bg-bg-raised ring-2 ring-bg"
+            >
+              <PlatformLogo engine={engine} className="size-3" />
+            </span>
+          ))}
         </span>
         <span>
           {sources.length} source{sources.length === 1 ? "" : "s"}

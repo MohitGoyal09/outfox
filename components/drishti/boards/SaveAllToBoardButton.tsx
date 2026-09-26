@@ -122,14 +122,14 @@ export function SaveAllToBoardButton({
             type="button"
             onClick={() => void saveAllToDefault()}
             disabled={isBusy || ordered === null}
-            className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-[13px] font-medium text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+            className="flex items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-[13px] font-medium text-fg hover:bg-bg-inset disabled:cursor-not-allowed disabled:opacity-60"
           >
             <span>{ordered !== null && !hasDefaultBoard ? `${DEFAULT_BOARD_NAME} (new)` : DEFAULT_BOARD_NAME}</span>
             <BulkRowStatus rowState={rowState} boardId={ordered?.find((b) => b.name === DEFAULT_BOARD_NAME)?._id} isPendingDefault={ordered !== null} />
           </button>
 
           {ordered === null ? (
-            <p className="px-2 py-1.5 text-[12px] text-muted-foreground">Loading your boards…</p>
+            <p className="px-2 py-1.5 text-[12px] text-fg-secondary">Loading your boards…</p>
           ) : (
             ordered
               .filter((board) => board.name !== DEFAULT_BOARD_NAME)
@@ -139,7 +139,7 @@ export function SaveAllToBoardButton({
                   type="button"
                   onClick={() => void saveAllTo(board._id, board.name)}
                   disabled={isBusy}
-                  className="flex items-center justify-between gap-2 rounded-md px-2 py-1.5 text-left text-[13px] text-foreground hover:bg-muted disabled:cursor-not-allowed disabled:opacity-60"
+                  className="flex items-center justify-between gap-2 rounded-sm px-2 py-1.5 text-left text-[13px] text-fg hover:bg-bg-inset disabled:cursor-not-allowed disabled:opacity-60"
                 >
                   <span className="truncate">{board.name}</span>
                   <BulkRowStatus rowState={rowState} boardId={board._id} />
@@ -150,7 +150,7 @@ export function SaveAllToBoardButton({
 
         <div className="border-t border-border p-1.5">
           {ordered !== null && isAtBoardCap(ordered.length) ? (
-            <p className="px-1 py-1 text-[11px] text-muted-foreground">You have 50 boards, the limit. Delete one to make another.</p>
+            <p className="px-1 py-1 text-[11px] text-fg-secondary">You have 50 boards, the limit. Delete one to make another.</p>
           ) : (
             <form
               onSubmit={(event) => {
@@ -174,7 +174,7 @@ export function SaveAllToBoardButton({
         </div>
 
         {feedback !== null ? (
-          <p className={cn("border-t border-border px-3 py-2 text-[12px]", rowState?.kind === "done" && rowState.isError ? "text-destructive" : "text-muted-foreground")}>
+          <p className={cn("border-t border-border px-3 py-2 text-[12px]", rowState?.kind === "done" && rowState.isError ? "text-danger" : "text-fg-secondary")}>
             {feedback}
           </p>
         ) : null}
@@ -193,7 +193,7 @@ function BulkRowStatus({
   isPendingDefault?: boolean;
 }) {
   const busyHere = rowState?.kind === "busy" && (rowState.boardId === boardId || (isPendingDefault && boardId === undefined));
-  if (busyHere) return <Loader2 className="size-3.5 shrink-0 animate-spin text-muted-foreground" />;
+  if (busyHere) return <Loader2 className="size-3.5 shrink-0 animate-spin text-fg-secondary" />;
   const doneHere = rowState?.kind === "done" && (rowState.boardId === boardId || (isPendingDefault && boardId === undefined));
   if (doneHere && !rowState.isError) return <Check className="size-3.5 shrink-0 text-accent" />;
   return null;

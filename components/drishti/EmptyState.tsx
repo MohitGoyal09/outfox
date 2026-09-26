@@ -66,14 +66,14 @@ export function EmptyState({
         "flex flex-col items-start",
         composed.size === "md" ? "gap-3 py-6" : "gap-2 py-3",
         composed.bounded &&
-          "rounded-[10px] border border-dashed border-[var(--border,#24242f)] bg-[var(--bg-inset,#0e0e13)] px-5 py-6",
+          "rounded-[10px] border border-dashed border-[var(--border)] bg-[var(--bg-inset)] px-5 py-6",
         className,
       )}
     >
       {icon ? (
         <span
           aria-hidden="true"
-          className="flex size-8 items-center justify-center rounded-[5px] border border-[var(--border,#24242f)] bg-[var(--bg-inset,#0e0e13)] text-[var(--text-tertiary,#64646f)]"
+          className="flex size-8 items-center justify-center rounded-[5px] border border-[var(--border)] bg-[var(--bg-inset)] text-[var(--text-tertiary)]"
         >
           {icon}
         </span>
@@ -81,7 +81,7 @@ export function EmptyState({
       <h3
         style={{ fontFamily: DISPLAY_FONT_STACK }}
         className={cn(
-          "text-balance font-semibold tracking-[-0.01em] text-[var(--text-primary,#eeeef2)]",
+          "text-balance font-semibold tracking-[-0.01em] text-[var(--text-primary)]",
           composed.size === "md"
             ? "text-[1.05rem] leading-[1.32]"
             : "text-[0.95rem] leading-[1.35]",
@@ -89,7 +89,7 @@ export function EmptyState({
       >
         {composed.title}
       </h3>
-      <p className="max-w-[56ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+      <p className="max-w-[56ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">
         {composed.description}
       </p>
       {composed.hasAction ? (

@@ -5,6 +5,7 @@ import type { MouseEvent, ReactNode } from "react";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
+  FOCUS_RING_CLASS,
   LABEL_CLASS,
   PRESS_CLASS,
   STATE_TRANSITION_CLASS,
@@ -84,22 +85,21 @@ export function Chip({
 
   const classes = cn(
     LABEL_CLASS,
-    "relative inline-flex items-center gap-1.5 rounded-full border bg-[var(--bg-inset,#0e0e13)] whitespace-nowrap",
+    "relative inline-flex items-center gap-1.5 rounded-full border bg-bg-inset whitespace-nowrap",
     size === "sm" ? "h-5 px-2" : "h-6 px-2.5",
     flags.invalid
-      ? "border-[var(--danger,#f87171)] text-[var(--danger,#f87171)]"
-      : "border-[var(--border-strong,#35353f)] text-[var(--text-secondary,#9797a3)]",
+      ? "border-danger text-danger"
+      : "border-border text-fg-secondary",
     flags.interactive &&
-      "cursor-pointer hover:border-[var(--text-tertiary,#64646f)] hover:bg-[var(--bg-raised,#131319)] hover:text-[var(--text-primary,#eeeef2)]",
+      "cursor-pointer hover:border-border-strong hover:bg-bg-raised hover:text-fg",
     flags.interactive && PRESS_CLASS,
     flags.interactive && STATE_TRANSITION_CLASS,
-    flags.interactive &&
-      "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#e2a339)] focus-visible:ring-[3px] focus-visible:ring-[rgba(226,163,57,0.22)]",
+    flags.interactive && FOCUS_RING_CLASS,
     flags.selected &&
-      "bg-[var(--bg-raised-2,#191922)] text-[var(--text-primary,#eeeef2)] ring-1 ring-[var(--accent,#e2a339)]",
+      "bg-bg-raised-2 text-fg ring-1 ring-accent",
     !flags.interactive &&
       (disabled || loading) &&
-      "cursor-not-allowed text-[var(--text-tertiary,#64646f)]",
+      "cursor-not-allowed text-fg-tertiary",
     flags.interactive &&
       "after:absolute after:inset-x-0 after:top-1/2 after:h-11 after:-translate-y-1/2 after:content-[''] after:hidden max-[899px]:after:block",
     className,
@@ -112,7 +112,7 @@ export function Chip({
           {...iconProps}
           size={14}
           aria-hidden="true"
-          className="size-3 animate-spin text-[var(--text-tertiary,#64646f)] motion-reduce:animate-none"
+          className="size-3 animate-spin text-fg-tertiary motion-reduce:animate-none"
         />
       ) : dot ? (
         <span

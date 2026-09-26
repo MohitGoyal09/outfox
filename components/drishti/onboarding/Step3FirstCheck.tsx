@@ -64,7 +64,7 @@ export function Step3FirstCheck({
     return (
       <div className="flex flex-col gap-6">
         <Panel as="section" interactive={false} padded ariaLabel="Starting your check">
-          <p className="text-[14px] leading-[1.5] text-[var(--text-secondary,#667085)]">Starting your first check…</p>
+          <p className="text-[14px] leading-[1.5] text-[var(--text-secondary)]">Starting your first check…</p>
         </Panel>
       </div>
     );
@@ -78,16 +78,16 @@ export function Step3FirstCheck({
     return (
       <div className="flex flex-col gap-6">
         <Panel as="section" interactive={false} padded ariaLabel="Checking your brands">
-          <p className="text-[14px] leading-[1.5] text-[var(--text-primary,#17191D)]">
+          <p className="text-[14px] leading-[1.5] text-[var(--text-primary)]">
             Checking {ownBrandName}
             {competitors.length > 0 ? ` and ${competitors.length} competitor${competitors.length === 1 ? "" : "s"}` : ""}{" "}
             against {SOURCES_CHECKED}.
           </p>
-          <p className="mt-1.5 text-[12.5px] leading-[1.5] text-[var(--text-tertiary,#98A2B3)]">
+          <p className="mt-1.5 text-[12.5px] leading-[1.5] text-[var(--text-tertiary)]">
             This can take a minute or two. You don&rsquo;t need to wait here.
           </p>
           {trailSteps.length > 0 ? (
-            <div className="mt-4 border-t border-[var(--border,#E4E7EC)] pt-4">
+            <div className="mt-4 border-t border-[var(--border)] pt-4">
               <Trail steps={trailSteps} density="inline" />
             </div>
           ) : null}
@@ -133,7 +133,7 @@ export function Step3FirstCheck({
   return (
     <div className="flex flex-col gap-6">
       {showPartialWarning ? (
-        <p className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--warn,#B45309)]">
+        <p className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--warn)]">
           <TriangleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
           Some sources couldn&rsquo;t be checked this time. Here&rsquo;s what we did find.
         </p>
@@ -147,16 +147,16 @@ export function Step3FirstCheck({
 
       {summary === null ? (
         <Panel as="section" interactive={false} padded>
-          <p className="text-[14px] text-[var(--text-secondary,#667085)]">Reading the results…</p>
+          <p className="text-[14px] text-[var(--text-secondary)]">Reading the results…</p>
         </Panel>
       ) : hasComparisonToShow(summary) ? (
         <Panel as="section" interactive={false} padded ariaLabel="Your first comparison">
-          <p className="mb-3 font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary,#98A2B3)]">
+          <p className="mb-3 font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
             What stood out
           </p>
           <ul className="flex flex-col gap-2.5">
             {summary.highlights.map((highlight) => (
-              <li key={highlight.hookType} className="text-[14px] leading-[1.5] text-[var(--text-primary,#17191D)]">
+              <li key={highlight.hookType} className="text-[14px] leading-[1.5] text-[var(--text-primary)]">
                 {highlight.competitorCount} of {highlight.checkedCompetitorCount} checked competitor
                 {highlight.checkedCompetitorCount === 1 ? "" : "s"} {highlight.competitorCount === 1 ? "runs" : "run"}{" "}
                 <strong className="font-semibold">{hookName(highlight.hookType).toLowerCase()}</strong> content.{" "}
@@ -178,12 +178,12 @@ export function Step3FirstCheck({
       )}
 
       {uncheckedNames.length > 0 ? (
-        <p className="text-[12.5px] leading-[1.5] text-[var(--text-tertiary,#98A2B3)]">
+        <p className="text-[12.5px] leading-[1.5] text-[var(--text-tertiary)]">
           Not checked yet: {uncheckedNames.join(", ")}.
         </p>
       ) : null}
 
-      <div className="flex items-center gap-2 border-t border-[var(--border,#E4E7EC)] pt-5">
+      <div className="flex items-center gap-2 border-t border-[var(--border)] pt-5">
         <Button type="button" onClick={onDone} iconRight={<ArrowRight {...iconProps} size={14} />}>
           Go to your homepage
         </Button>

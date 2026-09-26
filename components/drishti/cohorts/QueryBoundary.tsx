@@ -39,11 +39,11 @@ export class QueryBoundary extends Component<
       <section
         role="alert"
         className={cn(
-          "flex flex-col items-start gap-3 rounded-[10px] border border-[var(--danger,#f87171)] bg-[var(--bg-raised,#131319)] p-4",
+          "flex flex-col items-start gap-3 rounded-[10px] border border-[var(--danger)] bg-[var(--bg-raised)] p-4",
           this.props.className,
         )}
       >
-        <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--danger,#f87171)]">
+        <span className="flex items-center gap-2 text-[13px] font-medium text-[var(--danger)]">
           <CircleAlert
             {...iconProps}
             size={16}
@@ -52,7 +52,7 @@ export class QueryBoundary extends Component<
           />
           {this.props.label} could not load.
         </span>
-        <p className="max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+        <p className="max-w-[68ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">
           {error.message}
         </p>
         <Button

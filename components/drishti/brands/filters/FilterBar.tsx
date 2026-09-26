@@ -1,7 +1,9 @@
 "use client";
 
 import { BarChart3, CalendarRange, Filter, RotateCcw, Tag } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { CONTROL_SHELL_CLASS } from "@/components/drishti/tokens";
 import { FilterSelect } from "../EvidencePanels";
 import { SORT_OPTIONS, type BrandFilters, type FilterOption, type FreshnessValue } from "./filters-model";
 
@@ -28,7 +30,7 @@ export function FilterBar({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <label className="group inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs font-normal text-muted-foreground transition-[border-color,box-shadow] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:border-accent/50 focus-within:shadow-[0_0_0_3px_rgba(15,118,110,0.12)]">
+      <label className={cn(CONTROL_SHELL_CLASS, "gap-2")}>
         <CalendarRange className="size-3.5 shrink-0" />
         <span className="sr-only">From date</span>
         <input
@@ -80,7 +82,7 @@ export function FilterBar({
         onChange={(value) => setFilter("freshness", value as FreshnessValue)}
         options={freshnessOptions}
       />
-      <label className="group inline-flex h-9 items-center gap-2 rounded-lg border border-border bg-background px-3 text-xs font-normal text-muted-foreground transition-[border-color,box-shadow] duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] focus-within:border-accent/50 focus-within:shadow-[0_0_0_3px_rgba(15,118,110,0.12)]">
+      <label className={cn(CONTROL_SHELL_CLASS, "gap-2")}>
         <span className="sr-only">Sort</span>
         <select
           aria-label="Sort"

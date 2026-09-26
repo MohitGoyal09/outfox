@@ -7,7 +7,7 @@ import { RefreshCw, TriangleAlert } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button, LABEL_CLASS, Panel, VALUE_CLASS, iconProps } from "@/components/drishti";
+import { Button, LABEL_CLASS, VALUE_CLASS, iconProps } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 import { formatCount, formatUsd } from "./labels";
 
@@ -78,12 +78,12 @@ export function ReRunButton({
           Re-run
         </Button>
         {blocked ? (
-          <p className="max-w-[34ch] text-right text-[12px] leading-[1.45] text-[var(--text-tertiary,#64646f)]">
+          <p className="max-w-[34ch] text-right text-[12px] leading-[1.45] text-[var(--text-tertiary)]">
             {disabledReason}
           </p>
         ) : null}
         {error !== null ? (
-          <p role="alert" className="max-w-[42ch] text-right text-[12px] leading-[1.45] text-[var(--danger,#f87171)]">
+          <p role="alert" className="max-w-[42ch] text-right text-[12px] leading-[1.45] text-[var(--danger)]">
             {error}
           </p>
         ) : null}
@@ -92,23 +92,26 @@ export function ReRunButton({
   }
 
   return (
-    <Panel
-      interactive={false}
-      ariaLabel="Confirm the re-run"
-      className={cn("w-full max-w-[46ch] p-4", className)}
+    <div
+      role="group"
+      aria-label="Confirm the re-run"
+      className={cn(
+        "w-full max-w-[46ch] rounded-sm border border-border bg-bg-raised p-4",
+        className,
+      )}
     >
-      <p className={cn(LABEL_CLASS, "text-[var(--text-secondary,#9797a3)]")}>
+      <p className={cn(LABEL_CLASS, "text-[var(--text-secondary)]")}>
         confirm live re-run
       </p>
-      <p className="mt-2 text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+      <p className="mt-2 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
         The last run used{" "}
-        <span className={cn(VALUE_CLASS, "text-[var(--text-primary,#eeeef2)]")}>
+        <span className={cn(VALUE_CLASS, "text-[var(--text-primary)]")}>
           {estimate.searches === null
             ? "an unreported number of searches"
             : `${formatCount(estimate.searches)} searches`}
         </span>{" "}
         and{" "}
-        <span className={cn(VALUE_CLASS, "text-[var(--text-primary,#eeeef2)]")}>
+        <span className={cn(VALUE_CLASS, "text-[var(--text-primary)]")}>
           {estimate.costUsd === null
             ? "an unreported model cost"
             : `${formatUsd(estimate.costUsd)} ${estimate.costLabel}`}
@@ -119,7 +122,7 @@ export function ReRunButton({
       {error !== null ? (
         <p
           role="alert"
-          className="mt-3 flex items-start gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger,#f87171)]"
+          className="mt-3 flex items-start gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger)]"
         >
           <TriangleAlert
             {...iconProps}
@@ -149,6 +152,6 @@ export function ReRunButton({
           Cancel
         </Button>
       </div>
-    </Panel>
+    </div>
   );
 }

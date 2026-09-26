@@ -3,9 +3,9 @@
 import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { BadgeDollarSign, Clapperboard, Newspaper, Store, TrendingUp } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
+import { Panel } from "../../Panel";
 import { iconProps } from "../../tokens";
 import {
   adCreativeClaims,
@@ -38,12 +38,12 @@ function CountListPanel({
   emptyDescription: string;
 }) {
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         {icon}
-        <CardTitle className="text-sm">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">{title}</h3>
+      </div>
+      <div className="p-4">
         {rows.length === 0 ? (
           <EmptyState size="sm" icon={icon} title={emptyTitle} description={emptyDescription} />
         ) : (
@@ -56,21 +56,21 @@ function CountListPanel({
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
 function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
   const buckets = useMemo(() => organicRankBuckets(claims), [claims]);
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
-  const chartConfig = { count: { label: "Organic results", color: "#0f766e" } } satisfies ChartConfig;
+  const chartConfig = { count: { label: "Organic results", color: "var(--accent)" } } satisfies ChartConfig;
   return (
-    <Card className="shadow-none">
-      <CardHeader className="border-b border-border/70">
-        <CardTitle className="text-sm">Organic rank distribution</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="border-b border-border px-4 py-3">
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Organic rank distribution</h3>
+      </div>
+      <div className="p-4">
         {total === 0 ? (
           <EmptyState
             size="sm"
@@ -81,7 +81,7 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
         ) : (
           <ChartContainer config={chartConfig} className="h-[200px] w-full aspect-auto">
             <BarChart accessibilityLayer data={buckets} margin={{ left: -12, right: 12, top: 8 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={28} tick={{ fontSize: 10 }} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent hideLabel />} />
@@ -89,25 +89,25 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
             </BarChart>
           </ChartContainer>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
 function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
   const rows = useMemo(() => adRuntimeLeaderboard(claims), [claims]);
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <Clapperboard className="size-4 text-accent" />
-        <CardTitle className="text-sm">Longest-running ads</CardTitle>
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <Clapperboard className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Longest-running ads</h3>
         {rows.length > 0 ? (
           <span className="ml-auto font-mono text-[11px] text-muted-foreground">
             {rows.length} creative{rows.length === 1 ? "" : "s"}
           </span>
         ) : null}
-      </CardHeader>
-      <CardContent className="pt-4">
+      </div>
+      <div className="p-4">
         {rows.length === 0 ? (
           <EmptyState
             size="sm"
@@ -120,10 +120,10 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
             <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
               Run length is how long we observed each creative live — our honest proxy for spend, not spend itself. A longer-running ad is one the brand kept live, nothing more.
             </p>
-            <div className="max-h-[420px] overflow-auto rounded-md border border-border/60">
+            <div className="max-h-[420px] overflow-auto rounded-sm border border-border">
               <table className="w-full min-w-[560px] border-collapse text-xs">
-                <thead className="sticky top-0 bg-card">
-                  <tr className="border-b border-border/70 text-left text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
+                <thead className="sticky top-0 bg-bg-raised">
+                  <tr className="border-b border-border text-left text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
                     <th className="py-2 pl-3 pr-2 font-normal">#</th>
                     <th className="py-2 pr-2 font-normal">Creative</th>
                     <th className="py-2 pr-2 font-normal">Format</th>
@@ -133,10 +133,10 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
                 </thead>
                 <tbody>
                   {rows.map((row, index) => (
-                    <tr key={row.claimId} className="border-b border-border/40 last:border-0 hover:bg-accent/[0.03]">
+                    <tr key={row.claimId} className="border-b border-border last:border-0 hover:bg-accent/[0.03]">
                       <td className="py-2 pl-3 pr-2 font-mono text-[10px] tabular-nums text-muted-foreground">{index + 1}</td>
-                      <td className="max-w-[240px] truncate py-2 pr-2 text-foreground" title={row.title}>
-                        <a href={row.evidenceUrl} target="_blank" rel="noreferrer noopener" className="hover:text-accent hover:underline">
+                      <td className="max-w-[240px] truncate py-2 pr-2 text-fg" title={row.title}>
+                        <a href={row.evidenceUrl} target="_blank" rel="noreferrer noopener" className="hover:text-fg hover:underline">
                           {row.title}
                         </a>
                       </td>
@@ -152,7 +152,7 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
                       </td>
                       <td className="py-2 pr-3 text-right">
                         {row.runDays !== null ? (
-                          <span className="font-mono text-[12px] font-semibold tabular-nums text-foreground">{row.runDays}d</span>
+                          <span className="font-mono text-[12px] font-semibold tabular-nums text-fg">{row.runDays}d</span>
                         ) : (
                           <span className="font-mono text-[11px] tabular-nums text-muted-foreground">unknown</span>
                         )}
@@ -164,8 +164,8 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
             </div>
           </>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -255,7 +255,7 @@ export function PlacementTab({
         </p>
       ) : null}
       <div>
-        <h2 className="mb-3 text-sm font-semibold tracking-[-0.02em]">Real placements</h2>
+        <h2 className="type-headline text-fg">Real placements</h2>
         <EvidenceGrid
           claims={placementEvidenceClaims}
           sort={filters.sort}

@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { cn } from "@/lib/utils";
+import { categoricalColorFor } from "@/components/drishti/tokens";
 
 export function BrandMark({
   name,
@@ -23,9 +24,10 @@ export function BrandMark({
   return (
     <span
       className={cn(
-        "relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-full border border-border bg-white text-sm font-semibold text-foreground",
+        "relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-full border border-border text-sm font-semibold text-white",
         className,
       )}
+      style={{ backgroundColor: categoricalColorFor(name) }}
     >
       <span aria-hidden>{name.slice(0, 1).toUpperCase()}</span>
       {!failed ? (

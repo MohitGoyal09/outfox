@@ -3,7 +3,9 @@
 import { useMemo, useState } from "react";
 import { Filter, Tag, Video } from "lucide-react";
 import { NumberTicker } from "@/components/ui/number-ticker";
-import { HOOK_TYPES, FUNNEL_STAGES } from "../tokens";
+import { HOOK_TYPES, FUNNEL_STAGES, iconProps } from "../tokens";
+import { hookName, stageName } from "@/components/drishti/labels";
+import { EmptyState } from "../EmptyState";
 import {
   findYoutubeRawVideo,
   funnelDistribution,
@@ -93,12 +95,12 @@ export function YouTubeExperience({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hook.replaceAll("_", " ") }))} />
-        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stage.replaceAll("_", " ") }))} />
+        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hookName(hook) }))} />
+        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stageName(stage) }))} />
       </div>
 
       <div>
-        <div className="mb-3 flex items-center gap-2"><Video className="size-4 text-red-500" /><h2 className="text-base font-semibold"><NumberTicker value={groups.length} /> {groups.length === 1 ? "video" : "videos"}</h2></div>
+        <div className="mb-3 flex items-center gap-2"><Video className="size-4 text-fg" aria-hidden /><h2 className="type-headline text-fg"><NumberTicker value={groups.length} /> {groups.length === 1 ? "video" : "videos"}</h2></div>
         {groups.length ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {groups.map((group) => (
@@ -106,7 +108,12 @@ export function YouTubeExperience({
             ))}
           </div>
         ) : (
-          <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">{videoClaims.length === 0 ? "No YouTube video evidence was stored for this run." : "No videos match these filters."}</div>
+          <EmptyState
+            bounded
+            icon={<Video {...iconProps} size={16} />}
+            title={videoClaims.length === 0 ? "No YouTube video evidence for this run." : "No videos match these filters."}
+            description={videoClaims.length === 0 ? "Video detail is captured by a YouTube video check. Run one for this brand to fill this grid in." : "Clear a hook or funnel filter above to see the videos this run did capture."}
+          />
         )}
       </div>
     </div>

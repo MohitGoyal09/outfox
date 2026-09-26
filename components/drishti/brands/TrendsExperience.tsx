@@ -9,7 +9,10 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Button } from "@/components/ui/button";
-import { LABEL_CLASS } from "../tokens";
+import { categoricalColorFor, LABEL_CLASS } from "../tokens";
+import { EmptyState } from "../EmptyState";
+import { Panel } from "../Panel";
+import { Skeleton } from "../Skeleton";
 import { formatStamp } from "../cohorts/cohorts-model";
 import type { ClaimDoc, SnapshotDoc } from "./brand-model";
 import { PlatformLogo } from "./PlatformLogo";
@@ -50,10 +53,8 @@ function selectedRange(points: TrendPoint[], range: string): TrendPoint[] {
   return points.filter((point) => dateValue(point.date) >= cutoff);
 }
 
-const lineColors = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#0891b2"];
-
 function ScopeControl({ icon: Icon, label, value, children, onChange, pending = false }: { icon: typeof CalendarDays; label: string; value: string; children: React.ReactNode; onChange: (value: string) => void; pending?: boolean }) {
-  return <label className={cn("flex min-w-[130px] items-center gap-2 rounded-lg border px-3 py-2 text-xs", pending ? "border-accent/40 bg-accent/[0.05] text-accent" : "border-border bg-background text-muted-foreground")}><Icon className="size-3.5 shrink-0" /><span className="sr-only">{label}</span><select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="min-w-0 flex-1 appearance-none bg-transparent font-medium text-foreground outline-none">{children}</select>{pending ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" /> : null}</label>;
+  return <label className={cn("flex min-w-[130px] items-center gap-2 rounded-sm border px-3 py-2 text-xs focus-within:border-border-strong", pending ? "border-accent/40 bg-accent/[0.05] text-accent" : "border-border bg-bg-raised text-muted-foreground")}><Icon className="size-3.5 shrink-0" aria-hidden /><span className="sr-only">{label}</span><select aria-label={label} value={value} onChange={(event) => onChange(event.target.value)} className="min-w-0 flex-1 appearance-none bg-transparent font-medium text-fg outline-none">{children}</select>{pending ? <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full bg-accent" /> : null}</label>;
 }
 
 function EmptyTrend({
@@ -70,32 +71,33 @@ function EmptyTrend({
   hideAction?: boolean;
 }) {
   return (
-    <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-border bg-muted/20 px-6 text-center">
-      <div>
-        <PlatformLogo engine="google_trends" className="mx-auto size-7" />
-        <p className="mt-4 text-sm font-medium">No timeline yet for {brandName}</p>
-        <p className="mx-auto mt-1 max-w-md text-xs leading-5 text-muted-foreground">
-          {message ??
-            "Refreshing Google Trends captures dated interest points. The average score alone cannot produce a chart."}
-        </p>
-        {hideAction ? null : (
+    <EmptyState
+      bounded
+      icon={<PlatformLogo engine="google_trends" className="size-5" />}
+      title={`No timeline yet for ${brandName}`}
+      description={
+        message ??
+        "Refreshing Google Trends captures dated interest points. The average score alone cannot produce a chart."
+      }
+      action={
+        hideAction ? undefined : (
           <Button
             variant="outline"
             size="sm"
-            className="mt-4 gap-2 rounded-lg"
+            className="gap-2"
             disabled={refreshing}
             onClick={onRefresh}
           >
             {refreshing ? (
-              <Loader2 className="size-3.5 animate-spin" />
+              <Loader2 className="size-3.5 animate-spin" aria-hidden />
             ) : (
-              <TrendingUp className="size-3.5" />
+              <TrendingUp className="size-3.5" aria-hidden />
             )}
             Refresh Trends
           </Button>
-        )}
-      </div>
-    </div>
+        )
+      }
+    />
   );
 }
 
@@ -139,7 +141,7 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
   const targetPoints = filtered.filter((point) => point.query === target);
   const avg = targetPoints.length ? Math.round(targetPoints.reduce((sum, point) => sum + point.interest, 0) / targetPoints.length * 10) / 10 : null;
   const peak = targetPoints.reduce<TrendPoint | null>((best, point) => !best || point.interest > best.interest ? point : best, null);
-  const config = Object.fromEntries(rows.names.map((name, index) => [rows.keyOf(name), { label: name, color: lineColors[index % lineColors.length] }])) satisfies ChartConfig;
+  const config = Object.fromEntries(rows.names.map((name) => [rows.keyOf(name), { label: name, color: categoricalColorFor(name) }])) satisfies ChartConfig;
   async function refresh() {
     setRefreshing(true);
     setError(null);
@@ -154,13 +156,11 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
     }
   }
   return <section className="space-y-4" aria-label="Google Trends intelligence">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2"><PlatformLogo engine="google_trends" className="size-4" /><h2 className="text-base font-semibold">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest Google Trends check{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2 rounded-lg", noStoredData && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" />Refresh {regionLabel(region)}</Button></div>
-    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion} pending={noStoredData}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-lg border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" />Geography switches instantly between regions we&apos;ve already checked. Date range filters the chart locally.</span></div>
-    {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-xl border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Fetch live Google Trends data?</p><p className="mt-1 text-xs text-muted-foreground">This makes one live SerpApi Google Trends call for {regionLabel(region)} and saves it for next time. It does not touch any other evidence source, and costs far less than a full brand refresh.</p>{error ? <p role="alert" className="mt-2 text-xs text-red-600">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Refresh now</Button></div></div> : null}
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2">            <PlatformLogo engine="google_trends" className="size-4" /><h2 className="type-headline text-fg">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest Google Trends check{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2", noStoredData && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" aria-hidden />Refresh {regionLabel(region)}</Button></div>
+    <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion} pending={noStoredData}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-sm border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" aria-hidden />Geography switches instantly between regions we&apos;ve already checked. Date range filters the chart locally.</span></div>
+    {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Fetch live Google Trends data?</p><p className="mt-1 text-xs text-muted-foreground">This makes one live SerpApi Google Trends call for {regionLabel(region)} and saves it for next time. It does not touch any other evidence source, and costs far less than a full brand refresh.</p>{error ? <p role="alert" className="mt-2 text-xs text-danger">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Refresh now</Button></div></div> : null}
     {regionLoading ? (
-      <div className="grid min-h-[300px] place-items-center rounded-xl border border-dashed border-border bg-muted/20">
-        <Loader2 className="size-5 animate-spin text-muted-foreground" />
-      </div>
+      <Skeleton variant="block" height={300} />
     ) : filtered.length < 2 ? (
       <EmptyTrend
         brandName={brandName}
@@ -170,7 +170,7 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
         hideAction={confirming}
       />
     ) : (
-      <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <Panel interactive={false} className="overflow-hidden">
         <div className="grid border-b border-border sm:grid-cols-[1fr_auto]">
           <div className="px-5 py-4">
             <p className={cn(LABEL_CLASS, "text-muted-foreground")}>
@@ -181,18 +181,18 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
           <div className="grid grid-cols-2 border-t border-border sm:border-l sm:border-t-0">
             <div className="px-4 py-3">
               <p className={cn(LABEL_CLASS, "text-muted-foreground")}>Average</p>
-              <p className="mt-1 font-mono text-lg font-semibold tabular-nums">{avg ?? "n/a"}</p>
+              <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-fg">{avg ?? "not reported"}</p>
             </div>
             <div className="border-l border-border px-4 py-3">
               <p className={cn(LABEL_CLASS, "text-muted-foreground")}>Peak</p>
-              <p className="mt-1 font-mono text-lg font-semibold tabular-nums">{peak?.interest ?? "n/a"}</p>
+              <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-fg">{peak?.interest ?? "not reported"}</p>
             </div>
           </div>
         </div>
         <div className="px-3 pb-4 pt-6 sm:px-5">
           <ChartContainer config={config} className="h-[340px] w-full aspect-auto">
             <BarChart accessibilityLayer data={rows.data} margin={{ left: -12, right: 12, top: 8 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} minTickGap={36} />
               <YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={38} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent indicator="line" />} />
@@ -211,9 +211,9 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
             </BarChart>
           </ChartContainer>
         </div>
-      </div>
+      </Panel>
     )}
-    <div aria-live="polite" className={cn("rounded-lg border px-4 py-3 text-xs leading-5", noStoredData ? "border-accent/30 bg-accent/[0.05] text-foreground" : "border-border bg-muted/30 text-muted-foreground")}>
+    <div aria-live="polite" className={cn("rounded-sm border px-4 py-3 text-xs leading-5", noStoredData ? "border-accent/30 bg-accent/[0.05] text-fg" : "border-border bg-bg-inset/40 text-muted-foreground")}>
       <MapIcon className="mr-1 inline size-3.5" />
       {noStoredData
         ? `We haven't checked Google Trends for ${regionLabel(region)} yet. Refresh ${regionLabel(region)} to get one.`

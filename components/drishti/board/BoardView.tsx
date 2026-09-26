@@ -7,12 +7,13 @@ import { BarChart3 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent } from "@/components/ui/card";
 import { buttonClasses } from "../Button";
 import { DistributionPanel } from "../DistributionPanel";
 import { EmptyState } from "../EmptyState";
 import { stageName } from "../labels";
+import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
+import { StatReadout } from "../StatReadout";
 import { VALUE_CLASS, iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
 import { useAllRuns } from "../cohorts/useAllRuns";
@@ -43,7 +44,7 @@ function BoardSkeleton() {
         <DistributionPanel items={[]} kind="hook" title="Hook mix" loading />
         <DistributionPanel items={[]} kind="funnel" title="Funnel distribution" loading />
       </div>
-      <SkeletonRegion label="Loading brand leaderboard" className="rounded-[10px] border border-[var(--border,#24242f)] p-4">
+      <SkeletonRegion label="Loading brand leaderboard" className="rounded-lg border border-border bg-bg-raised p-4 shadow-xs">
         <Skeleton variant="text" width="30%" height={12} />
         <span className="mt-4 block">
           <Skeleton variant="row" height={40} />
@@ -52,7 +53,7 @@ function BoardSkeleton() {
           <Skeleton variant="row" height={40} />
         </span>
       </SkeletonRegion>
-      <SkeletonRegion label="Loading what we checked" className="rounded-[10px] border border-[var(--border,#24242f)] p-4">
+      <SkeletonRegion label="Loading what we checked" className="rounded-lg border border-border bg-bg-raised p-4 shadow-xs">
         <Skeleton variant="text" width="26%" height={12} />
         <span className="mt-4 block">
           <Skeleton variant="text" width="60%" />
@@ -144,6 +145,12 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const gaps = coverageGaps(coverage);
   const isPartial = current?.status === "partial" || gaps.length > 0;
   const singleBrand = brandIds.length === 1;
+  const totalChecks = coverage.reduce((total, brand) => total + brand.cells.length, 0);
+  const okChecks = coverage.reduce(
+    (total, brand) =>
+      total + brand.cells.filter((cell) => cell.status === "ok").length,
+    0,
+  );
   const cohortBrands = brandIds.map((id) => ({
     id,
     name: brandNames[id] ?? id.slice(0, 8),
@@ -152,18 +159,34 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const ownBrandInView = ownBrandId !== null && brandIds.includes(ownBrandId);
   const ownBrandNotInView = ownBrand != null && ownBrandId !== null && !ownBrandInView;
   const rivalCountInView = brandIds.length - (ownBrandInView ? 1 : 0);
+  const summaryStats: { label: string; value: string | number; hint: string }[] = [
+    {
+      label: "Brands in view",
+      value: brandIds.length,
+      hint: ownBrandInView
+        ? `You plus ${rivalCountInView} ${rivalCountInView === 1 ? "rival" : "rivals"}`
+        : "Rivals in this check",
+    },
+    {
+      label: "Findings held",
+      value: claims?.length ?? 0,
+      hint: "What we found, not performance",
+    },
+    {
+      label: "What we checked",
+      value: `${okChecks}/${totalChecks}`,
+      hint: "Checks that returned data",
+    },
+  ];
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex flex-col gap-1 border-b border-border pb-5">
+      <header className="flex flex-col gap-2 border-b border-border pb-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <div>
-            <p className="type-caption uppercase tracking-[0.14em] text-fg-tertiary">Cross-brand evidence</p>
-            <h1 className="type-display text-fg">Signals</h1>
-          </div>
+          <h1 className="type-display text-fg">Signals</h1>
           {current ? <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{current.status} · {formatStamp(current.requestedAt)}</Badge> : null}
         </div>
-        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] leading-[1.5] text-[var(--text-secondary,#9797a3)]">
+        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] leading-[1.5] text-fg-secondary">
           <span className="font-medium text-fg">
             {cohortBrands.length > 0
               ? cohortBrands.map((brand, index) => (
@@ -175,7 +198,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
               : "No brands in this check"}
           </span>
           {current !== null ? (
-            <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
+            <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
               checked {formatStamp(current.requestedAt)} · {current.status}
             </span>
           ) : null}
@@ -215,24 +238,15 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
       {current && claims !== undefined ? (
         <div className="grid gap-3 sm:grid-cols-3" aria-label="Board summary">
-          {[
-            [
-              "Brands in view",
-              brandIds.length,
-              ownBrandInView
-                ? `You plus ${rivalCountInView} ${rivalCountInView === 1 ? "rival" : "rivals"}`
-                : "Rivals in this check",
-            ],
-            ["Findings held", claims.length, "What we found, not performance"],
-            ["What we checked", `${coverage.reduce((total, brand) => total + brand.cells.filter((cell) => cell.status === "ok").length, 0)}/${coverage.reduce((total, brand) => total + brand.cells.length, 0)}`, "Checks that returned data"],
-          ].map(([label, value, detail]) => (
-            <Card key={String(label)} className="border-border/80 bg-card shadow-none">
-              <CardContent className="p-4">
-                <p className="type-caption uppercase tracking-[0.12em] text-fg-tertiary">{label}</p>
-                <p className={cn(VALUE_CLASS, "mt-2 text-2xl text-fg")}>{value}</p>
-                <p className="mt-1 text-xs text-fg-secondary">{detail}</p>
-              </CardContent>
-            </Card>
+          {summaryStats.map((stat) => (
+            <Panel key={stat.label} interactive={false} padded>
+              <StatReadout
+                label={stat.label}
+                value={stat.value}
+                hint={stat.hint}
+                size="md"
+              />
+            </Panel>
           ))}
         </div>
       ) : null}

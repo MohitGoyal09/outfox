@@ -15,6 +15,7 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { PlatformLogo } from "../brands/PlatformLogo";
 import { LABEL_CLASS, STATE_TRANSITION_CLASS, TONE_COLOR, formatLatency } from "../tokens";
 import type { ToolCallCardView } from "./ask-model";
 
@@ -80,6 +81,15 @@ export function toolIcon(name: string): LucideIcon {
   return (TOOL_META[name] ?? DEFAULT_TOOL_META).icon;
 }
 
+const TOOL_ENGINE: Record<string, string> = {
+  get_trends: "google_trends",
+  web_search: "google",
+};
+
+export function toolEngine(name: string): string | null {
+  return TOOL_ENGINE[name] ?? null;
+}
+
 export function subjectOf(name: string, rawPayload: unknown): string | null {
   if (typeof rawPayload !== "object" || rawPayload === null) return null;
   const input = rawPayload as Record<string, unknown>;
@@ -103,6 +113,7 @@ export function ToolCallCard({ card }: { card: ToolCallCardView }) {
   const meta = TOOL_META[card.name] ?? DEFAULT_TOOL_META;
   const Icon = meta.icon;
   const subject = subjectOf(card.name, card.rawPayload);
+  const engine = toolEngine(card.name);
   const rawDetail =
     card.rawPayload !== null &&
     card.rawPayload !== undefined &&
@@ -131,11 +142,14 @@ export function ToolCallCard({ card }: { card: ToolCallCardView }) {
       </span>
 
       <div className="min-w-0 flex-1 pt-0.5">
-        <p className="text-[13px] font-medium leading-5 text-fg">
-          {meta.title}
-          {subject !== null ? <span className="text-fg-secondary"> · {subject}</span> : null}
-        </p>
-        <div className={cn(LABEL_CLASS, "mt-0.5 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-fg-tertiary")}>
+        <div className="flex items-center gap-1.5">
+          {engine !== null ? <PlatformLogo engine={engine} className="size-3.5" /> : null}
+          <p className="min-w-0 text-[13px] font-medium leading-5 text-fg">
+            {meta.title}
+            {subject !== null ? <span className="text-fg-secondary"> · {subject}</span> : null}
+          </p>
+        </div>
+        <div className={cn(LABEL_CLASS, "mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-fg-tertiary")}>
           <span>{toolTitle(card.name)}</span>
           <span aria-hidden="true">·</span>
           <span>{STATUS_LABEL[card.status]}</span>

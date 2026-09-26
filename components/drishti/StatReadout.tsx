@@ -27,6 +27,10 @@ export type StatReadoutProps = {
   className?: string;
 };
 
+export type StatTileProps = StatReadoutProps & {
+  caption?: string;
+};
+
 export type StatReadoutText = { text: string; absent: boolean };
 
 export function statReadoutText(
@@ -67,7 +71,7 @@ export function StatReadout({
     return (
       <div className={cn("flex flex-col gap-1.5", className)}>
         {hideLabel ? null : <Skeleton variant="text" width={56} height={10} />}
-        <Skeleton variant="stat" width={72} height={size === "md" ? 22 : 18} />
+        <Skeleton variant="stat" width={72} height={size === "md" ? 24 : 20} />
       </div>
     );
   }
@@ -76,10 +80,8 @@ export function StatReadout({
     <span
       className={cn(
         VALUE_CLASS,
-        size === "md" ? "text-[1.05rem] leading-[1.2]" : "text-[13px] leading-[1.3]",
-        measured.absent
-          ? "text-[var(--text-tertiary,#64646f)]"
-          : "text-[var(--text-primary,#eeeef2)]",
+        size === "md" ? "text-[1.25rem] leading-[1.2]" : "text-[15px] leading-[1.25]",
+        measured.absent ? "text-fg-tertiary" : "text-fg",
       )}
       style={!measured.absent && tone ? { color: TONE_COLOR[tone] } : undefined}
     >
@@ -96,11 +98,7 @@ export function StatReadout({
       )}
     >
       {hideLabel ? null : (
-        <span
-          className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#64646f)]")}
-        >
-          {label}
-        </span>
+        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>{label}</span>
       )}
       {valueNode}
       {delta === null || delta === undefined ? null : (
@@ -112,8 +110,77 @@ export function StatReadout({
         </span>
       )}
       {hint ? (
-        <span className="w-full text-[12px] leading-[1.45] text-[var(--text-secondary,#9797a3)]">
+        <span className="w-full text-[12px] leading-[1.45] text-fg-secondary">
           {hint}
+        </span>
+      ) : null}
+    </div>
+  );
+}
+
+export function StatTile({
+  label,
+  value,
+  unit,
+  tone,
+  delta,
+  deltaUnit = "count",
+  size = "md",
+  hint,
+  caption,
+  hideLabel = false,
+  loading = false,
+  title,
+  className,
+}: StatTileProps) {
+  const measured = statReadoutText(value);
+  const description = caption ?? hint;
+
+  return (
+    <div
+      title={title}
+      className={cn(
+        "flex flex-col rounded-lg border border-border bg-bg-raised p-4 shadow-xs",
+        className,
+      )}
+    >
+      {hideLabel ? null : (
+        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>{label}</span>
+      )}
+
+      {loading ? (
+        <Skeleton variant="stat" width={88} height={28} className="mt-2.5" />
+      ) : (
+        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+          <span
+            className={cn(
+              VALUE_CLASS,
+              size === "md"
+                ? "text-[1.75rem] leading-none font-semibold"
+                : "text-[1.25rem] leading-none font-semibold",
+              measured.absent ? "text-fg-tertiary" : "text-fg",
+            )}
+            style={!measured.absent && tone ? { color: TONE_COLOR[tone] } : undefined}
+          >
+            {measured.text}
+          </span>
+          {unit && !measured.absent ? (
+            <span className="text-[12px] leading-none text-fg-secondary">{unit}</span>
+          ) : null}
+          {delta === null || delta === undefined ? null : (
+            <span
+              className={cn(VALUE_CLASS, "ml-auto text-[12px] leading-none")}
+              style={{ color: TONE_COLOR[deltaTone(delta)] }}
+            >
+              {formatDelta(delta, deltaUnit)}
+            </span>
+          )}
+        </div>
+      )}
+
+      {description ? (
+        <span className="mt-1.5 text-[12px] leading-[1.45] text-fg-secondary">
+          {description}
         </span>
       ) : null}
     </div>

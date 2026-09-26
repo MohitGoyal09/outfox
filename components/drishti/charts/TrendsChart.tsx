@@ -13,11 +13,17 @@ import {
 } from "recharts";
 import { cn } from "@/lib/utils";
 import type { Coverage } from "@/lib/agentTypes";
-import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
+import {
+  CHART_TOOLTIP_SURFACE,
+  ChartContainer,
+  ChartLegend,
+  ChartLegendContent,
+  type ChartConfig,
+} from "@/components/ui/chart";
 import { formatStamp } from "../cohorts/cohorts-model";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
-import { ABSENT, LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
+import { ABSENT, LABEL_CLASS, VALUE_CLASS, categoricalColor, iconProps } from "../tokens";
 import { canConnectWithLine, groupByChunk, type ChunkGroup, type TrendsChunkRow } from "./groupByChunk";
 import { compareTrendsDates } from "@/convex/lib/trendsDate";
 
@@ -36,7 +42,9 @@ export type TrendsChartProps = {
 
 const VALUE_DOMAIN: [number, number] = [0, 100];
 
-const SERIES_COLORS = ["#0f766e", "#2563eb", "#d97706", "#dc2626", "#0891b2"];
+function seriesColor(index: number): string {
+  return categoricalColor(index);
+}
 
 const MONTHS_SHORT = [
   "Jan", "Feb", "Mar", "Apr", "May", "Jun",
@@ -90,7 +98,7 @@ function ChunkPanel({
   const config = Object.fromEntries(
     brandIds.map((brandId, index) => [
       brandId,
-      { label: brandLabel(brandId), color: SERIES_COLORS[index % SERIES_COLORS.length] },
+      { label: brandLabel(brandId), color: seriesColor(index) },
     ]),
   ) satisfies ChartConfig;
   const hasWindowRows = !canConnectWithLine(group.rows);
@@ -98,22 +106,22 @@ function ChunkPanel({
   return (
     <Panel interactive={false} padded className="flex flex-col gap-3">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#98a2b3)]")}>
+        <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>
           query chunk · {group.chunkKey}
         </span>
-        <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#98a2b3)]")}>
+        <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
           {brandIds.length} {brandIds.length === 1 ? "brand" : "brands"}
         </span>
       </div>
       {hasWindowRows ? (
-        <p className="text-[12px] leading-[1.5] text-[var(--text-secondary,#667085)]">
+        <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">
           Each dot is a 30-day average from the last run, not a daily reading --
           refresh Trends for this brand to get a real daily series. Dots are
           shown unconnected on purpose: a line would imply days were measured
           in between, and none were.
         </p>
       ) : showChrome ? (
-        <p className="text-[12px] leading-[1.5] text-[var(--text-secondary,#667085)]">
+        <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">
           Values in this panel are comparable to each other only. Google Trends
           normalises interest within one query chunk, so a different chunk is
           never on this same scale.
@@ -121,7 +129,7 @@ function ChunkPanel({
       ) : null}
       <ChartContainer config={config} className="aspect-auto h-[220px] w-full">
         <LineChart data={data} margin={{ left: -12, right: 12, top: 8, bottom: 0 }}>
-          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border,#e4e7ec)" />
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
           <XAxis
             dataKey="date"
             tickLine={false}
@@ -138,25 +146,25 @@ function ChunkPanel({
             tick={{ fontFamily: "var(--font-mono)", fontSize: 10.5 }}
           />
           <Tooltip
-            cursor={{ stroke: "var(--accent,#0f766e)", strokeOpacity: 0.25 }}
+            cursor={{ stroke: "var(--accent)", strokeOpacity: 0.25 }}
             content={({ active, payload, label }) => {
               if (!active || !payload || payload.length === 0) return null;
               return (
-                <div className="rounded-md border border-[var(--border-strong,#cbd2dc)] bg-[var(--bg-raised,#ffffff)] px-3 py-2 text-[11px] shadow-[0_2px_8px_rgba(23,25,29,0.08)]">
-                  <p className={cn(VALUE_CLASS, "text-[var(--text-tertiary,#98a2b3)]")}>
+                <div className={cn(CHART_TOOLTIP_SURFACE, "min-w-40")}>
+                  <p className={cn(VALUE_CLASS, "text-[10.5px] uppercase tracking-[0.07em] text-fg-tertiary")}>
                     {formatAxisDate(String(label))}
                   </p>
                   {payload.map((entry) => (
                     <p key={String(entry.dataKey)} className="mt-1 flex items-center gap-1.5">
                       <span
                         aria-hidden="true"
-                        className="size-1.5 shrink-0 rounded-full"
+                        className="size-2 shrink-0 rounded-full"
                         style={{ backgroundColor: entry.color }}
                       />
-                      <span className="text-[var(--text-primary,#17191d)]">
+                      <span className="text-fg-secondary">
                         {config[String(entry.dataKey)]?.label}
                       </span>
-                      <span className={cn(VALUE_CLASS, "ml-auto text-[var(--text-primary,#17191d)]")}>
+                      <span className={cn(VALUE_CLASS, "ml-auto text-fg")}>
                         {entry.value === null || entry.value === undefined ? ABSENT : entry.value}
                       </span>
                     </p>
@@ -165,6 +173,13 @@ function ChunkPanel({
               );
             }}
           />
+          {brandIds.length > 1 ? (
+            <ChartLegend
+              verticalAlign="top"
+              height={28}
+              content={<ChartLegendContent className="pb-2 pt-0" />}
+            />
+          ) : null}
           {brandIds.map((brandId) => (
             <Line
               key={brandId}
@@ -173,8 +188,8 @@ function ChunkPanel({
               name={brandLabel(brandId)}
               stroke={hasWindowRows ? "none" : `var(--color-${brandId})`}
               strokeWidth={2}
-              dot={{ r: 3.5, fill: `var(--color-${brandId})`, stroke: "var(--bg-raised,#ffffff)", strokeWidth: 1 }}
-              activeDot={{ r: 4.5, fill: `var(--color-${brandId})`, stroke: "var(--bg-raised,#ffffff)", strokeWidth: 1.5 }}
+              dot={{ r: 3.5, fill: `var(--color-${brandId})`, stroke: "var(--bg-raised)", strokeWidth: 1 }}
+              activeDot={{ r: 4.5, fill: `var(--color-${brandId})`, stroke: "var(--bg-raised)", strokeWidth: 1.5 }}
               connectNulls={false}
               isAnimationActive={false}
             />
@@ -195,11 +210,11 @@ export function TrendsChart({ result, brandLabel, className }: TrendsChartProps)
   return (
     <section aria-labelledby={headingId} className={cn("flex flex-col gap-3", className)}>
       <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
-        <h3 id={headingId} className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-primary,#17191d)]">
-          <TrendingUp {...iconProps} size={16} className="text-[var(--accent,#0f766e)]" aria-hidden="true" />
+        <h3 id={headingId} className="flex items-center gap-2 text-[13px] font-medium text-[var(--text-primary)]">
+          <TrendingUp {...iconProps} size={16} className="text-[var(--accent)]" aria-hidden="true" />
           Search interest
         </h3>
-        <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#98a2b3)]")}>
+        <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
           as of {formatStamp(result.asOf)}
         </span>
       </div>

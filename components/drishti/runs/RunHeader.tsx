@@ -6,14 +6,15 @@ import type { ReactNode } from "react";
 import {
   Chip,
   LABEL_CLASS,
+  Panel,
   Skeleton,
   SkeletonRegion,
   TONE_COLOR,
   VALUE_CLASS,
   iconProps,
 } from "@/components/drishti";
+import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { cn } from "@/lib/utils";
-import { Card, CardContent } from "@/components/ui/card";
 import { RUN_STATUS_TONE, engineCellTone, formatRunDateTime } from "./labels";
 import { UsageMeter } from "./UsageMeter";
 import type { EngineGap, RunStatus } from "./types";
@@ -53,16 +54,14 @@ export function RunHeader({
 }: RunHeaderProps) {
   if (loading) {
     return (
-      <Card className="border-border/80 bg-card shadow-none">
-        <CardContent className="p-6">
+      <Panel interactive={false} className="p-6" ariaLabel="Loading the run">
         <SkeletonRegion label="Loading the run">
           <div className="flex flex-col gap-3">
             <Skeleton variant="text" width="38%" height={26} />
             <Skeleton variant="text" width="60%" height={12} />
           </div>
         </SkeletonRegion>
-        </CardContent>
-      </Card>
+      </Panel>
     );
   }
 
@@ -75,6 +74,7 @@ export function RunHeader({
             className="inline-flex items-center gap-1.5"
             title={gap.reason}
           >
+            <PlatformLogo engine={gap.engine} className="size-3" />
             <span
               aria-hidden="true"
               className="size-1.5 shrink-0 rounded-full"
@@ -83,7 +83,7 @@ export function RunHeader({
             <span
               className={cn(
                 LABEL_CLASS,
-                "text-[var(--text-secondary,#9797a3)]",
+                "text-[var(--text-secondary)]",
               )}
             >
               {gap.label} {gap.status === "failed" ? "failed" : gap.status === "missing" ? "not recorded" : "unavailable"}
@@ -94,18 +94,17 @@ export function RunHeader({
     );
 
   return (
-    <Card className="border-border/80 bg-card shadow-none">
-      <CardContent className="p-6">
+    <Panel interactive={false} className="p-6" ariaLabel="Run summary">
       <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
         <div className="min-w-0">
           <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-              <h1 className="text-2xl font-semibold tracking-[-0.04em] text-foreground sm:text-3xl">
+            <h1 className="type-display text-fg">
               {cohortName}
             </h1>
             <span
               className={cn(
                 VALUE_CLASS,
-                "text-[12px] text-[var(--text-secondary,#9797a3)]",
+                "text-[12px] text-[var(--text-secondary)]",
               )}
             >
               run of {formatRunDateTime(requestedAt)}
@@ -127,7 +126,7 @@ export function RunHeader({
           {errorMessage !== null && errorMessage.trim() !== "" ? (
             <p
               role="alert"
-              className="mt-3 flex items-start gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger,#f87171)]"
+              className="mt-3 flex items-start gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger)]"
             >
               <CircleAlert
                 {...iconProps}
@@ -145,7 +144,6 @@ export function RunHeader({
           {action}
         </div>
       </div>
-      </CardContent>
-    </Card>
+    </Panel>
   );
 }

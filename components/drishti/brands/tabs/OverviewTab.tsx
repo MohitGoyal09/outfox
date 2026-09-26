@@ -3,10 +3,11 @@
 import { useMemo } from "react";
 import { cn } from "@/lib/utils";
 import { checkedStateLabel, sourceName } from "@/components/drishti/labels";
+import { EmptyState } from "../../EmptyState";
 import { FETCH_ENGINES, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
+import { sourceColor } from "../../tokens";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
-import { sourceAccent } from "../EvidenceCard";
 import { EvidenceSection } from "../EvidenceSection";
 import type { BrandFilters } from "../filters/filters-model";
 import { shortDate } from "../format";
@@ -33,16 +34,27 @@ function EvidenceMix({ claims, previousClaims }: { claims: ClaimDoc[]; previousC
               {row.label}
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
-            <span className="font-mono text-[11px] text-emerald-600">{total ? `${Math.round((row.count / total) * 100)}%` : "—"}</span>
+            <span className="font-mono text-[11px] text-ok">{total ? `${Math.round((row.count / total) * 100)}%` : "—"}</span>
             <DeltaTag delta={row.delta} />
           </div>
         ))
       ) : (
-        <p className="text-sm text-muted-foreground">No evidence mix for this run yet.</p>
+        <EmptyState
+          size="sm"
+          icon={<PlatformLogo engine="google" className="size-4" />}
+          title="No evidence mix for this check."
+          description="This breaks the latest check's findings down by source. It fills in once an engine returns at least one finding."
+        />
       )}
       <div className="flex h-2 overflow-hidden rounded-full bg-muted">
         {rows.map((row) => (
-          <span key={row.engine} style={{ width: `${total ? (row.count / total) * 100 : 0}%`, backgroundColor: sourceAccent[row.engine] ?? "#0f766e" }} />
+          <span
+            key={row.engine}
+            style={{
+              width: `${total ? (row.count / total) * 100 : 0}%`,
+              backgroundColor: sourceColor(row.engine),
+            }}
+          />
         ))}
       </div>
     </div>
@@ -50,24 +62,31 @@ function EvidenceMix({ claims, previousClaims }: { claims: ClaimDoc[]; previousC
 }
 
 function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: EngineCoverageRow[]; latestClaims: ClaimDoc[]; previousClaims: ClaimDoc[] | null }) {
+  const total = rows.reduce(
+    (sum, row) => (row.status === "ok" ? sum + latestClaims.filter((claim) => claim.sourceEngine === row.engine).length : sum),
+    0,
+  );
   return (
     <div className="space-y-2.5">
       {rows.map((row) => {
         const count = latestClaims.filter((claim) => claim.sourceEngine === row.engine).length;
         const delta = previousClaims && row.status === "ok" ? count - previousClaims.filter((claim) => claim.sourceEngine === row.engine).length : null;
         return (
-          <div key={row.engine} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-xs">
+          <div key={row.engine} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 text-xs">
             <span className="flex items-center gap-2 truncate">
               <PlatformLogo engine={row.engine} className="size-3.5" />
               <span
                 className={cn(
                   "size-1.5 rounded-full",
-                  row.status === "ok" ? "bg-emerald-500" : row.status === "unavailable" ? "bg-amber-500" : "bg-muted-foreground/30",
+                  row.status === "ok" ? "bg-ok" : row.status === "unavailable" ? "bg-warn" : "bg-muted-foreground/30",
                 )}
               />
               {row.label}
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{row.status === "ok" ? Intl.NumberFormat("en-US").format(count) : checkedStateLabel(row.status)}</span>
+            <span className="font-mono text-[11px] text-muted-foreground">
+              {row.status === "ok" && total ? `${Math.round((count / total) * 100)}%` : "—"}
+            </span>
             <DeltaTag delta={delta} />
           </div>
         );
@@ -145,7 +164,7 @@ export function OverviewTab({
         heading={(count) => (
           <div className="flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="text-base font-semibold tracking-[-0.02em]">{Intl.NumberFormat("en-US").format(count)} evidence cards</h2>
+              <h2 className="type-headline text-fg">{Intl.NumberFormat("en-US").format(count)} evidence cards</h2>
               {/* Reconciles the header's broader "N findings" badge (BrandProfile.tsx,
                   counts every real signal, including pure-count metrics like view/like
                   counts that never render as their own card) against this narrower count (only

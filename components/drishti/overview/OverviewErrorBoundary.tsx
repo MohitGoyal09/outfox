@@ -30,9 +30,9 @@ export class OverviewErrorBoundary extends Component<Props, State> {
       return (
         <div
           role="alert"
-          className="flex flex-col gap-3 rounded-[10px] border border-[var(--danger,#f87171)] bg-[var(--bg-raised,#131319)] p-4"
+          className="flex flex-col gap-3 rounded-[10px] border border-[var(--danger)] bg-[var(--bg-raised)] p-4"
         >
-          <p className="flex items-center gap-2 type-body text-[var(--danger,#f87171)]">
+          <p className="flex items-center gap-2 type-body text-[var(--danger)]">
             <CircleAlert
               {...iconProps}
               size={16}

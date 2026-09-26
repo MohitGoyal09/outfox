@@ -2,13 +2,6 @@ import { Users } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
-import {
   Table,
   TableBody,
   TableCell,
@@ -18,8 +11,9 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
 import { hookName } from "../labels";
+import { Panel } from "../Panel";
 import { SkeletonRows } from "../Skeleton";
-import { VALUE_CLASS, iconProps } from "../tokens";
+import { HOOK_COLOR, LABEL_CLASS, VALUE_CLASS, iconProps, type HookType } from "../tokens";
 import { LEADERBOARD_RULE_LINE, type BrandLeader, type HookComparisonLine } from "./board-model";
 
 export function BrandLeaderboard({
@@ -38,26 +32,26 @@ export function BrandLeaderboard({
   const ownRow = rows.find((row) => row.isOwnBrand) ?? null;
   const rivalRows = rows.filter((row) => !row.isOwnBrand);
   return (
-    <Card className={cn("overflow-hidden border-border/80 bg-card shadow-none", className)}>
-      <CardHeader className="border-b border-border/70 px-5 py-4">
-        <div className="flex flex-wrap items-start justify-between gap-3">
-          <div>
-            <CardTitle className="text-base">Brand leaderboard</CardTitle>
-            <CardDescription className="mt-1">{LEADERBOARD_RULE_LINE}</CardDescription>
-          </div>
-          {loading ? null : (
-            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{rows.length} brands · {Intl.NumberFormat("en-US").format(totalClaims)} findings</Badge>
-          )}
+    <Panel interactive={false} className={cn("flex flex-col", className)} ariaLabel="Brand leaderboard">
+      <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
+        <div className="min-w-0">
+          <h3 className="type-headline text-fg">Brand leaderboard</h3>
+          <p className="mt-1 type-caption text-fg-secondary">{LEADERBOARD_RULE_LINE}</p>
         </div>
-      </CardHeader>
-      <CardContent className="px-0 py-0">
+        {loading ? null : (
+          <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
+            {rows.length} {rows.length === 1 ? "brand" : "brands"} ·{" "}
+            {Intl.NumberFormat("en-US").format(totalClaims)} findings
+          </Badge>
+        )}
+      </header>
 
       {loading ? (
-        <div>
+        <div className="p-4">
           <SkeletonRows count={4} variant="row" height={40} />
         </div>
       ) : rows.length === 0 ? (
-        <div>
+        <div className="p-4">
           <EmptyState
             size="sm"
             bounded
@@ -67,25 +61,33 @@ export function BrandLeaderboard({
           />
         </div>
       ) : (
-        <div className="mt-3">
-            <Table>
-            <TableHeader><TableRow className="hover:bg-transparent"><TableHead className="w-16 pl-5 text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Rank</TableHead><TableHead className="text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Brand</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Findings</TableHead><TableHead className="text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground">Sources</TableHead><TableHead className="hidden pr-5 text-right text-[11px] uppercase tracking-[0.12em] text-muted-foreground md:table-cell">Leading hook</TableHead></TableRow></TableHeader>
-            <TableBody>
-              {ownRow ? <LeaderRow row={ownRow} /> : null}
-              {rivalRows.map((row, index) => (
-                <LeaderRow key={row.brandId} row={row} dividerAbove={ownRow !== null && index === 0} />
-              ))}
-            </TableBody>
-          </Table>
-        </div>
+        <Table>
+          <TableHeader>
+            <TableRow className="hover:bg-transparent">
+              <TableHead className={cn(LABEL_CLASS, "w-16 pl-5 text-fg-tertiary")}>Rank</TableHead>
+              <TableHead className={cn(LABEL_CLASS, "text-fg-tertiary")}>Brand</TableHead>
+              <TableHead className={cn(LABEL_CLASS, "text-right text-fg-tertiary")}>Findings</TableHead>
+              <TableHead className={cn(LABEL_CLASS, "text-right text-fg-tertiary")}>Sources</TableHead>
+              <TableHead className={cn(LABEL_CLASS, "hidden pr-5 text-right text-fg-tertiary md:table-cell")}>
+                Leading hook
+              </TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody>
+            {ownRow ? <LeaderRow row={ownRow} /> : null}
+            {rivalRows.map((row, index) => (
+              <LeaderRow key={row.brandId} row={row} dividerAbove={ownRow !== null && index === 0} />
+            ))}
+          </TableBody>
+        </Table>
       )}
+
       {comparison ? (
-        <p className="border-t border-border/70 px-5 py-3 text-[13px] leading-[1.5] text-fg-secondary">
+        <p className="border-t border-border px-5 py-3 text-[13px] leading-[1.5] text-fg-secondary">
           {comparison.text}
         </p>
       ) : null}
-      </CardContent>
-    </Card>
+    </Panel>
   );
 }
 
@@ -93,11 +95,11 @@ function LeaderRow({ row, dividerAbove = false }: { row: BrandLeader; dividerAbo
   return (
     <TableRow
       className={cn(
-        row.isOwnBrand && "bg-muted/40 hover:bg-muted/40",
+        row.isOwnBrand && "bg-bg-inset hover:bg-bg-inset",
         dividerAbove && "border-t-2 border-border",
       )}
     >
-      <TableCell className={cn(VALUE_CLASS, "pl-5 text-muted-foreground")}>
+      <TableCell className={cn(VALUE_CLASS, "pl-5 text-fg-tertiary")}>
         {row.isOwnBrand ? (
           <Badge variant="outline" className="font-normal">You</Badge>
         ) : (
@@ -106,21 +108,28 @@ function LeaderRow({ row, dividerAbove = false }: { row: BrandLeader; dividerAbo
       </TableCell>
       <TableCell
         className={cn(
-          "max-w-[18rem] whitespace-normal text-foreground",
+          "max-w-[18rem] whitespace-normal text-fg",
           row.isOwnBrand ? "font-semibold" : "font-medium",
         )}
       >
         {row.brandName}
       </TableCell>
-      <TableCell className={cn(VALUE_CLASS, "text-right text-foreground")}>
+      <TableCell className={cn(VALUE_CLASS, "text-right text-fg")}>
         {Intl.NumberFormat("en-US").format(row.claimCount)}
       </TableCell>
-      <TableCell className={cn(VALUE_CLASS, "text-right text-muted-foreground")}>{row.engineCount}</TableCell>
+      <TableCell className={cn(VALUE_CLASS, "text-right text-fg-secondary")}>{row.engineCount}</TableCell>
       <TableCell className="hidden pr-5 text-right md:table-cell">
         {row.topHook ? (
-          <Badge variant="secondary" className="font-normal">{hookName(row.topHook)} · {row.topHookCount}</Badge>
+          <Badge variant="secondary" className="font-normal">
+            <span
+              aria-hidden="true"
+              className="size-2 shrink-0 rounded-sm"
+              style={{ backgroundColor: HOOK_COLOR[row.topHook as HookType] ?? HOOK_COLOR.not_applicable }}
+            />
+            {hookName(row.topHook)} · {row.topHookCount}
+          </Badge>
         ) : (
-          <span className="text-muted-foreground">Not tagged</span>
+          <span className="text-fg-tertiary">Not tagged</span>
         )}
       </TableCell>
     </TableRow>

@@ -7,9 +7,10 @@ import { MessageResponse } from "@/components/ai-elements/message";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
 import { sourceName } from "@/components/drishti/labels";
+import { PlatformLogo } from "../brands/PlatformLogo";
+import { FOCUS_RING_CLASS } from "../tokens";
 import { collapseAdjacentSameHostCitations, engineDomain } from "./agentChat-model";
 import type { SourceView } from "./agentChat-model";
-import { engineGlyph, engineHue } from "./SourcesDrawer";
 
 const CLAIM_LINK_HREF_RE = /\]\(claim:([^)\s]+)\)/g;
 const CLAIMSET_LINK_HREF_RE = /\]\(claimset:([^)\s]+)\)/g;
@@ -54,8 +55,10 @@ const TABLE_HEAD_CLASS =
   "whitespace-nowrap px-3 py-2 text-left align-middle font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-secondary tabular-nums";
 const TABLE_CELL_CLASS = "px-3 py-2 align-top text-fg tabular-nums";
 
-const CHIP_CLASS =
-  "inline-flex h-[18px] cursor-pointer items-center gap-1 rounded-[5px] border border-border bg-bg-inset pl-[3px] pr-1.5 align-baseline font-mono text-[10.5px] text-fg-secondary shadow-[var(--shadow-lift)] transition-colors duration-150 ease-out hover:bg-bg-raised-2 hover:text-fg";
+const CHIP_CLASS = cn(
+  "inline-flex h-[18px] cursor-pointer items-center gap-1 rounded-sm border border-border bg-bg-inset pl-1 pr-1.5 align-baseline font-mono text-[10.5px] text-fg-secondary shadow-[var(--shadow-xs)] transition-colors duration-150 ease-out hover:border-border-strong hover:bg-bg-raised-2 hover:text-fg active:translate-y-[0.5px]",
+  FOCUS_RING_CLASS,
+);
 
 function CitationChip({
   claimId,
@@ -70,7 +73,7 @@ function CitationChip({
   onOpenCitation: (claimId: string) => void;
   animateIn?: boolean;
 }) {
-  const label = source !== undefined ? engineDomain(source.engine, source.url) : fallbackLabel;
+  const host = source !== undefined ? engineDomain(source.engine, source.url) : null;
   return (
     <button
       type="button"
@@ -81,13 +84,12 @@ function CitationChip({
         CHIP_CLASS,
       )}
     >
-      {source !== undefined
-        ? (() => {
-            const Icon = engineGlyph(source.engine);
-            return <Icon className="size-[9px] shrink-0" style={{ color: engineHue(source.engine) }} aria-hidden="true" />;
-          })()
-        : null}
-      {label}
+      {/* The citation's own reference number stays the leading label: it is
+          the one token that maps the prose marker to this chip. Colour never
+          touches it -- only the engine's own brand mark beside it. */}
+      <span className="tabular-nums font-semibold">{fallbackLabel}</span>
+      {source !== undefined ? <PlatformLogo engine={source.engine} className="size-[11px]" /> : null}
+      {host !== null ? <span className="text-fg-tertiary">{host}</span> : null}
     </button>
   );
 }
@@ -116,17 +118,12 @@ function MergedCitationChip({
             CHIP_CLASS,
           )}
         >
-          {firstSource !== undefined
-            ? (() => {
-                const Icon = engineGlyph(firstSource.engine);
-                return <Icon className="size-[9px] shrink-0" style={{ color: engineHue(firstSource.engine) }} aria-hidden="true" />;
-              })()
-            : null}
+          {firstSource !== undefined ? <PlatformLogo engine={firstSource.engine} className="size-[11px]" /> : null}
           {host}
           <span className="tabular-nums">×{entries.length}</span>
         </button>
       </PopoverTrigger>
-      <PopoverContent align="start" className="w-auto min-w-0 border border-border bg-bg-raised p-1.5 shadow-[var(--shadow-drawer)]">
+      <PopoverContent align="start" className="w-auto min-w-0 rounded-lg border border-border bg-bg-raised p-1.5 shadow-[var(--shadow-md)]">
         <div className="flex flex-col gap-1">
           {entries.map((entry) => (
             <CitationChip

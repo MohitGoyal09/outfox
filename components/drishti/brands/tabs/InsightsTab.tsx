@@ -10,9 +10,9 @@ import { computeCreativeMix, diffMix } from "@/convex/pipeline/rollup";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Skeleton } from "@/components/ui/skeleton";
 import { EmptyState } from "../../EmptyState";
+import { Panel } from "../../Panel";
+import { Skeleton, SkeletonRegion } from "../../Skeleton";
 import { HOOK_COLOR, iconProps, type HookType } from "../../tokens";
 import { hookName } from "@/components/drishti/labels";
 import { countClaimsByEngine, hookTypeFrequency, signalClaims, type ClaimDoc } from "../brand-model";
@@ -84,24 +84,24 @@ function InsightsStatRow({ latestClaims, tags }: { latestClaims: ClaimDoc[]; tag
     { label: "Sources represented", value: engineCount, icon: Layers },
   ];
   return (
-    <Card className="shadow-none">
-      <CardHeader className="border-b border-border/70">
-        <CardTitle className="text-sm">Evidence at a glance</CardTitle>
-      </CardHeader>
-      <CardContent className="grid grid-cols-3 gap-4 pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="border-b border-border px-4 py-3">
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Evidence at a glance</h3>
+      </div>
+      <div className="grid grid-cols-3 gap-4 p-4">
         {stats.map(({ label, value, icon: Icon }) => (
           <div key={label} className="flex items-center gap-2.5">
-            <Icon className="size-4 text-accent" />
+            <Icon className="size-4 text-fg" aria-hidden />
             <div>
-              <p className="font-mono text-lg font-semibold leading-none tabular-nums text-foreground">
+              <p className="font-mono text-lg font-semibold leading-none tabular-nums text-fg">
                 {Intl.NumberFormat("en-US").format(value)}
               </p>
               <p className="mt-1 text-[11px] text-muted-foreground">{label}</p>
             </div>
           </div>
         ))}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -121,12 +121,12 @@ function DnaSectionCard({
   templateMode: boolean;
 }) {
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <Icon className="size-4 text-accent" />
-        <CardTitle className="text-sm">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <Icon className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">{title}</h3>
+      </div>
+      <div className="p-4">
         {sentences.length === 0 ? (
           <EmptyState
             size="sm"
@@ -138,14 +138,14 @@ function DnaSectionCard({
           <ul className="space-y-2.5">
             {sentences.map((sentence, index) => (
               <li key={index}>
-                <p className="text-[13px] leading-5 text-foreground">{displayClaimText(sentence.text)}</p>
+                <p className="text-[13px] leading-5 text-fg">{displayClaimText(sentence.text)}</p>
                 <CitationLinks citedClaimIds={sentence.citedClaimIds} claimsById={claimsById} />
               </li>
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -182,12 +182,12 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
   const { hasPreviousRun, movers } = useMemo(() => hookMoversBetweenRecentRuns(claims), [claims]);
 
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <TrendingUp className="size-4 text-accent" />
-        <CardTitle className="text-sm">What changed</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <TrendingUp className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">What changed</h3>
+      </div>
+      <div className="p-4">
         {!hasPreviousRun ? (
           <EmptyState
             size="sm"
@@ -208,7 +208,7 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
                 <span className="font-mono tabular-nums text-muted-foreground">
                   {row.before} → {row.after}
                 </span>
-                <span className={cn("font-mono text-[11px] tabular-nums", row.delta > 0 ? "text-emerald-600" : "text-red-600")}>
+                <span className={cn("font-mono text-[11px] tabular-nums", row.delta > 0 ? "text-ok" : "text-danger")}>
                   {row.delta > 0 ? "+" : ""}
                   {row.delta}
                 </span>
@@ -216,8 +216,8 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -271,7 +271,7 @@ export function InsightsTab({
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h2 className="text-base font-semibold tracking-[-0.02em]">Brand DNA</h2>
+          <h2 className="type-headline text-fg">Brand DNA</h2>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
             Four cited reads on this brand: how it positions itself, who it talks to, what it sells against, and what changed — refreshed automatically as new evidence comes in.
           </p>
@@ -283,7 +283,9 @@ export function InsightsTab({
       </div>
 
       {feed === undefined ? (
-        <Skeleton className="h-40 rounded-xl" />
+        <SkeletonRegion label="Loading Brand DNA">
+          <Skeleton variant="block" height={160} />
+        </SkeletonRegion>
       ) : latest === undefined || buckets === null ? (
         <EmptyState
           size="sm"
@@ -293,17 +295,17 @@ export function InsightsTab({
         />
       ) : (
         <>
-          <Card className="shadow-none border-accent/25 bg-accent/[0.03]">
-            <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-              <Sparkles className="size-4 text-accent" />
-              <CardTitle className="text-sm">Positioning — {relativeTime(latest.generatedAt, now)}</CardTitle>
+          <Panel interactive={false} className="overflow-hidden border-accent/25 bg-accent/[0.03]">
+            <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+              <Sparkles className="size-4 text-fg" aria-hidden />
+              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Positioning — {relativeTime(latest.generatedAt, now)}</h3>
               {templateMode ? (
-                <Badge variant="outline" className="ml-auto h-5 rounded-full border-amber-200 bg-amber-50 px-2 text-[10px] font-normal text-amber-700">
+                <Badge variant="outline" className="ml-auto h-5 rounded-full border-warn/30 bg-warn/10 px-2 text-[10px] font-normal text-warn">
                   Template fallback
                 </Badge>
               ) : null}
-            </CardHeader>
-            <CardContent className="space-y-4 pt-4">
+            </div>
+            <div className="space-y-4 p-4">
               {buckets.positioning.length === 0 ? (
                 <EmptyState
                   size="sm"
@@ -314,16 +316,16 @@ export function InsightsTab({
               ) : (
                 <>
                   <div>
-                    <p className="text-lg font-semibold leading-6 tracking-[-0.01em] text-foreground">{displayClaimText(buckets.positioning[0].text)}</p>
+                    <p className="text-lg font-semibold leading-6 tracking-[-0.01em] text-fg">{displayClaimText(buckets.positioning[0].text)}</p>
                     <CitationLinks citedClaimIds={buckets.positioning[0].citedClaimIds} claimsById={claimsById} />
                   </div>
                   {buckets.positioning.length > 1 ? (
-                    <ol className="space-y-2.5 border-t border-border/70 pt-4">
+                    <ol className="space-y-2.5 border-t border-border pt-4">
                       {buckets.positioning.slice(1).map((sentence, index) => (
                         <li key={index} className="flex gap-2.5">
                           <span className="mt-0.5 font-mono text-[11px] text-muted-foreground">{index + 1}</span>
                           <div className="min-w-0">
-                            <p className="text-[13px] leading-5 text-foreground">{displayClaimText(sentence.text)}</p>
+                            <p className="text-[13px] leading-5 text-fg">{displayClaimText(sentence.text)}</p>
                             <CitationLinks citedClaimIds={sentence.citedClaimIds} claimsById={claimsById} />
                           </div>
                         </li>
@@ -332,8 +334,8 @@ export function InsightsTab({
                   ) : null}
                 </>
               )}
-            </CardContent>
-          </Card>
+            </div>
+          </Panel>
 
           <div className="grid gap-3 md:grid-cols-2">
             <DnaSectionCard
@@ -365,6 +367,7 @@ export function InsightsTab({
           <RankedCatalogChart
             title="Top hooks"
             rows={hookRows}
+            colorFor={(label) => HOOK_COLOR[label as HookType] ?? HOOK_COLOR.not_applicable}
             formatLabel={hookName}
             emptyTitle="No tagged hooks yet."
             emptyDescription="Ranks the real hook type an enrichment check assigned to findings, most frequent first — fills in after a tagged check."

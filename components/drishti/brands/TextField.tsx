@@ -35,7 +35,7 @@ export function TextField({
     <div className={cn("flex flex-col gap-1.5", className)}>
       <label
         htmlFor={id}
-        className={cn(LABEL_CLASS, "text-[var(--text-tertiary,#98A2B3)]")}
+        className={cn(LABEL_CLASS, "text-fg-tertiary")}
       >
         {label}
       </label>
@@ -45,22 +45,21 @@ export function TextField({
         aria-invalid={error !== null && error !== "" ? true : undefined}
         aria-describedby={describedBy.length > 0 ? describedBy.join(" ") : undefined}
         className={cn(
-          "h-9 w-full rounded-[5px] border bg-[var(--bg-inset,#F1F3F0)] px-2.5 text-[13.5px] text-[var(--text-primary,#17191D)] outline-none",
+          "h-9 w-full rounded-sm border bg-bg-inset px-2.5 text-[13.5px] text-fg outline-none",
           "max-[899px]:min-h-11",
           "motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-out",
           mono ? "font-mono tabular-nums" : "font-sans",
-          "placeholder:text-[var(--text-tertiary,#98A2B3)]",
           error !== null && error !== ""
-            ? "border-[var(--danger,#DC2626)]"
-            : "border-[var(--border-strong,#CBD2DC)] hover:border-[var(--text-tertiary,#98A2B3)]",
-          "focus:border-[var(--accent,#0F766E)] focus:shadow-[0_0_0_3px_rgba(15,118,110,0.22)]",
-          "disabled:cursor-not-allowed disabled:border-[var(--border,#E4E7EC)] disabled:bg-[var(--bg-raised,#FFFFFF)] disabled:text-[var(--text-tertiary,#98A2B3)] disabled:hover:border-[var(--border,#E4E7EC)]",
+            ? "border-danger"
+            : "border-border-strong hover:border-fg-tertiary",
+          "focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-dim)]",
+          "disabled:cursor-not-allowed disabled:border-border disabled:bg-bg-raised disabled:text-fg-tertiary disabled:hover:border-border",
         )}
       />
       {hint !== undefined && (error === null || error === "") ? (
         <span
           id={`${id}-hint`}
-          className="text-[12px] leading-[1.45] text-[var(--text-secondary,#667085)]"
+          className="text-[12px] leading-[1.45] text-fg-secondary"
         >
           {hint}
         </span>
@@ -68,7 +67,7 @@ export function TextField({
       {error !== null && error !== "" ? (
         <span
           id={`${id}-error`}
-          className="flex items-center gap-1.5 text-[12px] leading-[1.45] text-[var(--danger,#DC2626)]"
+          className="flex items-center gap-1.5 text-[12px] leading-[1.45] text-danger"
         >
           <CircleAlert
             {...iconProps}

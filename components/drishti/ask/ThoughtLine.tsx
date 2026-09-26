@@ -6,6 +6,7 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animate, useReducedMotion } from "motion/react";
 import { Check, ChevronDown, Sparkles, X } from "lucide-react";
 import { iconProps } from "../tokens";
+import { PlatformLogo } from "../brands/PlatformLogo";
 import "./thought-line.css";
 
 const EASE_OUT = [0.23, 1, 0.32, 1] as const;
@@ -19,6 +20,7 @@ export type ThoughtStep = {
   id: string;
   text: string;
   status: ThoughtStepStatus;
+  engine?: string | null;
 };
 
 function formatElapsed(deciseconds: number): string {
@@ -31,8 +33,8 @@ export function ThoughtLine({
   working,
   elapsedSeconds,
   showTimer = true,
-  color = "var(--text-secondary, #667085)",
-  glyphColor = "var(--text-tertiary, #98a2b3)",
+  color = "var(--text-secondary)",
+  glyphColor = "var(--text-tertiary)",
   fontSize = 13,
   settleDuration = 250,
   shimmerDuration = 1.4,
@@ -264,12 +266,14 @@ export function ThoughtLine({
             {steps.map((step, index) => {
               const done = step.status === "complete" || (step.status === "running" && index < steps.length - 1);
               const failed = step.status === "failed";
+              const running = !done && !failed;
               return (
                 <div
                   key={step.id}
                   className="thought-line__step"
                   data-done={done && !failed ? "" : undefined}
                   data-failed={failed ? "" : undefined}
+                  data-running={running ? "" : undefined}
                 >
                   <span className="thought-line__mark" aria-hidden="true">
                     {failed ? (
@@ -280,6 +284,7 @@ export function ThoughtLine({
                       <i className="thought-line__pulse" />
                     )}
                   </span>
+                  {step.engine ? <PlatformLogo engine={step.engine} className="size-3.5" /> : null}
                   <span className="thought-line__step-text">{step.text}</span>
                 </div>
               );

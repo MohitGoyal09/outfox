@@ -3,8 +3,9 @@
 import { useState } from "react";
 import { ArrowUpRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Panel } from "../Panel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
-import { EvidenceCard, sourceAccent } from "./EvidenceCard";
+import { EvidenceCard } from "./EvidenceCard";
 import { EngineTag } from "./PlatformLogo";
 import { readGoogleNewsRawItem, type ClaimDoc } from "./brand-model";
 import { displayClaimText, periodWindow, shortDate } from "./format";
@@ -23,9 +24,10 @@ export function NewsEvidenceCard({
   if (info.thumbnailUrl === null || thumbnailFailed) return <EvidenceCard claim={claim} pageLabel={pageLabel} />;
   const publishedLabel = periodWindow(claim.period) ?? shortDate(claim.fetchedAt);
   return (
-    <article
-      className="flex flex-col overflow-hidden rounded-xl border border-border border-t-2 bg-card transition-colors hover:border-accent/50 hover:bg-accent/[0.02]"
-      style={{ borderTopColor: sourceAccent.google_news }}
+    <Panel
+      as="article"
+      interactive
+      className="flex flex-col overflow-hidden border-t-2 border-t-[var(--text-primary)]"
     >
       <div className="relative aspect-video w-full shrink-0 bg-muted">
         <img
@@ -65,6 +67,6 @@ export function NewsEvidenceCard({
           </a>
         </Button>
       </div>
-    </article>
+    </Panel>
   );
 }

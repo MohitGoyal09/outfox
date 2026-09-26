@@ -1,7 +1,10 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { Layers } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { EmptyState } from "../EmptyState";
+import { iconProps } from "../tokens";
 import {
   groupYoutubeVideoClaims,
   findGoogleNewsRawItem,
@@ -144,7 +147,14 @@ export function EvidenceGrid({
   const cards = useMemo(() => sortCards(buildCards(claims), sort), [claims, sort]);
 
   if (cards.length === 0) {
-    return <div className="rounded-xl border border-dashed p-10 text-center text-sm text-muted-foreground">{emptyMessage}</div>;
+    return (
+      <EmptyState
+        bounded
+        icon={<Layers {...iconProps} size={16} />}
+        title="No evidence to show here yet."
+        description={emptyMessage}
+      />
+    );
   }
 
   return (

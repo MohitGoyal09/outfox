@@ -31,8 +31,14 @@ export function CitationCard({
           pressed={focused}
           href={citation.href}
           title={`${citation.brandName} · ${citation.displayText}`}
+          dot={false}
         >
-          {citation.label}
+          <span className="inline-flex items-center gap-1">
+            {citation.sourceEngine !== "" ? (
+              <PlatformLogo engine={citation.sourceEngine} className="size-3" />
+            ) : null}
+            <span>{citation.label}</span>
+          </span>
         </Chip>
       </span>
     );

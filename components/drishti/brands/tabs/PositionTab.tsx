@@ -4,9 +4,9 @@ import { useMemo } from "react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ArrowUpRight, BookOpen, Layers, Sparkles, TrendingUp } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
+import { Panel } from "../../Panel";
 import { iconProps, HOOK_COLOR, type HookType } from "../../tokens";
 import { hookName } from "@/components/drishti/labels";
 import { RankedCatalogChart } from "../RankedCatalogChart";
@@ -32,27 +32,25 @@ function KnowledgeGraphCard({ brand, latestClaims }: { brand: BrandDoc; latestCl
   const attributes = knowledgeAttributeClaims(latestClaims);
   if (descriptions.length === 0 && attributes.length === 0) {
     return (
-      <Card className="shadow-none">
-        <CardContent className="py-4">
-          <EmptyState
-            size="sm"
-            icon={<BookOpen {...iconProps} size={16} />}
-            title="No knowledge-graph panel for this brand."
-            description="Google doesn't show a knowledge panel for every brand — this bonus card fills in only when one is available, it is not required for the rest of this tab."
-          />
-        </CardContent>
-      </Card>
+      <Panel interactive={false} className="p-4">
+        <EmptyState
+          size="sm"
+          icon={<BookOpen {...iconProps} size={16} />}
+          title="No knowledge-graph panel for this brand."
+          description="Google doesn't show a knowledge panel for every brand — this bonus card fills in only when one is available, it is not required for the rest of this tab."
+        />
+      </Panel>
     );
   }
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <BookOpen className="size-4 text-accent" />
-        <CardTitle className="text-sm">Knowledge graph identity</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <BookOpen className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Knowledge graph identity</h3>
+      </div>
+      <div className="p-4">
         <div className="space-y-4">
-          {descriptions.length > 0 ? <p className="text-sm leading-6 text-foreground">{displayClaimText(descriptions[0].text)}</p> : null}
+          {descriptions.length > 0 ? <p className="text-sm leading-6 text-fg">{displayClaimText(descriptions[0].text)}</p> : null}
           {attributes.length > 0 ? (
             <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
               {attributes.map((claim) => (
@@ -60,27 +58,27 @@ function KnowledgeGraphCard({ brand, latestClaims }: { brand: BrandDoc; latestCl
                   {/* Every row here shares the same claim.metric ("brand_knowledge_attribute") — that told the reader nothing and leaked a raw
                       identifier. claim.unit carries the real per-row attribute name (see extractClaims.ts's KNOWLEDGE_ATTRIBUTES), so use that instead. */}
                   <dt className="truncate text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">{claim.unit ?? "Attribute"}</dt>
-                  <dd className="truncate font-medium text-foreground">{String(claim.value ?? displayClaimText(claim.text))}</dd>
+                  <dd className="truncate font-medium text-fg">{String(claim.value ?? displayClaimText(claim.text))}</dd>
                 </div>
               ))}
             </dl>
           ) : null}
         </div>
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
 function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
   const blocks = aiOverviewClaims(claims);
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <Sparkles className="size-4 text-accent" />
-        <CardTitle className="text-sm">Google AI Overview</CardTitle>
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <Sparkles className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Google AI Overview</h3>
         <Badge variant="outline" className="ml-auto h-5 rounded-full px-2 text-[10px] font-normal text-muted-foreground">Google&apos;s synthesis, not ours</Badge>
-      </CardHeader>
-      <CardContent className="pt-4">
+      </div>
+      <div className="p-4">
         <p className="mb-3 text-[11px] leading-5 text-muted-foreground">
           Google&apos;s own generated summary of this brand, not a primary source and not Drishti&apos;s analysis. Every line below links to the page Google actually cited.
         </p>
@@ -94,13 +92,13 @@ function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
         ) : (
           <ul className="space-y-2.5">
             {blocks.map((claim) => (
-              <li key={String(claim._id)} className="rounded-lg border border-border/70 bg-muted/20 p-3">
-                <p className="text-[13px] leading-5 text-foreground">{displayClaimText(claim.text)}</p>
+              <li key={String(claim._id)} className="rounded-sm border border-border bg-bg-inset/40 p-3">
+                <p className="text-[13px] leading-5 text-fg">{displayClaimText(claim.text)}</p>
                 <a
                   href={claim.evidenceUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-fg hover:underline"
                 >
                   Google&apos;s cited source <ArrowUpRight className="size-3" />
                 </a>
@@ -108,8 +106,8 @@ function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -118,11 +116,11 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
   const min = points.length ? points[0].price : null;
   const max = points.length ? points[points.length - 1].price : null;
   return (
-    <Card className="shadow-none">
-      <CardHeader className="border-b border-border/70">
-        <CardTitle className="text-sm">Price ladder</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="border-b border-border px-4 py-3">
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Price ladder</h3>
+      </div>
+      <div className="p-4">
         {points.length === 0 ? (
           <EmptyState
             size="sm"
@@ -133,21 +131,21 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
         ) : (
           <div className="space-y-3">
             <p className="font-mono text-xs text-muted-foreground">
-              Range observed: <span className="text-foreground">{min}</span>–<span className="text-foreground">{max}</span> {points[0].unit ?? ""} across {points.length} listing{points.length === 1 ? "" : "s"}
+              Range observed: <span className="text-fg">{min}</span>–<span className="text-fg">{max}</span> {points[0].unit ?? ""} across {points.length} listing{points.length === 1 ? "" : "s"}
             </p>
             <ul className="space-y-1.5">
               {points.map((point) => (
                 <li key={point.claimId} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-[11px]">
                   <span className="truncate text-muted-foreground">{point.hostname ?? "unknown retailer"}</span>
-                  <span className="font-mono tabular-nums text-foreground">{point.price}{point.unit ? ` ${point.unit}` : ""}</span>
+                  <span className="font-mono tabular-nums text-fg">{point.price}{point.unit ? ` ${point.unit}` : ""}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">as of {shortDate(point.fetchedAt)}</span>
                 </li>
               ))}
             </ul>
           </div>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -155,12 +153,12 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
   const rows = useMemo(() => (previous === null ? [] : hookMixDrift(current, previous).slice(0, 9)), [current, previous]);
   const chartConfig = { current: { label: "This check" }, previous: { label: "Previous check" } } satisfies ChartConfig;
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <TrendingUp className="size-4 text-accent" />
-        <CardTitle className="text-sm">Hook-mix drift</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <TrendingUp className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Hook-mix drift</h3>
+      </div>
+      <div className="p-4">
         {previous === null ? (
           <EmptyState
             size="sm"
@@ -178,25 +176,25 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
         ) : (
           <ChartContainer config={chartConfig} className="h-[240px] w-full aspect-auto">
             <BarChart accessibilityLayer data={rows} margin={{ left: -16, right: 12, top: 8 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
+              <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 9 }} interval={0} angle={-28} textAnchor="end" height={56} tickFormatter={(value: string) => hookName(value)} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} tick={{ fontSize: 10 }} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent labelFormatter={(value: unknown) => hookName(String(value))} />} />
               <Bar dataKey="previous" name="Previous check" radius={[2, 2, 0, 0]} barSize={12}>
                 {rows.map((row) => (
-                  <Cell key={`prev-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? "#6b7280"} fillOpacity={0.35} />
+                  <Cell key={`prev-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable} fillOpacity={0.35} />
                 ))}
               </Bar>
               <Bar dataKey="current" name="This check" radius={[2, 2, 0, 0]} barSize={12}>
                 {rows.map((row) => (
-                  <Cell key={`cur-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? "#6b7280"} />
+                  <Cell key={`cur-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable} />
                 ))}
               </Bar>
             </BarChart>
           </ChartContainer>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -243,7 +241,7 @@ export function PositionTab({
         real specificity lives.
       */}
       <div>
-        <h2 className="mb-1 text-sm font-semibold tracking-[-0.02em]">Ranked hook catalog</h2>
+        <h2 className="type-headline text-fg">Ranked hook catalog</h2>
         <p className="mb-3 text-[11px] text-muted-foreground">
           The fixed hookType vocabulary, then the free-text theme and value-proposition long tail underneath it — every count real and server-computed.
         </p>
@@ -254,7 +252,7 @@ export function PositionTab({
         <RankedCatalogChart
           title="Hook type"
           rows={hookTypeRows}
-          colorFor={(label) => HOOK_COLOR[label as HookType] ?? "#6b7280"}
+          colorFor={(label) => HOOK_COLOR[label as HookType] ?? HOOK_COLOR.not_applicable}
           formatLabel={hookName}
           emptyTitle="No tagged hook types yet."
           emptyDescription="Ranks the real, fixed hook-type vocabulary an enrichment check assigned to findings, most frequent first — fills in after a tagged check."

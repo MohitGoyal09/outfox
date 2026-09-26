@@ -6,12 +6,12 @@ import Link from "next/link";
 import { api } from "@/convex/_generated/api";
 import {
   Chip,
+  Panel,
   Skeleton,
   TONE_COLOR,
   VALUE_CLASS,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
-import { Card, CardFooter } from "@/components/ui/card";
 import { ArrowUpRight, ChevronRight } from "lucide-react";
 import {
   COST_PROVENANCE_LABEL,
@@ -48,10 +48,10 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
 
   return (
     <li>
-      <Card className="group overflow-hidden border-border/80 bg-card py-0 shadow-none transition-colors hover:border-accent/50 hover:bg-accent/[0.025]">
+      <Panel interactive className="group overflow-hidden">
       <Link
         href={`/runs/${encodeURIComponent(String(run._id))}`}
-        className="block p-5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset"
+        className="block p-5"
       >
         <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
           <div className="min-w-0">
@@ -59,7 +59,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
               <span
                 className={cn(
                   VALUE_CLASS,
-                  "text-[12px] text-[var(--text-secondary,#9797a3)]",
+                  "text-[12px] text-[var(--text-secondary)]",
                 )}
               >
                 {formatRunDate(run.requestedAt)}
@@ -79,7 +79,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
               >
                 {formatCount(run.requestCount)} {run.requestCount === 1 ? "search" : "searches"}
               </span>
-              <span aria-hidden="true" className="text-[var(--text-tertiary,#64646f)]">
+              <span aria-hidden="true" className="text-[var(--text-tertiary)]">
                 {READOUT_SEPARATOR}
               </span>
               <span
@@ -92,7 +92,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
                   ? "model calls not reported"
                   : `${formatCount(run.llmRequestCount)} ${run.llmRequestCount === 1 ? "model call" : "model calls"}`}
               </span>
-              <span aria-hidden="true" className="text-[var(--text-tertiary,#64646f)]">
+              <span aria-hidden="true" className="text-[var(--text-tertiary)]">
                 {READOUT_SEPARATOR}
               </span>
               {costText === null ? (
@@ -103,10 +103,10 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
                     VALUE_CLASS,
                     "text-[11px]",
                     provenance === "exact" || provenance === "mixed"
-                      ? "text-[var(--ok,#4ade80)]"
+                      ? "text-[var(--ok)]"
                       : provenance === "estimated"
-                        ? "text-[var(--warn,#fbbf24)]"
-                        : "text-[var(--text-secondary,#9797a3)]",
+                        ? "text-[var(--warn)]"
+                        : "text-[var(--text-secondary)]",
                   )}
                 >
                   {costText}
@@ -115,14 +115,14 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
 
               {snapshots === undefined ? (
                 <>
-                  <span aria-hidden="true" className="text-[var(--text-tertiary,#64646f)]">
+                  <span aria-hidden="true" className="text-[var(--text-tertiary)]">
                     {READOUT_SEPARATOR}
                   </span>
                   <Skeleton variant="stat" width={124} height={12} />
                 </>
               ) : gaps.length === 0 ? null : (
                 <>
-                  <span aria-hidden="true" className="text-[var(--text-tertiary,#64646f)]">
+                  <span aria-hidden="true" className="text-[var(--text-tertiary)]">
                     {READOUT_SEPARATOR}
                   </span>
                   {gaps.map((gap) => (
@@ -154,11 +154,11 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
           <Chip tone={RUN_STATUS_TONE[status]} label={status} className="rounded-full" />
         </div>
       </Link>
-      <CardFooter className="flex items-center justify-between border-t border-border/70 bg-muted/30 px-5 py-2.5 text-[10px] text-muted-foreground">
+      <div className="flex items-center justify-between border-t border-border bg-bg-inset/50 px-5 py-2.5 text-[10px] text-muted-foreground">
         <span className="uppercase tracking-[0.15em]">Open run details</span>
         <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
-      </CardFooter>
-      </Card>
+      </div>
+      </Panel>
     </li>
   );
 }

@@ -59,11 +59,16 @@
   width: 1.1em;
   height: 1.1em;
   color: var(--tl-glyph);
+  transition: color var(--tl-settle) var(--tl-ease-out);
 }
 .thought-line__glyph svg {
   display: block;
   width: 100%;
   height: 100%;
+}
+/* A restrained accent while the turn is live -- ink, never a gradient sweep. */
+.thought-line[data-working] .thought-line__glyph {
+  color: var(--accent, #15171b);
 }
 
 .thought-line__label {
@@ -88,28 +93,11 @@
 .thought-line__breath {
   display: inline-block;
 }
-.thought-line[data-working] .thought-line__breath[data-shimmer] {
-  background: linear-gradient(
-    100deg,
-    color-mix(in srgb, var(--tl-color) 50%, transparent) 30%,
-    var(--tl-color) 50%,
-    color-mix(in srgb, var(--tl-color) 50%, transparent) 70%
-  );
-  background-size: 250% 100%;
-  background-position: 125% 0;
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
-  -webkit-text-fill-color: transparent;
-  animation: thought-line-shimmer var(--tl-shimmer) linear infinite;
-}
-@keyframes thought-line-shimmer {
-  to {
-    background-position: -125% 0;
-  }
-}
 
 .thought-line__timer {
+  /* A measured duration: mono + tabular, like every other measured value. */
+  font-family: var(--font-mono);
+  font-size: 0.9em;
   font-variant-numeric: tabular-nums;
   opacity: var(--tl-timer);
   transition:
@@ -167,10 +155,10 @@
 .thought-line__steps {
   display: flex;
   flex-direction: column;
-  gap: 0.45em;
+  gap: 0.55em;
   width: 100%;
   min-width: 0;
-  padding: 0.6em 0 0.2em 1.45em;
+  padding: 0.7em 0 0.3em 1.45em;
   font-size: 0.95em;
   font-weight: 400;
   white-space: normal;
@@ -229,6 +217,16 @@
 }
 .thought-line__step[data-done] .thought-line__step-text {
   opacity: 0.55;
+}
+/* Status colour lives on the mark; the icon shape (check / X / pulse) is the
+   non-colour cue, so a colourblind reader still reads the same state. */
+.thought-line__step[data-done] .thought-line__mark {
+  opacity: 0.85;
+  color: var(--ok, #059669);
+}
+.thought-line__step[data-running] .thought-line__mark {
+  opacity: 0.85;
+  color: var(--warn, #b45309);
 }
 /* A failed step never reads as completed: full opacity, danger ink, no dim. */
 .thought-line__step[data-failed] {

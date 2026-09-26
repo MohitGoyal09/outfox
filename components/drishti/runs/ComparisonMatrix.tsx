@@ -18,8 +18,8 @@ import {
   hookDotColor,
   iconProps,
 } from "@/components/drishti";
+import { categoricalColorFor } from "@/components/drishti/tokens";
 import { cn } from "@/lib/utils";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { FUNNEL_WORD, HOOK_WORD, formatCount } from "./labels";
 import type { BrandMixSummary } from "./derive";
 import type { BrandRef } from "./types";
@@ -70,14 +70,14 @@ function deltaCell(summary: BrandMixSummary, row: RowKey): DeltaCell {
 function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) {
   if (row === "claims") {
     return (
-      <span className={cn(VALUE_CLASS, "text-[13px] text-[var(--text-primary,#eeeef2)]")}>
+      <span className={cn(VALUE_CLASS, "text-[13px] text-[var(--text-primary)]")}>
         {formatCount(summary.claimCount)}
       </span>
     );
   }
   if (row === "tags") {
     return (
-      <span className={cn(VALUE_CLASS, "text-[13px] text-[var(--text-primary,#eeeef2)]")}>
+      <span className={cn(VALUE_CLASS, "text-[13px] text-[var(--text-primary)]")}>
         {formatCount(summary.tagCount)}
       </span>
     );
@@ -102,7 +102,7 @@ function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) 
           };
   if (leader === null) {
     return (
-      <span className="text-[12.5px] leading-[1.45] text-[var(--text-tertiary,#64646f)]">
+      <span className="text-[12.5px] leading-[1.45] text-[var(--text-tertiary)]">
         No tagged claims this run.
       </span>
     );
@@ -114,10 +114,10 @@ function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) 
         className="size-1.5 shrink-0 rounded-full"
         style={{ backgroundColor: leader.dot }}
       />
-      <span className={cn(VALUE_CLASS, "text-[12.5px] text-[var(--text-primary,#eeeef2)]")}>
+      <span className={cn(VALUE_CLASS, "text-[12.5px] text-[var(--text-primary)]")}>
         {leader.word}
       </span>
-      <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
+      <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
         {formatCount(leader.count)} · {leader.share}
       </span>
     </span>
@@ -137,8 +137,7 @@ export function ComparisonMatrix({
 }: ComparisonMatrixProps) {
   if (loading) {
     return (
-      <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="Side by side">
-        <CardContent className="p-5">
+      <Panel interactive={false} className={cn("p-5", className)} ariaLabel="Side by side">
         <SkeletonRegion label="Loading the comparison">
           <Skeleton variant="text" width={132} height={13} />
           <div className="mt-4 flex flex-col gap-3">
@@ -153,8 +152,7 @@ export function ComparisonMatrix({
             ))}
           </div>
         </SkeletonRegion>
-        </CardContent>
-      </Card>
+      </Panel>
     );
   }
 
@@ -163,7 +161,7 @@ export function ComparisonMatrix({
       <Panel interactive={false} className={cn("p-4", className)} ariaLabel="Side by side">
         <div
           role="alert"
-          className="flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-[var(--danger,#f87171)]"
+          className="flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-[var(--danger)]"
         >
           <span>{error}</span>
           {onRetry ? (
@@ -184,11 +182,13 @@ export function ComparisonMatrix({
   const totalClaims = summaries.reduce((sum, summary) => sum + summary.claimCount, 0);
 
   return (
-    <Card className={cn("border-border/80 bg-card shadow-none", className)} aria-label="Side by side">
-      <CardHeader className="border-b border-border/70 px-5 py-4">
-        <CardTitle className="text-sm font-semibold tracking-[-0.01em]">Coverage and counts</CardTitle>
-      </CardHeader>
-      <CardContent className="p-5">
+    <Panel interactive={false} className={cn("overflow-hidden", className)} ariaLabel="Side by side">
+      <div className="border-b border-border px-5 py-4">
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
+          Coverage and counts
+        </h3>
+      </div>
+      <div className="p-5">
 
       {brands.length === 0 ? (
         <div className="mt-3">
@@ -211,7 +211,7 @@ export function ComparisonMatrix({
       ) : (
         <>
           {brands.length === 1 ? (
-            <p className="mt-2 text-[12.5px] leading-[1.45] text-[var(--text-secondary,#9797a3)]">
+            <p className="mt-2 text-[12.5px] leading-[1.45] text-[var(--text-secondary)]">
               One rival in this run — a comparison needs at least two.
             </p>
           ) : null}
@@ -222,23 +222,30 @@ export function ComparisonMatrix({
                 Rival mix and counts{previousLabel === null ? "" : `, with the change against the run of ${previousLabel}`}
               </caption>
               <thead>
-                <tr className="border-b border-[var(--border,#24242f)]">
-                  <th scope="col" className={cn(LABEL_CLASS, "pb-2 text-[var(--text-tertiary,#64646f)]")}>
+                <tr className="border-b border-[var(--border)]">
+                  <th scope="col" className={cn(LABEL_CLASS, "pb-2 text-[var(--text-tertiary)]")}>
                     dimension
                   </th>
                   {brands.map((brand) => (
                     <th
                       key={brand.id}
                       scope="col"
-                      className="pb-2 pl-4 text-[12.5px] font-medium text-[var(--text-primary,#eeeef2)]"
+                      className="pb-2 pl-4 text-[12.5px] font-medium text-[var(--text-primary)]"
                     >
-                      {brand.name}
+                      <span className="inline-flex items-center gap-1.5">
+                        <span
+                          aria-hidden="true"
+                          className="size-1.5 shrink-0 rounded-full"
+                          style={{ backgroundColor: categoricalColorFor(brand.name) }}
+                        />
+                        {brand.name}
+                      </span>
                     </th>
                   ))}
                   {previousLabel === null ? null : (
                     <th
                       scope="col"
-                      className={cn(LABEL_CLASS, "pb-2 pl-4 text-[var(--text-secondary,#9797a3)]")}
+                      className={cn(LABEL_CLASS, "pb-2 pl-4 text-[var(--text-secondary)]")}
                     >
                       Δ vs run of {previousLabel}
                     </th>
@@ -247,12 +254,12 @@ export function ComparisonMatrix({
               </thead>
               <tbody>
                 {ROWS.map((row) => (
-                  <tr key={row} className="border-b border-[var(--border,#24242f)] last:border-b-0">
+                  <tr key={row} className="border-b border-[var(--border)] last:border-b-0">
                     <th
                       scope="row"
                       className={cn(
                         LABEL_CLASS,
-                        "py-3 pr-4 align-top font-semibold text-[var(--text-secondary,#9797a3)]",
+                        "py-3 pr-4 align-top font-semibold text-[var(--text-secondary)]",
                       )}
                     >
                       {ROW_LABEL[row]}
@@ -272,7 +279,7 @@ export function ComparisonMatrix({
                                 key={summary.brandId}
                                 className="flex flex-wrap items-baseline gap-x-2"
                               >
-                                <span className="text-[12px] leading-[1.3] text-[var(--text-tertiary,#64646f)]">
+                                <span className="text-[12px] leading-[1.3] text-[var(--text-tertiary)]">
                                   {summary.brandName}
                                 </span>
                                 <span
@@ -297,13 +304,18 @@ export function ComparisonMatrix({
             {summaries.map((summary) => (
               <li
                 key={summary.brandId}
-                className="border-t border-[var(--border,#24242f)] pt-3 first:border-t-0 first:pt-0"
+                className="border-t border-[var(--border)] pt-3 first:border-t-0 first:pt-0"
               >
-                <p className="text-[13px] font-medium text-[var(--text-primary,#eeeef2)]">
+                <p className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--text-primary)]">
+                  <span
+                    aria-hidden="true"
+                    className="size-1.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: categoricalColorFor(summary.brandName) }}
+                  />
                   {summary.brandName}
                 </p>
                 {previousLabel === null ? null : (
-                  <p className={cn(LABEL_CLASS, "mt-1 text-[var(--text-tertiary,#64646f)]")}>
+                  <p className={cn(LABEL_CLASS, "mt-1 text-[var(--text-tertiary)]")}>
                     Δ vs run of {previousLabel}
                   </p>
                 )}
@@ -317,7 +329,7 @@ export function ComparisonMatrix({
                         <dt
                           className={cn(
                             LABEL_CLASS,
-                            "text-[var(--text-tertiary,#64646f)] min-[480px]:w-[6.5rem] min-[480px]:shrink-0",
+                            "text-[var(--text-tertiary)] min-[480px]:w-[6.5rem] min-[480px]:shrink-0",
                           )}
                         >
                           {ROW_LABEL[row]}
@@ -342,7 +354,7 @@ export function ComparisonMatrix({
           </ul>
         </>
       )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }

@@ -5,19 +5,22 @@ import { ArrowUpRight, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Panel } from "../Panel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { adCreativeWindow, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
 import { displayClaimText, periodWindow, shortDate } from "./format";
 import { hookName, measureName, sourceName } from "@/components/drishti/labels";
 
+const SOURCE_ACCENT = "var(--text-primary)";
+
 export const sourceAccent: Record<string, string> = {
-  google: "#0f766e",
-  google_ads_transparency_center: "#d97706",
-  youtube: "#dc2626",
-  youtube_video: "#dc2626",
-  google_trends: "#2563eb",
-  google_news: "#7c3aed",
+  google: SOURCE_ACCENT,
+  google_ads_transparency_center: SOURCE_ACCENT,
+  youtube: SOURCE_ACCENT,
+  youtube_video: SOURCE_ACCENT,
+  google_trends: SOURCE_ACCENT,
+  google_news: SOURCE_ACCENT,
 };
 
 type LaneStyle = { topBorder: boolean; iconClass: string; titleClass: string; largeStat: boolean };
@@ -47,9 +50,9 @@ export function EvidenceCard({
   pageLabel?: string;
 }) {
   const source = sourceName(claim.sourceEngine).replace(" Search", "");
-  const accent = sourceAccent[claim.sourceEngine] ?? "#0f766e";
+  const accent = sourceAccent[claim.sourceEngine] ?? SOURCE_ACCENT;
   const lane = LANE_STYLE[claim.sourceEngine] ?? LANE_STYLE.google;
-  const cardBg = claim.sourceEngine === "google_trends" ? "bg-blue-50/40" : "bg-card";
+  const cardBg = claim.sourceEngine === "google_trends" ? "bg-bg-inset/50" : "bg-bg-raised";
   const rank = organicRank(claim);
   const [faviconFailed, setFaviconFailed] = useState(false);
   const favicon = faviconFailed ? null : (raw?.faviconUrl ?? null);
@@ -58,23 +61,23 @@ export function EvidenceCard({
   const runWindowLabel = isAdsCreative ? periodWindow(claim.period) : null;
   const trendPeriodLabel = lane.largeStat ? periodWindow(claim.period) : null;
   return (
-    <article
+    <Panel
+      as="article"
+      interactive
       className={cn(
-        "group flex flex-col rounded-xl border border-border p-4 transition-colors hover:border-accent/50 hover:bg-accent/[0.02]",
+        "group flex flex-col p-4",
         cardBg,
-        lane.topBorder && "border-t-2",
+        lane.topBorder && "border-t-2 border-t-[var(--text-primary)]",
       )}
-      style={lane.topBorder ? { borderTopColor: accent } : undefined}
     >
       <div className="flex items-start justify-between gap-3">
         <div className="flex min-w-0 items-center gap-2">
           <span
-            className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border text-[11px] font-semibold"
-            style={{ color: accent, backgroundColor: `${accent}1a` }}
+            className="relative grid size-8 shrink-0 place-items-center rounded-full border border-border bg-bg-inset text-[11px] font-semibold"
+            style={{ color: accent }}
           >
-            {/* Low-alpha tint of the engine's own accent (via the hex+alpha
-                suffix above) — one step past a flat neutral chip, short of
-                a colored border or glow either of which DESIGN.md bans. */}
+            {/* Real platform mark on a neutral well. Colour never carries the
+                source on its own: the mark plus the mono engine label do. */}
             {favicon !== null ? (
               <img
                 src={favicon}
@@ -135,9 +138,9 @@ export function EvidenceCard({
       </div>
       <div className="mt-4 flex items-center gap-2 border-t border-border/70 pt-3">
         <Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{claim.hookType ? hookName(claim.hookType) : "Signal"}</Badge>
-        <Badge variant="outline" className="h-6 rounded-full border-emerald-200 bg-emerald-50 px-2 text-[10px] text-emerald-700"><span className="mr-1 size-1.5 rounded-full bg-emerald-500" />{claim.confidence ?? "Unrated"}</Badge>
+        <Badge variant="outline" className="h-6 rounded-full border-ok/30 bg-ok/10 px-2 text-[10px] text-ok"><span className="mr-1 size-1.5 rounded-full bg-ok" />{claim.confidence ?? "Unrated"}</Badge>
         <Button asChild variant="outline" size="sm" className="ml-auto h-7 rounded-md px-2 text-[11px]"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button>
       </div>
-    </article>
+    </Panel>
   );
 }

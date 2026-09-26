@@ -2,9 +2,8 @@
 
 import { useMemo } from "react";
 import { AlertTriangle, HelpCircle, Search } from "lucide-react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { EmptyState } from "../../EmptyState";
-import { iconProps } from "../../tokens";
+import { Panel } from "../../Panel";
 import { stageName } from "@/components/drishti/labels";
 import {
   funnelCoverageGaps,
@@ -48,47 +47,47 @@ function RelatedListPanel({
   emptyDescription: string;
 }) {
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         {icon}
-        <CardTitle className="text-sm">{title}</CardTitle>
-      </CardHeader>
-      <CardContent className="pt-4">
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">{title}</h3>
+      </div>
+      <div className="p-4">
         {claims.length === 0 ? (
           <EmptyState size="sm" icon={icon} title={emptyTitle} description={emptyDescription} />
         ) : (
           <ul className="space-y-2 text-sm">
             {claims.map((claim) => (
               <li key={String(claim._id)}>
-                <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="text-foreground hover:text-accent hover:underline">
+                <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="text-fg hover:underline">
                   {displayClaimText(claim.text)}
                 </a>
               </li>
             ))}
           </ul>
         )}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
 function FunnelCoveragePanel({ items }: { items: ReturnType<typeof funnelDistribution> }) {
   const gaps = useMemo(() => funnelCoverageGaps(items), [items]);
   return (
-    <Card className="shadow-none">
-      <CardHeader className="flex flex-row items-center gap-2 border-b border-border/70">
-        <AlertTriangle className="size-4 text-accent" />
-        <CardTitle className="text-sm">Funnel-coverage gaps</CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-3 pt-4">
+    <Panel interactive={false} className="overflow-hidden">
+      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
+        <AlertTriangle className="size-4 text-fg" aria-hidden />
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Funnel-coverage gaps</h3>
+      </div>
+      <div className="space-y-3 p-4">
         <FunnelPanel items={items} />
         {gaps.length > 0 ? (
-          <p className="rounded-lg border border-dashed border-border bg-muted/20 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
-            No tagged evidence yet for: <span className="font-medium text-foreground">{gaps.map((stage) => stageName(stage)).join(", ")}</span>.
+          <p className="rounded-sm border border-dashed border-border bg-bg-inset/40 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
+            No tagged evidence yet for: <span className="font-medium text-fg">{gaps.map((stage) => stageName(stage)).join(", ")}</span>.
           </p>
         ) : null}
-      </CardContent>
-    </Card>
+      </div>
+    </Panel>
   );
 }
 
@@ -140,7 +139,7 @@ export function ProblemTab({
       <TrendsExperience snapshot={trendsSnapshot} claims={claims} brandId={brand._id} brandName={brand.name} latestRunAt={latestRunAt} />
       <FunnelCoveragePanel items={funnelItems} />
       <div>
-        <h2 className="mb-3 text-sm font-semibold tracking-[-0.02em]">Real problem evidence</h2>
+        <h2 className="type-headline text-fg">Real problem evidence</h2>
         <EvidenceGrid
           claims={problemEvidenceClaims}
           sort={filters.sort}

@@ -22,7 +22,7 @@ export function StepShell({
   children: ReactNode;
 }) {
   return (
-    <main className="flex min-h-dvh flex-col items-center bg-[var(--bg,#F6F7F4)] px-4 py-10 sm:py-14">
+    <main className="flex min-h-dvh flex-col items-center bg-[var(--bg)] px-4 py-10 sm:py-14">
       <div className="flex w-full max-w-[640px] flex-col gap-8">
         <header className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
@@ -47,10 +47,10 @@ export function StepShell({
                   className={cn(
                     "h-1.5 rounded-full motion-safe:transition-all motion-safe:duration-200",
                     dot === step
-                      ? "w-6 bg-[var(--accent,#0F766E)]"
+                      ? "w-6 bg-[var(--accent)]"
                       : dot < step
-                        ? "w-1.5 bg-[var(--accent,#0F766E)]/50"
-                        : "w-1.5 bg-[var(--border-strong,#CBD2DC)]",
+                        ? "w-1.5 bg-[var(--accent)]/50"
+                        : "w-1.5 bg-[var(--border-strong)]",
                   )}
                 />
               ))}
@@ -66,13 +66,13 @@ export function StepShell({
             </Link>
           </div>
           <div className="flex flex-col gap-2">
-            <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary,#98A2B3)]">
+            <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
               Step {step} of {ONBOARDING_STEP_COUNT}
             </p>
-            <h1 className="text-[1.75rem] font-semibold tracking-[-0.02em] text-[var(--text-primary,#17191D)]">
+            <h1 className="text-[1.75rem] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
               {title}
             </h1>
-            <p className="max-w-[52ch] text-[14px] leading-[1.5] text-[var(--text-secondary,#667085)]">
+            <p className="max-w-[52ch] text-[14px] leading-[1.5] text-[var(--text-secondary)]">
               {description}
             </p>
           </div>

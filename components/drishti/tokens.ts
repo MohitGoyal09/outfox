@@ -10,11 +10,11 @@ export const TONES: readonly Tone[] = [
 ];
 
 export const TONE_COLOR: Record<Tone, string> = {
-  ok: "var(--ok, #059669)",
-  warn: "var(--warn, #b45309)",
-  weak: "var(--weak, #b45309)",
-  danger: "var(--danger, #dc2626)",
-  neutral: "var(--text-tertiary, #667085)",
+  ok: "var(--ok)",
+  warn: "var(--warn)",
+  weak: "var(--weak)",
+  danger: "var(--danger)",
+  neutral: "var(--text-tertiary)",
 };
 
 
@@ -75,6 +75,50 @@ export const FUNNEL_STAGE_INDEX: Record<FunnelStage, number> = {
 };
 
 export type ScaleKind = "hook" | "funnel";
+
+
+export const CATEGORICAL: readonly string[] = [
+  "var(--cat-1)",
+  "var(--cat-2)",
+  "var(--cat-3)",
+  "var(--cat-4)",
+  "var(--cat-5)",
+  "var(--cat-6)",
+  "var(--cat-7)",
+  "var(--cat-8)",
+];
+
+export function categoricalColor(index: number): string {
+  const n = CATEGORICAL.length;
+  return CATEGORICAL[((Math.trunc(index) % n) + n) % n];
+}
+
+export function categoricalColorFor(value: string): string {
+  let hash = 0;
+  for (let i = 0; i < value.length; i += 1) {
+    hash = (hash * 31 + value.charCodeAt(i)) | 0;
+  }
+  return categoricalColor(Math.abs(hash));
+}
+
+
+export const SOURCE_COLOR: Record<string, string> = {
+  google: "var(--source-google, #4285f4)",
+  google_news: "var(--source-google-news, #34a853)",
+  youtube: "var(--source-youtube, #ff0000)",
+  youtube_video: "var(--source-youtube, #ff0000)",
+  google_trends: "var(--source-trends, #0ea5e9)",
+  google_ads_transparency_center: "var(--source-ads, #f59e0b)",
+  instagram: "var(--source-instagram, #e1306c)",
+  tiktok: "var(--source-tiktok, #111827)",
+  meta: "var(--source-meta, #0081fb)",
+  llm_tag: "var(--source-tag, #8b5cf6)",
+};
+
+export function sourceColor(engine: string): string {
+  return SOURCE_COLOR[engine] ?? TONE_COLOR.neutral;
+}
+
 
 export function isHookType(value: string): value is HookType {
   return Object.prototype.hasOwnProperty.call(HOOK_COLOR, value);
@@ -260,7 +304,7 @@ export const LABEL_CLASS =
 export const VALUE_CLASS = "font-mono tabular-nums";
 
 export const FOCUS_RING_CLASS =
-  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent,#4f46e5)] focus-visible:ring-[3px] focus-visible:ring-[rgba(79,70,229,0.18)]";
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--accent-dim)]";
 
 export const PRESS_CLASS = "active:translate-y-[0.5px]";
 
@@ -268,7 +312,10 @@ export const STATE_TRANSITION_CLASS =
   "motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-out";
 
 export const FOCUS_MARK_CLASS =
-  "bg-[var(--bg-raised-2,#f8fafc)] ring-1 ring-[var(--accent,#4f46e5)]";
+  "bg-[var(--bg-raised-2)] ring-1 ring-[var(--accent)]";
+
+export const CONTROL_SHELL_CLASS =
+  "inline-flex h-9 items-center gap-2 rounded-sm border border-border bg-bg-raised px-3 text-xs text-fg-secondary transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-strong focus-within:border-border-strong focus-within:shadow-[0_0_0_3px_var(--accent-dim)]";
 
 export const DISPLAY_FONT_STACK =
   "var(--font-sans, Inter, ui-sans-serif, system-ui, sans-serif)";

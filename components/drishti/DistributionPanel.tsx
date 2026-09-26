@@ -10,18 +10,20 @@ import { Panel } from "./Panel";
 import { Skeleton, SkeletonRegion } from "./Skeleton";
 import {
   ABSENT,
+  FUNNEL_COLOR,
   FUNNEL_STAGE_INDEX,
+  HOOK_COLOR,
   LABEL_CLASS,
   TONE_COLOR,
   VALUE_CLASS,
   barWidthPct,
+  categoricalColorFor,
   deltaTone,
   formatDelta,
   formatSharePct,
-  funnelDotColor,
-  hookDotColor,
   iconProps,
   isFunnelStage,
+  isHookType,
   shareOf,
   type Tone,
 } from "./tokens";
@@ -94,6 +96,13 @@ export function distributionTotal(items: DistributionItem[]): number {
   }, 0);
 }
 
+function distributionColor(label: string, kind: DistributionKind): string {
+  if (kind === "hook") {
+    return isHookType(label) ? HOOK_COLOR[label] : categoricalColorFor(label);
+  }
+  return isFunnelStage(label) ? FUNNEL_COLOR[label] : categoricalColorFor(label);
+}
+
 export function deriveDistributionRows(
   items: DistributionItem[],
   kind: DistributionKind,
@@ -121,9 +130,7 @@ export function deriveDistributionRows(
     const tone = deltaTone(delta);
     const dotColor = item.tone
       ? TONE_COLOR[item.tone]
-      : kind === "hook"
-        ? hookDotColor(item.label)
-        : funnelDotColor(item.label);
+      : distributionColor(item.label, kind);
     return {
       label: item.label,
       count,
@@ -161,8 +168,7 @@ export function stackedSegments(
       label: item.label,
       sharePct,
       widthPct: sharePct,
-      color:
-        kind === "hook" ? hookDotColor(item.label) : funnelDotColor(item.label),
+      color: distributionColor(item.label, kind),
     });
   }
   if (segments.length === 0) return [];
@@ -226,11 +232,11 @@ export function DistributionPanel({
   return (
     <Panel interactive={false} className={cn("p-4", className)} ariaLabel={title}>
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 className="text-[13px] font-medium text-[var(--text-primary,#eeeef2)]">
+        <h3 className="type-headline text-fg">
           {title}
         </h3>
         {summaryLabel ? (
-          <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary,#64646f)]")}>
+          <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
             {summaryLabel}
           </span>
         ) : null}
@@ -239,7 +245,7 @@ export function DistributionPanel({
       {error ? (
         <div
           role="alert"
-          className="mt-3 flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-[var(--danger,#f87171)]"
+          className="mt-3 flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-[var(--danger)]"
         >
           <span>{error}</span>
           {onRetry ? (
@@ -284,17 +290,17 @@ export function DistributionPanel({
         </div>
       ) : (
         <>
-          <div className="mt-3 hidden items-center gap-x-3 border-b border-[var(--border,#24242f)] pb-1.5 sm:flex">
-            <span className={cn(LABEL_CLASS, "min-w-0 flex-1 text-[var(--text-tertiary,#64646f)]")}>
+          <div className="mt-3 hidden items-center gap-x-3 border-b border-[var(--border)] pb-1.5 sm:flex">
+            <span className={cn(LABEL_CLASS, "min-w-0 flex-1 text-[var(--text-tertiary)]")}>
               {kind === "hook" ? "hook type" : "funnel stage"}
             </span>
-            <span className={cn(LABEL_CLASS, "w-10 text-[var(--text-tertiary,#64646f)]", COLUMN)}>
+            <span className={cn(LABEL_CLASS, "w-10 text-[var(--text-tertiary)]", COLUMN)}>
               count
             </span>
-            <span className={cn(LABEL_CLASS, "w-12 text-[var(--text-tertiary,#64646f)]", COLUMN)}>
+            <span className={cn(LABEL_CLASS, "w-12 text-[var(--text-tertiary)]", COLUMN)}>
               share
             </span>
-            <span className={cn(LABEL_CLASS, "w-20 text-[var(--text-secondary,#9797a3)]", COLUMN)}>
+            <span className={cn(LABEL_CLASS, "w-20 text-[var(--text-secondary)]", COLUMN)}>
               {previousLabel ?? "change"}
             </span>
             <span aria-hidden="true" className="w-24" />
@@ -315,14 +321,14 @@ export function DistributionPanel({
                   <span
                     className={cn(
                       LABEL_CLASS,
-                      "break-words text-[var(--text-primary,#eeeef2)]",
+                      "break-words text-[var(--text-primary)]",
                     )}
                   >
                     {formatLabel ? formatLabel(row.label, kind) : row.label}
                   </span>
                 </span>
                 {row.gap ? (
-                  <span className="basis-full text-[12px] leading-[1.45] text-[var(--text-tertiary,#64646f)] sm:basis-auto sm:flex-1">
+                  <span className="basis-full text-[12px] leading-[1.45] text-[var(--text-tertiary)] sm:basis-auto sm:flex-1">
                     {row.gap}
                   </span>
                 ) : (
@@ -330,7 +336,7 @@ export function DistributionPanel({
                     <span
                       className={cn(
                         VALUE_CLASS,
-                        "w-10 text-[12.5px] text-[var(--text-primary,#eeeef2)]",
+                        "w-10 text-[12.5px] text-[var(--text-primary)]",
                         COLUMN,
                       )}
                     >
@@ -339,7 +345,7 @@ export function DistributionPanel({
                     <span
                       className={cn(
                         VALUE_CLASS,
-                        "w-12 text-[11px] text-[var(--text-tertiary,#64646f)]",
+                        "w-12 text-[11px] text-[var(--text-tertiary)]",
                         COLUMN,
                       )}
                     >
@@ -355,7 +361,7 @@ export function DistributionPanel({
                       aria-hidden="true"
                       className="hidden items-center sm:flex sm:w-24"
                     >
-                      <span className="block h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-inset,#0e0e13)]">
+                      <span className="block h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-inset)]">
                         <span
                           className="block h-full rounded-full"
                           style={{
@@ -374,7 +380,7 @@ export function DistributionPanel({
           {segments.length > 0 ? (
             <div
               aria-hidden="true"
-              className="mt-3 flex h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-inset,#0e0e13)]"
+              className="mt-3 flex h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-inset)]"
             >
               {segments.map((segment) => (
                 <span
