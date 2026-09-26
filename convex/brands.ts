@@ -137,6 +137,17 @@ export const setBrandDomainInternal = internalMutation({
   },
 });
 
+export const setAdvertiserIdInternal = internalMutation({
+  args: { brandId: v.id("brands"), advertiserId: v.string() },
+  returns: v.boolean(),
+  handler: async (ctx, args) => {
+    const trimmed = args.advertiserId.trim();
+    if (brand === null) return false;
+    if (brand.adsTransparencyAdvertiserId !== undefined) return false;
+    return true;
+  },
+});
+
 export const updateBrandStatusInternal = internalMutation({
   args: {
     brandId: v.id("brands"),

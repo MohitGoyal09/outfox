@@ -340,39 +340,75 @@ function normalizeForAdvertiserMatch(value: string): string {
 }
 
 /**
- * Pick an advertiser id out of a free-text Ads Transparency search result.
+ * Pick an advertiser id out of an Ads Transparency search for a brand's own
+ * domain.
  *
- * SerpApi's `text` parameter is a real ad-creative search, not a domain
- * resolver: per SerpApi's own documented example, `text: apple.com` returns
- * ad creatives from unrelated advertisers ("BlueVision Interactive
- * Limited", an individual) alongside Apple's own, because it matches any ad
- * that references the query, not just ads run by that domain's owner.
+ * Two facts shape this, both measured against the live API rather than
+ * assumed:
  *
- * So this only ever accepts a result when every returned `ad_creatives`
- * entry whose `advertiser` name matches the brand name (case/punctuation
- * insensitive) shares the exact same `advertiser_id` -- one confident
- * advertiser, or nothing. A guessed id would silently attach another
- * company's ads to this brand, which is worse than staying unavailable.
+ * 1. The advertiser name is the LEGAL ENTITY, never the brand. Searching
+ *    mamaearth.in returns "HONASA CONSUMER LIMITED", beminimalist.co returns
+ *    "Uprising Science Private Limited", plumgoodness.com returns "PUREPLAY
+ *    SKIN SCIENCES (INDIA) PRIVATE LIMITED". Requiring the advertiser name to
+ *    equal the brand name therefore fails every time, which is exactly what a
+ *    first backfill attempt did: six lookups, six unresolved, zero failures.
+ *
+ * 2. `text` is a real ad-creative search, not a domain resolver. SerpApi's own
+ *    documented `text: apple.com` example returns unrelated advertisers
+ *    alongside Apple's, and gonoise.com really does return Nexxbase Marketing
+ *    plus an unrelated individual.
+ *
+ * So the discriminator is AGREEMENT, not naming: we searched a domain this
+ * brand owns, so if every creative returned belongs to ONE advertiser, that
+ * advertiser is the domain's advertiser. When several disagree, fall back to
+ * matching the brand name or one of its aliases (the catalog already records
+ * "Honasa Consumer" for Mamaearth) and accept only a single match. Anything
+ * still ambiguous resolves to nothing: a guessed id would silently show
+ * another company's ads under this brand's name, which is worse than the
+ * empty panel an absent id produces.
  */
 export function resolveAdvertiserIdFromSearch(
   data: unknown,
   brandName: string,
+  aliases: readonly string[] = [],
 ): string | null {
-  const normalizedBrand = normalizeForAdvertiserMatch(brandName);
-  if (normalizedBrand === "") return null;
   const creatives = readListField(data, "ad_creatives");
-  const matchedIds = new Set<string>();
+
+  const byId = new Map<string, Set<string>>();
   for (const creative of creatives) {
     if (typeof creative !== "object" || creative === null) continue;
     const record = creative as Record<string, unknown>;
     const id = record["advertiser_id"];
     const name = record["advertiser"];
-    if (typeof id !== "string" || typeof name !== "string") continue;
-    if (!ADVERTISER_ID_PATTERN.test(id)) continue;
-    if (normalizeForAdvertiserMatch(name) !== normalizedBrand) continue;
-    matchedIds.add(id);
+    if (typeof id !== "string" || !ADVERTISER_ID_PATTERN.test(id)) continue;
+    const names = byId.get(id) ?? new Set<string>();
+    if (typeof name === "string") names.add(normalizeForAdvertiserMatch(name));
+    byId.set(id, names);
   }
-  return matchedIds.size === 1 ? [...matchedIds][0] : null;
+
+  if (byId.size === 0) return null;
+  // Unanimous: one advertiser owns every ad returned for this brand's domain.
+  if (byId.size === 1) return [...byId.keys()][0];
+
+  // Several advertisers reference this domain. Only a name or alias match can
+  // say which one is the brand, and only if exactly one matches.
+  const wanted = new Set(
+    [brandName, ...aliases]
+      .map((value) => normalizeForAdvertiserMatch(value))
+      .filter((value) => value !== ""),
+  );
+  if (wanted.size === 0) return null;
+
+  const matched: string[] = [];
+  for (const [id, names] of byId) {
+    for (const name of names) {
+      if (wanted.has(name)) {
+        matched.push(id);
+        break;
+      }
+    }
+  }
+  return matched.length === 1 ? matched[0] : null;
 }
 
 export type AdsTransparencyResolveResult =
@@ -387,7 +423,7 @@ export type AdsTransparencyResolveResult =
  * never called again once a brand has an id.
  */
 export async function resolveAdsTransparencyAdvertiser(
-  brand: { name: string; domain: string },
+  brand: { name: string; domain: string; aliases?: readonly string[] },
   fetchFn: SerpapiFetchFn = serpapiFetch,
 ): Promise<AdsTransparencyResolveResult> {
   const queryParams = buildAdsTransparencyResolveParams(brand.domain);
@@ -395,7 +431,11 @@ export async function resolveAdsTransparencyAdvertiser(
   if (!result.ok) {
     return { status: "failed", errorMessage: result.error };
   }
-  const advertiserId = resolveAdvertiserIdFromSearch(result.data, brand.name);
+  const advertiserId = resolveAdvertiserIdFromSearch(
+    result.data,
+    brand.name,
+    brand.aliases ?? [],
+  );
   return advertiserId === null
     ? { status: "unresolved" }
     : { status: "resolved", advertiserId };
