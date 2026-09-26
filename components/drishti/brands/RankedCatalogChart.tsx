@@ -2,19 +2,24 @@
 
 import type { ReactNode } from "react";
 import { Layers } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { CategoryAxisTick } from "../charts/CategoryAxisTick";
 import { EmptyState } from "../EmptyState";
 import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
+import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { categoricalColorFor, iconProps } from "../tokens";
 import type { LabeledCount } from "./brand-model";
+
+const CHART_HEIGHT = 220;
 
 const YAXIS_WIDTH = 172;
 const LABEL_BUDGET = 24;
 
-export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyDescription, colorFor, formatLabel }: { title: string; /** Plain-language explanation of what this count measures — rendered as a `?` beside the title. */ definition?: ReactNode; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string; /** Display-only transform for a raw stored label (e.g. a fixed hookType id) — `colorFor`/the chart's own grouping still key off the raw `label`, only the rendered text changes. */ formatLabel?: (label: string) => string }) {
+export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyDescription, colorFor, formatLabel, loading = false }: { title: string; /** Plain-language explanation of what this count measures — rendered as a `?` beside the title. */ definition?: ReactNode; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string; /** Display-only transform for a raw stored label (e.g. a fixed hookType id) — `colorFor`/the chart's own grouping still key off the raw `label`, only the rendered text changes. */ formatLabel?: (label: string) => string; /** True while the caller's own query for `rows` is still in flight. Renders a skeleton instead of the empty state — an unresolved query is not the same as a resolved-and-empty one (docs/HANDOFF.md §2). */ loading?: boolean }) {
+  const reduceMotion = useReducedMotion();
   const colorForLabel = colorFor ?? categoricalColorFor;
   const top = rows.slice(0, 8).map((row) => ({
     ...row,
@@ -28,10 +33,14 @@ export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyD
         <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
           {definition ? <MetricInfo label={title} definition={definition} /> : title}
         </h3>
-        {rows.length > 0 ? <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{rows.length} distinct</span> : null}
+        {!loading && rows.length > 0 ? <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{rows.length} distinct</span> : null}
       </div>
       <div className="p-4">
-        {top.length === 0 ? (
+        {loading ? (
+          <SkeletonRegion label={`Loading ${title.toLowerCase()}`}>
+            <Skeleton variant="block" height={CHART_HEIGHT} />
+          </SkeletonRegion>
+        ) : top.length === 0 ? (
           <EmptyState size="sm" icon={<Layers {...iconProps} size={16} />} title={emptyTitle} description={emptyDescription} />
         ) : (
           <ChartContainer config={chartConfig} className="h-[220px] w-full aspect-auto">
@@ -40,7 +49,7 @@ export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyD
               <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
               <YAxis dataKey="displayLabel" type="category" width={YAXIS_WIDTH} tickLine={false} axisLine={false} tick={CategoryAxisTick(LABEL_BUDGET)} interval={0} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="count" fill="var(--color-count)" radius={3} barSize={16}>
+              <Bar dataKey="count" fill="var(--color-count)" radius={3} barSize={16} isAnimationActive={!reduceMotion}>
                 {top.map((row) => <Cell key={row.label} fill={row.fill} />)}
               </Bar>
             </BarChart>

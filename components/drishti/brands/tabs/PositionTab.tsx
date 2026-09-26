@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import { useQuery } from "convex/react";
+import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ArrowUpRight, BookOpen, Layers, Sparkles, TrendingUp } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -10,7 +11,6 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { EmptyState } from "../../EmptyState";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
-import { Skeleton, SkeletonRegion } from "../../Skeleton";
 import { iconProps, HOOK_COLOR, type HookType } from "../../tokens";
 import { hookName, humanize } from "@/components/drishti/labels";
 import { RankedCatalogChart } from "../RankedCatalogChart";
@@ -160,6 +160,7 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
 }
 
 function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previous: ClaimDoc[] | null }) {
+  const reduceMotion = useReducedMotion();
   const rows = useMemo(() => (previous === null ? [] : hookMixDrift(current, previous).slice(0, 9)), [current, previous]);
   const chartConfig = { current: { label: "This check" }, previous: { label: "Previous check" } } satisfies ChartConfig;
   return (
@@ -206,12 +207,12 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 9 }} interval={0} angle={-28} textAnchor="end" height={56} tickFormatter={(value: string) => hookName(value)} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={32} tick={{ fontSize: 10 }} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent labelFormatter={(value: unknown) => hookName(String(value))} />} />
-              <Bar dataKey="previous" name="Previous check" radius={[2, 2, 0, 0]} barSize={12}>
+              <Bar dataKey="previous" name="Previous check" radius={[2, 2, 0, 0]} barSize={12} isAnimationActive={!reduceMotion}>
                 {rows.map((row) => (
                   <Cell key={`prev-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable} fillOpacity={0.35} />
                 ))}
               </Bar>
-              <Bar dataKey="current" name="This check" radius={[2, 2, 0, 0]} barSize={12}>
+              <Bar dataKey="current" name="This check" radius={[2, 2, 0, 0]} barSize={12} isAnimationActive={!reduceMotion}>
                 {rows.map((row) => (
                   <Cell key={`cur-${row.label}`} fill={HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable} />
                 ))}
@@ -228,13 +229,6 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
 function CtaMixCard({ brandId }: { brandId: BrandDoc["_id"] }) {
   const facet = useQuery(api.claims.ctaFacetByBrand, { brandId });
   const rows = useMemo(() => (facet ?? []).map((row) => ({ label: row.value, count: row.count })), [facet]);
-  if (facet === undefined) {
-    return (
-      <SkeletonRegion label="Loading CTA mix">
-        <Skeleton variant="block" height={220} />
-      </SkeletonRegion>
-    );
-  }
   return (
     <RankedCatalogChart
       title="CTA mix"
@@ -243,6 +237,7 @@ function CtaMixCard({ brandId }: { brandId: BrandDoc["_id"] }) {
       formatLabel={humanize}
       emptyTitle="No tagged CTAs yet."
       emptyDescription="Ranks the real call-to-action text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+      loading={facet === undefined}
     />
   );
 }

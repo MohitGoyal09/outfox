@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAction, useQuery } from "convex/react";
+import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
 import { CalendarDays, Globe2, Info, Loader2, Map as MapIcon, TrendingUp } from "lucide-react";
 import { api } from "@/convex/_generated/api";
@@ -120,6 +121,7 @@ function regionLabel(code: string): string {
 }
 
 export function TrendsExperience({ snapshot, claims, brandId, brandName, latestRunAt }: { snapshot?: SnapshotDoc; claims: ClaimDoc[]; brandId: Id<"brands">; brandName: string; latestRunAt?: string | null }) {
+  const reduceMotion = useReducedMotion();
   const refreshTrends = useAction(api.pipeline.refreshTrends.refreshTrends);
   const storedDate = record(snapshot?.queryParams)?.date;
   const initialDate: TrendsDate = typeof storedDate === "string" && ["now 7-d", "today 1-m", "today 3-m", "today 12-m", "today 5-y"].includes(storedDate) ? storedDate as TrendsDate : "today 3-m";
@@ -211,6 +213,7 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
                   radius={[3, 3, 0, 0]}
                   fillOpacity={name === target ? 1 : 0.55}
                   maxBarSize={rows.names.length > 1 ? 14 : 22}
+                  isAnimationActive={!reduceMotion}
                 />
               ))}
             </BarChart>

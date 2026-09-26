@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { PieChart as RechartIcon } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { EmptyState } from "../EmptyState";
@@ -14,6 +15,7 @@ export type ChartCountRow = { label: string; count: number };
 export function DonutChart({ title, definition, rows, emptyTitle, emptyDescription, colorFor }: { title: string; /** Plain-language explanation of what this count measures — rendered as a `?` beside the title. */ definition?: ReactNode; rows: ChartCountRow[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string }) {
   const total = rows.reduce((sum, row) => sum + row.count, 0);
   const colorForLabel = colorFor ?? categoricalColorFor;
+  const reduceMotion = useReducedMotion();
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center justify-between border-b border-border px-4 py-3">
@@ -30,7 +32,7 @@ export function DonutChart({ title, definition, rows, emptyTitle, emptyDescripti
             <ChartContainer config={{ count: { label: title } }} className="mx-auto aspect-square w-full max-w-[220px]">
               <PieChart accessibilityLayer>
                 <Tooltip content={<ChartTooltipContent hideLabel />} />
-                <Pie data={rows.map((row) => ({ ...row, fill: colorForLabel(row.label) }))} dataKey="count" nameKey="label" innerRadius={52} outerRadius={88} strokeWidth={2} stroke="var(--bg-raised)">
+                <Pie data={rows.map((row) => ({ ...row, fill: colorForLabel(row.label) }))} dataKey="count" nameKey="label" innerRadius={52} outerRadius={88} strokeWidth={2} stroke="var(--bg-raised)" isAnimationActive={!reduceMotion}>
                   {rows.map((row) => (
                     <Cell key={row.label} fill={colorForLabel(row.label)} />
                   ))}

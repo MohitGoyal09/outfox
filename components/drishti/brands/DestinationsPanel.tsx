@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ExternalLink, Globe2, Link2 } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -36,6 +37,7 @@ function destinationRows(claims: ClaimDoc[]): Destination[] {
 }
 
 export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
+  const reduceMotion = useReducedMotion();
   const rows = useMemo(() => destinationRows(claims), [claims]);
   const top = rows.slice(0, 5).map((row) => ({ label: row.key, count: row.count, fill: categoricalColorFor(row.key) }));
   const chartConfig = { count: { label: "Evidence", color: "var(--accent)" } } satisfies ChartConfig;
@@ -81,7 +83,7 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
                   <XAxis type="number" allowDecimals={false} hide />
                   <YAxis dataKey="label" type="category" width={188} tickLine={false} axisLine={false} tick={CategoryAxisTick(26)} interval={0} />
                   <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="var(--color-count)" radius={4} barSize={22}>
+                  <Bar dataKey="count" fill="var(--color-count)" radius={4} barSize={22} isAnimationActive={!reduceMotion}>
                     {top.map((row) => <Cell key={row.label} fill={row.fill} />)}
                   </Bar>
                 </BarChart>

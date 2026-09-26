@@ -1,6 +1,7 @@
 "use client";
 
 import { BarChart3 } from "lucide-react";
+import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, LabelList, XAxis, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -15,6 +16,7 @@ const config = {
 } satisfies ChartConfig;
 
 export function BoardMixChart({ items }: { items: DistributionItem[] }) {
+  const reduceMotion = useReducedMotion();
   const data = items
     .filter(
       (item): item is DistributionItem & { count: number } =>
@@ -57,7 +59,7 @@ export function BoardMixChart({ items }: { items: DistributionItem[] }) {
               <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={46} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={30} />
               <ChartTooltip cursor={{ fill: "var(--bg-inset)", opacity: 0.6 }} content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="findings" radius={[4, 4, 0, 0]} fill="var(--color-findings)">
+              <Bar dataKey="findings" radius={[4, 4, 0, 0]} fill="var(--color-findings)" isAnimationActive={!reduceMotion}>
                 {data.map((row) => <Cell key={row.label} fill={row.fill} />)}
                 <LabelList
                   dataKey="findings"

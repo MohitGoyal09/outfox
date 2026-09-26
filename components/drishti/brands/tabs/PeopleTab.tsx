@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart } from "recharts";
 import { Newspaper, Trophy, Users, Video } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -95,6 +96,7 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
 }
 
 function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: ClaimDoc[]; youtubeSnapshot?: SnapshotDoc; brand: BrandDoc }) {
+  const reduceMotion = useReducedMotion();
   const groups = useMemo(() => groupYoutubeVideoClaims(claims), [claims]);
   const rows = useMemo(() => creatorRowsFromGroups(groups, youtubeSnapshot?.rawResponse, brand.name), [groups, youtubeSnapshot?.rawResponse, brand.name]);
   const ownedViews = rows.filter((row) => row.owned).reduce((sum, row) => sum + row.totalViews, 0);
@@ -130,7 +132,15 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
             <ChartContainer config={chartConfig} className="mx-auto aspect-square size-[92px]">
               <PieChart>
                 <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="label" />} />
-                <Pie data={data} dataKey="value" nameKey="label" innerRadius={26} outerRadius={44} strokeWidth={1}>
+                <Pie
+                  data={data}
+                  dataKey="value"
+                  nameKey="label"
+                  innerRadius={26}
+                  outerRadius={44}
+                  strokeWidth={1}
+                  isAnimationActive={!reduceMotion}
+                >
                   {data.map((row) => (
                     <Cell key={row.label} fill={row.color} />
                   ))}

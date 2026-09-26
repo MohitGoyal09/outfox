@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { BarChart3, Filter, Layers, Search as SearchIcon, Tag } from "lucide-react";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -82,6 +83,7 @@ export function SearchExperience({
   latestRunId: string | null;
   newsSnapshot?: SnapshotDoc;
 }) {
+  const reduceMotion = useReducedMotion();
   const [engineFilter, setEngineFilter] = useState("all");
   const [hookFilter, setHookFilter] = useState("all");
   const [funnelFilter, setFunnelFilter] = useState("all");
@@ -168,9 +170,9 @@ export function SearchExperience({
                 <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} />
                 <YAxis tickLine={false} axisLine={false} width={56} allowDecimals={false} />
                 <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent />} />
-                <Bar dataKey="google" name="Google Search" fill="var(--color-google)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
-                <Bar dataKey="youtube" name="YouTube Search" fill="var(--color-youtube)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
-                <Bar dataKey="google_news" name="Google News" fill="var(--color-google_news)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
+                <Bar dataKey="google" name="Google Search" fill="var(--color-google)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} isAnimationActive={!reduceMotion} />
+                <Bar dataKey="youtube" name="YouTube Search" fill="var(--color-youtube)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} isAnimationActive={!reduceMotion} />
+                <Bar dataKey="google_news" name="Google News" fill="var(--color-google_news)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} isAnimationActive={!reduceMotion} />
                 <ChartLegend content={<ChartLegendContent />} />
               </BarChart>
             </ChartContainer>
