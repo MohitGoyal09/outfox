@@ -13,6 +13,7 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
+  Rss,
 } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
@@ -37,6 +38,7 @@ import { BrandMark } from "@/components/drishti/brands/BrandMark";
 
 const NAV = [
   { href: "/brands", label: "Brands", icon: Building2 },
+  { href: "/feed", label: "Feed", icon: Rss, strokeWidth: 1.5 },
   { href: "/signals", label: "Signals", icon: BarChart3 },
   { href: "/boards", label: "Boards", icon: Bookmark },
   { href: "/ask", label: "Ask", icon: MessageSquare },
@@ -146,6 +148,7 @@ export function Sidebar() {
                       <Link href={item.href} aria-current={active ? "page" : undefined}>
                         <Icon
                           aria-hidden
+                          strokeWidth={"strokeWidth" in item ? item.strokeWidth : undefined}
                           className={cn(
                             "transition-transform duration-200 ease-out",
                             active && "scale-110",

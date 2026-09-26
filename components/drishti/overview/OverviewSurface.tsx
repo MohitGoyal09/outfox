@@ -8,6 +8,8 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import { EmptyState, Panel, iconProps } from "@/components/drishti";
 import { useAllRuns } from "@/components/drishti/cohorts/useAllRuns";
+import type { ClaimDoc } from "@/components/drishti/brands/brand-model";
+import type { FeedBrandInfo } from "@/components/drishti/feed/FeedCard";
 
 import { ActionLink } from "./ActionLink";
 import { EmergingPanel } from "./EmergingPanel";
@@ -113,6 +115,20 @@ function OverviewBody() {
         })),
       ),
     [feedQuery],
+  );
+  const claimsById: ReadonlyMap<string, ClaimDoc> = useMemo(
+    () => new Map((feedQuery ?? []).flatMap((entry) => entry.recent).map((claim) => [String(claim._id), claim])),
+    [feedQuery],
+  );
+  const brandById: ReadonlyMap<string, FeedBrandInfo> = useMemo(
+    () =>
+      new Map(
+        brands.map((brand) => [
+          String(brand._id),
+          { id: String(brand._id), name: brand.name, domain: brand.domain, isOwnBrand: brand.isOwnBrand === true },
+        ]),
+      ),
+    [brands],
   );
 
   const threadsQuery = useQuery(api.messages.listThreads, {});
@@ -271,7 +287,13 @@ function OverviewBody() {
 
       <section aria-label="Evidence and patterns" className="grid grid-cols-1 gap-4 lg:grid-cols-12">
         <div className="lg:col-span-8">
-          <NewestEvidence loading={panelsLoading} hasBrands={brands.length > 0} feed={evidenceFeed} nowMs={nowMs} />
+          <NewestEvidence
+            loading={panelsLoading}
+            hasBrands={brands.length > 0}
+            feed={evidenceFeed}
+            claimsById={claimsById}
+            brandById={brandById}
+          />
         </div>
         <div className="lg:col-span-4">
           <EmergingPanel loading={panelsLoading} coveredBrandCount={coveredBrandCount} emerging={emerging} />
