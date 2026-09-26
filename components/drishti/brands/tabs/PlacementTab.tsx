@@ -16,22 +16,45 @@ import {
   newsPublisherRanking,
   organicRankBuckets,
   productListingClaims,
-  retailerListingRanking,
   shoppingResultCatalogRows,
   tagsForClaim,
   youtubeAdResultClaims,
   youtubeDescriptionLinkClaims,
   youtubeShoppingResultClaims,
   youtubeShortResultClaims,
+  type AdRuntimeRow,
   type ClaimDoc,
+  type EvidenceCatalogRow,
 } from "../brand-model";
 import { CountListPanel } from "../CountListPanel";
 import { DestinationsPanel } from "../DestinationsPanel";
 import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
 import { EvidenceGrid } from "../EvidenceGrid";
 import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
-import { shortDate } from "../format";
+import { isGarbledDescriptionLinkAnchor, isVideoTimestampAnchor, parseListingVendor, shortDate } from "../format";
 import { PlatformLogo } from "../PlatformLogo";
+
+export function retailerVendorRanking(claims: ClaimDoc[]): { label: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const claim of productListingClaims(claims)) {
+    const vendor = parseListingVendor(claim.text);
+    if (vendor === null) continue;
+    counts.set(vendor, (counts.get(vendor) ?? 0) + 1);
+  }
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
+export function sanitizeDescriptionLinkRows(rows: readonly EvidenceCatalogRow[]): EvidenceCatalogRow[] {
+  return rows
+    .filter((row) => !isVideoTimestampAnchor(row.primary))
+    .map((row) =>
+      isGarbledDescriptionLinkAnchor(row.primary)
+        ? { ...row, primary: row.evidenceUrl.replace(/^https?:\/\//, ""), meta: null }
+        : row,
+    );
+}
 
 function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
   const reduceMotion = useReducedMotion();
@@ -76,8 +99,22 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
   );
 }
 
+export function shouldShowRunLengthTable(rows: readonly AdRuntimeRow[]): boolean {
+  return rows.some((row) => row.runDays !== null);
+}
+
+function formatMixFromRuntimeRows(rows: readonly AdRuntimeRow[]): { label: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const row of rows) counts.set(row.format, (counts.get(row.format) ?? 0) + 1);
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label: label.replaceAll("_", " "), count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
 function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
   const rows = useMemo(() => adRuntimeLeaderboard(claims), [claims]);
+  const showTable = useMemo(() => shouldShowRunLengthTable(rows), [rows]);
+  const formatMix = useMemo(() => formatMixFromRuntimeRows(rows), [rows]);
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
@@ -102,6 +139,22 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
             title="No Google Ads data for this brand."
             description="Many brands have no resolvable advertiser id, so this source genuinely returns nothing for them — this is not an error, and it fills in once a check resolves one."
           />
+        ) : !showTable ? (
+          <>
+            <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
+              None of these {rows.length} creative{rows.length === 1 ? "" : "s"} carries a real first/last-seen date
+              from this source, so run length — and any ranking by it — is not available for this batch. Showing
+              what IS known instead: format and creative count.
+            </p>
+            <ul className="space-y-2">
+              {formatMix.map((row) => (
+                <li key={row.label} className="flex items-center justify-between gap-3 text-xs">
+                  <span className="truncate capitalize">{row.label}</span>
+                  <span className="font-mono tabular-nums text-muted-foreground">{row.count}</span>
+                </li>
+              ))}
+            </ul>
+          </>
         ) : (
           <>
             <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
@@ -191,10 +244,13 @@ export function PlacementTab({
 
   const shortsCount = useMemo(() => youtubeShortResultClaims(filtered).length, [filtered]);
   const youtubeAdCount = useMemo(() => youtubeAdResultClaims(filtered).length, [filtered]);
-  const retailerRows = useMemo(() => retailerListingRanking(filtered).map((row) => ({ label: row.hostname, count: row.count })), [filtered]);
+  const retailerRows = useMemo(() => retailerVendorRanking(filtered), [filtered]);
   const publisherRows = useMemo(() => newsPublisherRanking(filtered), [filtered]);
   const shoppingResultRows = useMemo(() => shoppingResultCatalogRows(filtered), [filtered]);
-  const descriptionLinkRows = useMemo(() => descriptionLinkCatalogRows(filtered), [filtered]);
+  const descriptionLinkRows = useMemo(
+    () => sanitizeDescriptionLinkRows(descriptionLinkCatalogRows(filtered)),
+    [filtered],
+  );
 
   const placementEvidenceClaims = useMemo(() => {
     const rankedOrganicClaims = filtered.filter(
@@ -227,11 +283,11 @@ export function PlacementTab({
         />
         <CountListPanel
           title="Retailers carrying this brand"
-          definition="How many product listings each retailer domain contributed. It counts listings we captured, not sales or stock."
+          definition="How many product listings each named retailer contributed. It counts listings we captured, not sales or stock."
           icon={<Store className="size-4 text-accent" />}
           rows={retailerRows}
-          emptyTitle="No product listings yet."
-          emptyDescription="Ranks real retailer domains from SERP product listings — fills in once that source lands."
+          emptyTitle="No named retailers yet."
+          emptyDescription="Ranks the real retailer named in each SERP product listing — fills in once a listing names one."
         />
         <CountListPanel
           title="News outlets"

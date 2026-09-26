@@ -24,3 +24,14 @@ export function parseShoppingPrice(text: string): string | null {
   const match = text.match(/ at ([^"]+)$/);
   return match ? decodeClaimEntities(match[1]) : null;
 }
+
+export function isGarbledDescriptionLinkAnchor(anchor: string): boolean {
+  return /[\n\r ]/.test(anchor);
+}
+
+export function parseListingVendor(text: string): string | null {
+  const withoutMatchSuffix = text.split(' (matched to "')[0];
+  const withoutPrice = withoutRating.split(" at ")[0];
+  const match = withoutPrice.match(/ listed by ([\s\S]+)$/);
+  return match ? decodeClaimEntities(match[1].trim()) : null;
+}

@@ -22,23 +22,35 @@ function normalizeUrl(value: string): string | null {
   try { const url = new URL(value); if (!/^https?:$/.test(url.protocol)) return null; return url.toString(); } catch { return null; }
 }
 
-function destinationRows(claims: ClaimDoc[]): Destination[] {
+function collectionArtifactLabel(url: URL): string | null {
+  const host = url.hostname.replace(/^www\./, "");
+  if (host === "adstransparency.google.com") return "Google's Ads Transparency viewer";
+  if (host.endsWith("googleusercontent.com")) return "Google's ad-serving/preview infrastructure";
+  const isGoogleQueryHost = host === "google.com" || /^google\.[a-z.]{2,8}$/i.test(host) || host === "news.google.com" || host === "trends.google.com";
+  if (isGoogleQueryHost && (url.pathname === "/search" || url.pathname === "/trends/explore")) return "the search page we queried";
+  if (host === "youtube.com" && url.pathname === "/results") return "the YouTube search page we queried";
+  return null;
+}
+
+export function destinationRows(claims: ClaimDoc[]): { rows: Destination[]; artifactCount: number } {
   const map = new Map<string, Destination>();
+  let artifactCount = 0;
   for (const claim of claims) {
     const url = normalizeUrl(claim.evidenceUrl);
     if (!url || claim.sourceEngine === "google_trends" || claim.sourceEngine === "llm_tag") continue;
     const parsed = new URL(url);
+    if (collectionArtifactLabel(parsed) !== null) { artifactCount += 1; continue; }
     const key = `${parsed.hostname}${parsed.pathname}`.replace(/\/$/, "");
     const existing = map.get(key);
     if (existing) { existing.count += 1; existing.firstSeen = existing.firstSeen < claim.fetchedAt ? existing.firstSeen : claim.fetchedAt; existing.lastSeen = existing.lastSeen > claim.fetchedAt ? existing.lastSeen : claim.fetchedAt; if (!existing.engines.includes(claim.sourceEngine)) existing.engines.push(claim.sourceEngine); }
     else map.set(key, { key, url, count: 1, firstSeen: claim.fetchedAt, lastSeen: claim.fetchedAt, engines: [claim.sourceEngine] });
   }
-  return [...map.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key));
+  return { rows: [...map.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)), artifactCount };
 }
 
 export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
   const reduceMotion = useReducedMotion();
-  const rows = useMemo(() => destinationRows(claims), [claims]);
+  const { rows, artifactCount } = useMemo(() => destinationRows(claims), [claims]);
   const top = rows.slice(0, 5).map((row) => ({ label: row.key, count: row.count, fill: categoricalColorFor(row.key) }));
   const chartConfig = { count: { label: "Evidence", color: "var(--accent)" } } satisfies ChartConfig;
   return (
@@ -63,7 +75,11 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
           bounded
           icon={<Link2 {...iconProps} size={16} />}
           title="No destination URLs yet."
-          description="A Search or YouTube check with evidence links will populate this view."
+          description={
+            artifactCount > 0
+              ? `A Search or YouTube check with evidence links will populate this view. (${artifactCount} finding${artifactCount === 1 ? "" : "s"} pointed only at Google's own search/ad-viewer/ad-serving infrastructure, never a brand destination, so none are ranked here.)`
+              : "A Search or YouTube check with evidence links will populate this view."
+          }
         />
       ) : (
         <>
@@ -158,6 +174,13 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
                 </TableBody>
               </Table>
             </div>
+            {artifactCount > 0 ? (
+              <p className="border-t border-border px-4 py-2 text-[11px] leading-4 text-muted-foreground">
+                {artifactCount} further finding{artifactCount === 1 ? "" : "s"} pointed only at the search page we
+                queried, Google's Ads Transparency viewer, or Google's ad-serving infrastructure — never a brand
+                destination, so they are excluded from this ranking.
+              </p>
+            ) : null}
           </Panel>
         </>
       )}
