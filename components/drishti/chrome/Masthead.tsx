@@ -8,6 +8,7 @@ import { useQuery } from "convex/react";
 import { LogOut, MessageSquare, Plus, Search, UserRound } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
+import { CreditsChip } from "@/components/drishti/chrome/CreditsChip";
 import { NAV } from "@/components/drishti/chrome/Sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
@@ -79,6 +80,10 @@ export function Masthead() {
         {/* Actions live in the top-right corner, not floating after the search:
             a spacer pins this cluster to the edge at every width. */}
         <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          {/* Ambient, always visible: the account's hardest operating
+              constraint (PRODUCT.md's 250-searches/month plan) is in view
+              right where someone is about to spend one. */}
+          <CreditsChip />
           <Button
             asChild
             size="sm"

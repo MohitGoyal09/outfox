@@ -1,15 +1,18 @@
 "use client";
 
 import { useMemo } from "react";
+import { useQuery } from "convex/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ArrowUpRight, BookOpen, Layers, Sparkles, TrendingUp } from "lucide-react";
+import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
+import { Skeleton, SkeletonRegion } from "../../Skeleton";
 import { iconProps, HOOK_COLOR, type HookType } from "../../tokens";
-import { hookName } from "@/components/drishti/labels";
+import { hookName, humanize } from "@/components/drishti/labels";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   aiOverviewClaims,
@@ -222,6 +225,28 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
   );
 }
 
+function CtaMixCard({ brandId }: { brandId: BrandDoc["_id"] }) {
+  const facet = useQuery(api.claims.ctaFacetByBrand, { brandId });
+  const rows = useMemo(() => (facet ?? []).map((row) => ({ label: row.value, count: row.count })), [facet]);
+  if (facet === undefined) {
+    return (
+      <SkeletonRegion label="Loading CTA mix">
+        <Skeleton variant="block" height={220} />
+      </SkeletonRegion>
+    );
+  }
+  return (
+    <RankedCatalogChart
+      title="CTA mix"
+      definition="How often a call-to-action (the action a piece of creative asks for, e.g. 'shop now' or 'learn more') was assigned by an enrichment check. Counts are of the same bounded, tagged sample as the hook and theme catalogs above — not of every finding, post, view, or spend."
+      rows={rows}
+      formatLabel={humanize}
+      emptyTitle="No tagged CTAs yet."
+      emptyDescription="Ranks the real call-to-action text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+    />
+  );
+}
+
 export function PositionTab({
   brand,
   latestClaims,
@@ -297,6 +322,7 @@ export function PositionTab({
             emptyTitle="No tagged value propositions yet."
             emptyDescription="Ranks the real value-proposition text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
           />
+          <CtaMixCard brandId={brand._id} />
         </div>
       </div>
       <div className="grid gap-4 lg:grid-cols-2">

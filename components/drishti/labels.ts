@@ -1,11 +1,5 @@
 
 
-function humanize(id: string): string {
-  const spaced = id.replaceAll("_", " ").trim();
-  if (spaced === "") return "Unknown source";
-  return spaced.charAt(0).toUpperCase() + spaced.slice(1);
-}
-
 export function sourceName(engine: string): string {
   return SOURCE_NAMES[engine] ?? humanize(engine);
 }
