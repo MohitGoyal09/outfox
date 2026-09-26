@@ -24,25 +24,6 @@ const createRunArgs = {
   mode: runMode,
 };
 
-export const internalCreateRun = internalMutation({
-  args: { ...createRunArgs, ownerId: v.optional(v.id("users")) },
-  returns: v.id("runs"),
-  handler: async (ctx, args) => {
-    const brands = await Promise.all(args.brandIds.map((id) => ctx.db.get(id)));
-    const ownerId = args.ownerId ?? brands[0]?.ownerId;
-    if (ownerId === undefined || brands.some((brand) => brand?.ownerId !== ownerId)) throw new Error("Brand not found");
-    return await ctx.db.insert("runs", {
-      ownerId,
-      cohortKey: args.cohortKey,
-      brandIds: args.brandIds,
-      mode: args.mode,
-      status: "running",
-      requestedAt: new Date().toISOString(),
-      requestCount: 0,
-    });
-  },
-});
-
 type TerminalStatus = "complete" | "partial" | "failed";
 
 export const closeRun = mutation({
