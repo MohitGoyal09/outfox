@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useSearchParams } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import {
   BarChart3,
@@ -57,6 +57,7 @@ const RAIL_ICON_BUTTON_CLASS =
 
 export function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const searchParams = useSearchParams();
   const activeThreadKey =
     pathname === "/ask" ? searchParams.get("chat") ?? searchParams.get("cohort") ?? "" : null;
@@ -164,12 +165,18 @@ export function Sidebar() {
         <SidebarGroup className="px-3 py-2 group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between px-2">
             <SidebarGroupLabel className={cn(GROUP_LABEL_CLASS, "p-0")}>Recent chats</SidebarGroupLabel>
-            {/* /ask with no query params is already a clean slate: fresh thread
-                key, empty history. Same treatment as the Tracked brands "+" so
-                the two read as one pattern. */}
-            <Link href="/ask" className={RAIL_ICON_BUTTON_CLASS} aria-label="New chat">
+            {/* A fresh thread id every click. Linking to bare `/ask` looked
+                like a no-op while already on `/ask`: the route did not change,
+                so the open conversation stayed on screen. A new `?chat=` key
+                is a real navigation and always lands on an empty thread. */}
+            <button
+              type="button"
+              onClick={() => router.push(`/ask?chat=chat-${crypto.randomUUID()}`)}
+              className={RAIL_ICON_BUTTON_CLASS}
+              aria-label="New chat"
+            >
               <Plus aria-hidden className="size-3.5" />
-            </Link>
+            </button>
           </div>
           <SidebarGroupContent className="mt-1">
             <SidebarMenu>

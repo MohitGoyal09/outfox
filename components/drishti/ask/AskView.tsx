@@ -82,8 +82,10 @@ export function AskView({
   const searchParams = useSearchParams();
   const chatId = searchParams.get("chat") ?? initialChatId ?? "";
 
+  const mintedThreadRef = useRef<string | null>(null);
   const mintChatId = useCallback((): string => {
     const next = `chat-${crypto.randomUUID()}`;
+    mintedThreadRef.current = next;
     const params = new URLSearchParams(searchParams.toString());
     params.set("chat", next);
     router.replace(`${pathname}?${params.toString()}`, { scroll: false });
@@ -159,8 +161,12 @@ export function AskView({
   useEffect(() => {
     if (history === undefined || traceEvents === undefined || claims === undefined) return;
     if (hydratedThreadRef.current === threadKey) return;
+    const isOurOwnMint = mintedThreadRef.current === threadKey;
     hydratedThreadRef.current = threadKey;
-    if (history.length === 0) return;
+    if (history.length === 0) {
+      if (!isOurOwnMint) setMessages([]);
+      return;
+    }
     setMessages(
       history.map((row) => {
         const textPart = { type: "text" as const, text: row.text };
@@ -476,7 +482,7 @@ export function AskView({
   );
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-14rem)] min-h-[30rem] w-full max-w-4xl flex-col overflow-hidden">
+    <div className="-mb-24 -mt-6 flex h-[calc(100dvh-4rem)] min-h-[32rem] w-full flex-col overflow-hidden sm:-mt-8 lg:-mt-10">
       {hasTranscript ? (
         <div className="shrink-0 border-b border-border px-4 sm:px-6">
           <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 py-2.5">
