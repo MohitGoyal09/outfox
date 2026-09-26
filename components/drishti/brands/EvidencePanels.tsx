@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { hookName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { DONUT_MIN_DISTINCT, FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, FOCUS_RING_CLASS, VALUE_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
 export { DONUT_MIN_DISTINCT };
 import type { DistributionItem } from "../DistributionPanel";
@@ -191,10 +191,13 @@ export function HookChart({
   ) satisfies ChartConfig;
   return (
     <div className="grid grid-cols-[92px_1fr] items-center gap-4">
+      {/* No hover tooltip on purpose. The legend to the right already carries
+          every slice's label, count, share and delta, so a tooltip repeats it
+          -- and at 92px a cursor-following card lands squarely on the centre
+          label, hiding the tagged total it exists to show. */}
       <div className="relative mx-auto size-[92px]">
         <ChartContainer config={chartConfig} className="aspect-square size-[92px]">
           <PieChart>
-            <ChartTooltip content={<ChartTooltipContent hideLabel nameKey="label" />} />
             <Pie data={rows} dataKey="count" nameKey="label" innerRadius={26} outerRadius={44} strokeWidth={1} isAnimationActive={!reduceMotion}>
               {rows.map((row) => {
                 const selected = isRowSelected(row.label, selectedHook);
