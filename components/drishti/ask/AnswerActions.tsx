@@ -2,7 +2,7 @@
 
 
 import { useState } from "react";
-import { Check, Copy, RotateCcw, ThumbsDown, ThumbsUp } from "lucide-react";
+import { Check, Copy, RotateCcw } from "lucide-react";
 import { MessageAction, MessageActions } from "@/components/ai-elements/message";
 import { cn } from "@/lib/utils";
 import { iconProps } from "../tokens";
@@ -55,8 +55,6 @@ export function AnswerActions({
   visible: boolean;
   onRetry?: () => void;
 }) {
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
-
   return (
     <MessageActions
       className={cn(
@@ -74,40 +72,6 @@ export function AnswerActions({
         className="size-6 rounded-md text-fg-tertiary hover:text-fg"
       >
         <RotateCcw {...iconProps} className="size-3.5" aria-hidden="true" />
-      </MessageAction>
-      <MessageAction
-        aria-label="Good answer"
-        title="Good answer"
-        tooltip="Good answer"
-        aria-pressed={vote === "up"}
-        onClick={() => setVote((v) => (v === "up" ? null : "up"))}
-        className={cn(
-          "size-6 rounded-md text-fg-tertiary hover:text-fg",
-          vote === "up" && "text-accent",
-        )}
-      >
-        <ThumbsUp
-          {...iconProps}
-          className={cn("size-3.5", vote === "up" && "fill-current")}
-          aria-hidden="true"
-        />
-      </MessageAction>
-      <MessageAction
-        aria-label="Bad answer"
-        title="Bad answer"
-        tooltip="Bad answer"
-        aria-pressed={vote === "down"}
-        onClick={() => setVote((v) => (v === "down" ? null : "down"))}
-        className={cn(
-          "size-6 rounded-md text-fg-tertiary hover:text-fg",
-          vote === "down" && "text-danger",
-        )}
-      >
-        <ThumbsDown
-          {...iconProps}
-          className={cn("size-3.5", vote === "down" && "fill-current")}
-          aria-hidden="true"
-        />
       </MessageAction>
     </MessageActions>
   );

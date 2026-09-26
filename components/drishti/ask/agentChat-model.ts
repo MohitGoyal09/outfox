@@ -176,14 +176,3 @@ export function collapseAdjacentSameHostCitations(
   });
 }
 
-export type UntrackedBrandMention = { name: string };
-
-export function untrackedBrandMentionOf(message: PartsHolder): UntrackedBrandMention | null {
-  for (const part of partsOf(message)) {
-    if (part["type"] !== "data-answer-meta") continue;
-    const data = part["data"];
-    const untrackedBrand = (data as Record<string, unknown>)["untrackedBrand"];
-    if (typeof untrackedBrand !== "object" || untrackedBrand === null) continue;
-  }
-  return null;
-}

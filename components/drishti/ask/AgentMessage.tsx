@@ -27,7 +27,6 @@ import {
   sourceRowsOf,
   textOf,
   toolCallCardsOf,
-  untrackedBrandMentionOf,
 } from "./agentChat-model";
 import type { ClaimTextById } from "./agentChat-model";
 import { AnswerActions, CopyAction } from "./AnswerActions";
@@ -40,7 +39,6 @@ import { AnswerCharts } from "./AnswerCharts";
 import { A2UISurface } from "../a2ui/A2UISurface";
 import { splitA2UIBlock, surfaceResults } from "../a2ui/protocol";
 import { ThoughtLine, type ThoughtStep, type ThoughtStepStatus } from "./ThoughtLine";
-import { TrackBrandChip } from "./TrackBrandChip";
 import { AddBrandConfirmation, addBrandProposalOf } from "./AddBrandConfirmation";
 import { UnavailableBlock } from "./UnavailableBlock";
 
@@ -102,7 +100,6 @@ export function AgentMessage({
   const provenance = answerProvenanceOf([message as unknown as { parts?: unknown }]);
   const failedCards = cards.filter((card) => card.status === "failed");
   const citationSources = citationSourcesOf([message as unknown as { parts?: unknown }]);
-  const untrackedBrand = untrackedBrandMentionOf(message as unknown as { parts?: unknown });
   const sourceRows = sourceRowsOf([message as unknown as { parts?: unknown }], claimsById);
   const followUps = followUpsOf([message as unknown as { parts?: unknown }]);
   const isRunning = messageText === "";
@@ -233,12 +230,6 @@ export function AgentMessage({
             text={a2ui}
             results={surfaceResults(message as unknown as { parts?: unknown }, cards)}
           />
-        ) : null}
-
-        {untrackedBrand !== null ? (
-          <div className="mt-1">
-            <TrackBrandChip brandName={untrackedBrand.name} />
-          </div>
         ) : null}
 
         {text !== "" && !isStreaming ? (

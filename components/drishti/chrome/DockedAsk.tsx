@@ -3,16 +3,10 @@
 import { useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
-import { Mic, Send } from "lucide-react";
+import { Send } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
 import { askHref } from "@/components/drishti/ask/ask-model";
 import {
   BrandMentionMenu,
@@ -173,28 +167,6 @@ export function DockedAsk() {
                 placeholder="Ask about your rivals, or type @ to reference a brand."
                 className="min-w-0 flex-1 bg-transparent px-1 text-[14px] text-fg placeholder:text-fg-placeholder focus:outline-none"
               />
-
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      aria-label="Voice input"
-                      aria-disabled="true"
-                      onClick={(event) => event.preventDefault()}
-                      className={cn(
-                        PILL_BUTTON_CLASS,
-                        "text-fg-tertiary hover:bg-transparent",
-                      )}
-                    >
-                      <Mic aria-hidden className="size-[18px]" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">
-                    Voice input isn&apos;t available yet
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
 
               <button
                 type="submit"
