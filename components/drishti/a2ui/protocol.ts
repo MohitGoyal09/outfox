@@ -169,15 +169,25 @@ export function parseA2UI(text: string): A2UIParseResult {
 
 export type SettledToolResult = { name: string; output: unknown };
 
+function partToolName(candidate: { type?: unknown; toolName?: unknown }): string | null {
+  if (typeof candidate?.type !== "string") return null;
+  if (candidate.type === "dynamic-tool") {
+    return typeof candidate.toolName === "string" && candidate.toolName !== "" ? candidate.toolName : null;
+  }
+  if (!candidate.type.startsWith("tool-")) return null;
+  return candidate.type.slice("tool-".length);
+}
+
 export function settledToolResults(parts: unknown): SettledToolResult[] {
   const list = Array.isArray(parts) ? parts : [];
   const out: SettledToolResult[] = [];
   for (const part of list) {
-    const candidate = part as { type?: unknown; state?: unknown; output?: unknown };
-    if (typeof candidate?.type !== "string" || !candidate.type.startsWith("tool-")) continue;
+    const candidate = part as { type?: unknown; toolName?: unknown; state?: unknown; output?: unknown };
+    const name = partToolName(candidate);
+    if (name === null) continue;
     if (candidate.state !== "output-available") continue;
     if (candidate.output === undefined) continue;
-    out.push({ name: candidate.type.slice("tool-".length), output: candidate.output });
+    out.push({ name, output: candidate.output });
   }
   return out;
 }
