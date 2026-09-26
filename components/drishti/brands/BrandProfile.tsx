@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, LayoutGrid, Link2, Layers, MapPin, Tag, Users } from "lucide-react";
+import { ArrowLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, LayoutGrid, Link2, Layers, MapPin, Sparkles, Tag, Users } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -31,11 +31,12 @@ import {
   type RunHistoryRow,
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
-import { NarrativeBlock, type NarrativeBullet, type NarrativeCitation } from "./NarrativeBlock";
+import { NarrativeBlock } from "./NarrativeBlock";
+import { bucketNarrativeSections, overallNarrative, narrativeFrom, pinnedVerdictFromInsight } from "./narrative-model";
+import { PinnedVerdict } from "./PinnedVerdict";
 import { OwnBrandToggle } from "./OwnBrandToggle";
 import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
-import { displayClaimText, shortDate } from "./format";
-import { sourceName } from "@/components/drishti/labels";
+import { shortDate } from "./format";
 import { useBrandFilters } from "./filters/useBrandFilters";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PositionTab } from "./tabs/PositionTab";
@@ -50,6 +51,7 @@ export type BrandProfileProps = { brandId: Id<"brands">; className?: string };
 
 const tabs = [
   ["overview", "Overview", LayoutGrid],
+  ["insights", "Insights", Sparkles],
   ["position", "Position", Compass],
   ["placement", "Placement", MapPin],
   ["people", "People", Users],
@@ -61,78 +63,6 @@ const DEFAULT_TAB: TabValue = "overview";
 
 function isTabValue(value: string | null): value is TabValue {
   return value !== null && tabs.some(([tabId]) => tabId === value);
-}
-
-type InsightSentence = { text: string; citedClaimIds: Id<"claims">[] };
-type NarrativeSection = "positioning" | "audience" | "problem";
-type BrandNarrative = { headline: string; headlineCitation: NarrativeCitation | null; bullets: NarrativeBullet[] };
-
-const NARRATIVE_SECTION_MARKER: Record<NarrativeSection, string> = {
-  positioning: "[[positioning]] ",
-  audience: "[[audience]] ",
-  problem: "[[problem]] ",
-};
-
-function bucketNarrativeSections(sentences: readonly InsightSentence[]): Record<NarrativeSection, InsightSentence[]> {
-  const buckets: Record<NarrativeSection, InsightSentence[]> = { positioning: [], audience: [], problem: [] };
-  for (const sentence of sentences) {
-    const section = (Object.keys(NARRATIVE_SECTION_MARKER) as NarrativeSection[]).find((key) =>
-      sentence.text.startsWith(NARRATIVE_SECTION_MARKER[key]),
-    );
-    if (section) {
-      buckets[section].push({
-        text: sentence.text.slice(NARRATIVE_SECTION_MARKER[section].length),
-        citedClaimIds: sentence.citedClaimIds,
-      });
-    } else {
-      buckets.positioning.push(sentence);
-    }
-  }
-  return buckets;
-}
-
-function narrativeCitation(ids: readonly Id<"claims">[], claimsById: Map<string, ClaimDoc>): NarrativeCitation | null {
-  for (const id of ids) {
-    const claim = claimsById.get(String(id));
-    if (claim) return { href: claim.evidenceUrl, label: sourceName(claim.sourceEngine) };
-  }
-  return null;
-}
-
-function narrativeFrom(sentences: readonly InsightSentence[], claimsById: Map<string, ClaimDoc>): BrandNarrative | null {
-  const [lead, ...support] = sentences;
-  if (!lead || lead.text.trim().length === 0) return null;
-  return {
-    headline: displayClaimText(lead.text),
-    headlineCitation: narrativeCitation(lead.citedClaimIds, claimsById),
-    bullets: support
-      .filter((sentence) => sentence.text.trim().length > 0)
-      .slice(0, 4)
-      .map((sentence) => ({
-        text: displayClaimText(sentence.text),
-        citation: narrativeCitation(sentence.citedClaimIds, claimsById),
-      })),
-  };
-}
-
-function overallNarrative(buckets: Record<NarrativeSection, InsightSentence[]>, claimsById: Map<string, ClaimDoc>): BrandNarrative | null {
-  const lead = buckets.positioning[0];
-  if (!lead) return null;
-  const support = [
-    ...buckets.positioning.slice(1),
-    ...buckets.audience.slice(0, 1),
-    ...buckets.problem.slice(0, 1),
-  ].slice(0, 4);
-  return {
-    headline: displayClaimText(lead.text),
-    headlineCitation: narrativeCitation(lead.citedClaimIds, claimsById),
-    bullets: support
-      .filter((sentence) => sentence.text.trim().length > 0)
-      .map((sentence) => ({
-        text: displayClaimText(sentence.text),
-        citation: narrativeCitation(sentence.citedClaimIds, claimsById),
-      })),
-  };
 }
 
 function statusBadge(status: string) {
@@ -221,6 +151,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
       evidence: narrativeFrom(buckets.problem, claimsById),
     };
   }, [insight, claimsById]);
+  const pinnedVerdict = useMemo(() => pinnedVerdictFromInsight(insight, claimsById), [insight, claimsById]);
   const history = useMemo(
     () => runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)),
     [runs, brandId],
@@ -368,6 +299,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
           </div>
         </Panel>
       </header>
+      <PinnedVerdict state={pinnedVerdict} className="mb-5" />
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
         <div className="overflow-x-auto border-b border-border">
           <TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">
@@ -414,19 +346,18 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 googleSnapshot={latestGoogleSnapshot}
                 latestRunAt={latestRun?.requestedAt}
               />
-              {/* Brand DNA: the model's cited read of this brand, kept on the
-                  landing tab so the answer and its evidence are never a tab
-                  apart (it used to be its own "Insights" tab). */}
-              <div className="mt-8 border-t border-border pt-6">
-                <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} now={now} />
-              </div>
             </TabsContent>
-            <TabsContent value="position" className="mt-0 py-5">
-              {narratives?.position ? <NarrativeBlock className="mb-5" {...narratives.position} /> : null}
-              <PositionTab brand={brand} latestClaims={latestClaims} previousClaims={previousClaims} tags={tags} filters={filters} now={now} />
-              {/* Problem is a positioning lens — the pain points the brand
-                  frames itself against — so it lives under Position rather
-                  than as its own tab. */}
+            <TabsContent value="insights" className="mt-0 py-5">
+              {/* Brand DNA: the model's cited read of this brand, now its own
+                  reachable tab (it used to sit under Overview, below an
+                  unbounded evidence grid nobody would ever scroll past). */}
+              <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} now={now} />
+              {/* Problem folds in here rather than getting its own tab or
+                  staying stuffed inside Position (its previous, mismatched
+                  home): Insights already promises "what it's selling
+                  against" as one of its four Brand DNA reads, and these
+                  related-question/funnel-gap/evidence panels are that
+                  read's own supporting ground truth. */}
               <div className="mt-8 border-t border-border pt-6">
                 <ProblemTab
                   brand={brand}
@@ -439,6 +370,10 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                   now={now}
                 />
               </div>
+            </TabsContent>
+            <TabsContent value="position" className="mt-0 py-5">
+              {narratives?.position ? <NarrativeBlock className="mb-5" {...narratives.position} /> : null}
+              <PositionTab brand={brand} latestClaims={latestClaims} previousClaims={previousClaims} tags={tags} filters={filters} now={now} />
             </TabsContent>
             <TabsContent value="placement" className="mt-0 py-5">
               {/* Brand DNA has no distribution section, so Placement opens on
