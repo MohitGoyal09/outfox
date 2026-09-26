@@ -165,3 +165,42 @@ export const byBrandAndMetric = query({
 });
 
 const LLM_TAG_SOURCE_ENGINE = "llm_tag";
+
+function asRecord(value: unknown): Record<string, unknown> | null {
+  return typeof value === "object" && value !== null ? (value as Record<string, unknown>) : null;
+}
+
+function googleNewsThumbnail(
+  rawResponse: unknown,
+  evidenceUrl: string,
+): { thumbnailUrl: string | null; publisherName: string | null; snippet: string | null } {
+  const items = Array.isArray(root?.news_results) ? root.news_results : [];
+}
+
+export const feedThumbnails = query({
+  args: { claimIds: v.array(v.id("claims")) },
+  returns: v.array(
+    v.object({
+      claimId: v.id("claims"),
+      thumbnailUrl: v.union(v.string(), v.null()),
+      publisherName: v.union(v.string(), v.null()),
+      faviconUrl: v.union(v.string(), v.null()),
+      sourceName: v.union(v.string(), v.null()),
+      snippet: v.union(v.string(), v.null()),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const snapshotCache = new Map<
+      string,
+      import("./_generated/dataModel").Doc<"snapshots"> | null
+    >();
+    for (const claimId of args.claimIds) {
+      const claim = await ctx.db.get(claimId);
+      if (claim.sourceEngine !== "google_news" && claim.sourceEngine !== "google") continue;
+      const cacheKey = String(claim.snapshotId);
+      let snapshot = snapshotCache.get(cacheKey);
+      if (snapshot === undefined) {
+      }
+    }
+  },
+});

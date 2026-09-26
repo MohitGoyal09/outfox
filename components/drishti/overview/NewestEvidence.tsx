@@ -5,7 +5,7 @@ import { ArrowRight, Quote } from "lucide-react";
 
 import { EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
 import type { ClaimDoc } from "@/components/drishti/brands/brand-model";
-import { FeedCard, type FeedBrandInfo } from "@/components/drishti/feed/FeedCard";
+import { FeedCard, type FeedBrandInfo, type FeedThumbnail } from "@/components/drishti/feed/FeedCard";
 import { cn } from "@/lib/utils";
 
 import { Card } from "./Card";
@@ -17,6 +17,7 @@ export type NewestEvidenceProps = {
   feed: EvidenceFeed | null;
   claimsById: ReadonlyMap<string, ClaimDoc>;
   brandById: ReadonlyMap<string, FeedBrandInfo>;
+  thumbnailByClaimId: ReadonlyMap<string, FeedThumbnail>;
 };
 
 function NewestEvidenceSkeleton() {
@@ -31,7 +32,7 @@ function NewestEvidenceSkeleton() {
   );
 }
 
-export function NewestEvidence({ loading, hasBrands, feed, claimsById, brandById }: NewestEvidenceProps) {
+export function NewestEvidence({ loading, hasBrands, feed, claimsById, brandById, thumbnailByClaimId }: NewestEvidenceProps) {
   const trailing = (
     <div className="flex items-center gap-3">
       {feed && feed.bounded ? (
@@ -80,6 +81,7 @@ export function NewestEvidence({ loading, hasBrands, feed, claimsById, brandById
               key={item.id}
               brand={brandById.get(item.brandId)}
               claim={claimsById.get(item.id)}
+              thumbnail={thumbnailByClaimId.get(item.id)}
               pageLabel="Overview"
             />
           ))}

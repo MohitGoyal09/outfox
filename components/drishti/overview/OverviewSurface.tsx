@@ -9,7 +9,7 @@ import { api } from "@/convex/_generated/api";
 import { EmptyState, Panel, iconProps } from "@/components/drishti";
 import { useAllRuns } from "@/components/drishti/cohorts/useAllRuns";
 import type { ClaimDoc } from "@/components/drishti/brands/brand-model";
-import type { FeedBrandInfo } from "@/components/drishti/feed/FeedCard";
+import type { FeedBrandInfo, FeedThumbnail } from "@/components/drishti/feed/FeedCard";
 
 import { ActionLink } from "./ActionLink";
 import { EmergingPanel } from "./EmergingPanel";
@@ -152,6 +152,25 @@ function OverviewBody() {
     () => composeNewestEvidence(claims, brandNameById, undefined, ownBrandId),
     [claims, brandNameById, ownBrandId],
   );
+  const newestEvidenceThumbnailIds = useMemo(
+    () =>
+      evidenceFeed.items.flatMap((item) => {
+        const claim = claimsById.get(item.id);
+        return claim && (claim.sourceEngine === "google" || claim.sourceEngine === "google_news")
+          ? [claim._id]
+          : [];
+      }),
+    [evidenceFeed, claimsById],
+  );
+  const newestEvidenceThumbnailsQuery = useQuery(
+    api.claims.feedThumbnails,
+    newestEvidenceThumbnailIds.length > 0 ? { claimIds: newestEvidenceThumbnailIds } : "skip",
+  );
+  const newestEvidenceThumbnailById: ReadonlyMap<string, FeedThumbnail> = useMemo(() => {
+    const map = new Map<string, FeedThumbnail>();
+    for (const row of newestEvidenceThumbnailsQuery ?? []) map.set(String(row.claimId), row);
+    return map;
+  }, [newestEvidenceThumbnailsQuery]);
   const emerging = useMemo(() => composeEmerging(claims, coverage, brandNameById), [claims, coverage, brandNameById]);
 
   const compareRunIds = useMemo(() => {
@@ -293,6 +312,7 @@ function OverviewBody() {
             feed={evidenceFeed}
             claimsById={claimsById}
             brandById={brandById}
+            thumbnailByClaimId={newestEvidenceThumbnailById}
           />
         </div>
         <div className="lg:col-span-4">

@@ -62,10 +62,20 @@ export function GoogleAdsMark({ className }: MarkProps) {
 export function GoogleTrendsMark({ className }: MarkProps) {
   return (
     <svg viewBox="0 0 24 24" className={className} aria-hidden>
-      <rect x="2" y="14" width="4" height="8" rx="1" fill="#4285F4" />
-      <rect x="8" y="10" width="4" height="12" rx="1" fill="#EA4335" />
-      <rect x="14" y="5" width="4" height="17" rx="1" fill="#FBBC05" />
-      <rect x="20" y="2" width="2" height="20" rx="1" fill="#34A853" />
+      <defs>
+        <path
+          id="trends-leaf"
+          d="M4,20 C1,14 4,7 11,4 C14,2.7 17,2.7 20,4 C22,6 21,11 17,14 C13,17 8,19.5 4,20 Z"
+        />
+        <clipPath id="trends-band-0"><rect x="1.25" y="3" width="9.5" height="30" transform="rotate(-45 6 18)" /></clipPath>
+        <clipPath id="trends-band-1"><rect x="5.25" y="-1" width="9.5" height="30" transform="rotate(-45 10 14)" /></clipPath>
+        <clipPath id="trends-band-2"><rect x="9.25" y="-5" width="9.5" height="30" transform="rotate(-45 14 10)" /></clipPath>
+        <clipPath id="trends-band-3"><rect x="13.25" y="-9" width="9.5" height="30" transform="rotate(-45 18 6)" /></clipPath>
+      </defs>
+      <use href="#trends-leaf" fill="#4285F4" clipPath="url(#trends-band-0)" />
+      <use href="#trends-leaf" fill="#EA4335" clipPath="url(#trends-band-1)" />
+      <use href="#trends-leaf" fill="#FBBC05" clipPath="url(#trends-band-2)" />
+      <use href="#trends-leaf" fill="#34A853" clipPath="url(#trends-band-3)" />
     </svg>
   );
 }
