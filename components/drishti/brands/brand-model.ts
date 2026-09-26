@@ -31,6 +31,12 @@ export function isFetchEngine(value: string): value is FetchEngine {
   return (FETCH_ENGINES as readonly string[]).includes(value);
 }
 
+export type BrandEvidenceSummary = {
+  brandId: string;
+  evidenceCount: number;
+  engines: string[];
+};
+
 export function isSignalClaim(claim: ClaimDoc): boolean {
   return claim.sourceEngine !== "llm_tag";
 }

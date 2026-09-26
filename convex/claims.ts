@@ -134,6 +134,28 @@ export const runSourceCounts = query({
   },
 });
 
+export const evidenceSummaryByBrands = query({
+  args: { brandIds: v.array(v.id("brands")) },
+  returns: v.array(
+    v.object({
+      brandId: v.id("brands"),
+      evidenceCount: v.number(),
+      engines: v.array(sourceEngine),
+    }),
+  ),
+  handler: async (ctx, args) => {
+    const out: Array<{
+      brandId: import("./_generated/dataModel").Id<"brands">;
+      evidenceCount: number;
+      engines: Array<import("./_generated/dataModel").Doc<"claims">["sourceEngine"]>;
+    }> = [];
+    for (const brandId of args.brandIds) {
+      if (brand?.ownerId !== ownerId) continue;
+      const engines = new Set<import("./_generated/dataModel").Doc<"claims">["sourceEngine"]>();
+    }
+  },
+});
+
 export const byBrandAndMetric = query({
   args: { brandId: v.id("brands"), metric: v.string() },
   returns: v.array(claimDocValidator),

@@ -10,9 +10,15 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { BrandDoc } from "./brand-model";
+import type { BrandDoc, FetchEngine } from "./brand-model";
 import { formatStamp, profileStatusLabel } from "../cohorts/cohorts-model";
-import { FETCH_ENGINES, splitOwnBrand } from "./brand-model";
+import {
+  FETCH_ENGINES,
+  enginesWithEvidence,
+  evidenceSummaryByBrandId,
+  latestRunByBrand,
+  splitOwnBrand,
+} from "./brand-model";
 import { sourceName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
@@ -44,16 +50,15 @@ function StatusBadge({ status }: { status: string }) {
   );
 }
 
-function BrandRow({ brand, own = false }: { brand: BrandDoc; own?: boolean }) {
-  const claims = useQuery(api.claims.byBrand, { brandId: brand._id });
-  const runs = useQuery(api.runs.listByStatus, { status: "complete" });
-  const latestRun = runs?.find((run) => run.brandIds.some((id) => String(id) === String(brand._id)));
-  const claimCount = claims?.filter((claim) => claim.sourceEngine !== "llm_tag").length;
-  const enginesWithEvidence = useMemo(
-    () => new Set((claims ?? []).map((claim) => claim.sourceEngine)),
-    [claims],
-  );
+type BrandRowProps = {
+  brand: BrandDoc;
+  own?: boolean;
+  claimCount: number | undefined;
+  latestRunAt: string | undefined;
+  engines: Set<FetchEngine>;
+};
 
+function BrandRow({ brand, own = false, claimCount, latestRunAt, engines }: BrandRowProps) {
   return (
     <Panel
       interactive
@@ -88,7 +93,7 @@ function BrandRow({ brand, own = false }: { brand: BrandDoc; own?: boolean }) {
             <span className="text-muted-foreground">
               Latest{" "}
               <strong className="font-mono font-medium tabular-nums text-fg">
-                {latestRun ? formatStamp(latestRun.requestedAt).split(" · ")[0] : "Not checked yet"}
+                {latestRunAt ? formatStamp(latestRunAt).split(" · ")[0] : "Not checked yet"}
               </strong>
             </span>
           </div>
@@ -103,7 +108,7 @@ function BrandRow({ brand, own = false }: { brand: BrandDoc; own?: boolean }) {
       <div className="flex items-center gap-1 border-t border-border px-5 py-2.5 text-[10px] text-muted-foreground">
         <span className="mr-2 uppercase tracking-[0.14em]">Evidence from</span>
         {FETCH_ENGINES.map((engine) => {
-          const on = enginesWithEvidence.has(engine);
+          const on = engines.has(engine);
           return (
             <span
               key={engine}
@@ -114,7 +119,7 @@ function BrandRow({ brand, own = false }: { brand: BrandDoc; own?: boolean }) {
         })}
         <span className="sr-only">
           {FETCH_ENGINES.map(
-            (engine) => `${sourceName(engine)}: ${enginesWithEvidence.has(engine) ? "evidence found" : "no evidence found"}`,
+            (engine) => `${sourceName(engine)}: ${engines.has(engine) ? "evidence found" : "no evidence found"}`,
           ).join("; ")}
         </span>
         <span className="ml-auto mr-2 font-mono tabular-nums">
@@ -130,6 +135,19 @@ export function BrandList({ brands, isLoading = false, emptyAction, className }:
   const [query, setQuery] = useState("");
   const [filter, setFilter] = useState<"all" | "ready" | "pending">("all");
   const { own, competitors } = useMemo(() => splitOwnBrand(brands), [brands]);
+  const brandIds = useMemo(() => brands.map((brand) => brand._id), [brands]);
+  const runs = useQuery(api.runs.listByStatus, { status: "complete" });
+  const evidenceSummary = useQuery(api.claims.evidenceSummaryByBrands, { brandIds });
+  const latestRunMap = useMemo(() => latestRunByBrand(runs ?? []), [runs]);
+  const evidenceMap = useMemo(
+    () => (evidenceSummary === undefined ? undefined : evidenceSummaryByBrandId(evidenceSummary)),
+    [evidenceSummary],
+  );
+  const rowProps = (brand: BrandDoc) => ({
+    claimCount: evidenceMap?.get(String(brand._id))?.evidenceCount,
+    latestRunAt: latestRunMap.get(String(brand._id))?.requestedAt,
+    engines: enginesWithEvidence(evidenceMap?.get(String(brand._id))),
+  });
   const filtered = useMemo(
     () =>
       competitors.filter((brand) => {
@@ -164,7 +182,7 @@ export function BrandList({ brands, isLoading = false, emptyAction, className }:
 
   return (
     <div className={cn("flex flex-col gap-5", className)}>
-      {own ? <BrandRow brand={own} own /> : null}
+      {own ? <BrandRow brand={own} own {...rowProps(own)} /> : null}
       {competitors.length === 0 ? (
         <EmptyState
           bounded
@@ -219,7 +237,7 @@ export function BrandList({ brands, isLoading = false, emptyAction, className }:
           ) : (
             <div className="grid gap-3">
               {filtered.map((brand) => (
-                <BrandRow key={String(brand._id)} brand={brand} />
+                <BrandRow key={String(brand._id)} brand={brand} {...rowProps(brand)} />
               ))}
             </div>
           )}
