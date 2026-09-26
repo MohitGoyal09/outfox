@@ -32,7 +32,7 @@ import {
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
 import { NarrativeBlock } from "./NarrativeBlock";
-import { bucketNarrativeSections, narrativeFrom, pinnedVerdictFromInsight } from "./narrative-model";
+import { bucketNarrativeSections, narrativeFrom, pinnedVerdictFromInsight, positionSupportingNarrative } from "./narrative-model";
 import { PinnedVerdict } from "./PinnedVerdict";
 import { OwnBrandToggle } from "./OwnBrandToggle";
 import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
@@ -133,7 +133,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
     [claims, previousRunId],
   );
   const coverage = useMemo(
-    () => engineCoverage(snapshots ?? [], String(brandId)).filter((row) => row.engine !== "google_ads_transparency_center"),
+    () => engineCoverage(snapshots ?? [], String(brandId)),
     [snapshots, brandId],
   );
   const tags = tagBearingClaims(latestClaims);
@@ -145,7 +145,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
     if (!insight || insight.mode !== "llm") return null;
     const buckets = bucketNarrativeSections(insight.sentences);
     return {
-      position: narrativeFrom(buckets.positioning, claimsById),
+      position: positionSupportingNarrative(buckets.positioning, claimsById),
       people: narrativeFrom(buckets.audience, claimsById),
       evidence: narrativeFrom(buckets.problem, claimsById),
     };
@@ -373,6 +373,10 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               </div>
             </TabsContent>
             <TabsContent value="position" className="mt-0 py-5">
+              {/* narratives.position never repeats the pinned verdict's
+                  headline or provenance line (positionSupportingNarrative,
+                  narrative-model.ts) -- only the real supporting bullets
+                  that aren't shown anywhere above the tabs. */}
               {narratives?.position ? <NarrativeBlock className="mb-5" {...narratives.position} /> : null}
               <PositionTab brand={brand} latestClaims={latestClaims} previousClaims={previousClaims} tags={tags} filters={filters} now={now} />
             </TabsContent>

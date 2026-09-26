@@ -29,6 +29,11 @@ import {
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { displayClaimText, shortDate } from "../format";
 
+const PLACEHOLDER_TAG_VALUES = new Set(["unspecified", "none", "n/a", "unknown", ""]);
+export function isPlaceholderTagValue(value: string): boolean {
+  const normalized = value.trim().toLowerCase();
+  return normalized === "" || PLACEHOLDER_TAG_VALUES.has(normalized) || normalized.startsWith("unspecified");
+}
 
 function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
   const blocks = aiOverviewClaims(claims);
@@ -72,8 +77,24 @@ function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
   );
 }
 
+export function isSearchEngineHostname(hostname: string): boolean {
+  return /(^|\.)google\.[a-z.]{2,}$/i.test(hostname);
+}
+
+export function sellerFromListingText(text: string): string | null {
+  const match = text.match(/ listed by (.+?)(?= at | rated |\(matched to ")/);
+  const seller = match?.[1]?.trim();
+  return seller && seller.length > 0 ? seller : null;
+}
+
+export function sellerLabel(point: { claimId: string; hostname: string | null }, claimTextById: Map<string, string>): string {
+  if (point.hostname && !isSearchEngineHostname(point.hostname)) return point.hostname;
+  return sellerFromListingText(claimTextById.get(point.claimId) ?? "") ?? "unknown retailer";
+}
+
 function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
   const points = useMemo(() => pricePoints(claims), [claims]);
+  const claimTextById = useMemo(() => new Map(claims.map((claim) => [String(claim._id), claim.text])), [claims]);
   const min = points.length ? points[0].price : null;
   const max = points.length ? points[points.length - 1].price : null;
   return (
@@ -103,7 +124,7 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
             <ul className="space-y-1.5">
               {points.map((point) => (
                 <li key={point.claimId} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-[11px]">
-                  <span className="truncate text-muted-foreground">{point.hostname ?? "unknown retailer"}</span>
+                  <span className="truncate text-muted-foreground">{sellerLabel(point, claimTextById)}</span>
                   <span className="font-mono tabular-nums text-fg">{point.price}{point.unit ? ` ${point.unit}` : ""}</span>
                   <span className="font-mono text-[10px] text-muted-foreground">as of {shortDate(point.fetchedAt)}</span>
                 </li>
@@ -183,9 +204,21 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
   );
 }
 
+export function normalizeCtaRows(facet: readonly { value: string; count: number }[] | undefined): { label: string; count: number }[] {
+  const counts = new Map<string, number>();
+  for (const row of facet ?? []) {
+    const normalized = row.value.trim().toLowerCase();
+    if (isPlaceholderTagValue(normalized)) continue;
+    counts.set(normalized, (counts.get(normalized) ?? 0) + row.count);
+  }
+  return [...counts.entries()]
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+}
+
 function CtaMixCard({ brandId }: { brandId: BrandDoc["_id"] }) {
   const facet = useQuery(api.claims.ctaFacetByBrand, { brandId });
-  const rows = useMemo(() => (facet ?? []).map((row) => ({ label: row.value, count: row.count })), [facet]);
+  const rows = useMemo(() => normalizeCtaRows(facet), [facet]);
   return (
     <RankedCatalogChart
       title="CTA mix"
@@ -225,8 +258,11 @@ export function PositionTab({
   );
   const filteredTags = useMemo(() => tagBearingClaims(filteredLatest), [filteredLatest]);
   const hookTypeRows = useMemo(() => hookTypeFrequency(filteredTags), [filteredTags]);
-  const themeRows = useMemo(() => themeFrequency(filteredTags), [filteredTags]);
-  const valuePropRows = useMemo(() => valuePropFrequency(filteredTags), [filteredTags]);
+  const themeRows = useMemo(() => themeFrequency(filteredTags).filter((row) => !isPlaceholderTagValue(row.label)), [filteredTags]);
+  const valuePropRows = useMemo(
+    () => valuePropFrequency(filteredTags).filter((row) => !isPlaceholderTagValue(row.label)),
+    [filteredTags],
+  );
 
   return (
     <div className="space-y-4">
