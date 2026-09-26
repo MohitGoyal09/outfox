@@ -26,7 +26,7 @@ export function AskReasoning({
 
   return (
     <details
-      className="rounded-[8px] border border-border bg-bg-inset"
+      className="rounded-lg border border-border bg-bg-inset"
       {...(defaultOpen ? { open: true } : {})}
     >
       <summary

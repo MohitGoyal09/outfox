@@ -3,7 +3,6 @@
 
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
-import { ShieldCheck } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import {
@@ -12,18 +11,11 @@ import {
   ConversationEmptyState,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputTools,
-} from "@/components/ai-elements/prompt-input";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { Chip } from "../Chip";
 import { AgentMessage } from "./AgentMessage";
+import { AskComposer } from "./AskComposer";
 import { answerProvenanceOf, precedingUserTextOf, sourceRowsOf } from "./agentChat-model";
 import { MAX_ASK_BRANDS } from "./ask-model";
 import { CitationDrawer, type EvidenceDetail } from "./CitationDrawer";
@@ -117,7 +109,7 @@ export function AgentChat({
         </p>
       </header>
       <Conversation className="min-h-[280px]">
-        <ConversationContent>
+        <ConversationContent className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
           {messages.length === 0 ? (
             <ConversationEmptyState
               title="Ask about these brands"
@@ -170,32 +162,21 @@ export function AgentChat({
         </div>
       ) : null}
       <div className="border-t border-border py-4">
-        <PromptInput
-          onSubmit={(message) => void submit(message.text)}
-          className="rounded-3xl border border-border/70 bg-bg-raised shadow-[var(--shadow-lift)] transition-shadow duration-150 ease-out focus-within:shadow-[var(--shadow-toast)]"
-        >
-          <PromptInputBody>
-            <PromptInputTextarea
-              value={draft}
-              onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask about these rivals"
-              className="max-h-[300px] overflow-y-auto bg-transparent text-fg placeholder:text-fg-placeholder"
-            />
-          </PromptInputBody>
-          <PromptInputFooter>
-            <PromptInputTools>
-              <span className="hidden items-center gap-1.5 text-xs text-fg-tertiary sm:flex">
-                <ShieldCheck className="size-3.5 text-ok" /> A live refresh always asks first
-              </span>
-            </PromptInputTools>
-            <PromptInputSubmit
-              status={status}
-              onStop={() => void stop()}
-              disabled={busy ? false : draft.trim() === ""}
-              className="rounded-full bg-accent text-accent-ink hover:bg-accent-strong disabled:bg-bg-inset disabled:text-fg-tertiary disabled:opacity-50"
-            />
-          </PromptInputFooter>
-        </PromptInput>
+        <div className="mx-auto w-full max-w-3xl">
+          <AskComposer
+            value={draft}
+            onChange={(event) => setDraft(event.target.value)}
+            onSubmit={(text) => void submit(text)}
+            status={status}
+            onStop={() => void stop()}
+            disabled={busy}
+            canSend={draft.trim() !== "" && !busy}
+            overCap={false}
+            maxChars={2000}
+            placeholder="Ask about these rivals"
+            textareaAria={{ "aria-label": "Ask about these rivals" }}
+          />
+        </div>
       </div>
       <CitationDrawer
         open={openCitation !== null}

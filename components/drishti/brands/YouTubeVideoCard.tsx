@@ -21,7 +21,11 @@ export function YouTubeVideoCard({
   raw: YoutubeRawVideoInfo | null;
 }) {
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
-  const hasThumbnail = Boolean(raw?.thumbnailUrl) && !thumbnailFailed;
+  const derivedThumbnail = group.videoId
+    ? `https://i.ytimg.com/vi/${group.videoId}/hqdefault.jpg`
+    : null;
+  const thumbnailUrl = raw?.thumbnailUrl ?? derivedThumbnail;
+  const hasThumbnail = Boolean(thumbnailUrl) && !thumbnailFailed;
   const [channelThumbFailed, setChannelThumbFailed] = useState(false);
   const tag = tagBearingClaims(group.claims)[0] ?? null;
   return (
@@ -29,7 +33,7 @@ export function YouTubeVideoCard({
       <div className="relative aspect-video w-full shrink-0 bg-muted">
         {hasThumbnail ? (
           <img
-            src={raw!.thumbnailUrl!}
+            src={thumbnailUrl!}
             alt=""
             loading="lazy"
             className="size-full object-cover"

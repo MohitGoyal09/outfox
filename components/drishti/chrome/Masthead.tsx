@@ -67,7 +67,7 @@ export function Masthead() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group flex h-9 min-w-0 flex-1 items-center gap-2.5 rounded-[8px] border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:h-10 sm:max-w-[720px]"
+          className="group flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-[8px] border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:h-10"
           aria-label="Search brands and pages, or ask Drishti"
         >
           <Search {...iconProps} aria-hidden className="size-4 shrink-0 text-fg-secondary" />
@@ -76,37 +76,41 @@ export function Masthead() {
             ⌘K
           </kbd>
         </button>
-        <Button
-          asChild
-          size="sm"
-          className="hidden h-9 shrink-0 rounded-[8px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"
-        >
-          <Link href="/brands?add=1">
-            <Plus {...iconProps} aria-hidden className="size-4" />
-            Add brand
-          </Link>
-        </Button>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="shrink-0 rounded-full text-fg-secondary hover:bg-bg-inset hover:text-fg"
-              aria-label="Account menu"
-            >
-              <Avatar size="sm">
-                <AvatarFallback className="border border-border bg-bg-raised text-xs font-semibold text-fg">
-                  M
-                </AvatarFallback>
-              </Avatar>
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end" className="w-56">
-            <DropdownMenuLabel className="flex items-center gap-2"><UserRound {...iconProps} className="size-4" /> Account</DropdownMenuLabel>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem disabled={isSigningOut} onSelect={() => void handleSignOut()}><LogOut {...iconProps} className="size-4" /> Sign out</DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
+        {/* Actions live in the top-right corner, not floating after the search:
+            a spacer pins this cluster to the edge at every width. */}
+        <div className="ml-auto flex shrink-0 items-center gap-2 sm:gap-3">
+          <Button
+            asChild
+            size="sm"
+            className="hidden h-9 shrink-0 rounded-[8px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"
+          >
+            <Link href="/brands?add=1">
+              <Plus {...iconProps} aria-hidden className="size-4" />
+              Add brand
+            </Link>
+          </Button>
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button
+                variant="ghost"
+                size="icon"
+                className="shrink-0 rounded-full text-fg-secondary hover:bg-bg-inset hover:text-fg"
+                aria-label="Account menu"
+              >
+                <Avatar size="sm">
+                  <AvatarFallback className="border border-border bg-bg-raised text-xs font-semibold text-fg">
+                    M
+                  </AvatarFallback>
+                </Avatar>
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              <DropdownMenuLabel className="flex items-center gap-2"><UserRound {...iconProps} className="size-4" /> Account</DropdownMenuLabel>
+              <DropdownMenuSeparator />
+              <DropdownMenuItem disabled={isSigningOut} onSelect={() => void handleSignOut()}><LogOut {...iconProps} className="size-4" /> Sign out</DropdownMenuItem>
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
       </div>
       <CommandDialog
         open={open}

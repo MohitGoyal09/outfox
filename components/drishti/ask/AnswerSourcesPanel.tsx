@@ -51,6 +51,8 @@ export function AnswerSourcesPanel({
           "flex w-fit items-center gap-2 rounded-full py-1 pl-1 pr-2.5 text-xs text-fg-secondary",
           STATE_TRANSITION_CLASS,
           "hover:bg-bg-inset hover:text-fg",
+          "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+          "active:translate-y-[0.5px]",
         )}
       >
         <span className="flex items-center -space-x-1" aria-hidden="true">

@@ -1,7 +1,7 @@
 "use client";
 
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ConversationEmptyState } from "@/components/ai-elements/conversation";
 import { PromptCategories } from "./PromptCategories";
@@ -15,12 +15,10 @@ function greetingWord(hour: number): string {
 
 export function AskEmptyState({
   firstName,
-  composer,
   categoriesDisabled,
   onSelectPrompt,
 }: {
   firstName: string | null;
-  composer: ReactNode;
   categoriesDisabled: boolean;
   onSelectPrompt: (prompt: string) => void;
 }) {
@@ -29,21 +27,17 @@ export function AskEmptyState({
 
   return (
     <ConversationEmptyState className="flex-1">
-      <div className="w-full max-w-2xl space-y-7 text-center">
-        <div className="mx-auto max-w-md space-y-5">
-          <motion.div
+      <div className="w-full max-w-3xl space-y-8">
+        <div className="mx-auto max-w-xl space-y-5 text-center">
+          <motion.span
             aria-hidden="true"
-            className="relative mx-auto flex size-24 items-center justify-center"
+            className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-accent text-[15px] font-semibold text-accent-ink shadow-[var(--shadow-sm)]"
             initial={reduceMotion ? undefined : { opacity: 0, scale: 0.85 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
           >
-            {/* Neutral ink disc, no gradient and no glow: chrome stays
-                monochrome (`DESIGN.md` bans decorative gradient blobs). */}
-            <span className="relative flex size-14 items-center justify-center rounded-full bg-accent text-[16px] font-semibold text-accent-ink ring-1 ring-border shadow-[var(--shadow-sm)]">
-              D
-            </span>
-          </motion.div>
+            D
+          </motion.span>
           <div className="space-y-2">
             <h1 className="type-display text-fg">
               {firstName !== null ? (
@@ -61,7 +55,6 @@ export function AskEmptyState({
             </p>
           </div>
         </div>
-        <div className="w-full text-left">{composer}</div>
         <PromptCategories disabled={categoriesDisabled} onSelect={onSelectPrompt} />
       </div>
     </ConversationEmptyState>

@@ -860,7 +860,15 @@ export const PromptInput = ({
         ref={formRef}
         {...props}
       >
-        <InputGroup className="overflow-hidden">{children}</InputGroup>
+        {/*
+         * The form carries the visual shell (every consumer styles it), so the
+         * inner group stays chrome-free: no border, no radius, no focus ring.
+         * Otherwise the group's own shadcn ring painted a second box inside
+         * the composer card.
+         */}
+        <InputGroup className="overflow-hidden rounded-none border-0 bg-transparent has-[[data-slot=input-group-control]:focus-visible]:border-0 has-[[data-slot=input-group-control]:focus-visible]:ring-0 has-[[data-slot][aria-invalid=true]]:border-0 has-[[data-slot][aria-invalid=true]]:ring-0">
+          {children}
+        </InputGroup>
       </form>
     </>
   );

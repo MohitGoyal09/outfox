@@ -10,8 +10,7 @@ import {
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
-import { motion, useReducedMotion } from "motion/react";
-import { ArrowUp, CircleAlert, Eraser, Paperclip, Square, X } from "lucide-react";
+import { CircleAlert, Eraser } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
@@ -20,21 +19,10 @@ import {
   ConversationContent,
   ConversationScrollButton,
 } from "@/components/ai-elements/conversation";
-import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputButton,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputTools,
-  usePromptInputAttachments,
-} from "@/components/ai-elements/prompt-input";
-import { Spinner } from "@/components/ui/spinner";
-import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { Button } from "../Button";
-import { LABEL_CLASS, STATE_TRANSITION_CLASS, iconProps } from "../tokens";
+import { LABEL_CLASS, iconProps } from "../tokens";
 import { AgentMessage } from "./AgentMessage";
+import { AskComposer } from "./AskComposer";
 import { AskEmptyState } from "./AskEmptyState";
 import {
   BrandMentionMenu,
@@ -58,26 +46,6 @@ import { tracesByAssistantMessageId, useAskTraceEvents } from "./useAskTrace";
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
 const ASK_MAX_CHARS = 2000;
 
-function ComposerAttachButton({ disabled }: { disabled: boolean }) {
-  const attachments = usePromptInputAttachments();
-  return (
-    <PromptInputButton
-      aria-label="Attach a file"
-      tooltip="Attach a file"
-      disabled={disabled}
-      onClick={() => attachments.openFileDialog()}
-      className={cn(
-        "size-8 rounded-full text-fg-tertiary",
-        STATE_TRANSITION_CLASS,
-        "hover:bg-bg-inset hover:text-fg",
-        "disabled:cursor-not-allowed disabled:opacity-60",
-      )}
-    >
-      <Paperclip className="size-3.5" aria-hidden="true" />
-    </PromptInputButton>
-  );
-}
-
 export function AskView({
   initialChatId,
   cohortKey,
@@ -92,7 +60,6 @@ export function AskView({
   const brands = useQuery(api.brands.listBrands);
   const me = useQuery(api.users.me);
   const firstName = me?.name?.trim().split(/\s+/)[0] ?? null;
-  const reduceMotion = useReducedMotion();
 
   const brandNames = useMemo(() => {
     const map: Record<string, string> = {};
@@ -417,210 +384,123 @@ export function AskView({
   }, [hasTranscript, history]);
   const draftLength = value.length;
   const overCap = draftLength > ASK_MAX_CHARS;
-  const nearCap = draftLength >= ASK_MAX_CHARS * 0.9;
   const canSend = value.trim().length > 0 && !asking && !overCap;
   const isGenerating = chatStatus === "submitted" || chatStatus === "streaming";
   const mentionBrandViews = mentionedBrandIds
     .map((id) => mentionBrands.find((brand) => brand.id === id))
     .filter((brand): brand is MentionBrand => brand !== undefined);
   const composer = (
-    <>
-      {mentionBrandViews.length > 0 ? (
-        <div className="mb-2 flex flex-wrap items-center gap-1.5">
-          <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Context</span>
-          {mentionBrandViews.map((brand) => (
-            <span
-              key={String(brand.id)}
-              className="inline-flex h-6 items-center gap-1 rounded-full border border-border-strong bg-bg-inset px-2 text-[11.5px] text-fg-secondary"
-            >
-              {brand.name}
-              <button
-                type="button"
-                aria-label={`Remove ${brand.name} from context`}
-                onClick={() => removeMention(brand.id)}
-                className="rounded-full p-0.5 text-fg-tertiary hover:bg-bg-raised-2 hover:text-fg"
-              >
-                <X aria-hidden className="size-3" />
-              </button>
-            </span>
-          ))}
-        </div>
-      ) : null}
-
-      <div className="relative">
-        {mentionMenuOpen ? (
+    <AskComposer
+      value={value}
+      onChange={handleValueChange}
+      onKeyDown={handleTextareaKeyDown}
+      onSubmit={(text) => void submit(text)}
+      status={chatStatus}
+      onStop={() => {
+        void stop();
+        requestAnimationFrame(() => textareaRef.current?.focus());
+      }}
+      disabled={asking}
+      canSend={canSend}
+      overCap={overCap}
+      maxChars={ASK_MAX_CHARS}
+      placeholder="Which rival is leaning hardest on discount hooks?"
+      textareaRef={textareaRef}
+      textareaAria={{
+        role: "combobox",
+        "aria-label": "Ask about your rivals",
+        "aria-autocomplete": "list",
+        "aria-expanded": mentionMenuOpen,
+        "aria-controls": mentionMenuOpen ? listboxId : undefined,
+        "aria-activedescendant":
+          mentionMenuOpen && activeMentionOption !== undefined
+            ? mentionOptionId(listboxId, activeMentionOption.id)
+            : undefined,
+        "aria-invalid": error !== undefined || undefined,
+      }}
+      chips={mentionBrandViews.map((brand) => ({ id: String(brand.id), name: brand.name }))}
+      onRemoveChip={(id) => removeMention(id as Id<"brands">)}
+      overlay={
+        mentionMenuOpen ? (
           <BrandMentionMenu
             id={listboxId}
             brands={visibleMentionBrands}
             highlightedIndex={safeHighlightedIndex}
             onSelect={selectMentionBrand}
           />
-        ) : null}
-        <PromptInput
-          onSubmit={(message) => {
-            void submit(message.text);
-          }}
-          className="rounded-[10px] border border-border-strong bg-bg-raised shadow-[var(--shadow-lift)] transition-[box-shadow,border-color] duration-200 ease-out focus-within:border-accent focus-within:ring-2 focus-within:ring-accent/25"
-        >
-          <PromptInputBody>
-            <PromptInputTextarea
-              ref={textareaRef}
-              value={value}
-              onChange={handleValueChange}
-              onKeyDown={handleTextareaKeyDown}
-              disabled={asking}
-              placeholder="Which rival is leaning hardest on discount hooks?"
-              aria-invalid={error !== undefined || undefined}
-              role="combobox"
-              aria-autocomplete="list"
-              aria-expanded={mentionMenuOpen}
-              aria-controls={mentionMenuOpen ? listboxId : undefined}
-              aria-activedescendant={
-                mentionMenuOpen && activeMentionOption !== undefined
-                  ? mentionOptionId(listboxId, activeMentionOption.id)
-                  : undefined
-              }
-              className="min-h-[44px] max-h-[300px] overflow-y-auto bg-transparent pt-2.5 pl-1 text-fg placeholder:text-fg-placeholder"
-            />
-          </PromptInputBody>
-          {/* Bottom control row: one continuous card with the textarea above it
-              (no divider line, no tinted well) -- Karax's composer reads as a
-              single card, never two stacked panels. */}
-          <PromptInputFooter className="items-center gap-x-2 rounded-b-[10px] border-t-0 pb-1">
-            <PromptInputTools className="gap-2">
-              <ComposerAttachButton disabled={asking} />
-              {/* No brand-scope control here, on purpose: the agent picks the
-                  brands from the message (docs/specs/agent-brand-scope.md 3.8).
-                  Typing "@name" still adds one, because a typed name IS part of
-                  the message. Do not add a manual scope picker back. */}
-            </PromptInputTools>
-            <div className="flex items-center gap-2.5">
-              {/* A live budget, not a label: shown once there is a draft to
-                  budget, or once the cap is close enough to matter. A "0/2000"
-                  at rest was the faintest thing on screen and told nobody
-                  anything. */}
-              {draftLength > 0 || nearCap ? (
-                <span
-                  className={cn(
-                    "font-mono text-[11px] tabular-nums",
-                    overCap ? "text-danger" : nearCap ? "text-warn" : "text-fg-secondary",
-                  )}
-                >
-                  {draftLength}/{ASK_MAX_CHARS}
-                </span>
-              ) : null}
-              {/* The reference composer swaps this control to a Microphone
-                  while the box is empty. There is no voice input in this
-                  product, so an empty box keeps an arrow and the tooltip
-                  carries the one thing a user needs to know about it: there is
-                  nothing to send yet. `asChild` on a span, not on the button,
-                  because the wrapper needs no ref forwarding from the submit
-                  control for the tooltip to open. */}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <PromptInputSubmit
-                      status={chatStatus}
-                      onStop={() => {
-                        void stop();
-                        requestAnimationFrame(() => textareaRef.current?.focus());
+        ) : null
+      }
+      note={
+        <>
+          {mentionNotice !== null ? (
+            <p role="status" className="mt-1.5 text-right text-[11px] text-danger">
+              {mentionNotice}
+            </p>
+          ) : null}
+
+          {error !== undefined ? (
+            <p role="alert" className="mt-2 flex items-start gap-2 text-[12.5px] leading-[1.5] text-danger">
+              <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+              <span>
+                {error.message}
+                {lastQuestion !== null ? (
+                  <>
+                    {" "}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        void submit(lastQuestion);
                       }}
-                      disabled={isGenerating ? false : !canSend}
-                      aria-label={isGenerating ? "Stop" : "Send"}
-                      className={cn(
-                        "size-8 rounded-full",
-                        isGenerating || (value.trim().length > 0 && !overCap)
-                          ? "bg-accent text-accent-ink hover:bg-accent-strong"
-                          : "bg-bg-inset text-fg-tertiary",
-                        "disabled:cursor-not-allowed disabled:bg-bg-inset disabled:text-fg-tertiary",
-                      )}
+                      className="cursor-pointer underline decoration-danger underline-offset-[3px] hover:text-fg"
                     >
-                      {chatStatus === "submitted" ? (
-                        <Spinner />
-                      ) : chatStatus === "streaming" ? (
-                        <Square className="size-3.5" aria-hidden="true" />
-                      ) : chatStatus === "error" ? (
-                        <CircleAlert className="size-4" aria-hidden="true" />
-                      ) : (
-                        <ArrowUp className="size-4" aria-hidden="true" />
-                      )}
-                    </PromptInputSubmit>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  {isGenerating ? "Stop" : canSend ? "Send" : "Type a question to send"}
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </PromptInputFooter>
-        </PromptInput>
-      </div>
-
-      {mentionNotice !== null ? (
-        <p role="status" className="mt-1.5 text-right text-[11px] text-danger">
-          {mentionNotice}
-        </p>
-      ) : null}
-
-      {error !== undefined ? (
-        <p role="alert" className="mt-2 flex items-start gap-2 text-[12.5px] leading-[1.5] text-danger">
-          <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-          <span>
-            {error.message}
-            {lastQuestion !== null ? (
-              <>
-                {" "}
-                <button
-                  type="button"
-                  onClick={() => {
-                    void submit(lastQuestion);
-                  }}
-                  className="cursor-pointer underline decoration-danger underline-offset-[3px] hover:text-fg"
-                >
-                  Retry
-                </button>
-              </>
-            ) : null}
-          </span>
-        </p>
-      ) : null}
-    </>
+                      Retry
+                    </button>
+                  </>
+                ) : null}
+              </span>
+            </p>
+          ) : null}
+        </>
+      }
+    />
   );
 
   return (
-    <div className="mx-auto flex h-[calc(100dvh-14rem)] min-h-[30rem] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-bg-raised shadow-[var(--shadow-xs)]">
+    <div className="mx-auto flex h-[calc(100dvh-14rem)] min-h-[30rem] w-full max-w-4xl flex-col overflow-hidden">
       {hasTranscript ? (
-        <div className="flex shrink-0 items-center justify-between gap-3 border-b border-border px-4 py-2.5">
-          <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Conversation</span>
-          <div className="flex items-center gap-1.5">
-            {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} claimsById={claimsById} /> : null}
-            <Button
-              variant="ghost"
-              size="sm"
-              className="rounded-sm"
-              icon={<Eraser {...iconProps} size={14} aria-hidden="true" />}
-              onClick={() => setMessages([])}
-            >
-              Clear
-            </Button>
+        <div className="shrink-0 border-b border-border px-4 sm:px-6">
+          <div className="mx-auto flex w-full max-w-3xl items-center justify-between gap-3 py-2.5">
+            <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Conversation</span>
+            <div className="flex items-center gap-1.5">
+              {sourceRows.length > 0 ? <SourcesDrawer rows={sourceRows} claimsById={claimsById} /> : null}
+              <Button
+                variant="ghost"
+                size="sm"
+                className="rounded-sm"
+                icon={<Eraser {...iconProps} size={14} aria-hidden="true" />}
+                onClick={() => setMessages([])}
+              >
+                Clear
+              </Button>
+            </div>
           </div>
         </div>
       ) : null}
 
-      <Conversation className="min-h-0 flex-1">
-        <ConversationContent className="mx-auto flex w-full max-w-3xl flex-col gap-4 px-4 py-6 sm:px-6">
-          {!hasTranscript ? (
-            <AskEmptyState
-              firstName={firstName}
-              composer={composer}
-              categoriesDisabled={asking}
-              onSelectPrompt={(prompt) => {
-                setValue(prompt);
-                requestAnimationFrame(() => textareaRef.current?.focus());
-              }}
-            />
-          ) : null}
-
+      {!hasTranscript ? (
+        <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-6 sm:px-6">
+          <AskEmptyState
+            firstName={firstName}
+            categoriesDisabled={asking}
+            onSelectPrompt={(prompt) => {
+              setValue(prompt);
+              requestAnimationFrame(() => textareaRef.current?.focus());
+            }}
+          />
+        </div>
+      ) : (
+        <Conversation className="min-h-0 flex-1">
+          <ConversationContent className="mx-auto flex w-full max-w-3xl flex-col gap-6 px-4 py-6 sm:px-6">
           {messages.map((message, index) => {
             const isLastMessage = index === messages.length - 1;
             const precedingUserText = precedingUserTextOf(
@@ -648,20 +528,17 @@ export function AskView({
               />
             );
           })}
-        </ConversationContent>
-        <ConversationScrollButton />
-      </Conversation>
+          </ConversationContent>
+          <ConversationScrollButton />
+        </Conversation>
+      )}
 
-      {hasTranscript ? (
-        <motion.div
-          className="shrink-0 border-t border-border bg-bg-raised px-4 pb-4 pt-3 sm:px-6"
-          initial={reduceMotion ? undefined : { opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={reduceMotion ? { duration: 0 } : { duration: 0.3, ease: "easeOut" }}
-        >
-          {composer}
-        </motion.div>
-      ) : null}
+      {/* The prompt box is a permanent bottom dock: it sits in the same place
+          before the first message and after the last, so the eye never hunts
+          for it. The conversation scrolls above it. */}
+      <div className="relative z-10 shrink-0 border-t border-border bg-bg-raised/95 px-4 pb-4 pt-3 shadow-[0_-1px_2px_rgba(16,24,40,0.04)] backdrop-blur supports-[backdrop-filter]:bg-bg-raised/80 sm:px-6">
+        <div className="mx-auto w-full max-w-3xl">{composer}</div>
+      </div>
 
       <CitationDrawer
         open={openCitation !== null}

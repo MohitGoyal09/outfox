@@ -1,13 +1,13 @@
 "use client";
 
 import { useMemo } from "react";
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { BadgeDollarSign, Clapperboard, Newspaper, Store, TrendingUp } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
-import { iconProps } from "../../tokens";
+import { categoricalColor, iconProps } from "../../tokens";
 import {
   adCreativeClaims,
   adRuntimeLeaderboard,
@@ -69,7 +69,7 @@ function CountListPanel({
 function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
   const buckets = useMemo(() => organicRankBuckets(claims), [claims]);
   const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
-  const chartConfig = { count: { label: "Organic results", color: "var(--accent)" } } satisfies ChartConfig;
+  const chartConfig = { count: { label: "Organic results", color: "var(--cat-1)" } } satisfies ChartConfig;
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="border-b border-border px-4 py-3">
@@ -95,7 +95,11 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 11 }} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} width={28} tick={{ fontSize: 10 }} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="count" fill="var(--color-count)" radius={[3, 3, 0, 0]} barSize={36} />
+              <Bar dataKey="count" radius={[3, 3, 0, 0]} barSize={36}>
+                {buckets.map((bucket, index) => (
+                  <Cell key={bucket.label} fill={categoricalColor(index)} />
+                ))}
+              </Bar>
             </BarChart>
           </ChartContainer>
         )}

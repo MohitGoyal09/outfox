@@ -2,6 +2,7 @@
 
 
 import type { UIMessage } from "ai";
+import { motion, useReducedMotion } from "motion/react";
 import {
   Confirmation,
   ConfirmationAccepted,
@@ -11,7 +12,12 @@ import {
   ConfirmationRequest,
   ConfirmationTitle,
 } from "@/components/ai-elements/confirmation";
-import { Message, MessageContent } from "@/components/ai-elements/message";
+import {
+  Message,
+  MessageActions,
+  MessageContent,
+  MessageToolbar,
+} from "@/components/ai-elements/message";
 import {
   answerProvenanceOf,
   approvalPartsOf,
@@ -24,7 +30,7 @@ import {
   untrackedBrandMentionOf,
 } from "./agentChat-model";
 import type { ClaimTextById } from "./agentChat-model";
-import { AnswerActions } from "./AnswerActions";
+import { AnswerActions, CopyAction } from "./AnswerActions";
 import { AnswerMarkdown } from "./AnswerMarkdown";
 import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
 import { persistedTrendsResultsOf, type ToolCallCardView } from "./ask-model";
@@ -73,15 +79,17 @@ export function AgentMessage({
   persistedCards?: ToolCallCardView[];
   persistedDurationMs?: number | null;
 }) {
+  const reduceMotion = useReducedMotion();
   const messageText = textOf(message as unknown as { parts?: unknown });
   const { text, a2ui } = splitA2UIBlock(messageText);
 
   if (message.role === "user") {
     return (
       <Message from="user">
-        <MessageContent className="rounded-lg border border-border bg-bg-inset px-4 py-3 text-fg">
-          {text}
-        </MessageContent>
+        <MessageContent>{text}</MessageContent>
+        <MessageActions className="justify-end pr-0.5">
+          <CopyAction text={text} copyLabel="Copy question" copiedLabel="Copied" />
+        </MessageActions>
       </Message>
     );
   }
@@ -111,10 +119,17 @@ export function AgentMessage({
       ? persistedDurationMs / 1000
       : undefined;
   const showTimer = isBusy || isLive || persistedElapsedSeconds !== undefined;
+  const animateIn = !reduceMotion && (isBusy || isLive);
 
   return (
     <Message from="assistant">
       <MessageContent className="w-full">
+        <motion.div
+          className="flex w-full min-w-0 flex-col gap-2"
+          initial={animateIn ? { opacity: 0, y: -8 } : false}
+          animate={{ opacity: 1, y: 0 }}
+          transition={animateIn ? { duration: 0.18, ease: "easeOut" } : { duration: 0 }}
+        >
         <ThoughtLine
           steps={steps}
           working={isRunning && isBusy}
@@ -186,24 +201,26 @@ export function AgentMessage({
         })}
 
         {messageText !== "" ? (
-          <div className="flex w-full flex-col gap-3 rounded-lg border border-border bg-bg-raised p-4 shadow-[var(--shadow-xs)]">
-            <UnavailableBlock
-              failedSteps={failedCards}
-              noGroundedEvidence={provenance?.mode === "template"}
-            />
+          <>
+            <div className="flex w-full flex-col gap-3 rounded-lg border border-border bg-bg-raised p-4 shadow-[var(--shadow-xs)]">
+              <UnavailableBlock
+                failedSteps={failedCards}
+                noGroundedEvidence={provenance?.mode === "template"}
+              />
 
-            <AnswerMarkdown
-              text={text}
-              citationSources={citationSources}
-              isStreaming={isStreaming}
-              onOpenCitation={onOpenCitation}
-            />
-
-            <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border pt-3">
-              <AnswerSourcesPanel sources={sourceRows} claimsById={claimsById} question={question} threadKey={threadKey} />
-              <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
+              <AnswerMarkdown
+                text={text}
+                citationSources={citationSources}
+                isStreaming={isStreaming}
+                onOpenCitation={onOpenCitation}
+              />
             </div>
-          </div>
+
+            <MessageToolbar className="mt-0.5">
+              <AnswerActions text={text} visible={!isStreaming} onRetry={onRetry} />
+              <AnswerSourcesPanel sources={sourceRows} claimsById={claimsById} question={question} threadKey={threadKey} />
+            </MessageToolbar>
+          </>
         ) : null}
 
         {a2ui !== null ? (
@@ -222,6 +239,7 @@ export function AgentMessage({
         {text !== "" && !isStreaming ? (
           <FollowUpList followUps={followUps} onSelect={onSelectFollowUp} />
         ) : null}
+        </motion.div>
       </MessageContent>
     </Message>
   );

@@ -1,28 +1,32 @@
 "use client";
 
 
-import { Database, GitCompare, TrendingUp, type LucideIcon } from "lucide-react";
+import { BadgePercent, GitCompare, History, Quote, type LucideIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { STATE_TRANSITION_CLASS, iconProps } from "../tokens";
 
-type Suggestion = { id: string; label: string; icon: LucideIcon; prompt: string };
+type Suggestion = { id: string; question: string; icon: LucideIcon };
 
 const SUGGESTIONS: Suggestion[] = [
   {
-    id: "compare",
-    label: "Compare two brands",
-    icon: GitCompare,
-    prompt: "Compare two of my tracked brands.",
+    id: "discounts",
+    question: "Which rival leans hardest on discount hooks?",
+    icon: BadgePercent,
   },
   {
-    id: "trends",
-    label: "Check search trends",
-    icon: TrendingUp,
-    prompt: "How has search interest changed for this brand?",
+    id: "compare",
+    question: "Compare two of my brands",
+    icon: GitCompare,
+  },
+  {
+    id: "changed",
+    question: "What changed since the last check?",
+    icon: History,
   },
   {
     id: "evidence",
-    label: "See the evidence",
-    icon: Database,
-    prompt: "Show the evidence behind the top hook.",
+    question: "Show the evidence behind the top hook.",
+    icon: Quote,
   },
 ];
 
@@ -34,9 +38,9 @@ export function PromptCategories({
   disabled: boolean;
 }) {
   return (
-    <div className="w-full text-center">
+    <div className="w-full text-left">
       <p className="type-label text-fg-tertiary">Try asking</p>
-      <div className="mt-2.5 flex flex-wrap justify-center gap-2">
+      <div className="mt-3 grid grid-cols-1 gap-2.5 sm:grid-cols-2">
         {SUGGESTIONS.map((suggestion) => {
           const Icon = suggestion.icon;
           return (
@@ -44,11 +48,33 @@ export function PromptCategories({
               key={suggestion.id}
               type="button"
               disabled={disabled}
-              onClick={() => onSelect(suggestion.prompt)}
-              className="inline-flex items-center gap-1.5 rounded-full border border-border bg-bg-raised px-3.5 py-2 text-[12.5px] font-medium text-fg-secondary transition-[transform,box-shadow,border-color,color] duration-150 ease-out hover:-translate-y-0.5 hover:border-accent/30 hover:text-fg hover:shadow-[var(--shadow-lift)] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:shadow-none"
+              onClick={() => onSelect(suggestion.question)}
+              className={cn(
+                "group flex items-center gap-3 rounded-lg border border-border bg-bg-inset p-3 text-left",
+                "motion-safe:transition-[box-shadow,border-color,background-color,transform] motion-safe:duration-150 motion-safe:ease-out",
+                "hover:-translate-y-0.5 hover:border-border-strong hover:bg-bg-raised hover:shadow-[var(--shadow-md)]",
+                "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                "disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0 disabled:hover:border-border disabled:hover:bg-bg-inset disabled:hover:shadow-none",
+              )}
             >
-              <Icon className="size-3.5 text-accent" aria-hidden="true" />
-              {suggestion.label}
+              <span
+                className={cn(
+                  "flex size-9 shrink-0 items-center justify-center rounded-md bg-bg-raised text-fg-secondary",
+                  STATE_TRANSITION_CLASS,
+                  "group-hover:bg-accent group-hover:text-accent-ink",
+                )}
+              >
+                <Icon {...iconProps} size={16} aria-hidden="true" />
+              </span>
+              <span
+                className={cn(
+                  "text-[13.5px] leading-5 text-fg-secondary",
+                  STATE_TRANSITION_CLASS,
+                  "group-hover:text-fg",
+                )}
+              >
+                {suggestion.question}
+              </span>
             </button>
           );
         })}

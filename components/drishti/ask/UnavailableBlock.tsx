@@ -38,7 +38,7 @@ export function UnavailableBlock({
     <div
       role="status"
       className={cn(
-        "flex flex-col gap-2 rounded-[8px] border px-3.5 py-3",
+        "flex flex-col gap-2 rounded-lg border px-3.5 py-3",
         isFault ? "border-danger/30 bg-danger/[0.06]" : "border-weak/30 bg-weak/[0.06]",
       )}
     >

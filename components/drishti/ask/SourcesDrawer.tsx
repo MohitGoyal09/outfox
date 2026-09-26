@@ -100,7 +100,7 @@ export function SourcesDrawerContent({ rows, claimsById }: { rows: SourceRowView
                 {label} · {engineRows.length}
               </span>
             </div>
-            <div className="flex flex-col gap-0.5 rounded-sm border border-border bg-bg-inset p-1">
+            <div className="flex flex-col gap-0.5 rounded-lg border border-border bg-bg-inset p-1">
               {engineRows.map((row) => (
                 <SourceRow key={row.claimId} row={row} isStoredClaim={claimsById.has(row.claimId)} />
               ))}
