@@ -283,6 +283,15 @@ export function AskView({
     }
   }
 
+  function openMentionPicker() {
+    const next = value.length === 0 || value.endsWith(" ") ? `${value}@` : `${value} @`;
+    setValue(next);
+    setMentionSource("typed");
+    setMentionToken("");
+    setHighlightedIndex(0);
+    requestAnimationFrame(() => textareaRef.current?.focus());
+  }
+
   function handleTextareaKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (!mentionMenuOpen) return;
     if (event.key === "ArrowDown") {
@@ -420,6 +429,7 @@ export function AskView({
       }}
       chips={mentionBrandViews.map((brand) => ({ id: String(brand.id), name: brand.name }))}
       onRemoveChip={(id) => removeMention(id as Id<"brands">)}
+      onMention={openMentionPicker}
       overlay={
         mentionMenuOpen ? (
           <BrandMentionMenu
@@ -536,7 +546,7 @@ export function AskView({
       {/* The prompt box is a permanent bottom dock: it sits in the same place
           before the first message and after the last, so the eye never hunts
           for it. The conversation scrolls above it. */}
-      <div className="relative z-10 shrink-0 border-t border-border bg-bg-raised/95 px-4 pb-4 pt-3 shadow-[0_-1px_2px_rgba(16,24,40,0.04)] backdrop-blur supports-[backdrop-filter]:bg-bg-raised/80 sm:px-6">
+      <div className="relative z-10 shrink-0 border-t border-border bg-bg px-4 pb-5 pt-4 sm:px-6">
         <div className="mx-auto w-full max-w-3xl">{composer}</div>
       </div>
 

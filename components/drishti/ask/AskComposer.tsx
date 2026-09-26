@@ -3,7 +3,7 @@
 
 import type { AriaAttributes, ChangeEvent, KeyboardEvent, ReactNode, RefObject } from "react";
 import type { ChatStatus } from "ai";
-import { ArrowUp, CircleAlert, Square, X } from "lucide-react";
+import { ArrowUp, CircleAlert, Plus, Square, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
@@ -35,6 +35,7 @@ export function AskComposer({
   textareaAria,
   chips = [],
   onRemoveChip,
+  onMention,
   overlay,
   note,
   className,
@@ -54,6 +55,7 @@ export function AskComposer({
   textareaAria?: AriaAttributes & { role?: "combobox" };
   chips?: AskContextChip[];
   onRemoveChip?: (id: string) => void;
+  onMention?: () => void;
   overlay?: ReactNode;
   note?: ReactNode;
   className?: string;
@@ -78,9 +80,10 @@ export function AskComposer({
         <PromptInput
           onSubmit={(message) => onSubmit(message.text)}
           className={cn(
-            "rounded-2xl border border-border bg-bg-raised shadow-[0_1px_4px_rgba(28,28,28,0.04)]",
-            "motion-safe:transition-shadow motion-safe:duration-150 motion-safe:ease-out",
-            "focus-within:shadow-[0_4px_16px_rgba(28,28,28,0.08)]",
+            "rounded-2xl border border-border-strong bg-bg-raised shadow-[var(--shadow-sm)]",
+            "motion-safe:transition-[box-shadow,border-color] motion-safe:duration-150 motion-safe:ease-out",
+            "focus-within:border-border-strong focus-within:shadow-[var(--shadow-md)]",
+            "hover:shadow-[var(--shadow-md)]",
           )}
         >
           <PromptInputBody>
@@ -92,16 +95,35 @@ export function AskComposer({
               disabled={disabled}
               rows={3}
               placeholder={placeholder}
-              className="max-h-[300px] min-h-[44px] overflow-y-auto bg-transparent pt-3 pl-4 pb-2 pr-4 text-fg placeholder:text-fg-placeholder"
+              className="max-h-[300px] min-h-[52px] overflow-y-auto bg-transparent px-4 pt-3.5 pb-2 text-[14px] leading-6 text-fg placeholder:text-fg-placeholder"
               {...textareaAria}
             />
           </PromptInputBody>
-          <PromptInputFooter className="items-center gap-2 rounded-b-2xl px-3 pt-0 pb-2">
+          <PromptInputFooter className="items-center gap-2 rounded-b-2xl px-3 pt-0.5 pb-2.5">
             <PromptInputTools className="min-w-0 flex-wrap gap-1.5">
+              {onMention ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={onMention}
+                      aria-label="Reference a brand"
+                      className={cn(
+                        "flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-bg-inset text-fg-secondary",
+                        STATE_TRANSITION_CLASS,
+                        "hover:border-border-strong hover:bg-bg-raised hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                      )}
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Reference a brand (@)</TooltipContent>
+                </Tooltip>
+              ) : null}
               {chips.map((chip) => (
                 <span
                   key={chip.id}
-                  className="inline-flex h-7 items-center gap-1 rounded-full bg-bg-inset pl-2.5 pr-1 text-[11.5px] text-fg-secondary"
+                  className="inline-flex h-7 items-center gap-1 rounded-full border border-border bg-bg-inset pl-2.5 pr-1 text-[11.5px] text-fg-secondary"
                 >
                   {chip.name}
                   {onRemoveChip ? (
@@ -139,12 +161,12 @@ export function AskComposer({
                       disabled={generating ? false : !canSend || overCap}
                       aria-label={generating ? "Stop" : "Send"}
                       className={cn(
-                        "size-10 rounded-full",
+                        "size-10 rounded-full shadow-[var(--shadow-xs)]",
                         generating
                           ? "bg-danger text-white hover:bg-danger/90"
                           : canSend && !overCap
                             ? "bg-accent text-accent-ink hover:bg-accent-strong"
-                            : "bg-bg-inset text-fg-secondary hover:bg-bg-inset",
+                            : "bg-bg-inset text-fg",
                         "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-bg-inset disabled:text-fg-secondary disabled:opacity-100",
                       )}
                     >
