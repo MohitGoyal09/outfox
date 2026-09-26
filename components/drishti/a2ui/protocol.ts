@@ -222,7 +222,8 @@ export type ResolvedBinding =
   | { ok: false; reason: string };
 
 function facetRowsOf(output: unknown): { raw: string; count: number }[] | null {
-  const rows = (output as { rows?: unknown } | null)?.rows;
+  const counted = (output as { facetRows?: unknown } | null)?.facetRows;
+  const rows = Array.isArray(counted) ? counted : (output as { rows?: unknown } | null)?.rows;
   if (!Array.isArray(rows)) return null;
   const out: { raw: string; count: number }[] = [];
   for (const row of rows) {

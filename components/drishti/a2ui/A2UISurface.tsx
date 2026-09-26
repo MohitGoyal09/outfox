@@ -5,7 +5,7 @@ import { useQuery } from "convex/react";
 import { TriangleAlert } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { EmptyState } from "../EmptyState";
-import { hookName } from "../labels";
+import { hookName, sourceName } from "../labels";
 import { HOOK_TYPES, categoricalColorFor, iconProps } from "../tokens";
 import { RankedCatalogChart } from "../brands/RankedCatalogChart";
 import { TrendsChart, type TrendsChartResult } from "../charts";
@@ -33,7 +33,8 @@ export function A2UISurface({ text, results }: { text: string; results: SettledT
     if ((HOOK_TYPES as readonly string[]).includes(raw)) return hookName(raw);
     const brand = brands.find((row) => String(row._id) === raw);
     if (brand !== undefined) return brand.name;
-    return STORED_ID_RE.test(raw) ? null : raw;
+    if (STORED_ID_RE.test(raw)) return null;
+    return sourceName(raw);
   };
 
   const tree = resolveA2UI(parsed, results, labelFor);

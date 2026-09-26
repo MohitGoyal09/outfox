@@ -182,6 +182,14 @@ export const fetchBrand = action({
       brandId: v.optional(v.string()),
       brandName: v.string(),
       rows: v.array(fetchedClaimValidator),
+      /**
+       * Chart-shaped counts over `rows`, present only in `mode: "read"`. The
+       * chart engine binds to {value, count} rows, so this is what lets an
+       * untracked brand be drawn instead of only cited. A preview, never stored.
+       */
+      facetRows: v.optional(
+        v.array(v.object({ value: v.string(), count: v.number() })),
+      ),
       total: v.number(),
       coverage: coverageValidator,
       asOf: v.union(v.string(), v.null()),
@@ -328,11 +336,24 @@ export const fetchBrand = action({
         }
       }
 
+      // Chart-shaped summary over the live rows. The chart engine binds to
+      // {value, count} rows and cannot read evidence rows, so before this an
+      // untracked brand could be cited but never charted. Counted here, never
+      // stored -- it is a preview for this turn, not evidence.
+      const facetCounts = new Map<string, number>();
+      for (const row of readRows) {
+        facetCounts.set(row.sourceEngine, (facetCounts.get(row.sourceEngine) ?? 0) + 1);
+      }
+      const facetRows = [...facetCounts.entries()]
+        .map(([value, count]) => ({ value, count }))
+        .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+
       return {
         ok: true as const,
         mode: "read" as const,
         brandName: name,
         rows: readRows,
+        facetRows,
         total: readRows.length,
         coverage: readCoverage,
         asOf: readFetchedAt,
