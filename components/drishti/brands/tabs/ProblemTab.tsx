@@ -72,7 +72,7 @@ function RelatedListPanel({
   );
 }
 
-function FunnelCoveragePanel({ items }: { items: ReturnType<typeof funnelDistribution> }) {
+function FunnelCoveragePanel({ items, totalFindings }: { items: ReturnType<typeof funnelDistribution>; totalFindings?: number | null }) {
   const gaps = useMemo(() => funnelCoverageGaps(items), [items]);
   return (
     <Panel interactive={false} className="overflow-hidden">
@@ -86,7 +86,7 @@ function FunnelCoveragePanel({ items }: { items: ReturnType<typeof funnelDistrib
         </h3>
       </div>
       <div className="space-y-3 p-4">
-        <FunnelPanel items={items} />
+        <FunnelPanel items={items} totalFindings={totalFindings} />
         {gaps.length > 0 ? (
           <p className="rounded-sm border border-dashed border-border bg-bg-inset/40 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
             No tagged evidence yet for: <span className="font-medium text-fg">{gaps.map((stage) => stageName(stage)).join(", ")}</span>.
@@ -143,7 +143,7 @@ export function ProblemTab({
         />
       </div>
       <TrendsExperience snapshot={trendsSnapshot} claims={claims} brandId={brand._id} brandName={brand.name} latestRunAt={latestRunAt} />
-      <FunnelCoveragePanel items={funnelItems} />
+      <FunnelCoveragePanel items={funnelItems} totalFindings={filtered.length} />
       <div>
         <h2 className="type-headline text-fg">Real problem evidence</h2>
         <EvidenceGrid

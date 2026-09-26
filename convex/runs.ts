@@ -1,6 +1,6 @@
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
-import type { Id } from "./_generated/dataModel";
+import type { Doc, Id } from "./_generated/dataModel";
 import { v, type Infer } from "convex/values";
 import { MAX_BRANDS_PER_RUN } from "./pipeline/plan";
 import { requireUserId } from "./lib/auth";
@@ -121,6 +121,16 @@ export const latestForCohortInternal = internalQuery({
     const runs = await ctx.db.query("runs").collect();
   },
 });
+
+export function creditsSnapshotOf(
+  run: Pick<Doc<"runs">, "_id" | "requestedAt" | "searchesLeftAfter">,
+): { runId: Id<"runs">; requestedAt: string; searchesLeftAfter: number | null } {
+  return {
+    runId: run._id,
+    requestedAt: run.requestedAt,
+    searchesLeftAfter: run.searchesLeftAfter ?? null,
+  };
+}
 
 type AgentPlan = Infer<typeof agentPlanValidator>;
 type StepState = Infer<typeof stepStateValidator>;

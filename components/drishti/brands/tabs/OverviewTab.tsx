@@ -103,6 +103,7 @@ export function OverviewTab({
   tags,
   hookItems,
   funnelItems,
+  totalFindings,
   fallbackLabel,
   filters,
   setFilter,
@@ -119,6 +120,7 @@ export function OverviewTab({
   tags: ClaimDoc[];
   hookItems: DistributionItem[];
   funnelItems: DistributionItem[];
+  totalFindings?: number | null;
   fallbackLabel?: React.ReactNode;
   filters: BrandFilters;
   setFilter: <K extends keyof BrandFilters>(key: K, value: BrandFilters[K]) => void;
@@ -161,7 +163,7 @@ export function OverviewTab({
           }
           subtitle={fallbackLabel}
         >
-          <HookChart items={hookItems} />
+          <HookChart items={hookItems} totalFindings={totalFindings} />
         </SummaryPanel>
         {/* Renamed from "Funnel stage": funnelStage is a tag distribution across five
             categories, not a measured conversion sequence, so the panel name and its
@@ -176,7 +178,7 @@ export function OverviewTab({
           }
           subtitle={fallbackLabel}
         >
-          <FunnelPanel items={funnelItems} />
+          <FunnelPanel items={funnelItems} totalFindings={totalFindings} />
         </SummaryPanel>
       </div>
       {/* SimilarBrandsPanel moved to the brand header as a chip (BrandProfile.tsx),

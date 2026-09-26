@@ -111,6 +111,9 @@ export function SearchExperience({
   }, [claims, hookFunnelPreviousRunId]);
   const hookItems = hookDistribution(latestTags, previousTags);
   const funnelItems = funnelDistribution(latestTags, previousTags);
+  const hookFunnelTotalFindings = hookFunnelRunId
+    ? searchClaims.filter((claim) => String(claim.runId) === hookFunnelRunId).length
+    : null;
   const searchFallbackLabel = searchFallbackRun ? (
     <p className="mt-1 font-mono text-[10px] text-muted-foreground">from the run on {shortDate(searchFallbackRun.requestedAt)}</p>
   ) : undefined;
@@ -185,7 +188,7 @@ export function SearchExperience({
           }
           subtitle={searchFallbackLabel}
         >
-          <HookChart items={hookItems} />
+          <HookChart items={hookItems} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
         <SummaryPanel
           title={
@@ -196,7 +199,7 @@ export function SearchExperience({
           }
           subtitle={searchFallbackLabel}
         >
-          <FunnelPanel items={funnelItems} />
+          <FunnelPanel items={funnelItems} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
       </div>
 

@@ -49,6 +49,17 @@ export function DonutChart({ title, definition, rows, emptyTitle, emptyDescripti
             </ul>
           </div>
         )}
+        {/* This chart draws whatever `rows` it is bound to — sometimes a
+            tagged sample, sometimes another bounded slice — and has no way to
+            know which from a label+count pair alone. So the denominator line
+            names only what is provably true here: the real count these
+            shares divide by is the rows bound to THIS chart, never implied
+            to be the brand's whole findings set (docs/HANDOFF.md §2). */}
+        {rows.length > 0 && total > 0 ? (
+          <p className="mt-3 text-[11px] leading-5 text-muted-foreground">
+            Shares are of the <span className="font-mono tabular-nums text-fg">{total}</span> counted here, not of anything beyond these rows.
+          </p>
+        ) : null}
       </div>
     </Panel>
   );

@@ -141,3 +141,5 @@ export const byBrandAndMetric = query({
     if (brand?.ownerId !== ownerId) throw new Error("Brand not found");
   },
 });
+
+const LLM_TAG_SOURCE_ENGINE = "llm_tag";

@@ -8,7 +8,7 @@ import { hookName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
+import { FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, VALUE_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
 import type { DistributionItem } from "../DistributionPanel";
 
 
@@ -50,7 +50,24 @@ function hookRow(row: DistributionItem): DistributionItem & { count: number } {
   return { label: row.label, count: row.count ?? 0, sharePct: null, delta: row.delta };
 }
 
-function HookFallback({ rows, total }: { rows: DistributionItem[]; total: number }) {
+function TaggedShareNote({ shown, totalFindings }: { shown: number; totalFindings?: number | null }) {
+  const shownText = <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(shown)}</span>;
+  return (
+    <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+      {totalFindings != null && totalFindings > 0 ? (
+        <>
+          {shownText} of{" "}
+          <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(totalFindings)}</span>{" "}
+          finding{totalFindings === 1 ? "" : "s"} tagged — shares above are of that tagged sample, not of all findings.
+        </>
+      ) : (
+        <>Shares above are of {shownText} tagged finding{shown === 1 ? "" : "s"}, not of all findings.</>
+      )}
+    </p>
+  );
+}
+
+function HookFallback({ rows, total, totalFindings }: { rows: DistributionItem[]; total: number; totalFindings?: number | null }) {
   if (rows.length === 1) {
     const row = rows[0];
     return (
@@ -76,11 +93,12 @@ function HookFallback({ rows, total }: { rows: DistributionItem[]; total: number
           <DeltaTag delta={row.delta} />
         </div>
       ))}
+      {total > 0 ? <TaggedShareNote shown={total} totalFindings={totalFindings} /> : null}
     </div>
   );
 }
 
-export function HookChart({ items }: { items: DistributionItem[] }) {
+export function HookChart({ items, totalFindings }: { items: DistributionItem[]; /** Real count of all findings in this check/tab's scope, for the "N of TOTAL findings tagged" note — omit only when the caller has no such total to hand down (see EvidencePanels.tsx's TaggedShareNote). */ totalFindings?: number | null }) {
   const rows = [...items].map(hookRow).filter((row) => row.count > 0).sort((a, b) => b.count - a.count).slice(0, 9);
   const total = rows.reduce((sum, row) => sum + row.count, 0);
   if (rows.length === 0) return (
@@ -91,7 +109,7 @@ export function HookChart({ items }: { items: DistributionItem[] }) {
       description="Hook types are assigned by an enrichment pass after a check runs. This check carries none yet."
     />
   );
-  if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} />;
+  if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} totalFindings={totalFindings} />;
   const chartConfig = Object.fromEntries(
     rows.map((row) => [row.label, { label: hookName(row.label), color: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }]),
   ) satisfies ChartConfig;
@@ -110,7 +128,11 @@ export function HookChart({ items }: { items: DistributionItem[] }) {
         </ChartContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-mono text-sm font-semibold tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(total)}</span>
-          <span className="text-[7px] uppercase tracking-wide text-muted-foreground">evidence</span>
+          {/* Was "EVIDENCE" — read as the brand's total evidence count, which
+              this is not: it is only the tagged sample the shares below
+              divide by (docs/HANDOFF.md §2, "a bounded query cannot assert
+              absence"/a whole-corpus claim). */}
+          <span className="text-[7px] uppercase tracking-wide text-muted-foreground">tagged</span>
         </div>
       </div>
       <div className="space-y-2">
@@ -126,6 +148,11 @@ export function HookChart({ items }: { items: DistributionItem[] }) {
           </div>
         ))}
       </div>
+      {total > 0 ? (
+        <div className="col-span-2">
+          <TaggedShareNote shown={total} totalFindings={totalFindings} />
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -140,7 +167,7 @@ const FUNNEL_ORDER: readonly [FunnelStage, string][] = [
 
 const FUNNEL_EMPTY_BAND_PCT = 4;
 
-export function FunnelPanel({ items }: { items: DistributionItem[] }) {
+export function FunnelPanel({ items, totalFindings }: { items: DistributionItem[]; /** Real count of all findings in this check/tab's scope, for the "N of TOTAL findings tagged" note — omit only when the caller has no such total to hand down (see TaggedShareNote above). */ totalFindings?: number | null }) {
   const byLabel = new Map(items.map((item) => [item.label, item]));
   const rows = FUNNEL_ORDER.map(([stage, label]) => ({
     stage,
@@ -177,6 +204,7 @@ export function FunnelPanel({ items }: { items: DistributionItem[] }) {
           </div>
         );
       })}
+      <TaggedShareNote shown={total} totalFindings={totalFindings} />
     </div>
   );
 }

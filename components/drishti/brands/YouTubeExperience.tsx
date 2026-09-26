@@ -73,6 +73,9 @@ export function YouTubeExperience({
   }, [claims, hookFunnelPreviousRunId]);
   const hookItems = hookDistribution(miniPanelTags, previousMiniPanelTags);
   const funnelItems = funnelDistribution(miniPanelTags, previousMiniPanelTags);
+  const hookFunnelTotalFindings = hookFunnelRunId
+    ? videoClaims.filter((claim) => String(claim.runId) === hookFunnelRunId).length
+    : null;
   const videoFallbackLabel = videoFallbackRun ? (
     <p className="mt-1 font-mono text-[10px] text-muted-foreground">from the run on {shortDate(videoFallbackRun.requestedAt)}</p>
   ) : undefined;
@@ -100,7 +103,7 @@ export function YouTubeExperience({
           }
           subtitle={videoFallbackLabel}
         >
-          <HookChart items={hookItems} />
+          <HookChart items={hookItems} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
         <SummaryPanel
           title={
@@ -111,7 +114,7 @@ export function YouTubeExperience({
           }
           subtitle={videoFallbackLabel}
         >
-          <FunnelPanel items={funnelItems} />
+          <FunnelPanel items={funnelItems} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
       </div>
 

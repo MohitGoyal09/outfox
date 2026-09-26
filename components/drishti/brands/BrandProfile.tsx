@@ -212,6 +212,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const hookFunnelPreviousClaims = hookFunnelPreviousRunId ? (claims ?? []).filter((claim) => String(claim.runId) === hookFunnelPreviousRunId) : null;
   const hookItems = hookDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
   const funnelItems = funnelDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
+  const hookFunnelTotalFindings = signalClaims(hookFunnelClaims).length;
   const fallbackLabel = fallbackRun ? <p className="mt-1 font-mono text-[10px] text-muted-foreground">from the check on {formatStamp(fallbackRun.requestedAt)}</p> : undefined;
 
   const historyRows = useMemo(() => {
@@ -380,6 +381,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 tags={tags}
                 hookItems={hookItems}
                 funnelItems={funnelItems}
+                totalFindings={hookFunnelTotalFindings}
                 fallbackLabel={fallbackLabel}
                 filters={filters}
                 setFilter={setFilter}

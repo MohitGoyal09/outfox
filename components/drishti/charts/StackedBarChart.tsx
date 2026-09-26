@@ -43,6 +43,14 @@ export function StackedBarChart({ title, definition, rows, emptyTitle, emptyDesc
                 </li>
               ))}
             </ul>
+            {/* Same reasoning as DonutChart.tsx: this bar composes whatever
+                bounded `rows` it is handed, with no way to know if that is a
+                tagged sample or some other slice, so the note names only the
+                real, known denominator — these rows' own total — instead of
+                letting a segment's `%` be read as a share of everything. */}
+            <p className="text-[11px] leading-5 text-muted-foreground">
+              Shares are of the <span className="font-mono tabular-nums text-fg">{total}</span> counted here, not of anything beyond these rows.
+            </p>
           </>
         )}
       </div>
