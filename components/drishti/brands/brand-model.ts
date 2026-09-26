@@ -504,14 +504,6 @@ export function relatedSearchClaims(claims: ClaimDoc[]): ClaimDoc[] {
   return claims.filter((claim) => claim.metric === "google_related_search");
 }
 
-export function knowledgeDescriptionClaims(claims: ClaimDoc[]): ClaimDoc[] {
-  return claims.filter((claim) => claim.metric === "brand_knowledge_description");
-}
-
-export function knowledgeAttributeClaims(claims: ClaimDoc[]): ClaimDoc[] {
-  return claims.filter((claim) => claim.metric === "brand_knowledge_attribute");
-}
-
 export function youtubeShortResultClaims(claims: ClaimDoc[]): ClaimDoc[] {
   return claims.filter((claim) => claim.metric === "youtube_short_result");
 }

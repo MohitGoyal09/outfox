@@ -4,7 +4,7 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { ArrowUpRight, BookOpen, Layers, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Layers, Sparkles, TrendingUp } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
@@ -18,8 +18,6 @@ import {
   aiOverviewClaims,
   hookMixDrift,
   hookTypeFrequency,
-  knowledgeAttributeClaims,
-  knowledgeDescriptionClaims,
   pricePoints,
   tagBearingClaims,
   tagsForClaim,
@@ -31,47 +29,6 @@ import {
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { displayClaimText, shortDate } from "../format";
 
-function KnowledgeGraphCard({ brand, latestClaims }: { brand: BrandDoc; latestClaims: ClaimDoc[] }) {
-  const descriptions = knowledgeDescriptionClaims(latestClaims);
-  const attributes = knowledgeAttributeClaims(latestClaims);
-  if (descriptions.length === 0 && attributes.length === 0) {
-    return (
-      <Panel interactive={false} className="p-4">
-        <EmptyState
-          size="sm"
-          icon={<BookOpen {...iconProps} size={16} />}
-          title="No knowledge-graph panel for this brand."
-          description="Google doesn't show a knowledge panel for every brand — this bonus card fills in only when one is available, it is not required for the rest of this tab."
-        />
-      </Panel>
-    );
-  }
-  return (
-    <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <BookOpen className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Knowledge graph identity</h3>
-      </div>
-      <div className="p-4">
-        <div className="space-y-4">
-          {descriptions.length > 0 ? <p className="text-sm leading-6 text-fg">{displayClaimText(descriptions[0].text)}</p> : null}
-          {attributes.length > 0 ? (
-            <dl className="grid grid-cols-2 gap-x-4 gap-y-2 text-xs sm:grid-cols-3">
-              {attributes.map((claim) => (
-                <div key={String(claim._id)} className="min-w-0">
-                  {/* Every row here shares the same claim.metric ("brand_knowledge_attribute") — that told the reader nothing and leaked a raw
-                      identifier. claim.unit carries the real per-row attribute name (see extractClaims.ts's KNOWLEDGE_ATTRIBUTES), so use that instead. */}
-                  <dt className="truncate text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">{claim.unit ?? "Attribute"}</dt>
-                  <dd className="truncate font-medium text-fg">{String(claim.value ?? displayClaimText(claim.text))}</dd>
-                </div>
-              ))}
-            </dl>
-          ) : null}
-        </div>
-      </div>
-    </Panel>
-  );
-}
 
 function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
   const blocks = aiOverviewClaims(claims);
@@ -273,7 +230,24 @@ export function PositionTab({
 
   return (
     <div className="space-y-4">
-      <KnowledgeGraphCard brand={brand} latestClaims={filteredLatest} />
+      {/*
+        No knowledge-graph card here, deliberately. Google does return a panel
+        for these brands -- q=Mamaearth gives title, description, rating and
+        review count -- but only for a bare ENTITY query. Our Google call
+        qualifies the name with the vertical ("Mamaearth skincare") because a
+        one-word brand that is also a common word returns the wrong results
+        unqualified: q=Minimalist comes back with decluttering habits and
+        lifestyle articles, which is what the qualifier was added to stop.
+        The two cannot both be had from one call, and a second Google call per
+        brand per run would double the most metered cost this product has, for
+        a card that is a bonus by its own description. Measured: 0 of 56 ok
+        Google snapshots ever carried a knowledge_graph block.
+
+        The EXTRACTOR stays in convex/pipeline/extractClaims.ts -- it costs
+        nothing and captures a panel on the rare call that returns one. If a
+        knowledge card is ever wanted, the fix is a second entity-query call,
+        not a change here.
+      */}
       <AiOverviewPanel claims={filteredLatest} />
       {/*
         Ranked hook catalog — two levels of the same enrichment pass, both
