@@ -45,7 +45,7 @@ export function StatTile({
           <span
             aria-hidden="true"
             className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-[8px] border bg-bg-inset",
+              "flex size-8 shrink-0 items-center justify-center rounded-sm border bg-bg-inset",
               accentColor === null && "border-border text-fg-secondary",
             )}
             style={

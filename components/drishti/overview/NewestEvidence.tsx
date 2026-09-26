@@ -97,7 +97,7 @@ export function NewestEvidence({ loading, hasBrands, feed, nowMs }: NewestEviden
                   href={item.evidenceUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="ml-auto inline-flex items-center gap-1 rounded-[4px] text-[12px] text-fg-secondary transition-colors duration-150 ease-out hover:text-fg hover:underline"
+                  className="ml-auto inline-flex items-center gap-1 rounded-sm text-[12px] text-fg-secondary transition-colors duration-150 ease-out hover:text-fg hover:underline"
                 >
                   Source
                   <ArrowUpRight {...iconProps} size={12} aria-hidden="true" className="size-3" />

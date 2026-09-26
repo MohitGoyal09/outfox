@@ -4,7 +4,7 @@
 import type { InputHTMLAttributes } from "react";
 import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LABEL_CLASS, iconProps } from "@/components/drishti";
+import { FOCUS_RING_CLASS, LABEL_CLASS, iconProps } from "@/components/drishti";
 
 export type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"> & {
   id: string;
@@ -31,13 +31,14 @@ export function Field({ id, label, error = null, hint, className, ...rest }: Fie
         aria-invalid={invalid ? true : undefined}
         aria-describedby={describedBy.length > 0 ? describedBy.join(" ") : undefined}
         className={cn(
-          "h-10 w-full rounded-[5px] border bg-[var(--bg-inset)] px-3 text-[14px] text-[var(--text-primary)] outline-none",
+          "h-10 w-full rounded-sm border bg-[var(--bg-inset)] px-3 text-[14px] text-[var(--text-primary)] outline-none",
           "motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-out",
           "placeholder:text-[var(--text-tertiary)]",
           invalid
             ? "border-[var(--danger)]"
             : "border-[var(--border-strong)] hover:border-[var(--text-tertiary)]",
-          "focus:border-[var(--border-strong)] focus:shadow-[0_0_0_3px_var(--accent-dim)]",
+          "focus:border-[var(--border-strong)]",
+          FOCUS_RING_CLASS,
           "disabled:cursor-not-allowed disabled:bg-[var(--bg-raised)] disabled:text-[var(--text-tertiary)]",
         )}
       />

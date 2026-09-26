@@ -41,7 +41,7 @@ export function Card({
       <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="flex min-w-0 items-start gap-2.5">
           {icon ? (
-            <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-[8px] border border-border bg-bg-inset text-fg-secondary">
+            <span className="mt-0.5 flex size-7 shrink-0 items-center justify-center rounded-sm border border-border bg-bg-inset text-fg-secondary">
               {icon}
             </span>
           ) : null}

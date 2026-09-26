@@ -6,7 +6,7 @@ import { useAction, useQuery } from "convex/react";
 import { ArrowRight, CircleAlert, Loader2, Plus, Search, X } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button, Chip, EmptyState, Panel, iconProps } from "@/components/drishti";
+import { Button, Chip, EmptyState, FOCUS_RING_CLASS, Panel, iconProps } from "@/components/drishti";
 import { Field } from "./Field";
 import {
   MAX_ONBOARDING_COMPETITORS,
@@ -157,7 +157,7 @@ export function Step2Competitors({
             onChange={(event) => setQuery(event.target.value)}
             placeholder={`Search ${vertical.toLowerCase()} brands…`}
             aria-label="Search competitors"
-            className="h-10 w-full rounded-sm border border-[var(--border-strong)] bg-[var(--bg-inset)] pl-9 pr-3 text-[14px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] focus:shadow-[0_0_0_3px_var(--accent-dim)]"
+            className={`h-10 w-full rounded-sm border border-[var(--border-strong)] bg-[var(--bg-inset)] pl-9 pr-3 text-[14px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] ${FOCUS_RING_CLASS}`}
           />
         </div>
       )}
@@ -173,7 +173,7 @@ export function Step2Competitors({
         isLoading ? (
           <div className="grid gap-2 sm:grid-cols-2">
             {[1, 2, 3, 4].map((row) => (
-              <div key={row} className="h-14 animate-pulse rounded-[8px] bg-[var(--bg-inset)]" />
+              <div key={row} className="h-14 animate-pulse rounded-lg bg-[var(--bg-inset)]" />
             ))}
           </div>
         ) : catalogEmpty ? (

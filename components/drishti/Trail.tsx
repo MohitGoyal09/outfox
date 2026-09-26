@@ -225,7 +225,7 @@ function StepLabel({
       onClick={() => onStepFocus(view.id)}
       className={cn(
         base,
-        "-mx-1 rounded-[3px] px-1 hover:text-[var(--text-primary)]",
+        "-mx-1 rounded-sm px-1 hover:text-[var(--text-primary)]",
         PRESS_CLASS,
         STATE_TRANSITION_CLASS,
         "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--accent-dim)]",
@@ -252,7 +252,7 @@ function StepValue({ view }: { view: TrailRowView }) {
       rel="noreferrer noopener"
       className={cn(
         "group inline text-[var(--text-primary)] underline decoration-[var(--border-strong)] underline-offset-[3px] hover:decoration-[var(--accent)]",
-        "rounded-[3px] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--accent-dim)]",
+        "rounded-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[var(--accent)] focus-visible:ring-[3px] focus-visible:ring-[var(--accent-dim)]",
       )}
     >
       <span className={textClass}>{view.valueText}</span>
@@ -287,7 +287,7 @@ function TrailGaps({ gaps }: { gaps: TrailGap[] }) {
         <li
           key={gap.id}
           data-state="gap"
-          className="flex items-start gap-2 rounded-[5px] border border-dashed border-[var(--border)] px-2 py-1.5"
+          className="flex items-start gap-2 rounded-md border border-dashed border-[var(--border)] px-2 py-1.5"
         >
           <span
             aria-hidden="true"
@@ -321,7 +321,7 @@ export function TrailInline({
     <li
       aria-current={view.focused ? "true" : undefined}
       className={cn(
-        "flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-[5px] px-1.5 py-1 -mx-1.5",
+        "flex min-w-0 max-w-full flex-wrap items-center gap-x-2 gap-y-0.5 rounded-md px-1.5 py-1 -mx-1.5",
         STATE_TRANSITION_CLASS,
         view.focused && FOCUS_MARK_CLASS,
       )}
@@ -388,7 +388,7 @@ function StepDetail({ detail }: { detail: NonNullable<TrailRowView["detail"]> })
           <p className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-secondary)]")}>{detail.result}</p>
         ) : null}
         {argsText !== null ? (
-          <pre className="overflow-x-auto rounded-[4px] bg-[var(--bg-inset)] p-2 text-[10.5px] leading-[1.5] text-[var(--text-tertiary)]">
+          <pre className="overflow-x-auto rounded-sm bg-[var(--bg-inset)] p-2 text-[10.5px] leading-[1.5] text-[var(--text-tertiary)]">
             {argsText}
           </pre>
         ) : null}
@@ -434,7 +434,7 @@ export function TrailVertical({
       </span>
       <div
         className={cn(
-          "min-w-0 rounded-[5px] px-2 py-1 -mx-2 -my-1",
+          "min-w-0 rounded-md px-2 py-1 -mx-2 -my-1",
           STATE_TRANSITION_CLASS,
           view.focused && FOCUS_MARK_CLASS,
         )}

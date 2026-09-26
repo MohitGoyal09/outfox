@@ -21,7 +21,7 @@ type SkeletonShape = {
 export const SKELETON_SHAPE: Record<SkeletonVariant, SkeletonShape> = {
   text: {
     height: 12,
-    radiusClass: "rounded-[4px]",
+    radiusClass: "rounded-full",
     defaultLines: 1,
     fullWidth: true,
   },

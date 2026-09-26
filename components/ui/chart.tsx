@@ -11,7 +11,7 @@ const INITIAL_DIMENSION = { width: 320, height: 200 } as const
 type TooltipNameType = number | string
 
 export const CHART_TOOLTIP_SURFACE =
-  "grid min-w-32 items-start gap-1.5 rounded-[14px] border border-border bg-bg-raised px-3 py-2.5 text-xs shadow-[var(--shadow-md)]"
+  "grid min-w-32 items-start gap-1.5 rounded-lg border border-border bg-bg-raised px-3 py-2.5 text-xs shadow-[var(--shadow-md)]"
 
 export type ChartConfig = Record<
   string,

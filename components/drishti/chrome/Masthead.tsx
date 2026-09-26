@@ -67,12 +67,12 @@ export function Masthead() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-[8px] border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:h-10"
+          className="group flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-sm border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:h-10"
           aria-label="Search brands and pages, or ask Drishti"
         >
           <Search {...iconProps} aria-hidden className="size-4 shrink-0 text-fg-secondary" />
           <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Drishti…</span>
-          <kbd className="hidden shrink-0 rounded-[6px] border border-border bg-bg-inset px-1.5 py-0.5 font-mono text-[10px] text-fg-tertiary sm:inline-flex">
+          <kbd className="hidden shrink-0 rounded-sm border border-border bg-bg-inset px-1.5 py-0.5 font-mono text-[10px] text-fg-tertiary sm:inline-flex">
             ⌘K
           </kbd>
         </button>
@@ -82,7 +82,7 @@ export function Masthead() {
           <Button
             asChild
             size="sm"
-            className="hidden h-9 shrink-0 rounded-[8px] bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"
+            className="hidden h-9 shrink-0 rounded-sm bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"
           >
             <Link href="/brands?add=1">
               <Plus {...iconProps} aria-hidden className="size-4" />

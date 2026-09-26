@@ -48,7 +48,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, nowMs }: PickU
             action={
               <Link
                 href="/ask"
-                className="inline-flex items-center gap-1.5 rounded-[4px] text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
+                className="inline-flex items-center gap-1.5 rounded-sm text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
               >
                 Ask Drishti
                 <ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
@@ -61,7 +61,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, nowMs }: PickU
               <li key={thread.threadKey} className="border-b border-border py-2.5 first:pt-0 last:border-b-0 last:pb-0">
                 <Link
                   href={threadHref(thread.threadKey)}
-                  className="flex items-center justify-between gap-3 rounded-[6px] px-1 py-1 type-body text-fg transition-colors duration-150 ease-out hover:bg-bg-inset"
+                  className="flex items-center justify-between gap-3 rounded-md px-1 py-1 type-body text-fg transition-colors duration-150 ease-out hover:bg-bg-inset"
                 >
                   <span className="min-w-0 truncate">{thread.title}</span>
                   <span className={cn(VALUE_CLASS, "shrink-0 text-[11px] text-fg-tertiary")}>
@@ -91,7 +91,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, nowMs }: PickU
             action={
               <Link
                 href="/boards"
-                className="inline-flex items-center gap-1.5 rounded-[4px] text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
+                className="inline-flex items-center gap-1.5 rounded-sm text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
               >
                 Open Boards
                 <ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
@@ -104,7 +104,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, nowMs }: PickU
               <li key={board.id} className="border-b border-border py-2.5 first:pt-0 last:border-b-0 last:pb-0">
                 <Link
                   href="/boards"
-                  className="flex items-center justify-between gap-3 rounded-[6px] px-1 py-1 type-body text-fg transition-colors duration-150 ease-out hover:bg-bg-inset"
+                  className="flex items-center justify-between gap-3 rounded-md px-1 py-1 type-body text-fg transition-colors duration-150 ease-out hover:bg-bg-inset"
                 >
                   <span className="min-w-0 truncate">{board.name}</span>
                   <ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5 shrink-0 text-fg-tertiary" />

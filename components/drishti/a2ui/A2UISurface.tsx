@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { TriangleAlert } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { EmptyState } from "../EmptyState";
+import { Panel } from "../Panel";
 import { hookName, sourceName } from "../labels";
 import { HOOK_TYPES, categoricalColorFor, iconProps } from "../tokens";
 import { RankedCatalogChart } from "../brands/RankedCatalogChart";
@@ -105,8 +106,8 @@ function render(node: ResolvedNode): React.ReactNode {
 
 function Cannot({ title, reason }: { title: string; reason: string }) {
   return (
-    <div className="rounded-lg border border-border bg-bg-raised-2 p-4 shadow-[var(--shadow-xs)]">
+    <Panel interactive={false} padded>
       <EmptyState size="sm" icon={<TriangleAlert {...iconProps} size={16} />} title={title} description={reason} />
-    </div>
+    </Panel>
   );
 }

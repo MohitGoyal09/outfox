@@ -39,7 +39,7 @@ export class QueryBoundary extends Component<
       <section
         role="alert"
         className={cn(
-          "flex flex-col items-start gap-3 rounded-[10px] border border-[var(--danger)] bg-[var(--bg-raised)] p-4",
+          "flex flex-col items-start gap-3 rounded-lg border border-[var(--danger)] bg-[var(--bg-raised)] p-4",
           this.props.className,
         )}
       >

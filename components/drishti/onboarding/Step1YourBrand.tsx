@@ -34,7 +34,7 @@ export function Step1YourBrand({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Panel as="section" interactive={false} padded ariaLabel="Your brand">
-        <div className="mb-4 flex items-start gap-2.5 rounded-[6px] border border-[var(--border)] bg-[var(--bg-inset)] px-3 py-2.5">
+        <div className="mb-4 flex items-start gap-2.5 rounded-md border border-[var(--border)] bg-[var(--bg-inset)] px-3 py-2.5">
           <Compass {...iconProps} size={16} aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--accent)]" />
           <p className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
             This becomes the baseline every comparison reads against — every rival you add

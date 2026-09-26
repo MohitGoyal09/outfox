@@ -31,7 +31,7 @@ export function BrandHeader({
     <header className={cn("flex flex-col gap-4 border-b border-border pb-5", className)}>
       <Link
         href="/brands"
-        className="inline-flex w-fit items-center gap-1.5 rounded-[3px] text-[13px] text-fg-secondary hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+        className="inline-flex w-fit items-center gap-1.5 rounded-sm text-[13px] text-fg-secondary hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
       >
         <ArrowLeft {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
         All brands

@@ -43,7 +43,7 @@ export function BrandMentionMenu({
         id={id}
         role="listbox"
         aria-label="Brands"
-        className="absolute bottom-full left-0 mb-2 w-64 rounded-lg border border-border-strong bg-white p-2 text-[12.5px] text-fg-tertiary shadow-[0_12px_32px_rgba(16,24,40,0.14)]"
+        className="absolute bottom-full left-0 mb-2 w-64 rounded-lg border border-border-strong bg-bg-raised p-2 text-[12.5px] text-fg-tertiary shadow-lg"
       >
         No matching brands.
       </div>
@@ -55,7 +55,7 @@ export function BrandMentionMenu({
       id={id}
       role="listbox"
       aria-label="Brands"
-      className="absolute bottom-full left-0 mb-2 max-h-64 w-64 overflow-y-auto rounded-lg border border-border-strong bg-white p-1 shadow-[0_12px_32px_rgba(16,24,40,0.14)]"
+      className="absolute bottom-full left-0 mb-2 max-h-64 w-64 overflow-y-auto rounded-lg border border-border-strong bg-bg-raised p-1 shadow-lg"
     >
       {brands.map((brand, index) => {
         const active = index === highlightedIndex;
@@ -70,7 +70,7 @@ export function BrandMentionMenu({
               onSelect(brand);
             }}
             className={cn(
-              "cursor-pointer rounded-[5px] px-2.5 py-1.5 text-[13px] text-fg",
+              "cursor-pointer rounded-md px-2.5 py-1.5 text-[13px] text-fg",
               active ? "bg-accent-dim text-fg" : "hover:bg-bg-inset",
             )}
           >

@@ -185,7 +185,7 @@ export function ToolCallCard({ card }: { card: ToolCallCardView }) {
             >
               Detail
             </summary>
-            <pre className="mt-1 overflow-x-auto rounded-[4px] bg-bg-inset p-2 text-[10.5px] leading-[1.5] text-fg-tertiary">
+            <pre className="mt-1 overflow-x-auto rounded-sm bg-bg-inset p-2 text-[10.5px] leading-[1.5] text-fg-tertiary">
               {rawDetail}
             </pre>
           </details>

@@ -50,7 +50,7 @@ function numberLabelOf(children: unknown): string {
 }
 
 const TABLE_WRAPPER_CLASS =
-  "my-2 w-0 min-w-full overflow-x-auto rounded-[8px] border border-border";
+  "my-2 w-0 min-w-full overflow-x-auto rounded-md border border-border";
 const TABLE_HEAD_CLASS =
   "whitespace-nowrap px-3 py-2 text-left align-middle font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-secondary tabular-nums";
 const TABLE_CELL_CLASS = "px-3 py-2 align-top text-fg tabular-nums";

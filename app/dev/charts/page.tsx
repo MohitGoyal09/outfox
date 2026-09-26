@@ -93,8 +93,8 @@ const missingEngineResult: TrendsChartResult = {
 
 function Demo({ title, result }: { title: string; result: TrendsChartResult }) {
   return (
-    <section className="flex flex-col gap-3 border-b border-[var(--border,#e4e7ec)] py-8">
-      <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary,#98a2b3)]">
+    <section className="flex flex-col gap-3 border-b border-[var(--border)] py-8">
+      <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
         {title}
       </h2>
       <TrendsChart result={result} brandLabel={label} />
@@ -104,11 +104,11 @@ function Demo({ title, result }: { title: string; result: TrendsChartResult }) {
 
 export default function DevChartsPage() {
   return (
-    <main className="mx-auto flex max-w-[1000px] flex-col gap-2 bg-[var(--bg,#f6f7f4)] px-4 py-8 sm:px-8">
-      <h1 className="text-[1.4rem] font-semibold text-[var(--text-primary,#17191d)]">
+    <main className="mx-auto flex max-w-[1000px] flex-col gap-2 bg-[var(--bg)] px-4 py-8 sm:px-8">
+      <h1 className="text-[1.4rem] font-semibold text-[var(--text-primary)]">
         TrendsChart — dev harness
       </h1>
-      <p className="text-[13px] text-[var(--text-secondary,#667085)]">
+      <p className="text-[13px] text-[var(--text-secondary)]">
         Not a product route. For browser verification of components/drishti/charts/TrendsChart.tsx only.
       </p>
       <Demo title="1. Two brands, two chunks -> two panels, each a real multi-point line" result={twoChunkResult} />

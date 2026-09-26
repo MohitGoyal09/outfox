@@ -12,9 +12,9 @@
   --tl-ease-out: cubic-bezier(0.23, 1, 0.32, 1);
   --tl-ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
   --tl-font: 13px;
-  --tl-color: var(--text-secondary, #667085);
-  --tl-glyph: var(--text-tertiary, #98a2b3);
-  --tl-danger: var(--danger, #dc2626);
+  --tl-color: var(--text-secondary);
+  --tl-glyph: var(--text-tertiary);
+  --tl-danger: var(--danger);
   --tl-settle: 250ms;
   --tl-blur: 2px;
   --tl-shimmer: 1.4s;

@@ -4,7 +4,7 @@
 import type { InputHTMLAttributes, ReactNode } from "react";
 import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { LABEL_CLASS, iconProps } from "../tokens";
+import { FOCUS_RING_CLASS, LABEL_CLASS, iconProps } from "../tokens";
 
 export type TextFieldProps = Omit<
   InputHTMLAttributes<HTMLInputElement>,
@@ -52,7 +52,8 @@ export function TextField({
           error !== null && error !== ""
             ? "border-danger"
             : "border-border-strong hover:border-fg-tertiary",
-          "focus:border-accent focus:shadow-[0_0_0_3px_var(--accent-dim)]",
+          "focus:border-accent",
+          FOCUS_RING_CLASS,
           "disabled:cursor-not-allowed disabled:border-border disabled:bg-bg-raised disabled:text-fg-tertiary disabled:hover:border-border",
         )}
       />

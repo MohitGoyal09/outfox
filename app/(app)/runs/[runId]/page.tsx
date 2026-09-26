@@ -93,7 +93,7 @@ function BackToRuns() {
   return (
     <Link
       href="/"
-      className="inline-flex w-fit items-center gap-1.5 text-[12.5px] text-[var(--text-secondary,#9797a3)] hover:text-[var(--text-primary,#eeeef2)]"
+      className="inline-flex w-fit items-center gap-1.5 text-[12.5px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
     >
       <ArrowLeft {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
       Evidence desk
@@ -124,7 +124,7 @@ function RunUnavailable({
           }
         />
         {detail === undefined ? null : (
-          <p className="mt-2 break-all font-mono text-[11.5px] text-[var(--text-tertiary,#64646f)]">
+          <p className="mt-2 break-all font-mono text-[11.5px] text-[var(--text-tertiary)]">
             requested id: {detail}
           </p>
         )}
@@ -381,11 +381,11 @@ function RunView({ runId }: { runId: string }) {
         <div>
           <h2
             id="side-by-side-heading"
-            className="type-title text-[var(--text-primary,#eeeef2)]"
+            className="type-title text-[var(--text-primary)]"
           >
             Side by side
           </h2>
-          <p className="type-body measure-prose mt-1.5 text-[var(--text-secondary,#9797a3)]">
+          <p className="type-body measure-prose mt-1.5 text-[var(--text-secondary)]">
             {previousDayMonth === null
               ? "Each rival's mix, as this run recorded it. This is the first recorded comparison for the cohort, so there is no earlier mix to measure against."
               : `Each rival's mix, with the change against the run of ${previousDayMonth}.`}
@@ -404,7 +404,7 @@ function RunView({ runId }: { runId: string }) {
         ) : (
           <>
             <div>
-              <h3 className="type-headline text-[var(--text-primary,#eeeef2)]">Hook mix</h3>
+              <h3 className="type-headline text-[var(--text-primary)]">Hook mix</h3>
               <div className={cn("mt-3", MIX_GRID)}>
                 {refs.map((brand) => (
                   <BrandMixPanel
@@ -420,7 +420,7 @@ function RunView({ runId }: { runId: string }) {
             </div>
 
             <div>
-              <h3 className="type-headline text-[var(--text-primary,#eeeef2)]">Funnel mix</h3>
+              <h3 className="type-headline text-[var(--text-primary)]">Funnel mix</h3>
               <div className={cn("mt-3", MIX_GRID)}>
                 {refs.map((brand) => (
                   <BrandMixPanel

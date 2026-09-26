@@ -66,14 +66,14 @@ export function EmptyState({
         "flex flex-col items-start",
         composed.size === "md" ? "gap-3 py-6" : "gap-2 py-3",
         composed.bounded &&
-          "rounded-[10px] border border-dashed border-[var(--border)] bg-[var(--bg-inset)] px-5 py-6",
+          "rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-inset)] px-5 py-6",
         className,
       )}
     >
       {icon ? (
         <span
           aria-hidden="true"
-          className="flex size-8 items-center justify-center rounded-[5px] border border-[var(--border)] bg-[var(--bg-inset)] text-[var(--text-tertiary)]"
+          className="flex size-8 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--bg-inset)] text-[var(--text-tertiary)]"
         >
           {icon}
         </span>
