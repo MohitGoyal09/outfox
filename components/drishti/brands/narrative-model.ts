@@ -45,26 +45,6 @@ export function narrativeFrom(sentences: readonly InsightSentence[], claimsById:
   };
 }
 
-export function overallNarrative(buckets: Record<NarrativeSection, InsightSentence[]>, claimsById: Map<string, ClaimDoc>): BrandNarrative | null {
-  const lead = buckets.positioning[0];
-  if (!lead) return null;
-  const support = [
-    ...buckets.positioning.slice(1),
-    ...buckets.audience.slice(0, 1),
-    ...buckets.problem.slice(0, 1),
-  ].slice(0, 4);
-  return {
-    headline: displayClaimText(lead.text),
-    headlineCitation: narrativeCitation(lead.citedClaimIds, claimsById),
-    bullets: support
-      .filter((sentence) => sentence.text.trim().length > 0)
-      .map((sentence) => ({
-        text: displayClaimText(sentence.text),
-        citation: narrativeCitation(sentence.citedClaimIds, claimsById),
-      })),
-  };
-}
-
 export type PinnedVerdictState =
   | {
       kind: "llm";

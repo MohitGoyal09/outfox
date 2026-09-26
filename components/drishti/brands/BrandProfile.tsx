@@ -32,7 +32,7 @@ import {
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
 import { NarrativeBlock } from "./NarrativeBlock";
-import { bucketNarrativeSections, overallNarrative, narrativeFrom, pinnedVerdictFromInsight } from "./narrative-model";
+import { bucketNarrativeSections, narrativeFrom, pinnedVerdictFromInsight } from "./narrative-model";
 import { PinnedVerdict } from "./PinnedVerdict";
 import { OwnBrandToggle } from "./OwnBrandToggle";
 import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
@@ -145,7 +145,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
     if (!insight || insight.mode !== "llm") return null;
     const buckets = bucketNarrativeSections(insight.sentences);
     return {
-      overview: overallNarrative(buckets, claimsById),
       position: narrativeFrom(buckets.positioning, claimsById),
       people: narrativeFrom(buckets.audience, claimsById),
       evidence: narrativeFrom(buckets.problem, claimsById),
@@ -327,7 +326,9 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
         ) : (
           <>
             <TabsContent value="overview" className="mt-0 py-5">
-              {narratives?.overview ? <NarrativeBlock className="mb-5" {...narratives.overview} /> : null}
+              {/* No narrative block here: PinnedVerdict above the tabs
+                  already shows the verdict, so Overview would otherwise
+                  duplicate it (and its provenance line) on the same screen. */}
               <OverviewTab
                 latestClaims={latestClaims}
                 previousClaims={previousClaims}

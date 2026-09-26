@@ -30,6 +30,37 @@ const SECTION_MARKER: Record<BrandInsightSection, string> = {
 
 type InsightSentence = { text: string; citedClaimIds: Id<"claims">[] };
 
+type FeedEntry = {
+  _id: Id<"brandInsights">;
+  generatedAt: string;
+  mode: "llm" | "template" | "failed";
+  sentences: InsightSentence[];
+  failureReason?: string;
+};
+
+export type EarlierVerdictRow =
+  | { id: string; generatedAt: string; kind: "llm"; text: string }
+  | { id: string; generatedAt: string; kind: "failed"; reason: string | null };
+
+export function earlierVerdictRows(entries: FeedEntry[]): EarlierVerdictRow[] {
+  const rows: EarlierVerdictRow[] = [];
+  for (const entry of entries) {
+    if (entry.mode === "failed") {
+      const reason = entry.failureReason?.trim();
+      rows.push({ id: String(entry._id), generatedAt: entry.generatedAt, kind: "failed", reason: reason && reason.length > 0 ? reason : null });
+      continue;
+    }
+    if (entry.mode === "llm") {
+      const lead = bucketSentences(entry.sentences).positioning[0];
+      if (lead && lead.text.trim().length > 0) {
+        rows.push({ id: String(entry._id), generatedAt: entry.generatedAt, kind: "llm", text: displayClaimText(lead.text) });
+      }
+      continue;
+    }
+  }
+  return rows;
+}
+
 function bucketSentences(sentences: InsightSentence[]): Record<BrandInsightSection, InsightSentence[]> {
   const buckets: Record<BrandInsightSection, InsightSentence[]> = { positioning: [], audience: [], problem: [] };
   for (const sentence of sentences) {
@@ -266,6 +297,7 @@ export function InsightsTab({
   const [latest, ...earlier] = feed ?? [];
   const buckets = useMemo(() => (latest ? bucketSentences(latest.sentences) : null), [latest]);
   const templateMode = latest?.mode === "template";
+  const earlierVerdicts = earlierVerdictRows(earlier);
 
   return (
     <div className="flex flex-col gap-4">
@@ -378,17 +410,27 @@ export function InsightsTab({
       {earlier.length > 0 ? (
         <div>
           <h3 className="mb-2 text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground">Earlier verdicts</h3>
-          <ul className="space-y-1.5">
-            {earlier.map((entry) => {
-              const entryPositioning = bucketSentences(entry.sentences).positioning;
-              return (
-                <li key={String(entry._id)} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
-                  <span className="shrink-0 text-muted-foreground">{relativeTime(entry.generatedAt, now)}</span>
-                  <span className="min-w-0 truncate text-foreground">{entryPositioning[0] ? displayClaimText(entryPositioning[0].text) : "—"}</span>
+          {earlierVerdicts.length === 0 ? (
+            <EmptyState
+              size="sm"
+              icon={<Sparkles {...iconProps} size={16} />}
+              title="No earlier verdicts."
+              description="Every earlier read either used the template fallback (raw claim text, not a model read) or failed outright, so there's nothing real to show yet."
+            />
+          ) : (
+            <ul className="space-y-1.5">
+              {earlierVerdicts.map((row) => (
+                <li key={row.id} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
+                  <span className="shrink-0 text-muted-foreground">{relativeTime(row.generatedAt, now)}</span>
+                  {row.kind === "failed" ? (
+                    <span className="min-w-0 truncate text-danger">Check failed{row.reason ? ` — ${row.reason}` : ""}</span>
+                  ) : (
+                    <span className="min-w-0 truncate text-foreground">{row.text}</span>
+                  )}
                 </li>
-              );
-            })}
-          </ul>
+              ))}
+            </ul>
+          )}
         </div>
       ) : null}
     </div>
