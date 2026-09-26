@@ -4,7 +4,7 @@ import { action } from "../_generated/server";
 import { api, internal } from "../_generated/api";
 import { v, ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
-import { fetchGoogleSearch } from "./fetchEngines";
+import { fetchGoogleSearch, resolveAdsTransparencyAdvertiser } from "./fetchEngines";
 import { requireUserId } from "../lib/auth";
 
 export type ProfileStatus = Doc<"brands">["profileStatus"];
@@ -55,7 +55,17 @@ export type CreateBrandProfileIO = {
 
 export type CreateBrandProfileDeps = {
   fetchGoogleSearchFn?: typeof fetchGoogleSearch;
+  resolveAdvertiserFn?: typeof resolveAdsTransparencyAdvertiser;
 };
+
+async function maybeResolveAdvertiserId(
+  brand: { name: string; domain: string },
+  suppliedAdvertiserId: string | undefined,
+  resolveAdvertiserFn: typeof resolveAdsTransparencyAdvertiser,
+): Promise<string | undefined> {
+  const supplied = suppliedAdvertiserId?.trim();
+  return resolved.status === "resolved" ? resolved.advertiserId : undefined;
+}
 
 export function normalizeBrandName(name: string): string {
   return name.trim().replace(/\s+/g, " ");
@@ -82,56 +92,4 @@ function toCandidate(brand: Doc<"brands">): BrandCandidate {
     vertical: brand.vertical,
     profileStatus: brand.profileStatus,
   };
-}
-
-export async function createBrandProfileCore(
-  io: CreateBrandProfileIO,
-  args: CreateBrandProfileInput,
-  deps: CreateBrandProfileDeps = {},
-): Promise<CreateBrandProfileResult> {
-  const fetchGoogleSearchFn = deps.fetchGoogleSearchFn ?? fetchGoogleSearch;
-  const domain = normalizeBrandDomain(args.domain);
-  const vertical = args.vertical.trim();
-
-  if (name === "" || domain === "" || vertical === "") {
-    throw new ConvexError("name, domain, and vertical must be non-empty");
-  }
-  if (!domain.includes(".")) {
-    throw new ConvexError("domain must contain '.' (e.g. example.in)");
-  }
-
-  const all = await io.listOwnerBrands();
-
-  if (exact !== null) {
-    if (exact.profileStatus !== "ready") {
-    }
-    return {
-      brandId: exact._id,
-      status: exact.profileStatus,
-      needsConfirmation: exact.profileStatus === "needs_confirmation",
-    };
-  }
-
-  const lowered = name.toLowerCase();
-
-  if (candidates.length > 0) {
-    return {
-      brandId,
-      status: "needs_confirmation",
-      needsConfirmation: true,
-      candidates,
-    };
-  }
-
-  const brandId = await io.insertBrand({
-    name,
-    domain,
-    vertical,
-    aliases,
-    profileStatus: "pending",
-    adsTransparencyAdvertiserId: args.adsTransparencyAdvertiserId,
-  });
-  if (profile.status === "ok") {
-    return { brandId, status: "ready", needsConfirmation: false };
-  }
 }

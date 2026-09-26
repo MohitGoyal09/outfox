@@ -108,7 +108,11 @@ export function isValidVideoId(videoId: string): boolean {
   return VIDEO_ID_PATTERN.test(videoId);
 }
 
-const ADVERTISER_ID_PATTERN = /^[0-9-]{1,64}$/;
+// Real Google Ads Transparency advertiser ids are "AR" followed by digits
+// (e.g. AR17828074650563772417, per SerpApi's own docs) -- not the
+// digits-and-hyphens-only shape this pattern used to require, which would
+// have rejected every real id a user or a resolved lookup could produce.
+const ADVERTISER_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
 
 /**
  * Param builders, exported so the Phase 3 verifier asserts the exact
@@ -316,6 +320,85 @@ export async function fetchAdsTransparency(
     errorMessage: result.error,
     queryParams,
   };
+}
+
+/**
+ * Free-text Ads Transparency search, used only to resolve an advertiser id
+ * for a brand that does not have one yet -- never for fetching ads (that
+ * stays on `buildAdsTransparencyParams`/`advertiser_id`).
+ */
+export function buildAdsTransparencyResolveParams(query: string) {
+  return {
+    engine: "google_ads_transparency_center",
+    text: query,
+    region: "2356",
+  };
+}
+
+function normalizeForAdvertiserMatch(value: string): string {
+  return value.trim().toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
+}
+
+/**
+ * Pick an advertiser id out of a free-text Ads Transparency search result.
+ *
+ * SerpApi's `text` parameter is a real ad-creative search, not a domain
+ * resolver: per SerpApi's own documented example, `text: apple.com` returns
+ * ad creatives from unrelated advertisers ("BlueVision Interactive
+ * Limited", an individual) alongside Apple's own, because it matches any ad
+ * that references the query, not just ads run by that domain's owner.
+ *
+ * So this only ever accepts a result when every returned `ad_creatives`
+ * entry whose `advertiser` name matches the brand name (case/punctuation
+ * insensitive) shares the exact same `advertiser_id` -- one confident
+ * advertiser, or nothing. A guessed id would silently attach another
+ * company's ads to this brand, which is worse than staying unavailable.
+ */
+export function resolveAdvertiserIdFromSearch(
+  data: unknown,
+  brandName: string,
+): string | null {
+  const normalizedBrand = normalizeForAdvertiserMatch(brandName);
+  if (normalizedBrand === "") return null;
+  const creatives = readListField(data, "ad_creatives");
+  const matchedIds = new Set<string>();
+  for (const creative of creatives) {
+    if (typeof creative !== "object" || creative === null) continue;
+    const record = creative as Record<string, unknown>;
+    const id = record["advertiser_id"];
+    const name = record["advertiser"];
+    if (typeof id !== "string" || typeof name !== "string") continue;
+    if (!ADVERTISER_ID_PATTERN.test(id)) continue;
+    if (normalizeForAdvertiserMatch(name) !== normalizedBrand) continue;
+    matchedIds.add(id);
+  }
+  return matchedIds.size === 1 ? [...matchedIds][0] : null;
+}
+
+export type AdsTransparencyResolveResult =
+  | { status: "resolved"; advertiserId: string }
+  | { status: "unresolved" }
+  | { status: "failed"; errorMessage: string };
+
+/**
+ * Resolve an advertiser id for a brand that does not have one, by name.
+ * Called once at brand creation, never per run -- see
+ * `createBrandProfileCore` in `brandProfile.ts`. Costs one SerpApi search;
+ * never called again once a brand has an id.
+ */
+export async function resolveAdsTransparencyAdvertiser(
+  brand: { name: string; domain: string },
+  fetchFn: SerpapiFetchFn = serpapiFetch,
+): Promise<AdsTransparencyResolveResult> {
+  const queryParams = buildAdsTransparencyResolveParams(brand.domain);
+  const result = await fetchFn(queryParams);
+  if (!result.ok) {
+    return { status: "failed", errorMessage: result.error };
+  }
+  const advertiserId = resolveAdvertiserIdFromSearch(result.data, brand.name);
+  return advertiserId === null
+    ? { status: "unresolved" }
+    : { status: "resolved", advertiserId };
 }
 
 function readVideoId(entry: unknown): string | null {

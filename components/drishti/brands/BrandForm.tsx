@@ -305,7 +305,7 @@ export function BrandForm({
           placeholder="AR_123"
           mono
           autoComplete="off"
-          hint="Optional. Without it, Ads Transparency reports unavailable."
+          hint="Optional. Left blank, we try to resolve one from the domain; if that fails, Ads Transparency reports unavailable."
         />
       </div>
 
