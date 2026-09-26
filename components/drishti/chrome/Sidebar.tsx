@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import {
+  ArrowRight,
   BarChart3,
   Building2,
   BookOpen,
@@ -31,7 +32,7 @@ import {
 } from "@/components/ui/sidebar";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
-import { categoricalColorFor } from "@/components/drishti/tokens";
+import { BrandMark } from "@/components/drishti/brands/BrandMark";
 
 
 const NAV = [
@@ -203,6 +204,15 @@ export function Sidebar() {
                 ))
               )}
             </SidebarMenu>
+            {threads !== undefined && threads.length > 0 ? (
+              <Link
+                href="/chats"
+                className="mt-1 flex items-center gap-1 px-2 py-1 text-[11px] font-medium text-sidebar-foreground/45 transition-colors duration-150 ease-out hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
+              >
+                View all chats
+                <ArrowRight aria-hidden className="size-3" />
+              </Link>
+            ) : null}
           </SidebarGroupContent>
         </SidebarGroup>
 
@@ -230,12 +240,7 @@ export function Sidebar() {
                     className="rounded-full text-sidebar-foreground/65 transition-colors duration-200 ease-out hover:bg-sidebar-accent/70 hover:text-sidebar-accent-foreground"
                   >
                     <Link href={`/brands/${brand._id}`}>
-                      <span
-                        className="flex size-5 shrink-0 items-center justify-center rounded-md text-[10px] font-semibold text-white"
-                        style={{ backgroundColor: categoricalColorFor(brand.name) }}
-                      >
-                        {brand.name.slice(0, 1).toUpperCase()}
-                      </span>
+                      <BrandMark name={brand.name} domain={brand.domain} className="size-5 rounded-md text-[10px]" />
                       <span>{brand.name}</span>
                     </Link>
                   </SidebarMenuButton>
