@@ -95,16 +95,47 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
   );
 }
 
+export const TWO_WAY_DONUT_MIN_DISTINCT = 2;
+
+export function ownedVsCreatorData(rows: { owned: boolean; totalViews: number }[]): { label: string; value: number; color: string }[] {
+  const ownedViews = rows.filter((row) => row.owned).reduce((sum, row) => sum + row.totalViews, 0);
+  const creatorViews = rows.filter((row) => !row.owned).reduce((sum, row) => sum + row.totalViews, 0);
+  return [
+    { label: "Owned channel", value: ownedViews, color: categoricalColorFor("Owned channel") },
+    { label: "Creator channels", value: creatorViews, color: categoricalColorFor("Creator channels") },
+  ].filter((row) => row.value > 0);
+}
+
+export function ownedVsCreatorRenderMode(rows: { owned: boolean; totalViews: number }[]): "empty" | "single" | "donut" {
+  const count = ownedVsCreatorData(rows).length;
+  if (count === 0) return "empty";
+  if (count < TWO_WAY_DONUT_MIN_DISTINCT) return "single";
+  return "donut";
+}
+
+export function SingleSideStat({ row }: { row: { label: string; value: number; color: string } }) {
+  const owned = row.label === "Owned channel";
+  const context = owned
+    ? "No third-party creator video is captured yet — not proof none exist."
+    : "Zero owned views here is a name-match miss against the brand's own name — not proof the brand has no channel.";
+  return (
+    <div className="flex items-center gap-3">
+      <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} />
+      <div>
+        <p className="font-mono text-2xl font-semibold leading-none tabular-nums text-foreground">{compactCount(row.value)}</p>
+        <p className="mt-1 text-[11px] text-muted-foreground">
+          All real views so far are {row.label.toLowerCase()}. {context}
+        </p>
+      </div>
+    </div>
+  );
+}
+
 function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: ClaimDoc[]; youtubeSnapshot?: SnapshotDoc; brand: BrandDoc }) {
   const reduceMotion = useReducedMotion();
   const groups = useMemo(() => groupYoutubeVideoClaims(claims), [claims]);
   const rows = useMemo(() => creatorRowsFromGroups(groups, youtubeSnapshot?.rawResponse, brand.name), [groups, youtubeSnapshot?.rawResponse, brand.name]);
-  const ownedViews = rows.filter((row) => row.owned).reduce((sum, row) => sum + row.totalViews, 0);
-  const creatorViews = rows.filter((row) => !row.owned).reduce((sum, row) => sum + row.totalViews, 0);
-  const data = [
-    { label: "Owned channel", value: ownedViews, color: categoricalColorFor("Owned channel") },
-    { label: "Creator channels", value: creatorViews, color: categoricalColorFor("Creator channels") },
-  ].filter((row) => row.value > 0);
+  const data = useMemo(() => ownedVsCreatorData(rows), [rows]);
   const totalViews = data.reduce((sum, row) => sum + row.value, 0);
   const chartConfig = Object.fromEntries(data.map((row) => [row.label, { label: row.label, color: row.color }])) satisfies ChartConfig;
 
@@ -127,6 +158,8 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
             title="Not enough channel data yet."
             description="Splits real view totals between the brand's own channel (matched by name) and third-party creators once video evidence with a channel name is available."
           />
+        ) : data.length < TWO_WAY_DONUT_MIN_DISTINCT ? (
+          <SingleSideStat row={data[0]} />
         ) : (
           <div className="grid grid-cols-[92px_1fr] items-center gap-4">
             <ChartContainer config={chartConfig} className="mx-auto aspect-square size-[92px]">
