@@ -1,7 +1,7 @@
 "use client";
 
 import { BarChart3 } from "lucide-react";
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
+import { Bar, BarChart, CartesianGrid, Cell, LabelList, XAxis, YAxis } from "recharts";
 import { cn } from "@/lib/utils";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../EmptyState";
@@ -16,12 +16,16 @@ const config = {
 
 export function BoardMixChart({ items }: { items: DistributionItem[] }) {
   const data = items
-    .filter((item) => typeof item.count === "number" && item.count > 0)
+    .filter(
+      (item): item is DistributionItem & { count: number } =>
+        typeof item.count === "number" && item.count > 0,
+    )
     .map((item) => ({
       label: hookName(item.label),
       findings: item.count,
       fill: HOOK_COLOR[item.label as keyof typeof HOOK_COLOR] ?? "var(--accent)",
     }));
+  const total = data.reduce((sum, row) => sum + row.findings, 0);
 
   return (
     <Panel interactive={false} className="flex flex-col" ariaLabel="Hook mix">
@@ -32,8 +36,9 @@ export function BoardMixChart({ items }: { items: DistributionItem[] }) {
             How much evidence each hook has in this check.
           </p>
         </div>
-        <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
-          {data.length} {data.length === 1 ? "hook" : "hooks"}
+        <span className={cn(VALUE_CLASS, "text-[11px] tabular-nums text-fg-tertiary")}>
+          {total} {total === 1 ? "finding" : "findings"} · {data.length}{" "}
+          {data.length === 1 ? "hook" : "hooks"}
         </span>
       </header>
       <div className="p-4">
@@ -47,13 +52,20 @@ export function BoardMixChart({ items }: { items: DistributionItem[] }) {
           />
         ) : (
           <ChartContainer config={config} className="h-52 w-full aspect-auto">
-            <BarChart accessibilityLayer data={data} margin={{ top: 6, right: 8, left: -18, bottom: 0 }}>
+            <BarChart accessibilityLayer data={data} margin={{ top: 18, right: 8, left: -18, bottom: 0 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={46} />
               <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={30} />
               <ChartTooltip cursor={{ fill: "var(--bg-inset)", opacity: 0.6 }} content={<ChartTooltipContent hideLabel />} />
               <Bar dataKey="findings" radius={[4, 4, 0, 0]} fill="var(--color-findings)">
                 {data.map((row) => <Cell key={row.label} fill={row.fill} />)}
+                <LabelList
+                  dataKey="findings"
+                  position="top"
+                  fill="var(--text-tertiary)"
+                  fontSize={10}
+                  fontFamily="var(--font-mono)"
+                />
               </Bar>
             </BarChart>
           </ChartContainer>

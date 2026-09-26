@@ -35,7 +35,7 @@ export function StatTile({
       as="div"
       interactive={false}
       className={cn(
-        "h-full rounded-lg p-5 shadow-xs motion-safe:transition-shadow hover:shadow-sm",
+        "h-full rounded-lg p-4 shadow-xs motion-safe:transition-shadow hover:shadow-sm",
         className,
       )}
     >
@@ -63,7 +63,7 @@ export function StatTile({
         ) : null}
       </div>
       {hint && !loading ? (
-        <p className="mt-2.5 type-caption text-fg-secondary">{hint}</p>
+        <p className="mt-2 text-[11.5px] leading-snug tabular-nums text-fg-secondary">{hint}</p>
       ) : null}
     </Panel>
   );

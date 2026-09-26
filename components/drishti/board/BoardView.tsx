@@ -164,18 +164,18 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       label: "Brands in view",
       value: brandIds.length,
       hint: ownBrandInView
-        ? `You plus ${rivalCountInView} ${rivalCountInView === 1 ? "rival" : "rivals"}`
-        : "Rivals in this check",
+        ? `you plus ${rivalCountInView} ${rivalCountInView === 1 ? "rival" : "rivals"}`
+        : "no brand of yours in this check",
     },
     {
       label: "Findings held",
       value: claims?.length ?? 0,
-      hint: "What we found, not performance",
+      hint: `across ${brandIds.length} ${brandIds.length === 1 ? "brand" : "brands"}`,
     },
     {
       label: "What we checked",
       value: `${okChecks}/${totalChecks}`,
-      hint: "Checks that returned data",
+      hint: `of ${totalChecks} source ${totalChecks === 1 ? "check" : "checks"}`,
     },
   ];
 
@@ -237,9 +237,9 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       ) : null}
 
       {current && claims !== undefined ? (
-        <div className="grid gap-3 sm:grid-cols-3" aria-label="Board summary">
+        <div className="grid gap-2.5 sm:grid-cols-3" aria-label="Board summary">
           {summaryStats.map((stat) => (
-            <Panel key={stat.label} interactive={false} padded>
+            <Panel key={stat.label} interactive={false} className="p-3.5">
               <StatReadout
                 label={stat.label}
                 value={stat.value}

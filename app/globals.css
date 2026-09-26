@@ -43,6 +43,11 @@
   --weak: #b45309;
   --danger: #dc2626;
 
+  /* narrative — the one decorative colour, reserved for the model-written
+     "what this means" read. Distinct from --warn (freshness/warning) so the
+     two never mean the same thing. */
+  --narrative: #b7791f;
+
   /* shell — a white rail with ink text against the warm canvas. */
   --sidebar: #ffffff;
   --sidebar-foreground: #17191b;
@@ -91,9 +96,6 @@
   --source-youtube: #ff0000;
   --source-trends: #0ea5e9;
   --source-ads: #f59e0b;
-  --source-instagram: #e1306c;
-  --source-tiktok: #111827;
-  --source-meta: #0081fb;
   --source-tag: #8b5cf6;
 
   /* prose measure */
@@ -139,6 +141,9 @@
   --color-weak: var(--weak);
   --color-danger: var(--danger);
 
+  /* narrative → bg-narrative, text-narrative */
+  --color-narrative: var(--narrative);
+
   /* hook scale → bg-hook-*, text-hook-*, border-hook-* */
   --color-hook-discount-offer: var(--hook-discount-offer);
   --color-hook-social-proof: var(--hook-social-proof);
@@ -174,9 +179,6 @@
   --color-source-youtube: var(--source-youtube);
   --color-source-trends: var(--source-trends);
   --color-source-ads: var(--source-ads);
-  --color-source-instagram: var(--source-instagram);
-  --color-source-tiktok: var(--source-tiktok);
-  --color-source-meta: var(--source-meta);
   --color-source-tag: var(--source-tag);
 
   /* radii — controls 8, cards 14, containers 18. Chips stay 999px. */

@@ -220,6 +220,7 @@ export function DistributionPanel({
   const ordered = orderedDistributionRows(items, kind, order);
   const rows = deriveDistributionRows(ordered, kind);
   const segments = stackedSegments(ordered, kind);
+  const total = distributionTotal(ordered);
   const defaultEmptyTitle =
     kind === "hook"
       ? "No hook mix in this run yet."
@@ -378,20 +379,30 @@ export function DistributionPanel({
           </ul>
 
           {segments.length > 0 ? (
-            <div
-              aria-hidden="true"
-              className="mt-3 flex h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-inset)]"
-            >
-              {segments.map((segment) => (
-                <span
-                  key={segment.label}
-                  className="h-full"
-                  style={{
-                    width: `${segment.widthPct}%`,
-                    backgroundColor: segment.color,
-                  }}
-                />
-              ))}
+            <div className="mt-3 flex items-center gap-3">
+              <span
+                aria-hidden="true"
+                className="flex h-1.5 min-w-0 flex-1 overflow-hidden rounded-full bg-[var(--bg-inset)]"
+              >
+                {segments.map((segment) => (
+                  <span
+                    key={segment.label}
+                    className="h-full"
+                    style={{
+                      width: `${segment.widthPct}%`,
+                      backgroundColor: segment.color,
+                    }}
+                  />
+                ))}
+              </span>
+              <span
+                className={cn(
+                  VALUE_CLASS,
+                  "shrink-0 text-[10.5px] text-[var(--text-tertiary)]",
+                )}
+              >
+                {total} total
+              </span>
             </div>
           ) : null}
         </>

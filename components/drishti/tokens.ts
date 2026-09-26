@@ -109,9 +109,6 @@ export const SOURCE_COLOR: Record<string, string> = {
   youtube_video: "var(--source-youtube, #ff0000)",
   google_trends: "var(--source-trends, #0ea5e9)",
   google_ads_transparency_center: "var(--source-ads, #f59e0b)",
-  instagram: "var(--source-instagram, #e1306c)",
-  tiktok: "var(--source-tiktok, #111827)",
-  meta: "var(--source-meta, #0081fb)",
   llm_tag: "var(--source-tag, #8b5cf6)",
 };
 

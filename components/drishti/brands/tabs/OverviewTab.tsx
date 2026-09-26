@@ -6,6 +6,7 @@ import { checkedStateLabel, sourceName } from "@/components/drishti/labels";
 import { EmptyState } from "../../EmptyState";
 import { FETCH_ENGINES, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
 import { sourceColor } from "../../tokens";
+import { MetricInfo } from "../../MetricInfo";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
 import { EvidenceSection } from "../EvidenceSection";
@@ -131,20 +132,50 @@ export function OverviewTab({
   return (
     <div className="space-y-5">
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <SummaryPanel title="Evidence mix">
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="Evidence mix"
+              definition="Each source's share of this latest check's findings, plus the change from the previous check. It is a share of findings, not of the brand's posts, and a source that returned nothing is left out rather than shown as zero."
+            />
+          }
+        >
           <EvidenceMix claims={latestClaims} previousClaims={previousClaims} />
         </SummaryPanel>
-        <SummaryPanel title="What we checked">
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="What we checked"
+              definition="The sources this check queried and what each returned. “Not checked yet” and “nothing found” are different facts: the first means we did not look, the second that we looked and found nothing. Percentages are each source's share of this check's findings."
+            />
+          }
+        >
           <EngineCoverageList rows={coverage} latestClaims={latestClaims} previousClaims={previousClaims} />
         </SummaryPanel>
-        <SummaryPanel title="Top hooks" subtitle={fallbackLabel}>
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="Top hooks"
+              definition="How often each hook type was tagged across this check's findings. It counts tagged findings, not posts, views, or spend, so a bigger check lifts every count. Shares are of tagged findings only."
+            />
+          }
+          subtitle={fallbackLabel}
+        >
           <HookChart items={hookItems} />
         </SummaryPanel>
         {/* Renamed from "Funnel stage": funnelStage is a tag distribution across five
             categories, not a measured conversion sequence, so the panel name and its
             chart (EvidencePanels.tsx's FunnelPanel, left-aligned bars, never a
             tapering funnel silhouette) both avoid implying attrition we never measured. */}
-        <SummaryPanel title="Stage mix" subtitle={fallbackLabel}>
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="Stage mix"
+              definition="Each tagged finding's audience stage. These are tags, not a conversion path, so the shares sum to 100% and nobody drops out between rows."
+            />
+          }
+          subtitle={fallbackLabel}
+        >
           <FunnelPanel items={funnelItems} />
         </SummaryPanel>
       </div>

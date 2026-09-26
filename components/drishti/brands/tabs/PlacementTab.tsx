@@ -5,6 +5,7 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { BadgeDollarSign, Clapperboard, Newspaper, Store, TrendingUp } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
+import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { iconProps } from "../../tokens";
 import {
@@ -26,12 +27,14 @@ import { shortDate } from "../format";
 
 function CountListPanel({
   title,
+  definition,
   icon,
   rows,
   emptyTitle,
   emptyDescription,
 }: {
   title: string;
+  definition: string;
   icon: React.ReactNode;
   rows: { label: string; count: number }[];
   emptyTitle: string;
@@ -41,7 +44,9 @@ function CountListPanel({
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         {icon}
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">{title}</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo label={title} definition={definition} />
+        </h3>
       </div>
       <div className="p-4">
         {rows.length === 0 ? (
@@ -68,7 +73,12 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Organic rank distribution</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Organic rank distribution"
+            definition="How many Google organic results landed in each rank bucket on the page. It counts results found at each position, not search volume or clicks."
+          />
+        </h3>
       </div>
       <div className="p-4">
         {total === 0 ? (
@@ -100,7 +110,12 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         <Clapperboard className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Longest-running ads</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Longest-running ads"
+            definition="Real Ads Transparency creatives ranked by how long each was observed live. It shows which creatives the brand kept running, not budget, reach, or spend."
+          />
+        </h3>
         {rows.length > 0 ? (
           <span className="ml-auto font-mono text-[11px] text-muted-foreground">
             {rows.length} creative{rows.length === 1 ? "" : "s"}
@@ -128,7 +143,13 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
                     <th className="py-2 pr-2 font-normal">Creative</th>
                     <th className="py-2 pr-2 font-normal">Format</th>
                     <th className="py-2 pr-2 font-normal">Window</th>
-                    <th className="py-2 pr-3 text-right font-normal">Run length</th>
+                    <th className="py-2 pr-3 text-right font-normal">
+                      <MetricInfo
+                        label="Run length"
+                        definition="Days between the first and last time we saw the creative live. Our honest proxy for spend, not spend itself — a longer run means the brand kept it live, nothing more."
+                        className="justify-end"
+                      />
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -229,6 +250,7 @@ export function PlacementTab({
       <div className="grid gap-4 lg:grid-cols-3">
         <CountListPanel
           title="Ad formats"
+          definition="How many captured Google Ads creatives use each format. It counts stored creatives, not impressions or how well each format performed."
           icon={<BadgeDollarSign className="size-4 text-accent" />}
           rows={adFormatRows}
           emptyTitle="No ad creatives yet."
@@ -236,6 +258,7 @@ export function PlacementTab({
         />
         <CountListPanel
           title="Retailers carrying this brand"
+          definition="How many product listings each retailer domain contributed. It counts listings we captured, not sales or stock."
           icon={<Store className="size-4 text-accent" />}
           rows={retailerRows}
           emptyTitle="No product listings yet."
@@ -243,6 +266,7 @@ export function PlacementTab({
         />
         <CountListPanel
           title="News outlets"
+          definition="How many news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage."
           icon={<Newspaper className="size-4 text-accent" />}
           rows={publisherRows}
           emptyTitle="No publisher evidence yet."

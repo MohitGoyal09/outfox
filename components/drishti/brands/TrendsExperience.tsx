@@ -11,6 +11,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { Button } from "@/components/ui/button";
 import { categoricalColorFor, LABEL_CLASS } from "../tokens";
 import { EmptyState } from "../EmptyState";
+import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
 import { Skeleton } from "../Skeleton";
 import { formatStamp } from "../cohorts/cohorts-model";
@@ -156,7 +157,7 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
     }
   }
   return <section className="space-y-4" aria-label="Google Trends intelligence">
-    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2">            <PlatformLogo engine="google_trends" className="size-4" /><h2 className="type-headline text-fg">Search interest over time</h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest Google Trends check{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2", noStoredData && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" aria-hidden />Refresh {regionLabel(region)}</Button></div>
+    <div className="flex flex-wrap items-center justify-between gap-3"><div><div className="flex items-center gap-2">            <PlatformLogo engine="google_trends" className="size-4" /><h2 className="type-headline text-fg"><MetricInfo label="Search interest over time" definition="Google Trends relative interest for this comparison group. A higher score means more interest than the other terms in the same query, not more searches overall, and two different comparison groups are never on the same scale." /></h2></div><p className="mt-1 text-xs text-muted-foreground">Relative index from the latest Google Trends check{latestRunAt ? `, captured ${formatStamp(latestRunAt)}` : ""}.</p></div><Button variant="outline" size="sm" className={cn("gap-2", noStoredData && "border-accent bg-accent/10 text-accent hover:bg-accent/15")} onClick={() => setConfirming(true)}><TrendingUp className="size-3.5" aria-hidden />Refresh {regionLabel(region)}</Button></div>
     <div className="flex flex-wrap gap-2"><ScopeControl icon={CalendarDays} label="Date range" value={range} onChange={(value) => setRange(value as TrendsDate)}><option value="now 7-d">Last 7 days</option><option value="today 1-m">Last month</option><option value="today 3-m">Last 3 months</option><option value="today 12-m">Last 12 months</option><option value="today 5-y">Last 5 years</option></ScopeControl><ScopeControl icon={Globe2} label="Geography" value={region} onChange={setRegion} pending={noStoredData}><option value="IN">India</option><option value="US">United States</option><option value="GB">United Kingdom</option><option value="CA">Canada</option><option value="AU">Australia</option></ScopeControl><span className="inline-flex items-center gap-1.5 rounded-sm border border-dashed border-border px-3 py-2 text-[11px] text-muted-foreground"><Info className="size-3.5" aria-hidden />Geography switches instantly between regions we&apos;ve already checked. Date range filters the chart locally.</span></div>
     {confirming ? <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg border border-accent/25 bg-accent/[0.05] p-4"><div><p className="text-sm font-medium">Fetch live Google Trends data?</p><p className="mt-1 text-xs text-muted-foreground">This makes one live SerpApi Google Trends call for {regionLabel(region)} and saves it for next time. It does not touch any other evidence source, and costs far less than a full brand refresh.</p>{error ? <p role="alert" className="mt-2 text-xs text-danger">{error}</p> : null}</div><div className="flex items-center gap-2"><Button variant="ghost" size="sm" disabled={refreshing} onClick={() => setConfirming(false)}>Cancel</Button><Button size="sm" disabled={refreshing} onClick={() => void refresh()}>{refreshing ? <Loader2 className="size-3.5 animate-spin" /> : <TrendingUp className="size-3.5" />}Refresh now</Button></div></div> : null}
     {regionLoading ? (
@@ -180,11 +181,15 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
           </div>
           <div className="grid grid-cols-2 border-t border-border sm:border-l sm:border-t-0">
             <div className="px-4 py-3">
-              <p className={cn(LABEL_CLASS, "text-muted-foreground")}>Average</p>
+              <p className={cn(LABEL_CLASS, "flex items-center gap-1 text-muted-foreground")}>
+                <MetricInfo label="Average" definition="The mean of the brand's interest points in the selected range. Each point is a relative index, not search volume." />
+              </p>
               <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-fg">{avg ?? "not reported"}</p>
             </div>
             <div className="border-l border-border px-4 py-3">
-              <p className={cn(LABEL_CLASS, "text-muted-foreground")}>Peak</p>
+              <p className={cn(LABEL_CLASS, "flex items-center gap-1 text-muted-foreground")}>
+                <MetricInfo label="Peak" definition="The highest single interest point for the brand in the selected range." />
+              </p>
               <p className="mt-1 font-mono text-lg font-semibold tabular-nums text-fg">{peak?.interest ?? "not reported"}</p>
             </div>
           </div>

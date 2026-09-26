@@ -30,9 +30,11 @@ import {
   type RunHistoryRow,
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
+import { NarrativeBlock, type NarrativeBullet, type NarrativeCitation } from "./NarrativeBlock";
 import { OwnBrandToggle } from "./OwnBrandToggle";
 import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
-import { shortDate } from "./format";
+import { displayClaimText, shortDate } from "./format";
+import { sourceName } from "@/components/drishti/labels";
 import { useBrandFilters } from "./filters/useBrandFilters";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PositionTab } from "./tabs/PositionTab";
@@ -52,6 +54,78 @@ const tabs = [
   ["people", "People", Users],
   ["evidence", "Evidence", Layers],
 ] as const;
+
+type InsightSentence = { text: string; citedClaimIds: Id<"claims">[] };
+type NarrativeSection = "positioning" | "audience" | "problem";
+type BrandNarrative = { headline: string; headlineCitation: NarrativeCitation | null; bullets: NarrativeBullet[] };
+
+const NARRATIVE_SECTION_MARKER: Record<NarrativeSection, string> = {
+  positioning: "[[positioning]] ",
+  audience: "[[audience]] ",
+  problem: "[[problem]] ",
+};
+
+function bucketNarrativeSections(sentences: readonly InsightSentence[]): Record<NarrativeSection, InsightSentence[]> {
+  const buckets: Record<NarrativeSection, InsightSentence[]> = { positioning: [], audience: [], problem: [] };
+  for (const sentence of sentences) {
+    const section = (Object.keys(NARRATIVE_SECTION_MARKER) as NarrativeSection[]).find((key) =>
+      sentence.text.startsWith(NARRATIVE_SECTION_MARKER[key]),
+    );
+    if (section) {
+      buckets[section].push({
+        text: sentence.text.slice(NARRATIVE_SECTION_MARKER[section].length),
+        citedClaimIds: sentence.citedClaimIds,
+      });
+    } else {
+      buckets.positioning.push(sentence);
+    }
+  }
+  return buckets;
+}
+
+function narrativeCitation(ids: readonly Id<"claims">[], claimsById: Map<string, ClaimDoc>): NarrativeCitation | null {
+  for (const id of ids) {
+    const claim = claimsById.get(String(id));
+    if (claim) return { href: claim.evidenceUrl, label: sourceName(claim.sourceEngine) };
+  }
+  return null;
+}
+
+function narrativeFrom(sentences: readonly InsightSentence[], claimsById: Map<string, ClaimDoc>): BrandNarrative | null {
+  const [lead, ...support] = sentences;
+  if (!lead || lead.text.trim().length === 0) return null;
+  return {
+    headline: displayClaimText(lead.text),
+    headlineCitation: narrativeCitation(lead.citedClaimIds, claimsById),
+    bullets: support
+      .filter((sentence) => sentence.text.trim().length > 0)
+      .slice(0, 4)
+      .map((sentence) => ({
+        text: displayClaimText(sentence.text),
+        citation: narrativeCitation(sentence.citedClaimIds, claimsById),
+      })),
+  };
+}
+
+function overallNarrative(buckets: Record<NarrativeSection, InsightSentence[]>, claimsById: Map<string, ClaimDoc>): BrandNarrative | null {
+  const lead = buckets.positioning[0];
+  if (!lead) return null;
+  const support = [
+    ...buckets.positioning.slice(1),
+    ...buckets.audience.slice(0, 1),
+    ...buckets.problem.slice(0, 1),
+  ].slice(0, 4);
+  return {
+    headline: displayClaimText(lead.text),
+    headlineCitation: narrativeCitation(lead.citedClaimIds, claimsById),
+    bullets: support
+      .filter((sentence) => sentence.text.trim().length > 0)
+      .map((sentence) => ({
+        text: displayClaimText(sentence.text),
+        citation: narrativeCitation(sentence.citedClaimIds, claimsById),
+      })),
+  };
+}
 
 function statusBadge(status: string) {
   const good = status === "ok" || status === "complete" || status === "ready";
@@ -85,6 +159,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const [tab, setTab] = useState("overview");
   const brand = useQuery(api.brands.getBrand, { brandId });
   const claims = useQuery(api.claims.byBrand, { brandId });
+  const insight = useQuery(api.brandInsights.latestForBrand, { brandId });
   const { runs, isLoading: runsLoading } = useAllRuns();
   const { filters, setFilter, resetFilters } = useBrandFilters();
   const [now] = useState(() => Date.now());
@@ -110,6 +185,20 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
     [snapshots, brandId],
   );
   const tags = tagBearingClaims(latestClaims);
+  const claimsById = useMemo(
+    () => new Map((claims ?? []).map((claim) => [String(claim._id), claim])),
+    [claims],
+  );
+  const narratives = useMemo(() => {
+    if (!insight || insight.mode !== "llm") return null;
+    const buckets = bucketNarrativeSections(insight.sentences);
+    return {
+      overview: overallNarrative(buckets, claimsById),
+      position: narrativeFrom(buckets.positioning, claimsById),
+      people: narrativeFrom(buckets.audience, claimsById),
+      evidence: narrativeFrom(buckets.problem, claimsById),
+    };
+  }, [insight, claimsById]);
   const history = useMemo(
     () => runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)),
     [runs, brandId],
@@ -194,7 +283,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
           <ArrowLeft className="size-3.5" />
           All brands
         </Link>
-        <span className="font-mono text-[10px] uppercase tracking-[0.14em] text-muted-foreground">Brand intelligence</span>
       </div>
       <header className="pb-5">
         <Panel interactive={false} className="p-5" ariaLabel="Brand identity">
@@ -284,6 +372,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
         ) : (
           <>
             <TabsContent value="overview" className="mt-0 py-5">
+              {narratives?.overview ? <NarrativeBlock className="mb-5" {...narratives.overview} /> : null}
               <OverviewTab
                 latestClaims={latestClaims}
                 previousClaims={previousClaims}
@@ -309,6 +398,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               </div>
             </TabsContent>
             <TabsContent value="position" className="mt-0 py-5">
+              {narratives?.position ? <NarrativeBlock className="mb-5" {...narratives.position} /> : null}
               <PositionTab brand={brand} latestClaims={latestClaims} previousClaims={previousClaims} tags={tags} filters={filters} now={now} />
               {/* Problem is a positioning lens — the pain points the brand
                   frames itself against — so it lives under Position rather
@@ -327,9 +417,12 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               </div>
             </TabsContent>
             <TabsContent value="placement" className="mt-0 py-5">
+              {/* Brand DNA has no distribution section, so Placement opens on
+                  its evidence with no narrative rather than a fabricated one. */}
               <PlacementTab latestClaims={latestClaims} tags={tags} filters={filters} now={now} />
             </TabsContent>
             <TabsContent value="people" className="mt-0 py-5">
+              {narratives?.people ? <NarrativeBlock className="mb-5" {...narratives.people} /> : null}
               <PeopleTab
                 brand={brand}
                 latestClaims={latestClaims}
@@ -341,6 +434,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               />
             </TabsContent>
             <TabsContent value="evidence" className="mt-0 py-5">
+              {narratives?.evidence ? <NarrativeBlock className="mb-5" {...narratives.evidence} /> : null}
               <EvidenceTab
                 latestClaims={latestClaims}
                 tags={tags}

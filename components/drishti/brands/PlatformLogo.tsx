@@ -3,9 +3,6 @@ import {
   SiGoogle,
   SiGoogleads,
   SiGooglenews,
-  SiInstagram,
-  SiMeta,
-  SiTiktok,
   SiYoutube,
 } from "react-icons/si";
 import { Globe, Tag, TrendingUp, type LucideIcon } from "lucide-react";
@@ -19,9 +16,6 @@ const BRAND_MARKS: Record<string, IconType> = {
   google_news: SiGooglenews,
   youtube: SiYoutube,
   youtube_video: SiYoutube,
-  instagram: SiInstagram,
-  tiktok: SiTiktok,
-  meta: SiMeta,
 };
 
 const UI_MARKS: Record<string, LucideIcon> = {

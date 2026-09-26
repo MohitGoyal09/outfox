@@ -1,10 +1,12 @@
 "use client";
 
+import type { ReactNode } from "react";
 import { Layers } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { CategoryAxisTick } from "../charts/CategoryAxisTick";
 import { EmptyState } from "../EmptyState";
+import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
 import { categoricalColorFor, iconProps } from "../tokens";
 import type { LabeledCount } from "./brand-model";
@@ -12,7 +14,7 @@ import type { LabeledCount } from "./brand-model";
 const YAXIS_WIDTH = 172;
 const LABEL_BUDGET = 24;
 
-export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription, colorFor, formatLabel }: { title: string; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string; /** Display-only transform for a raw stored label (e.g. a fixed hookType id) — `colorFor`/the chart's own grouping still key off the raw `label`, only the rendered text changes. */ formatLabel?: (label: string) => string }) {
+export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyDescription, colorFor, formatLabel }: { title: string; /** Plain-language explanation of what this count measures — rendered as a `?` beside the title. */ definition?: ReactNode; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string; /** Display-only transform for a raw stored label (e.g. a fixed hookType id) — `colorFor`/the chart's own grouping still key off the raw `label`, only the rendered text changes. */ formatLabel?: (label: string) => string }) {
   const colorForLabel = colorFor ?? categoricalColorFor;
   const top = rows.slice(0, 8).map((row) => ({
     ...row,
@@ -23,7 +25,9 @@ export function RankedCatalogChart({ title, rows, emptyTitle, emptyDescription, 
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center justify-between border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">{title}</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          {definition ? <MetricInfo label={title} definition={definition} /> : title}
+        </h3>
         {rows.length > 0 ? <span className="font-mono text-[11px] tabular-nums text-muted-foreground">{rows.length} distinct</span> : null}
       </div>
       <div className="p-4">

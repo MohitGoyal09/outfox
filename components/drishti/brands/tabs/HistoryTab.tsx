@@ -4,6 +4,7 @@ import Link from "next/link";
 import { ArrowUpRight, CheckCircle2, Clock3, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { EmptyState } from "../../EmptyState";
 import { formatStamp } from "../../cohorts/cohorts-model";
@@ -25,7 +26,12 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex items-center gap-2 border-b border-border px-4 py-3">
         <History className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Check history</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Check history"
+            definition="One row per stored check, newest first. “Findings” is how many pieces of evidence that check stored, top hook and top funnel are its most common real tags, and tokens and cost are what its tagging actually used."
+          />
+        </h3>
       </div>
       <div className="p-4">
         {rows.length ? (

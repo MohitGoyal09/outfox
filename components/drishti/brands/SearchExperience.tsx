@@ -3,7 +3,7 @@
 import { useMemo, useState } from "react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { BarChart3, Filter, Layers, Search as SearchIcon, Tag } from "lucide-react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
+import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
 import { HOOK_TYPES, FUNNEL_STAGES, LABEL_CLASS, iconProps, sourceColor } from "../tokens";
 import { hookName, stageName } from "@/components/drishti/labels";
@@ -23,6 +23,7 @@ import {
 } from "./brand-model";
 import { EvidenceCard } from "./EvidenceCard";
 import { FilterSelect, FunnelPanel, HookChart, SummaryPanel } from "./EvidencePanels";
+import { MetricInfo } from "../MetricInfo";
 import { NewsEvidenceCard } from "./NewsEvidenceCard";
 import { runTickLabel, shortDate } from "./format";
 
@@ -139,7 +140,15 @@ export function SearchExperience({
   return (
     <div className="space-y-5">
       <div>
-        <div className="mb-3 flex items-center gap-2"><SearchIcon className="size-4 text-accent" /><h2 className="text-base font-semibold">Search result volume over time</h2></div>
+        <div className="mb-3 flex items-center gap-2">
+          <SearchIcon className="size-4 text-accent" />
+          <h2 className="text-base font-semibold">
+            <MetricInfo
+              label="Search result volume over time"
+              definition="One bar per stored check for each source. Google and YouTube plot the result total the provider reported; Google News counts the articles we stored, so the three bars are not the same measure. A gap means the source did not run, never zero."
+            />
+          </h2>
+        </div>
         {rows.length === 0 ? (
           <EmptyState
             bounded
@@ -159,6 +168,7 @@ export function SearchExperience({
                 <Bar dataKey="google" name="Google Search" fill="var(--color-google)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
                 <Bar dataKey="youtube" name="YouTube Search" fill="var(--color-youtube)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
                 <Bar dataKey="google_news" name="Google News" fill="var(--color-google_news)" radius={[3, 3, 0, 0]} maxBarSize={rows.length > 1 ? 18 : 40} />
+                <ChartLegend content={<ChartLegendContent />} />
               </BarChart>
             </ChartContainer>
           </div>
@@ -166,8 +176,28 @@ export function SearchExperience({
       </div>
 
       <div className="grid gap-3 md:grid-cols-2">
-        <SummaryPanel title="Top hooks (search)" subtitle={searchFallbackLabel}><HookChart items={hookItems} /></SummaryPanel>
-        <SummaryPanel title="Funnel stage (search)" subtitle={searchFallbackLabel}><FunnelPanel items={funnelItems} /></SummaryPanel>
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="Top hooks (search)"
+              definition="How often each hook type was tagged across findings from Google, YouTube Search, and Google News. It counts tagged findings, not posts or spend, and shares are of tagged findings only."
+            />
+          }
+          subtitle={searchFallbackLabel}
+        >
+          <HookChart items={hookItems} />
+        </SummaryPanel>
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="Funnel stage (search)"
+              definition="Each tagged finding's audience stage across this tab's sources. Stages are tags, not a conversion path, so the shares sum to 100% and nobody drops out between rows."
+            />
+          }
+          subtitle={searchFallbackLabel}
+        >
+          <FunnelPanel items={funnelItems} />
+        </SummaryPanel>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">

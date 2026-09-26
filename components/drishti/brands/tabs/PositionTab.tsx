@@ -6,6 +6,7 @@ import { ArrowUpRight, BookOpen, Layers, Sparkles, TrendingUp } from "lucide-rea
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
+import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { iconProps, HOOK_COLOR, type HookType } from "../../tokens";
 import { hookName } from "@/components/drishti/labels";
@@ -130,8 +131,14 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
           />
         ) : (
           <div className="space-y-3">
-            <p className="font-mono text-xs text-muted-foreground">
-              Range observed: <span className="text-fg">{min}</span>–<span className="text-fg">{max}</span> {points[0].unit ?? ""} across {points.length} listing{points.length === 1 ? "" : "s"}
+            <p className="flex flex-wrap items-center gap-1 font-mono text-xs text-muted-foreground">
+              <MetricInfo
+                label="Range observed"
+                definition="The lowest and highest product-listing prices captured so far. Each price is a point-in-time observation from a real listing, not the brand's current price."
+              />
+              <span>
+                : <span className="text-fg">{min}</span>–<span className="text-fg">{max}</span> {points[0].unit ?? ""} across {points.length} listing{points.length === 1 ? "" : "s"}
+              </span>
             </p>
             <ul className="space-y-1.5">
               {points.map((point) => (
@@ -156,7 +163,12 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         <TrendingUp className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Hook-mix drift</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Hook-mix drift"
+            definition="The change in hook-tag counts between this check and the previous tagged check. Bars show counts, not rates, so a larger check can lift every bar — a taller bar is more tags, not automatically a bigger share."
+          />
+        </h3>
       </div>
       <div className="p-4">
         {previous === null ? (
@@ -174,7 +186,18 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
             description="Neither this check nor the earlier one has real hook tags to compare yet."
           />
         ) : (
-          <ChartContainer config={chartConfig} className="h-[240px] w-full aspect-auto">
+          <>
+            <div className="mb-2 flex items-center gap-4 text-[11px] text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: "var(--text-primary)" }} />
+                This check
+              </span>
+              <span className="inline-flex items-center gap-1.5">
+                <span aria-hidden className="h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: "var(--text-primary)", opacity: 0.35 }} />
+                Previous check
+              </span>
+            </div>
+            <ChartContainer config={chartConfig} className="h-[240px] w-full aspect-auto">
             <BarChart accessibilityLayer data={rows} margin={{ left: -16, right: 12, top: 8 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tick={{ fontSize: 9 }} interval={0} angle={-28} textAnchor="end" height={56} tickFormatter={(value: string) => hookName(value)} />
@@ -191,7 +214,8 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
                 ))}
               </Bar>
             </BarChart>
-          </ChartContainer>
+            </ChartContainer>
+          </>
         )}
       </div>
     </Panel>
@@ -251,6 +275,7 @@ export function PositionTab({
             them elsewhere in this tab. */}
         <RankedCatalogChart
           title="Hook type"
+          definition="How often an enrichment check assigned each fixed hook type to a finding. Counts are of tagged findings, not of posts, views, or spend."
           rows={hookTypeRows}
           colorFor={(label) => HOOK_COLOR[label as HookType] ?? HOOK_COLOR.not_applicable}
           formatLabel={hookName}
@@ -260,12 +285,14 @@ export function PositionTab({
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <RankedCatalogChart
             title="Themes"
+            definition="How often an enrichment check assigned each theme to a finding. The tag is free text, so two rows can mean the same thing in different words."
             rows={themeRows}
             emptyTitle="No tagged themes yet."
             emptyDescription="Ranks the real theme text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
           />
           <RankedCatalogChart
             title="Value propositions"
+            definition="How often an enrichment check assigned each value proposition to a finding. The tag is free text, so two rows can mean the same thing in different words."
             rows={valuePropRows}
             emptyTitle="No tagged value propositions yet."
             emptyDescription="Ranks the real value-proposition text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."

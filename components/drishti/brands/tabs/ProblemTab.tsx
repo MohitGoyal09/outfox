@@ -3,6 +3,7 @@
 import { useMemo } from "react";
 import { AlertTriangle, HelpCircle, Search } from "lucide-react";
 import { EmptyState } from "../../EmptyState";
+import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { stageName } from "@/components/drishti/labels";
 import {
@@ -77,7 +78,12 @@ function FunnelCoveragePanel({ items }: { items: ReturnType<typeof funnelDistrib
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         <AlertTriangle className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Funnel-coverage gaps</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Funnel-coverage gaps"
+            definition="Which audience stages have no tagged evidence in this check. A stage with no tag is a coverage gap, not a measured fall to zero; shares are of tagged findings only."
+          />
+        </h3>
       </div>
       <div className="space-y-3 p-4">
         <FunnelPanel items={items} />

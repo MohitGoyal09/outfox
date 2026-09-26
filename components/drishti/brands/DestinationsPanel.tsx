@@ -10,6 +10,7 @@ import { formatStamp } from "../cohorts/cohorts-model";
 import { sourceName } from "@/components/drishti/labels";
 import { CategoryAxisTick } from "../charts/CategoryAxisTick";
 import { EmptyState } from "../EmptyState";
+import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
 import { categoricalColorFor, iconProps } from "../tokens";
 import { type ClaimDoc } from "./brand-model";
@@ -44,7 +45,12 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
         <div>
           <div className="flex items-center gap-2">
             <Globe2 className="size-4 text-fg" aria-hidden />
-            <h2 className="type-headline text-fg">Destinations in the evidence set</h2>
+            <h2 className="type-headline text-fg">
+              <MetricInfo
+                label="Destinations in the evidence set"
+                definition="Every real URL captured in search and video evidence, grouped by page. Counts are of findings we stored; no historical counts or traffic estimates are inferred."
+              />
+            </h2>
           </div>
           <p className="mt-1 text-xs text-muted-foreground">Ranked URLs from search and video evidence. No historical counts are inferred.</p>
         </div>
@@ -61,7 +67,12 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
         <>
           <Panel interactive={false} className="overflow-hidden">
             <div className="border-b border-border px-4 py-3">
-              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Evidence count by destination</h3>
+              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+                <MetricInfo
+                  label="Evidence count by destination"
+                  definition="How many stored findings point at each destination URL. It counts evidence rows, not visits, clicks, or page traffic."
+                />
+              </h3>
             </div>
             <div className="p-4">
               <ChartContainer config={chartConfig} className="h-[240px] w-full aspect-auto">
@@ -86,10 +97,30 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Destination</TableHead>
-                    <TableHead>Evidence</TableHead>
-                    <TableHead>Seen</TableHead>
-                    <TableHead>Sources</TableHead>
+                    <TableHead>
+                      <MetricInfo
+                        label="Destination"
+                        definition="The page URL the captured findings link to."
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <MetricInfo
+                        label="Evidence"
+                        definition="Number of stored findings that link to this destination."
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <MetricInfo
+                        label="Seen"
+                        definition="The first and last dates we captured a finding for this destination."
+                      />
+                    </TableHead>
+                    <TableHead>
+                      <MetricInfo
+                        label="Sources"
+                        definition="Which engines contributed findings that link to this destination."
+                      />
+                    </TableHead>
                     <TableHead className="text-right">Open</TableHead>
                   </TableRow>
                 </TableHeader>

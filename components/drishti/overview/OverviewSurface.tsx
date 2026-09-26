@@ -94,6 +94,10 @@ function OverviewBody() {
     () => (feedQuery ?? []).reduce((sum, entry) => sum + entry.totalCount, 0),
     [feedQuery],
   );
+  const brandsWithFindings = useMemo(
+    () => (feedQuery ?? []).filter((entry) => entry.totalCount > 0).length,
+    [feedQuery],
+  );
   const claims: FeedClaim[] = useMemo(
     () =>
       (feedQuery ?? []).flatMap((entry) =>
@@ -209,12 +213,12 @@ function OverviewBody() {
 
       <section aria-label="At a glance" className="flex flex-col gap-3">
         <SectionLabel>At a glance</SectionLabel>
-        <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
           <StatTile
             label="Tracked brands"
             value={brands.length}
             loading={brandsLoading}
-            hint="Brands on your desk."
+            hint={`${coveredBrandCount} with a finished check`}
             icon={<Building2 {...iconProps} size={16} aria-hidden="true" className="size-4" />}
           />
           <StatTile
@@ -222,7 +226,7 @@ function OverviewBody() {
             value={totalClaimCount}
             accent="ok"
             loading={panelsLoading}
-            hint="Stored findings across your brands."
+            hint={`across ${brandsWithFindings} of ${brands.length} brands`}
             icon={<Quote {...iconProps} size={16} aria-hidden="true" className="size-4" />}
           />
           <StatTile
@@ -230,7 +234,7 @@ function OverviewBody() {
             value={coveredBrandCount}
             accent={coveredBrandCount > 0 ? "ok" : "neutral"}
             loading={panelsLoading}
-            hint="Brands with a finished check."
+            hint={`of ${brands.length} tracked brands`}
             icon={<BarChart3 {...iconProps} size={16} aria-hidden="true" className="size-4" />}
           />
           <StatTile
@@ -239,7 +243,9 @@ function OverviewBody() {
             accent={attentionRows.length > 0 ? "warn" : "ok"}
             loading={panelsLoading}
             hint={
-              attentionRows.length > 0 ? "Brands that need a look." : "Nothing needs a look."
+              attentionRows.length > 0
+                ? `of ${brands.length} tracked brands`
+                : `all ${brands.length} look current`
             }
             icon={<TriangleAlert {...iconProps} size={16} aria-hidden="true" className="size-4" />}
           />

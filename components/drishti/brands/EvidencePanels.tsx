@@ -32,7 +32,7 @@ export function DeltaTag({ delta }: { delta: number | null }) {
   return <span className={cn("font-mono text-[10px]", positive ? "text-ok" : "text-danger")}>{positive ? "+" : ""}{delta}</span>;
 }
 
-export function SummaryPanel({ title, subtitle, children, className }: { title: string; subtitle?: ReactNode; children: ReactNode; className?: string }) {
+export function SummaryPanel({ title, subtitle, children, className }: { title: ReactNode; subtitle?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <Panel interactive={false} className={cn("flex min-h-[206px] flex-col overflow-hidden", className)}>
       <div className="border-b border-border px-4 py-3">
@@ -115,12 +115,13 @@ export function HookChart({ items }: { items: DistributionItem[] }) {
       </div>
       <div className="space-y-2">
         {rows.map((row) => (
-          <div key={row.label} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[11px]">
+          <div key={row.label} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-[11px]">
             <span className="flex min-w-0 items-center gap-2 capitalize">
               <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
               <span className="truncate">{hookName(row.label)}</span>
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
+            <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "—"}</span>
             <DeltaTag delta={row.delta} />
           </div>
         ))}

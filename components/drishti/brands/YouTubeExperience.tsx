@@ -22,6 +22,7 @@ import {
   type YoutubeVideoGroup,
 } from "./brand-model";
 import { FilterSelect, FunnelPanel, HookChart, SummaryPanel } from "./EvidencePanels";
+import { MetricInfo } from "../MetricInfo";
 import { shortDate } from "./format";
 import { YouTubeVideoCard } from "./YouTubeVideoCard";
 
@@ -90,8 +91,28 @@ export function YouTubeExperience({
   return (
     <div className="space-y-5">
       <div className="grid gap-3 md:grid-cols-2">
-        <SummaryPanel title="Top hooks (YouTube)" subtitle={videoFallbackLabel}><HookChart items={hookItems} /></SummaryPanel>
-        <SummaryPanel title="Funnel stage (YouTube)" subtitle={videoFallbackLabel}><FunnelPanel items={funnelItems} /></SummaryPanel>
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="Top hooks (YouTube)"
+              definition="How often each hook type was tagged across this tab's video findings. It counts tagged findings, not videos or views, and shares are of tagged findings only."
+            />
+          }
+          subtitle={videoFallbackLabel}
+        >
+          <HookChart items={hookItems} />
+        </SummaryPanel>
+        <SummaryPanel
+          title={
+            <MetricInfo
+              label="Funnel stage (YouTube)"
+              definition="Each tagged video finding's audience stage. Stages are tags, not a conversion path, so the shares sum to 100% and nobody drops out between rows."
+            />
+          }
+          subtitle={videoFallbackLabel}
+        >
+          <FunnelPanel items={funnelItems} />
+        </SummaryPanel>
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
@@ -100,7 +121,16 @@ export function YouTubeExperience({
       </div>
 
       <div>
-        <div className="mb-3 flex items-center gap-2"><Video className="size-4 text-fg" aria-hidden /><h2 className="type-headline text-fg"><NumberTicker value={groups.length} /> {groups.length === 1 ? "video" : "videos"}</h2></div>
+        <div className="mb-3 flex items-center gap-2">
+          <Video className="size-4 text-fg" aria-hidden />
+          <h2 className="type-headline text-fg">
+            <NumberTicker value={groups.length} />{" "}
+            <MetricInfo
+              label={groups.length === 1 ? "video" : "videos"}
+              definition="Real stored YouTube videos for this check, one card per video rather than one row per field. Missing view or like counts stay missing, never zero."
+            />
+          </h2>
+        </div>
         {groups.length ? (
           <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
             {groups.map((group) => (

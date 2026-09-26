@@ -5,6 +5,7 @@ import { Cell, Pie, PieChart } from "recharts";
 import { Newspaper, Trophy, Users, Video } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../../EmptyState";
+import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { categoricalColorFor, iconProps } from "../../tokens";
 import { RankedCatalogChart } from "../RankedCatalogChart";
@@ -55,7 +56,12 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         <Trophy className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Creator leaderboard</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Creator leaderboard"
+            definition="Real YouTube channels ranked by total views across the videos we captured. Subscriber counts come from the source and may be missing; “owned” is a name match against the brand, not a source category."
+          />
+        </h3>
       </div>
       <div className="p-4">
         {rows.length === 0 ? (
@@ -96,13 +102,19 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
     { label: "Owned channel", value: ownedViews, color: categoricalColorFor("Owned channel") },
     { label: "Creator channels", value: creatorViews, color: categoricalColorFor("Creator channels") },
   ].filter((row) => row.value > 0);
+  const totalViews = data.reduce((sum, row) => sum + row.value, 0);
   const chartConfig = Object.fromEntries(data.map((row) => [row.label, { label: row.label, color: row.color }])) satisfies ChartConfig;
 
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         <Users className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Owned vs. creator views</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Owned vs. creator views"
+            definition="Real view totals split between the brand's own channel — matched by name — and third-party creators. It is a derived split of the videos we captured, not a category from the source data."
+          />
+        </h3>
       </div>
       <div className="p-4">
         {data.length === 0 ? (
@@ -129,6 +141,7 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
                 <div key={row.label} className="flex items-center gap-2">
                   <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} />
                   <span className="flex-1 truncate">{row.label}</span>
+                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{totalViews ? `${Math.round((row.value / totalViews) * 100)}%` : "—"}</span>
                   <span className="font-mono tabular-nums text-muted-foreground">{compactCount(row.value)}</span>
                 </div>
               ))}
@@ -150,8 +163,19 @@ function BreakoutVideos({ claims, youtubeSnapshot }: { claims: ClaimDoc[]; youtu
     <section className="space-y-3">
       <div className="flex flex-row items-center gap-2">
         <Video className="size-4 text-fg" aria-hidden />
-        <h3 className="type-headline text-fg">Breakout videos</h3>
-        {groups.length > 0 ? <span className="ml-auto font-mono text-[11px] text-muted-foreground">ranked by views</span> : null}
+        <h3 className="type-headline text-fg">
+          <MetricInfo
+            label="Breakout videos"
+            definition="The brand's stored YouTube videos ranked by real view count, highest first. Likes are shown beside views so a gap is visible; we never compute an outlier score."
+          />
+        </h3>
+        {groups.length > 0 ? (
+          <MetricInfo
+            label="ranked by views"
+            definition="Order is the real stored view count, highest first. A video with no stored view count sorts last and is never treated as zero."
+            className="ml-auto font-mono text-[11px] text-muted-foreground"
+          />
+        ) : null}
       </div>
       {groups.length === 0 ? (
         <EmptyState
@@ -193,7 +217,12 @@ function PublisherListPanel({ claims }: { claims: ClaimDoc[] }) {
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
         <Newspaper className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Publishers talking about this brand</h3>
+        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
+          <MetricInfo
+            label="Publishers talking about this brand"
+            definition="How many real news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage of the brand."
+          />
+        </h3>
       </div>
       <div className="p-4">
         {rows.length === 0 ? (
@@ -262,6 +291,7 @@ export function PeopleTab({
       <BreakoutVideos claims={filtered} youtubeSnapshot={youtubeSnapshot} />
       <RankedCatalogChart
         title="Audience hints"
+        definition="How often an enrichment check assigned each audience hint to a finding. The tag is free text, so two rows can mean the same audience in different words."
         rows={audienceHintRows}
         emptyTitle="No tagged audience hints yet."
         emptyDescription="Ranks the real audience-hint text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
