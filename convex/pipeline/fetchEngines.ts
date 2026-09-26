@@ -124,8 +124,25 @@ const ADVERTISER_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  * disambiguated with the brand's vertical when one is known, same real
  * query, just a more specific one. Mirrors buildGoogleNewsParams exactly.
  */
+/**
+ * A vertical only disambiguates a query when it means something. Brand
+ * creation writes the literal string "unknown" when it could not determine
+ * one, and that placeholder was being pasted straight into the search: three
+ * brands were being looked up as "Plum unknown", "SUGAR Cosmetics unknown"
+ * and "WOW Skin Science unknown", which is a worse query than the bare name.
+ * Treat a placeholder as absent rather than as a word.
+ */
+const PLACEHOLDER_VERTICALS = new Set(["", "unknown", "unspecified", "n/a", "none"]);
+
+export function searchQueryForBrand(brand: { name: string; vertical?: string }): string {
+  const vertical = (brand.vertical ?? "").trim();
+  return PLACEHOLDER_VERTICALS.has(vertical.toLowerCase())
+    ? brand.name
+    : `${brand.name} ${vertical}`;
+}
+
 export function buildGoogleSearchParams(brand: { name: string; vertical?: string }) {
-  const query = brand.vertical ? `${brand.name} ${brand.vertical}` : brand.name;
+  const query = searchQueryForBrand(brand);
   return {
     engine: "google",
     q: truncateQuery(query),
@@ -144,7 +161,7 @@ export function buildGoogleSearchParams(brand: { name: string; vertical?: string
  * when one is known, same real query, just a more specific one.
  */
 export function buildGoogleNewsParams(brand: { name: string; vertical?: string }) {
-  const query = brand.vertical ? `${brand.name} ${brand.vertical}` : brand.name;
+  const query = searchQueryForBrand(brand);
   return {
     engine: "google_news",
     q: truncateQuery(query),
