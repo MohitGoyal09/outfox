@@ -8,7 +8,7 @@ import { EmptyState } from "../EmptyState";
 import { hookName, sourceName } from "../labels";
 import { HOOK_TYPES, categoricalColorFor, iconProps } from "../tokens";
 import { RankedCatalogChart } from "../brands/RankedCatalogChart";
-import { TrendsChart, type TrendsChartResult } from "../charts";
+import { DonutChart, RankedTable, StackedBarChart, TrendsChart, type TrendsChartResult } from "../charts";
 import { parseA2UI, resolveA2UI, type ResolvedNode, type SettledToolResult } from "./protocol";
 
 const STORED_ID_RE = /^[a-z0-9]{20,}$/;
@@ -66,6 +66,39 @@ function render(node: ResolvedNode): React.ReactNode {
       return <Cannot key={node.id} title={node.title} reason="that result is not a series" />;
     }
     return <TrendsChart key={node.id} result={node.series} />;
+  }
+  if (node.kind === "donut") {
+    return (
+      <DonutChart
+        key={node.id}
+        title={node.title}
+        rows={node.rows}
+        emptyTitle="No rows to chart"
+        emptyDescription="This turn returned no countable rows for that view."
+      />
+    );
+  }
+  if (node.kind === "stacked-bar") {
+    return (
+      <StackedBarChart
+        key={node.id}
+        title={node.title}
+        rows={node.rows}
+        emptyTitle="No rows to chart"
+        emptyDescription="This turn returned no countable rows for that view."
+      />
+    );
+  }
+  if (node.kind === "table") {
+    return (
+      <RankedTable
+        key={node.id}
+        title={node.title}
+        rows={node.rows}
+        emptyTitle="No rows to chart"
+        emptyDescription="This turn returned no countable rows for that view."
+      />
+    );
   }
   return <Cannot key={node.id} title={node.title} reason={node.reason} />;
 }

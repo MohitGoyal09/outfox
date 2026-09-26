@@ -32,11 +32,13 @@ export type TrendsChartResult = {
   total: number;
   coverage: Coverage;
   asOf: string | null;
+  caption?: string;
 };
 
 export type TrendsChartProps = {
   result: TrendsChartResult;
   brandLabel?: (brandId: string) => string;
+  caption?: string;
   className?: string;
 };
 
@@ -200,12 +202,13 @@ function ChunkPanel({
   );
 }
 
-export function TrendsChart({ result, brandLabel, className }: TrendsChartProps) {
+export function TrendsChart({ result, brandLabel, caption: captionProp, className }: TrendsChartProps) {
   const headingId = useId();
   const resolveLabel = brandLabel ?? ((brandId: string) => brandId);
   const groups = useMemo(() => groupByChunk(result.rows), [result.rows]);
   const showChrome = groups.length > 1;
   const missingEngine = result.coverage.google_trends === "missing";
+  const caption = captionProp ?? result.caption ?? null;
 
   return (
     <section aria-labelledby={headingId} className={cn("flex flex-col gap-3", className)}>
@@ -218,6 +221,9 @@ export function TrendsChart({ result, brandLabel, className }: TrendsChartProps)
           as of {formatStamp(result.asOf)}
         </span>
       </div>
+      {caption !== null && caption !== "" ? (
+        <p className="text-[12px] leading-[1.5] text-[var(--text-secondary)]">{caption}</p>
+      ) : null}
 
       {missingEngine ? (
         <EmptyState

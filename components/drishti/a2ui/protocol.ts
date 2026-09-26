@@ -34,6 +34,9 @@ export type A2UIParseResult =
 export const CATALOG: Record<string, { dataProps: readonly string[]; container?: boolean }> = {
   Column: { dataProps: [], container: true },
   Bar: { dataProps: ["rows"] },
+  Donut: { dataProps: ["rows"] },
+  StackedBar: { dataProps: ["rows"] },
+  Table: { dataProps: ["rows"] },
 };
 
 function findNumericLiteral(value: unknown, path: string): string | null {
@@ -213,6 +216,9 @@ export function splitA2UIBlock(text: string): { text: string; a2ui: string | nul
 export type ResolvedNode =
   | { kind: "container"; id: string; children: ResolvedNode[] }
   | { kind: "bar"; id: string; title: string; rows: { label: string; count: number }[] }
+  | { kind: "donut"; id: string; title: string; rows: { label: string; count: number }[] }
+  | { kind: "stacked-bar"; id: string; title: string; rows: { label: string; count: number }[] }
+  | { kind: "table"; id: string; title: string; rows: { label: string; count: number }[] }
   | { kind: "line"; id: string; title: string; series: unknown }
   | { kind: "unavailable"; id: string; title: string; reason: string };
 
@@ -267,6 +273,16 @@ export function resolveBinding(
   return { ok: true, rows: labelled };
 }
 
+function resolveRows(
+  component: A2UIComponent,
+  results: SettledToolResult[],
+  labelFor: (raw: string) => string | null,
+): { rows: { label: string; count: number }[] } | { reason: string } {
+  const resolved = resolveBinding(component.rows as A2UIBinding, results, labelFor);
+  if (resolved.ok && "rows" in resolved) return { rows: resolved.rows };
+  return { reason: resolved.ok ? "the rows could not be read" : resolved.reason };
+}
+
 export function resolveA2UI(
   parsed: Extract<A2UIParseResult, { ok: true }>,
   results: SettledToolResult[],
@@ -286,11 +302,34 @@ export function resolveA2UI(
     if (component.component === "Column") {
       node = { kind: "container", id, children: (component.children ?? []).map(build) };
     } else if (component.component === "Bar") {
-      const resolved = resolveBinding(component.rows as A2UIBinding, results, labelFor);
+      const bound = resolveRows(component, results, labelFor);
       node =
-        resolved.ok && "rows" in resolved
-          ? { kind: "bar", id, title, rows: resolved.rows }
-          : { kind: "unavailable", id, title, reason: resolved.ok ? "the rows could not be read" : resolved.reason };
+        "rows" in bound
+          ? { kind: "bar", id, title, rows: bound.rows }
+          : { kind: "unavailable", id, title, reason: bound.reason };
+    } else if (component.component === "Donut") {
+      const bound = resolveRows(component, results, labelFor);
+      if (!("rows" in bound)) {
+        node = { kind: "unavailable", id, title, reason: bound.reason };
+      } else {
+        const real = bound.rows.filter((row) => row.count > 0);
+        node =
+          real.length < 3
+            ? { kind: "unavailable", id, title, reason: `a share chart needs at least 3 categories with a count; this view has ${real.length}` }
+            : { kind: "donut", id, title, rows: real };
+      }
+    } else if (component.component === "StackedBar") {
+      const bound = resolveRows(component, results, labelFor);
+      node =
+        "rows" in bound
+          ? { kind: "stacked-bar", id, title, rows: bound.rows }
+          : { kind: "unavailable", id, title, reason: bound.reason };
+    } else if (component.component === "Table") {
+      const bound = resolveRows(component, results, labelFor);
+      node =
+        "rows" in bound
+          ? { kind: "table", id, title, rows: bound.rows }
+          : { kind: "unavailable", id, title, reason: bound.reason };
     } else {
       node = { kind: "unavailable", id, title, reason: `"${component.component}" has no renderer` };
     }

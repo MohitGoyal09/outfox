@@ -30,7 +30,7 @@ import { buildCohortKey } from "./brandProfile";
 import { matchBrandQuery } from "../lib/brandMatch";
 import { deriveDomainFromGoogleResults } from "../lib/brandDomain";
 import { SEARCH_RESERVE_FLOOR } from "./webSearch";
-import { YOUTUBE_VIDEO_DETAIL_COUNT } from "../../lib/constants";
+import { TRENDS_TIMELINE_POINT_CAP, YOUTUBE_VIDEO_DETAIL_COUNT } from "../../lib/constants";
 import type { Coverage, Engine } from "../../lib/agentTypes";
 
 /**
@@ -190,6 +190,26 @@ export const fetchBrand = action({
       facetRows: v.optional(
         v.array(v.object({ value: v.string(), count: v.number() })),
       ),
+      /**
+       * A bounded, compact preview series for this turn only, present only in
+       * `mode: "read"` when a Google Trends fetch returned real points. Same
+       * wire shape as `get_trends`' persisted `trendsGroups` (see
+       * `app/api/chat/persistedTrends.ts`), so `AnswerCharts` can bind a
+       * reloaded turn's chart through the identical reader. A preview, never
+       * stored evidence; absent when the timeline was empty.
+       */
+      trendsGroups: v.optional(
+        v.array(
+          v.object({
+            brandId: v.string(),
+            chunkKey: v.string(),
+            evidenceUrl: v.string(),
+            granularity: v.union(v.literal("point"), v.literal("window")),
+            fetchedAt: v.string(),
+            points: v.array(v.array(v.union(v.string(), v.number(), v.null()))),
+          }),
+        ),
+      ),
       total: v.number(),
       coverage: coverageValidator,
       asOf: v.union(v.string(), v.null()),
@@ -242,6 +262,20 @@ export const fetchBrand = action({
         fetchedAt: readFetchedAt,
       });
       const readCoverage: Coverage = {};
+      /**
+       * One compact preview group for this turn, built only from real Trends
+       * points (metric `google_trends_interest_point`). Never an empty group:
+       * absent when the timeline held nothing, so the UI shows no chart rather
+       * than a fabricated or empty one.
+       */
+      const trendsGroups: Array<{
+        brandId: string;
+        chunkKey: string;
+        evidenceUrl: string;
+        granularity: "point" | "window";
+        fetchedAt: string;
+        points: Array<[string, string | number | null]>;
+      }> = [];
       const readRows: Array<{
         id: string;
         text: string;
@@ -321,6 +355,30 @@ export const fetchBrand = action({
             continue;
           }
           readCoverage[engine] = "ok";
+          if (trendsGroups.length === 0) {
+            const pointClaims = claims.filter(
+              (claim): claim is ExtractedClaim & { period: string } =>
+                claim.metric === "google_trends_interest_point" &&
+                typeof claim.period === "string" &&
+                claim.period !== "",
+            );
+            if (pointClaims.length > 0) {
+              const anchorClaim = pointClaims[0]!;
+              trendsGroups.push({
+                // The brand's own name, not an opaque id: the chart defaults
+                // its series label to the raw `brandId`, and this brand is
+                // untracked, so no `brandLabel` lookup would rename it.
+                brandId: name,
+                chunkKey,
+                evidenceUrl: anchorClaim.evidenceUrl,
+                granularity: "point",
+                fetchedAt: anchorClaim.fetchedAt,
+                points: pointClaims
+                  .slice(0, TRENDS_TIMELINE_POINT_CAP)
+                  .map((claim) => [claim.period, claim.value ?? null]),
+              });
+            }
+          }
           claims.forEach((claim, i) => {
             readRows.push({
               id: `webfetch:${engine}:${index}-${i}`,
@@ -354,6 +412,7 @@ export const fetchBrand = action({
         brandName: name,
         rows: readRows,
         facetRows,
+        ...(trendsGroups.length > 0 ? { trendsGroups } : {}),
         total: readRows.length,
         coverage: readCoverage,
         asOf: readFetchedAt,

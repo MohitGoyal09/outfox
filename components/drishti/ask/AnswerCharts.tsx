@@ -2,6 +2,7 @@
 
 
 import { TrendsChart, type TrendsChartResult } from "@/components/drishti/charts";
+import { LIVE_PREVIEW_CAPTION, trendsResultsFromGroups } from "./ask-model";
 
 type UnknownPart = { type?: unknown; state?: unknown; output?: unknown; toolCallId?: unknown };
 
@@ -24,6 +25,23 @@ export function trendsResultsOf(message: { parts?: unknown }): TrendsChartResult
   return out;
 }
 
+export function fetchBrandPreviewResultsOf(message: { parts?: unknown }): TrendsChartResult[] {
+  const parts = Array.isArray(message.parts) ? (message.parts as UnknownPart[]) : [];
+  const out: TrendsChartResult[] = [];
+  for (const part of parts) {
+    if (part.type !== "tool-fetch_brand") continue;
+    if (part.state !== "output-available") continue;
+    if (typeof part.output !== "object" || part.output === null) continue;
+    out.push(
+      ...trendsResultsFromGroups(
+        (part.output as { trendsGroups?: unknown }).trendsGroups,
+        LIVE_PREVIEW_CAPTION,
+      ),
+    );
+  }
+  return out;
+}
+
 export function AnswerCharts({
   message,
   brandLabel,
@@ -33,7 +51,7 @@ export function AnswerCharts({
   brandLabel?: (brandId: string) => string;
   persistedResults?: TrendsChartResult[];
 }) {
-  const liveResults = trendsResultsOf(message);
+  const liveResults = [...trendsResultsOf(message), ...fetchBrandPreviewResultsOf(message)];
   const results = liveResults.length > 0 ? liveResults : (persistedResults ?? []);
   if (results.length === 0) return null;
   return (
