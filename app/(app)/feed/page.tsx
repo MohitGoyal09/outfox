@@ -35,7 +35,7 @@ import {
 import { useFeedFilters } from "@/components/drishti/feed/useFeedFilters";
 import { cn } from "@/lib/utils";
 
-function FeedSkeleton() {
+export function FeedSkeleton() {
   return (
     <SkeletonRegion label="Loading the feed" className="flex flex-col gap-4">
       <Skeleton variant="row" height={40} />
