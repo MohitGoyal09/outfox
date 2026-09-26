@@ -98,19 +98,24 @@ function HookRow({
   );
 }
 
-function TaggedShareNote({ shown, totalFindings }: { shown: number; totalFindings?: number | null }) {
-  const shownText = <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(shown)}</span>;
+function TaggedShareNote({
+  realCount,
+  taggedCount,
+  totalFindings,
+  dimensionNoun,
+}: {
+  realCount: number;
+  taggedCount: number;
+  totalFindings?: number | null;
+  dimensionNoun: string;
+}) {
+  const num = (n: number) => <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(n)}</span>;
+  const hasFindings = totalFindings != null && totalFindings > 0;
   return (
     <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
-      {totalFindings != null && totalFindings > 0 ? (
-        <>
-          {shownText} of{" "}
-          <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(totalFindings)}</span>{" "}
-          finding{totalFindings === 1 ? "" : "s"} tagged — shares above are of that tagged sample, not of all findings.
-        </>
-      ) : (
-        <>Shares above are of {shownText} tagged finding{shown === 1 ? "" : "s"}, not of all findings.</>
-      )}
+      {num(realCount)} of {num(taggedCount)} tagged finding{taggedCount === 1 ? "" : "s"} carry a real {dimensionNoun}
+      {hasFindings ? <> — {num(taggedCount)} of {num(totalFindings as number)} finding{totalFindings === 1 ? "" : "s"} were tagged at all</> : null}
+      . Shares above are of those {num(realCount)}, not of every tagged finding{hasFindings ? " or every finding" : ""}.
     </p>
   );
 }
@@ -118,12 +123,14 @@ function TaggedShareNote({ shown, totalFindings }: { shown: number; totalFinding
 function HookFallback({
   rows,
   total,
+  taggedCount,
   totalFindings,
   selectedHook,
   onSelectHook,
 }: {
   rows: DistributionItem[];
   total: number;
+  taggedCount: number;
   totalFindings?: number | null;
   selectedHook?: string;
   onSelectHook?: (hookType: string) => void;
@@ -158,18 +165,20 @@ function HookFallback({
       {rows.map((row) => (
         <HookRow key={row.label} row={hookRow(row)} total={total} selectedHook={selectedHook} onSelectHook={onSelectHook} />
       ))}
-      {total > 0 ? <TaggedShareNote shown={total} totalFindings={totalFindings} /> : null}
+      {total > 0 ? <TaggedShareNote realCount={total} taggedCount={taggedCount} totalFindings={totalFindings} dimensionNoun="hook" /> : null}
     </div>
   );
 }
 
 export function HookChart({
   items,
+  taggedCount,
   totalFindings,
   selectedHook,
   onSelectHook,
 }: {
   items: DistributionItem[];
+  taggedCount: number;
   totalFindings?: number | null;
   selectedHook?: string;
   onSelectHook?: (hookType: string) => void;
@@ -185,7 +194,7 @@ export function HookChart({
       description="Hook types are assigned by an enrichment pass after a check runs. This check carries none yet."
     />
   );
-  if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} totalFindings={totalFindings} selectedHook={selectedHook} onSelectHook={onSelectHook} />;
+  if (rows.length < DONUT_MIN_DISTINCT) return <HookFallback rows={rows} total={total} taggedCount={taggedCount} totalFindings={totalFindings} selectedHook={selectedHook} onSelectHook={onSelectHook} />;
   const chartConfig = Object.fromEntries(
     rows.map((row) => [row.label, { label: hookName(row.label), color: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }]),
   ) satisfies ChartConfig;
@@ -217,11 +226,14 @@ export function HookChart({
         </ChartContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-mono text-sm font-semibold tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(total)}</span>
-          {/* Was "EVIDENCE" — read as the brand's total evidence count, which
-              this is not: it is only the tagged sample the shares below
-              divide by (docs/HANDOFF.md §2, "a bounded query cannot assert
-              absence"/a whole-corpus claim). */}
-          <span className="text-[7px] uppercase tracking-wide text-muted-foreground">tagged</span>
+          {/* Was "EVIDENCE", then "TAGGED" — both read as the brand's tagged-
+              findings count (the header badge's own word, `taggedCount`
+              below), which this total is not: `not_applicable` findings are
+              tagged too but excluded from this donut, so `total` is only the
+              REAL-hook subset of the tagged sample (docs/HANDOFF.md §2 /
+              §10's honest-percentages rule — "tagged" only ever means
+              `taggedCount` on this page now). */}
+          <span className="text-[7px] uppercase tracking-wide text-muted-foreground">with hook</span>
         </div>
       </div>
       <div className="space-y-2">
@@ -231,7 +243,7 @@ export function HookChart({
       </div>
       {total > 0 ? (
         <div className="col-span-2">
-          <TaggedShareNote shown={total} totalFindings={totalFindings} />
+          <TaggedShareNote realCount={total} taggedCount={taggedCount} totalFindings={totalFindings} dimensionNoun="hook" />
         </div>
       ) : null}
     </div>
@@ -250,11 +262,13 @@ const FUNNEL_EMPTY_BAND_PCT = 4;
 
 export function FunnelPanel({
   items,
+  taggedCount,
   totalFindings,
   selectedStage,
   onSelectStage,
 }: {
   items: DistributionItem[];
+  taggedCount: number;
   totalFindings?: number | null;
   selectedStage?: string;
   onSelectStage?: (stage: FunnelStage) => void;
@@ -330,7 +344,7 @@ export function FunnelPanel({
           </button>
         );
       })}
-      <TaggedShareNote shown={total} totalFindings={totalFindings} />
+      <TaggedShareNote realCount={total} taggedCount={taggedCount} totalFindings={totalFindings} dimensionNoun="audience stage" />
     </div>
   );
 }

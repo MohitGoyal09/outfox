@@ -190,7 +190,7 @@ export function SearchExperience({
           }
           subtitle={searchFallbackLabel}
         >
-          <HookChart items={hookItems} totalFindings={hookFunnelTotalFindings} />
+          <HookChart items={hookItems} taggedCount={latestTags.length} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
         <SummaryPanel
           title={
@@ -201,7 +201,7 @@ export function SearchExperience({
           }
           subtitle={searchFallbackLabel}
         >
-          <FunnelPanel items={funnelItems} totalFindings={hookFunnelTotalFindings} />
+          <FunnelPanel items={funnelItems} taggedCount={latestTags.length} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
       </div>
 

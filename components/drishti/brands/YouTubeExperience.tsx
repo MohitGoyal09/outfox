@@ -103,7 +103,7 @@ export function YouTubeExperience({
           }
           subtitle={videoFallbackLabel}
         >
-          <HookChart items={hookItems} totalFindings={hookFunnelTotalFindings} />
+          <HookChart items={hookItems} taggedCount={miniPanelTags.length} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
         <SummaryPanel
           title={
@@ -114,7 +114,7 @@ export function YouTubeExperience({
           }
           subtitle={videoFallbackLabel}
         >
-          <FunnelPanel items={funnelItems} totalFindings={hookFunnelTotalFindings} />
+          <FunnelPanel items={funnelItems} taggedCount={miniPanelTags.length} totalFindings={hookFunnelTotalFindings} />
         </SummaryPanel>
       </div>
 

@@ -165,7 +165,7 @@ export function OverviewTab({
           }
           subtitle={fallbackLabel}
         >
-          <HookChart items={hookItems} totalFindings={totalFindings} selectedHook={filters.hook} onSelectHook={handleSelectHook} />
+          <HookChart items={hookItems} taggedCount={tags.length} totalFindings={totalFindings} selectedHook={filters.hook} onSelectHook={handleSelectHook} />
         </SummaryPanel>
         {/* Renamed from "Funnel stage": funnelStage is a tag distribution across five
             categories, not a measured conversion sequence, so the panel name and its
@@ -180,7 +180,7 @@ export function OverviewTab({
           }
           subtitle={fallbackLabel}
         >
-          <FunnelPanel items={funnelItems} totalFindings={totalFindings} selectedStage={filters.funnel} onSelectStage={handleSelectFunnel} />
+          <FunnelPanel items={funnelItems} taggedCount={tags.length} totalFindings={totalFindings} selectedStage={filters.funnel} onSelectStage={handleSelectFunnel} />
         </SummaryPanel>
       </div>
       {/* SimilarBrandsPanel moved to the brand header as a chip (BrandProfile.tsx),

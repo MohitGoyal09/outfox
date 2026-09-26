@@ -12,6 +12,7 @@ import {
   isContentClaim,
   relatedQuestionClaims,
   relatedSearchClaims,
+  signalClaims,
   tagBearingClaims,
   tagsForClaim,
   type BrandDoc,
@@ -72,7 +73,7 @@ function RelatedListPanel({
   );
 }
 
-function FunnelCoveragePanel({ items, totalFindings }: { items: ReturnType<typeof funnelDistribution>; totalFindings?: number | null }) {
+function FunnelCoveragePanel({ items, taggedCount, totalFindings }: { items: ReturnType<typeof funnelDistribution>; taggedCount: number; totalFindings?: number | null }) {
   const gaps = useMemo(() => funnelCoverageGaps(items), [items]);
   return (
     <Panel interactive={false} className="overflow-hidden">
@@ -86,7 +87,7 @@ function FunnelCoveragePanel({ items, totalFindings }: { items: ReturnType<typeo
         </h3>
       </div>
       <div className="space-y-3 p-4">
-        <FunnelPanel items={items} totalFindings={totalFindings} />
+        <FunnelPanel items={items} taggedCount={taggedCount} totalFindings={totalFindings} />
         {gaps.length > 0 ? (
           <p className="rounded-sm border border-dashed border-border bg-bg-inset/40 px-3 py-2 text-[11px] leading-5 text-muted-foreground">
             No tagged evidence yet for: <span className="font-medium text-fg">{gaps.map((stage) => stageName(stage)).join(", ")}</span>.
@@ -143,7 +144,13 @@ export function ProblemTab({
         />
       </div>
       <TrendsExperience snapshot={trendsSnapshot} claims={claims} brandId={brand._id} brandName={brand.name} latestRunAt={latestRunAt} />
-      <FunnelCoveragePanel items={funnelItems} totalFindings={filtered.length} />
+      {/* `totalFindings` is real findings only (never `llm_tag` rows) — the
+          same convention Overview's own panels use. `filtered` includes tag
+          rows (matchesBrandFilters doesn't exclude them), so passing its raw
+          length would silently swap in a different "findings" denominator
+          (337, tag rows included) than every other panel on this brand page
+          (260, tag rows excluded) for the exact same run. */}
+      <FunnelCoveragePanel items={funnelItems} taggedCount={filteredTags.length} totalFindings={signalClaims(filtered).length} />
       <div>
         <h2 className="type-headline text-fg">Real problem evidence</h2>
         <EvidenceGrid
