@@ -227,8 +227,8 @@ export function DistributionPanel({
       : "No funnel mix in this run yet.";
   const defaultEmptyDescription =
     kind === "hook"
-      ? "Every claim carries a hook type. The mix appears here once at least one engine returns claims."
-      : "Every claim carries a funnel stage. The mix appears here once at least one engine returns claims.";
+      ? "Every tagged finding carries a hook type. The mix appears here once at least one finding has been tagged."
+      : "Every tagged finding carries a funnel stage. The mix appears here once at least one finding has been tagged.";
 
   return (
     <Panel interactive={false} className={cn("p-4", className)} ariaLabel={title}>

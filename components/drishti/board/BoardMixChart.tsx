@@ -15,7 +15,13 @@ const config = {
   findings: { label: "Findings", color: "var(--accent)" },
 } satisfies ChartConfig;
 
-export function BoardMixChart({ items }: { items: DistributionItem[] }) {
+export function BoardMixChart({
+  items,
+  totalFindings,
+}: {
+  items: DistributionItem[];
+  totalFindings?: number | null;
+}) {
   const reduceMotion = useReducedMotion();
   const data = items
     .filter(
@@ -28,6 +34,7 @@ export function BoardMixChart({ items }: { items: DistributionItem[] }) {
       fill: HOOK_COLOR[item.label as keyof typeof HOOK_COLOR] ?? "var(--accent)",
     }));
   const total = data.reduce((sum, row) => sum + row.findings, 0);
+  const hasFindingsTotal = totalFindings != null && totalFindings > 0;
 
   return (
     <Panel interactive={false} className="flex flex-col" ariaLabel="Hook mix">
@@ -39,7 +46,7 @@ export function BoardMixChart({ items }: { items: DistributionItem[] }) {
           </p>
         </div>
         <span className={cn(VALUE_CLASS, "text-[11px] tabular-nums text-fg-tertiary")}>
-          {total} {total === 1 ? "finding" : "findings"} · {data.length}{" "}
+          {total} tagged{hasFindingsTotal ? ` of ${totalFindings} findings` : ""} · {data.length}{" "}
           {data.length === 1 ? "hook" : "hooks"}
         </span>
       </header>
@@ -50,7 +57,7 @@ export function BoardMixChart({ items }: { items: DistributionItem[] }) {
             bounded
             icon={<BarChart3 {...iconProps} size={16} />}
             title="No hook evidence in this check yet."
-            description="Every finding carries a hook. The mix appears here once at least one source returns a hook."
+            description="Every tagged finding carries a hook. The mix appears here once at least one finding has been tagged."
           />
         ) : (
           <ChartContainer config={config} className="h-52 w-full aspect-auto">

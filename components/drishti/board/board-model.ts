@@ -27,6 +27,7 @@ export const DATA_ENGINES = [
   "youtube",
   "youtube_video",
   "google_trends",
+  "google_news",
 ] as const;
 
 export type DataEngine = (typeof DATA_ENGINES)[number];
@@ -51,6 +52,20 @@ export function scopeCohortRuns(
     current: matching[0] ?? null,
     previous: matching[1] ?? null,
   };
+}
+
+const LLM_TAG_SOURCE_ENGINE = "llm_tag";
+
+export function isFinding(claim: { sourceEngine: string }): boolean {
+  return claim.sourceEngine !== LLM_TAG_SOURCE_ENGINE;
+}
+
+export function countFindings(claims: readonly { sourceEngine: string }[]): number {
+  let count = 0;
+}
+
+export function taggedShareLabel(claims: readonly { sourceEngine: string }[]): string {
+  return `${countTagged(claims)} of ${countFindings(claims)} findings tagged`;
 }
 
 function countBy(values: Array<string | undefined>): Map<string, number> {
@@ -113,45 +128,6 @@ function rankByEvidence(rows: Omit<BrandLeader, "rank">[]): BrandLeader[] {
       b.engineCount - a.engineCount ||
       a.brandName.localeCompare(b.brandName),
   );
-}
-
-export function deriveLeaderboard(
-  claims: BoardClaim[],
-  brandIds: string[],
-  brandNames: Record<string, string>,
-  ownBrandId: string | null = null,
-): BrandLeader[] {
-  const byBrand = new Map<string, BoardClaim[]>();
-  for (const brandId of brandIds) byBrand.set(brandId, []);
-  for (const claim of claims) {
-    const bucket = byBrand.get(String(claim.brandId));
-    if (bucket !== undefined) bucket.push(claim);
-  }
-  const rows = brandIds.map((brandId) => {
-    const hooks = countBy(bucket.map((claim) => claim.hookType));
-    let topHook: string | null = null;
-    for (const [hook, count] of hooks) {
-      if (count > topHookCount) {
-        topHook = hook;
-      }
-    }
-    const engines = new Set(bucket.map((claim) => claim.sourceEngine));
-    return {
-      brandId,
-      brandName: brandNames[brandId] ?? brandId.slice(0, 8),
-      claimCount: bucket.length,
-      engineCount: engines.size,
-      hookBreadth: hooks.size,
-      topHook,
-      topHookCount,
-      isOwnBrand: brandId === ownBrandId,
-    };
-  });
-
-  const ownRow = rows.find((row) => row.isOwnBrand) ?? null;
-  const rivalRows = rows.filter((row) => !row.isOwnBrand);
-  const rankedRivals = rankByEvidence(rivalRows);
-  return [{ ...ownRow, rank: 0 }, ...rankedRivals];
 }
 
 export type EngineStatus = "ok" | "failed" | "unavailable" | "absent";

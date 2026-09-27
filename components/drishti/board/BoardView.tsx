@@ -23,6 +23,7 @@ import { EngineCoverage } from "./EngineCoverage";
 import { BoardMixChart } from "./BoardMixChart";
 import {
   BOARD_HONESTY_LINE,
+  countFindings,
   coverageGaps,
   deriveEmerging,
   deriveEngineCoverage,
@@ -32,6 +33,7 @@ import {
   deriveOwnBrandHookComparison,
   runCoverageLine,
   scopeCohortRuns,
+  taggedShareLabel,
 } from "./board-model";
 
 const EMPTY_DESCRIPTION =
@@ -169,7 +171,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     },
     {
       label: "Findings held",
-      value: claims?.length ?? 0,
+      value: claims !== undefined ? countFindings(claims) : 0,
       hint: `across ${brandIds.length} ${brandIds.length === 1 ? "brand" : "brands"}`,
     },
     {
@@ -267,17 +269,17 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       ) : (
         <>
           <div className="grid gap-4 lg:grid-cols-2">
-            <BoardMixChart items={hookItems} />
+            <BoardMixChart items={hookItems} totalFindings={claims !== undefined ? countFindings(claims) : null} />
             <DistributionPanel
               items={funnelItems}
               kind="funnel"
               title="Funnel distribution"
               formatLabel={(label) => stageName(label)}
               loading={claims === undefined}
-              summaryLabel={claims !== undefined ? `${claims.length} findings` : undefined}
+              summaryLabel={claims !== undefined ? taggedShareLabel(claims) : undefined}
               previousLabel={previous ? `vs ${formatStamp(previous.requestedAt)}` : undefined}
               emptyTitle="No funnel mix in this check yet."
-              emptyDescription="Every finding carries a funnel stage. The mix appears here once at least one source returns findings."
+              emptyDescription="Every tagged finding carries a funnel stage. The mix appears here once at least one finding has been tagged."
             />
           </div>
           <BrandLeaderboard
