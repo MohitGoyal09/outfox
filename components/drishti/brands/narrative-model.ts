@@ -30,6 +30,10 @@ export function bucketNarrativeSections(sentences: readonly InsightSentence[]): 
   return buckets;
 }
 
+export function narrativeCitation(ids: readonly Id<"claims">[], claimsById: Map<string, ClaimDoc>): NarrativeCitation | null {
+  return null;
+}
+
 export function narrativeFrom(sentences: readonly InsightSentence[], claimsById: Map<string, ClaimDoc>): BrandNarrative | null {
   if (!lead || lead.text.trim().length === 0) return null;
   return {

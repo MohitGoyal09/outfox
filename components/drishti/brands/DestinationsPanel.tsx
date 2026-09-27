@@ -180,7 +180,8 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
             {artifactCount > 0 ? (
               <p className="border-t border-border px-4 py-2 text-[11px] leading-4 text-muted-foreground">
                 {artifactCount} further finding{artifactCount === 1 ? "" : "s"} pointed only at the search page we
-                queried, Google's Ads Transparency viewer, or Google's ad-serving infrastructure — never a brand
+                queried, Google&apos;s Ads Transparency viewer, or Google&apos;s ad-serving infrastructure — never a
+                brand
                 destination, so they are excluded from this ranking.
               </p>
             ) : null}
