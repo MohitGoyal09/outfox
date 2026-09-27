@@ -12,6 +12,7 @@ import {
   youtubeVideoIdOf,
 } from "../brands/brand-model";
 import { displayClaimText } from "../brands/format";
+import { REMOVED_BRAND_LABEL } from "../runs/derive";
 
 export const MAX_ASK_BRANDS = 6;
 export const LONG_ANSWER_CHARS = 240;

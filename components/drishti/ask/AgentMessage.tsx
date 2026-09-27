@@ -34,6 +34,7 @@ import { AnswerMarkdown } from "./AnswerMarkdown";
 import { AnswerSourcesPanel } from "./AnswerSourcesPanel";
 import { persistedTrendsResultsOf, type ToolCallCardView } from "./ask-model";
 import { descriptiveToolLabel, toolEngine, toolTitle } from "./ToolCallCard";
+import { REMOVED_BRAND_LABEL } from "../runs/derive";
 import { FollowUpList } from "./FollowUpList";
 import { AnswerCharts } from "./AnswerCharts";
 import { A2UISurface } from "../a2ui/A2UISurface";
@@ -140,7 +141,7 @@ export function AgentMessage({
         <AnswerCharts
           message={message as unknown as { parts?: unknown }}
           persistedResults={persistedTrends}
-          brandLabel={(brandId) => brandNames[brandId] ?? brandId}
+          brandLabel={(brandId) => brandNames[brandId] ?? REMOVED_BRAND_LABEL}
         />
 
         {approvals.map((part) => {
