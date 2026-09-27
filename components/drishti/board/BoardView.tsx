@@ -21,6 +21,7 @@ import { BrandLeaderboard } from "./BrandLeaderboard";
 import { EmergingMoves } from "./EmergingMoves";
 import { EngineCoverage } from "./EngineCoverage";
 import { BoardMixChart } from "./BoardMixChart";
+import { REMOVED_BRAND_LABEL } from "../runs/derive";
 import {
   BOARD_HONESTY_LINE,
   countFindings,
@@ -155,7 +156,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   );
   const cohortBrands = brandIds.map((id) => ({
     id,
-    name: brandNames[id] ?? id.slice(0, 8),
+    name: brandNames[id] ?? REMOVED_BRAND_LABEL,
     isOwn: id === ownBrandId,
   }));
   const ownBrandInView = ownBrandId !== null && brandIds.includes(ownBrandId);

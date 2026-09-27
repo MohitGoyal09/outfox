@@ -1,6 +1,7 @@
 import type { Doc } from "@/convex/_generated/dataModel";
 import type { DistributionItem } from "../DistributionPanel";
 import { checkedStateLabel, hookName, sourceName } from "../labels";
+import { REMOVED_BRAND_LABEL } from "../runs/derive";
 import {
   FUNNEL_STAGES,
   HOOK_TYPES,
@@ -145,6 +146,41 @@ export type BrandCoverage = {
   isOwnBrand: boolean;
   cells: EngineCell[];
 };
+
+export function deriveEngineCoverage(
+  snapshots: BoardSnapshot[],
+  brandIds: string[],
+  brandNames: Record<string, string>,
+  ownBrandId: string | null = null,
+): BrandCoverage[] {
+  return brandIds.map((brandId) => ({
+    brandId,
+    brandName: brandNames[brandId] ?? REMOVED_BRAND_LABEL,
+    isOwnBrand: brandId === ownBrandId,
+    cells: DATA_ENGINES.map((engine) => {
+      const label = sourceName(engine);
+      if (matches.length === 0) {
+        return {
+          engine,
+          label,
+          status: "absent" as const,
+          reason: "Not checked yet.",
+        };
+      }
+      if (matches.some((snapshot) => snapshot.status === "ok")) {
+        return { engine, label, status: "ok" as const, reason: null };
+      }
+      if (failed !== undefined) {
+        return {
+          engine,
+          label,
+          status: "failed" as const,
+          reason: failed.errorMessage ?? "The check failed.",
+        };
+      }
+    }),
+  }));
+}
 
 export function engineStatusLabel(status: EngineStatus): string {
   switch (status) {

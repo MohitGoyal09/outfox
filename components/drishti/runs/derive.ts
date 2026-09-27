@@ -51,8 +51,10 @@ export function brandNameMap(
   return map;
 }
 
+export const REMOVED_BRAND_LABEL = "a removed brand";
+
 export function brandDisplayName(id: string, names: Map<string, string>): string {
-  return names.get(id) ?? "a removed brand";
+  return names.get(id) ?? REMOVED_BRAND_LABEL;
 }
 
 export function brandRefs(
