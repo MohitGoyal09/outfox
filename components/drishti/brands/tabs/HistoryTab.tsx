@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, CheckCircle2, Clock3, History } from "lucide-react";
+import { AlertTriangle, ArrowUpRight, CheckCircle2, Clock3, History, XCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { MetricInfo } from "../../MetricInfo";
@@ -11,11 +11,33 @@ import { formatStamp } from "../../cohorts/cohorts-model";
 import { hookName, stageName } from "@/components/drishti/labels";
 import type { RunHistoryRow } from "../brand-model";
 
+export function runStatusTone(status: string): "ok" | "warn" | "danger" | "neutral" {
+  if (status === "complete") return "ok";
+  if (status === "partial") return "warn";
+  if (status === "failed") return "danger";
+  return "neutral";
+}
+
+const TONE_CLASS: Record<ReturnType<typeof runStatusTone>, string> = {
+  ok: "border-ok/30 bg-ok/10 text-ok",
+  warn: "border-warn/30 bg-warn/10 text-warn",
+  danger: "border-danger/30 bg-danger/10 text-danger",
+  neutral: "border-weak/30 bg-weak/10 text-weak",
+};
+
+const TONE_ICON: Record<ReturnType<typeof runStatusTone>, typeof CheckCircle2> = {
+  ok: CheckCircle2,
+  warn: AlertTriangle,
+  danger: XCircle,
+  neutral: Clock3,
+};
+
 function statusBadge(status: string) {
-  const good = status === "ok" || status === "complete" || status === "ready";
+  const tone = runStatusTone(status);
+  const Icon = TONE_ICON[tone];
   return (
-    <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good ? "border-ok/30 bg-ok/10 text-ok" : "border-warn/30 bg-warn/10 text-warn")}>
-      {good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}
+    <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", TONE_CLASS[tone])}>
+      <Icon className="mr-1 size-3" />
       {status}
     </Badge>
   );

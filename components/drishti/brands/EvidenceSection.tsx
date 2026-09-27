@@ -2,9 +2,10 @@
 
 import { useMemo, type ReactNode } from "react";
 import { isContentClaim, tagsForClaim, type ClaimDoc, type SnapshotDoc } from "./brand-model";
-import { EvidenceGrid, gridSortOptionsFrom } from "./EvidenceGrid";
+import { EvidenceGrid, evidenceCardCount, gridSortOptionsFrom } from "./EvidenceGrid";
 import { FilterBar } from "./filters/FilterBar";
 import {
+  describeActiveBrandFilters,
   engineOptionsFrom,
   evidencePageLabel,
   freshnessOptionsFrom,
@@ -50,10 +51,12 @@ export function EvidenceSection({
   const funnelOptions = useMemo(() => funnelOptionsFrom(tags), [tags]);
   const freshnessOptions = useMemo(() => freshnessOptionsFrom(contentClaims, now), [contentClaims, now]);
   const sortOptions = useMemo(() => gridSortOptionsFrom(filtered), [filtered]);
+  const cardCount = useMemo(() => evidenceCardCount(filtered), [filtered]);
+  const filterDescription = useMemo(() => describeActiveBrandFilters(filters), [filters]);
 
   return (
     <div>
-      {heading ? <div className="mb-3">{heading(filtered.length)}</div> : null}
+      {heading ? <div className="mb-3">{heading(cardCount)}</div> : null}
       <div className="mb-3">
         <FilterBar
           filters={filters}
@@ -73,7 +76,11 @@ export function EvidenceSection({
         newsSnapshot={newsSnapshot}
         googleSnapshot={googleSnapshot}
         sort={filters.sort}
-        emptyMessage={contentClaims.length === 0 ? "No findings yet for the latest check." : "No evidence matches these filters."}
+        emptyMessage={
+          contentClaims.length === 0
+            ? "No findings yet for the latest check."
+            : (filterDescription ?? "No evidence matches these filters.")
+        }
         pageLabel={evidencePageLabel(tabLabel, filters)}
       />
     </div>

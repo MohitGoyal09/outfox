@@ -118,3 +118,11 @@ export const SORT_OPTIONS: FilterOption[] = [
   { value: "oldest", label: SORT_LABEL.oldest },
   { value: "confidence", label: SORT_LABEL.confidence },
 ];
+
+
+const SENTENCE_FRESHNESS_LABEL: Record<Exclude<FreshnessValue, "all">, string> = {
+  "24h": "the last 24 hours",
+  "7d": "the last 7 days",
+  "30d": "the last 30 days",
+  "90d": "the last 90 days",
+};

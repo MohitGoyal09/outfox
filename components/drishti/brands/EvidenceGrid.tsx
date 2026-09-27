@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "../EmptyState";
 import { iconProps } from "../tokens";
 import {
+  adCreativeWindow,
   groupYoutubeVideoClaims,
   findGoogleNewsRawItem,
   findGoogleOrganicRawItem,
@@ -94,12 +95,7 @@ function sortCards(cards: EvidenceGridCard[], sort: SortValue): EvidenceGridCard
 }
 
 function adRunDays(claim: ClaimDoc): number {
-  if (claim.period === undefined) return -1;
-  const [first, last] = claim.period.split("..");
-  if (last === undefined) return -1;
-  const start = Date.parse(first);
-  const end = Date.parse(last);
-  return Number.isNaN(start) || Number.isNaN(end) ? -1 : Math.max(0, Math.round((end - start) / (24 * 60 * 60 * 1000)));
+  return adCreativeWindow(claim).runDays ?? -1;
 }
 
 export function gridSortOptionsFrom(claims: ClaimDoc[]): FilterOption[] {
@@ -124,6 +120,10 @@ export function gridSortOptionsFrom(claims: ClaimDoc[]): FilterOption[] {
     options.push({ value: "longest_run", label: SORT_LABEL.longest_run });
   }
   return options;
+}
+
+export function evidenceCardCount(claims: ClaimDoc[]): number {
+  return buildCards(claims).length;
 }
 
 export function EvidenceGrid({
