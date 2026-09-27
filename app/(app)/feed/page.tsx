@@ -11,6 +11,7 @@ import { EmptyState, Panel, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } f
 import { QueryBoundary } from "@/components/drishti/cohorts/QueryBoundary";
 import {
   isContentClaim,
+  isSignalClaim,
   tagBearingClaims,
   tagsForClaim,
   type ClaimDoc,
@@ -79,9 +80,17 @@ function FeedBody() {
   const feedQuery = useQuery(api.claims.overviewFeed, brandIds.length > 0 ? { brandIds } : "skip");
   const feedLoading = brandIds.length > 0 && feedQuery === undefined;
 
-  const totalCount = useMemo(() => (feedQuery ?? []).reduce((sum, entry) => sum + entry.totalCount, 0), [feedQuery]);
+  const evidenceSummaryQuery = useQuery(
+    api.claims.evidenceSummaryByBrands,
+    brandIds.length > 0 ? { brandIds } : "skip",
+  );
+  const evidenceSummaryLoading = brandIds.length > 0 && evidenceSummaryQuery === undefined;
+  const totalCount = useMemo(
+    () => (evidenceSummaryQuery ?? []).reduce((sum, entry) => sum + entry.evidenceCount, 0),
+    [evidenceSummaryQuery],
+  );
   const allClaims: ClaimDoc[] = useMemo(() => (feedQuery ?? []).flatMap((entry) => entry.recent), [feedQuery]);
-  const recentCount = allClaims.length;
+  const recentCount = useMemo(() => allClaims.filter(isSignalClaim).length, [allClaims]);
   const isBounded = totalCount > recentCount;
 
   const contentClaims = useMemo(() => allClaims.filter(isContentClaim), [allClaims]);
@@ -121,7 +130,7 @@ function FeedBody() {
   const freshnessOptions = useMemo(() => freshnessOptionsFrom(contentClaims, nowMs), [contentClaims, nowMs]);
   const sortOptions = useMemo(() => gridSortOptionsFrom(filtered), [filtered]);
 
-  const loading = brandsLoading || feedLoading;
+  const loading = brandsLoading || feedLoading || evidenceSummaryLoading;
 
   if (loading) return <FeedSkeleton />;
 

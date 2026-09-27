@@ -81,30 +81,6 @@ export const byBrands = query({
 });
 const MAX_RECENT_PER_BRAND = 300;
 
-export const overviewFeed = query({
-  args: {
-    brandIds: v.array(v.id("brands")),
-    recentPerBrand: v.optional(v.number()),
-  },
-  returns: v.array(
-    v.object({
-      brandId: v.id("brands"),
-      totalCount: v.number(),
-      recent: v.array(claimDocValidator),
-    }),
-  ),
-  handler: async (ctx, args) => {
-    const out: Array<{
-      brandId: import("./_generated/dataModel").Id<"brands">;
-      totalCount: number;
-      recent: Array<import("./_generated/dataModel").Doc<"claims">>;
-    }> = [];
-    for (const brandId of args.brandIds) {
-      if (brand?.ownerId !== ownerId) continue;
-    }
-  },
-});
-
 export const runSourceCounts = query({
   args: { runIds: v.array(v.id("runs")) },
   returns: v.array(

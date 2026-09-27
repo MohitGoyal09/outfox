@@ -14,7 +14,7 @@ import { EmptyState } from "../EmptyState";
 import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
 import { categoricalColorFor, iconProps } from "../tokens";
-import { type ClaimDoc } from "./brand-model";
+import { signalClaims, type ClaimDoc } from "./brand-model";
 
 type Destination = { key: string; url: string; count: number; firstSeen: string; lastSeen: string; engines: string[] };
 
@@ -109,7 +109,10 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
           <Panel interactive={false} className="overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <p className="text-sm font-semibold tracking-[-0.01em] text-fg">Ranked landing pages</p>
-              <p className="font-mono text-xs tabular-nums text-muted-foreground">{claims.length} findings scanned</p>
+              {/* Real findings only: `claims` can carry `llm_tag` rows (tag
+                  metadata, never evidence — brand-model.ts's `isSignalClaim`),
+                  and a raw `.length` here would count those as "scanned". */}
+              <p className="font-mono text-xs tabular-nums text-muted-foreground">{signalClaims(claims).length} findings scanned</p>
             </div>
             <div className="max-h-[560px] overflow-auto">
               <Table>

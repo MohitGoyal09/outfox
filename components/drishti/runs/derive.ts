@@ -201,6 +201,10 @@ export function taggedClaims(claims: readonly ClaimDoc[]): ClaimDoc[] {
   );
 }
 
+export function countFindings(claims: readonly ClaimDoc[]): number {
+  return claims.filter((claim) => claim.sourceEngine !== "llm_tag").length;
+}
+
 function taggable(claims: readonly ClaimDoc[]) {
   return claims.map((claim) => ({
     hookType: claim.hookType ?? null,
@@ -357,13 +361,14 @@ export function brandMixSummaries(input: {
     return {
       brandId: brand.id,
       brandName: brand.name,
-      claimCount: current.length,
+      claimCount: countFindings(current),
       tagCount: currentTagged,
       hook: leadingHook(currentMix, true) ?? leadingHook(currentMix),
       funnel: leadingFunnel(currentMix, true) ?? leadingFunnel(currentMix),
       hookChange,
       funnelChange,
-      claimDelta: previous === undefined ? null : current.length - previous.length,
+      claimDelta:
+        previous === undefined ? null : countFindings(current) - countFindings(previous),
       tagDelta: previousTagged === null ? null : currentTagged - previousTagged,
     };
   });
@@ -420,12 +425,14 @@ export function deriveChange(input: {
   if (previousClaims === null || previousAt === null) {
     return {
       kind: "no-previous",
-      cohortClaimCount: currentClaims.length,
+      cohortClaimCount: countFindings(currentClaims),
       cohortEngineCount: engineCount,
       brandCounts: brands.map((brand) => ({
         brandId: brand.id,
         brandName: brand.name,
-        claims: currentClaims.filter((claim) => String(claim.brandId) === brand.id).length,
+        claims: countFindings(
+          currentClaims.filter((claim) => String(claim.brandId) === brand.id),
+        ),
       })),
     };
   }
@@ -435,17 +442,17 @@ export function deriveChange(input: {
     return {
       kind: "no-change",
       previousAt,
-      cohortClaimCount: currentClaims.length,
+      cohortClaimCount: countFindings(currentClaims),
       tagCount,
     };
   }
   return {
     kind: "change",
     ...change,
-    brandClaimCount: currentClaims.filter(
-      (claim) => String(claim.brandId) === change.brandId,
-    ).length,
-    cohortClaimCount: currentClaims.length,
+    brandClaimCount: countFindings(
+      currentClaims.filter((claim) => String(claim.brandId) === change.brandId),
+    ),
+    cohortClaimCount: countFindings(currentClaims),
     tagCount,
     previousAt,
   };

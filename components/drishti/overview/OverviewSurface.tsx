@@ -92,13 +92,18 @@ function OverviewBody() {
   );
   const feedLoading = brandIds.length > 0 && feedQuery === undefined;
 
+  const evidenceSummaryQuery = useQuery(
+    api.claims.evidenceSummaryByBrands,
+    brandIds.length > 0 ? { brandIds } : "skip",
+  );
+  const evidenceSummaryLoading = brandIds.length > 0 && evidenceSummaryQuery === undefined;
   const totalClaimCount = useMemo(
-    () => (feedQuery ?? []).reduce((sum, entry) => sum + entry.totalCount, 0),
-    [feedQuery],
+    () => (evidenceSummaryQuery ?? []).reduce((sum, entry) => sum + entry.evidenceCount, 0),
+    [evidenceSummaryQuery],
   );
   const brandsWithFindings = useMemo(
-    () => (feedQuery ?? []).filter((entry) => entry.totalCount > 0).length,
-    [feedQuery],
+    () => (evidenceSummaryQuery ?? []).filter((entry) => entry.evidenceCount > 0).length,
+    [evidenceSummaryQuery],
   );
   const claims: FeedClaim[] = useMemo(
     () =>
@@ -134,7 +139,7 @@ function OverviewBody() {
   const threadsQuery = useQuery(api.messages.listThreads, {});
   const boardsQuery = useQuery(api.boards.listBoards, {});
 
-  const panelsLoading = brandsLoading || runsLoading || feedLoading;
+  const panelsLoading = brandsLoading || runsLoading || feedLoading || evidenceSummaryLoading;
 
   const coverage = useMemo(() => brandCoverage(brandLikes, runLikes), [brandLikes, runLikes]);
   const coveredBrandCount = useMemo(

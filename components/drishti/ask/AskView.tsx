@@ -132,7 +132,14 @@ export function AskView({
   const evidenceById = useMemo(() => {
     const map = new Map<string, EvidenceDetail>();
     for (const ref of ledgerRefs ?? []) map.set(ref.claimId, ref);
-    for (const [id, claim] of claimsById) if (!map.has(id)) map.set(id, claim);
+    for (const [id, claim] of claimsById) {
+      if (map.has(id)) continue;
+      const real =
+        claim.sourceEngine === "llm_tag" && claim.taggedClaimId !== undefined
+          ? claimsById.get(String(claim.taggedClaimId))
+          : undefined;
+      map.set(id, real !== undefined ? { ...claim, sourceEngine: real.sourceEngine } : claim);
+    }
     return map;
   }, [ledgerRefs, claimsById]);
 

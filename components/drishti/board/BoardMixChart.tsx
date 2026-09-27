@@ -8,6 +8,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } f
 import { EmptyState } from "../EmptyState";
 import { hookName } from "../labels";
 import { Panel } from "../Panel";
+import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { HOOK_COLOR, VALUE_CLASS, iconProps } from "../tokens";
 import type { DistributionItem } from "../DistributionPanel";
 
@@ -18,9 +19,11 @@ const config = {
 export function BoardMixChart({
   items,
   totalFindings,
+  loading = false,
 }: {
   items: DistributionItem[];
   totalFindings?: number | null;
+  loading?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
   const data = items
@@ -45,13 +48,19 @@ export function BoardMixChart({
             How much evidence each hook has in this check.
           </p>
         </div>
-        <span className={cn(VALUE_CLASS, "text-[11px] tabular-nums text-fg-tertiary")}>
-          {total} tagged{hasFindingsTotal ? ` of ${totalFindings} findings` : ""} · {data.length}{" "}
-          {data.length === 1 ? "hook" : "hooks"}
-        </span>
+        {loading ? null : (
+          <span className={cn(VALUE_CLASS, "text-[11px] tabular-nums text-fg-tertiary")}>
+            {total} tagged{hasFindingsTotal ? ` of ${totalFindings} findings` : ""} · {data.length}{" "}
+            {data.length === 1 ? "hook" : "hooks"}
+          </span>
+        )}
       </header>
       <div className="p-4">
-        {data.length === 0 ? (
+        {loading ? (
+          <SkeletonRegion label="Loading hook mix">
+            <Skeleton variant="block" height={208} />
+          </SkeletonRegion>
+        ) : data.length === 0 ? (
           <EmptyState
             size="sm"
             bounded

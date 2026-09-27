@@ -162,7 +162,12 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const ownBrandInView = ownBrandId !== null && brandIds.includes(ownBrandId);
   const ownBrandNotInView = ownBrand != null && ownBrandId !== null && !ownBrandInView;
   const rivalCountInView = brandIds.length - (ownBrandInView ? 1 : 0);
-  const summaryStats: { label: string; value: string | number; hint: string }[] = [
+  const summaryStats: {
+    label: string;
+    value: string | number;
+    hint: string;
+    loading?: boolean;
+  }[] = [
     {
       label: "Brands in view",
       value: brandIds.length,
@@ -179,6 +184,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       label: "What we checked",
       value: `${okChecks}/${totalChecks}`,
       hint: `of ${totalChecks} source ${totalChecks === 1 ? "check" : "checks"}`,
+      loading: snapshots === undefined,
     },
   ];
 
@@ -248,6 +254,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
                 value={stat.value}
                 hint={stat.hint}
                 size="md"
+                loading={stat.loading}
               />
             </Panel>
           ))}
@@ -270,7 +277,11 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       ) : (
         <>
           <div className="grid gap-4 lg:grid-cols-2">
-            <BoardMixChart items={hookItems} totalFindings={claims !== undefined ? countFindings(claims) : null} />
+            <BoardMixChart
+              items={hookItems}
+              totalFindings={claims !== undefined ? countFindings(claims) : null}
+              loading={claims === undefined}
+            />
             <DistributionPanel
               items={funnelItems}
               kind="funnel"

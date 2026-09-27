@@ -47,7 +47,7 @@ export function scopeCohortRuns(
   const sorted = [...runs].sort((a, b) =>
     a.requestedAt < b.requestedAt ? 1 : a.requestedAt > b.requestedAt ? -1 : 0,
   );
-  const cohortKey = requestedCohortKey ?? sorted[0]?.cohortKey ?? null;
+  const newestPooled = sorted.find((run) => run.brandIds.length > 1);
   return {
     cohortKey,
     current: matching[0] ?? null,

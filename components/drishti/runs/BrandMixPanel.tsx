@@ -6,6 +6,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { DistributionPanel } from "@/components/drishti";
 import {
+  countFindings,
   funnelDistributionItems,
   hookDistributionItems,
   mixForBrand,
@@ -49,7 +50,7 @@ export function BrandMixPanel({
     <DistributionPanel
       kind={kind}
       title={brand.name}
-      summaryLabel={`${taggedClaims(current ?? []).length} tagged of ${(current ?? []).length} claims`}
+      summaryLabel={`${taggedClaims(current ?? []).length} tagged of ${countFindings(current ?? [])} claims`}
       previousLabel={previousLabel}
       loading={loading}
       items={
