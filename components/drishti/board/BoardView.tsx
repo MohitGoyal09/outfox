@@ -285,7 +285,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           </div>
           <BrandLeaderboard
             rows={leaders}
-            totalClaims={claims?.length ?? 0}
+            totalClaims={claims !== undefined ? countFindings(claims) : 0}
             comparison={hookComparison}
             loading={claims === undefined}
           />

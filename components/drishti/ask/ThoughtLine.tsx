@@ -63,7 +63,8 @@ export function ThoughtLine({
     failedCount > 0
       ? `${stepCount} ${actionWord} · ${failedCount} failed`
       : `${stepCount} ${actionWord} completed`;
-  const workingSummary = `Running ${stepCount} ${actionWord}…`;
+  const workingSummary =
+    stepCount === 0 ? "Working…" : `Running ${stepCount} ${actionWord}…`;
 
   const [autoSettled, setAutoSettled] = useState(false);
   const [open, setOpen] = useState(working);
