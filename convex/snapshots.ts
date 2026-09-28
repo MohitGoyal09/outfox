@@ -19,7 +19,7 @@ const snapshotStatus = v.union(
   v.literal("unavailable"),
 );
 
-const snapshotDocValidator = v.object({
+export const snapshotDocValidator = v.object({
   _id: v.id("snapshots"),
   _creationTime: v.number(),
   ownerId: v.optional(v.id("users")),

@@ -3,6 +3,8 @@ import { v, ConvexError } from "convex/values";
 import { requireUserId } from "./lib/auth";
 import { MAX_BRANDS_PER_RUN } from "./pipeline/plan";
 import { isRelevantToBrand } from "./pipeline/extractClaims";
+import { snapshotDocValidator } from "./snapshots";
+import type { Doc, Id } from "./_generated/dataModel";
 
 const sourceEngine = v.union(
   v.literal("google"),
@@ -181,6 +183,51 @@ export const feedThumbnails = query({
       let snapshot = snapshotCache.get(cacheKey);
       if (snapshot === undefined) {
       }
+    }
+  },
+});
+
+export const signalsScope = query({
+  args: {},
+  returns: v.object({
+    brands: v.array(
+      v.object({
+        brandId: v.id("brands"),
+        name: v.string(),
+        isOwnBrand: v.boolean(),
+        checkedAt: v.string(),
+        status: v.string(),
+        hasPrevious: v.boolean(),
+      }),
+    ),
+    current: v.array(claimDocValidator),
+    previous: v.array(claimDocValidator),
+    snapshots: v.array(snapshotDocValidator),
+  }),
+  handler: async (ctx) => {
+
+    const finishedRuns = (
+      await ctx.db
+        .query("runs")
+        .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
+        .collect()
+    )
+      .filter((run) => run.status === "complete" || run.status === "partial")
+      .sort((a, b) => (a.requestedAt < b.requestedAt ? 1 : a.requestedAt > b.requestedAt ? -1 : 0));
+    const current: Doc<"claims">[] = [];
+
+    for (const brand of brands) {
+      const forBrand = finishedRuns.filter((run) =>
+        run.brandIds.some((id) => String(id) === String(brand._id)),
+      );
+      if (latest === undefined) continue;
+      const prior = forBrand[1];
+      current.push(...latestClaims);
+
+      const latestSnapshots = await ctx.db
+        .query("snapshots")
+        .withIndex("by_brand", (q) => q.eq("brandId", brand._id))
+        .collect();
     }
   },
 });

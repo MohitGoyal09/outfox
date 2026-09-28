@@ -73,7 +73,9 @@ export function BoardMixChart({
             <BarChart accessibilityLayer data={data} margin={{ top: 18, right: 8, left: -18, bottom: 0 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" />
               <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={46} />
-              <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={30} />
+              {/* width 30 fits two digits; a three-digit count (154 live) clipped to a
+                  single glyph stub, so the axis read ") ) ) )". */}
+              <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={42} />
               <ChartTooltip cursor={{ fill: "var(--bg-inset)", opacity: 0.6 }} content={<ChartTooltipContent hideLabel />} />
               <Bar dataKey="findings" radius={[4, 4, 0, 0]} fill="var(--color-findings)" isAnimationActive={!reduceMotion}>
                 {data.map((row) => <Cell key={row.label} fill={row.fill} />)}

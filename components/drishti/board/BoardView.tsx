@@ -34,6 +34,7 @@ import {
   deriveOwnBrandHookComparison,
   runCoverageLine,
   scopeCohortRuns,
+  scopeEmergingToComparable,
   taggedShareLabel,
 } from "./board-model";
 
@@ -79,26 +80,30 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     () => runs.filter((run) => run.status === "complete" || run.status === "partial"),
     [runs],
   );
-  const scope = useMemo(
+
+  const pinned = useMemo(
     () =>
-      runsLoading
+      cohortKey === null || runsLoading
         ? { cohortKey, current: null, previous: null }
         : scopeCohortRuns(finishedRuns, cohortKey),
     [runsLoading, finishedRuns, cohortKey],
   );
+  const pinnedRun = pinned.current;
 
-  const current = scope.current;
-  const previous = scope.previous;
+  const scope = useQuery(api.claims.signalsScope, cohortKey === null ? {} : "skip");
 
-  const claims = useQuery(api.claims.byRun, current ? { runId: current._id } : "skip");
-  const previousClaims = useQuery(
+  const pinnedClaims = useQuery(api.claims.byRun, pinnedRun ? { runId: pinnedRun._id } : "skip");
+  const pinnedPrevious = useQuery(
     api.claims.byRun,
-    previous ? { runId: previous._id } : "skip",
+    pinned.previous ? { runId: pinned.previous._id } : "skip",
   );
-  const snapshots = useQuery(
+  const pinnedSnapshots = useQuery(
     api.snapshots.byRun,
-    current ? { runId: current._id } : "skip",
+    pinnedRun ? { runId: pinnedRun._id } : "skip",
   );
+
+  const claims = cohortKey === null ? scope?.current : pinnedClaims;
+  const snapshots = cohortKey === null ? scope?.snapshots : pinnedSnapshots;
 
   const brandNames = useMemo(() => {
     const map: Record<string, string> = {};
@@ -107,10 +112,35 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   }, [brands]);
 
   const brandIds = useMemo(
-    () => (current ? current.brandIds.map((id) => String(id)) : []),
-    [current],
+    () =>
+      cohortKey === null
+        ? (scope?.brands ?? []).map((brand) => String(brand.brandId))
+        : pinnedRun
+          ? pinnedRun.brandIds.map((id) => String(id))
+          : [],
+    [cohortKey, scope, pinnedRun],
   );
-  const priorClaims = previous === null ? null : (previousClaims ?? null);
+
+  const emergingScope = useMemo(
+    () =>
+      scopeEmergingToComparable(
+        (scope?.brands ?? []).map((b) => ({ brandId: String(b.brandId), hasPrevious: b.hasPrevious })),
+        scope?.current ?? [],
+        scope?.previous ?? [],
+      ),
+    [scope],
+  );
+  const comparable = { size: emergingScope.comparedBrands };
+  const emergingCurrent = cohortKey === null ? emergingScope.current : (pinnedClaims ?? []);
+  const emergingPrevious =
+    cohortKey === null
+      ? emergingScope.comparedBrands > 0
+        ? emergingScope.previous
+        : null
+      : (pinnedPrevious ?? null);
+  const hasPrevious = cohortKey === null ? emergingScope.comparedBrands > 0 : pinned.previous !== null;
+
+  const priorClaims = cohortKey === null ? (scope?.previous ?? null) : (pinned.previous === null ? null : (pinnedPrevious ?? null));
 
   const hookItems = useMemo(
     () => (claims !== undefined ? deriveHookDistribution(claims, priorClaims) : []),
@@ -136,17 +166,45 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     [claims, brandIds, ownBrandId],
   );
   const emerging = useMemo(
-    () =>
-      claims !== undefined && previousClaims !== undefined
-        ? deriveEmerging(claims, previousClaims)
-        : [],
-    [claims, previousClaims],
+    () => (emergingPrevious !== null ? deriveEmerging(emergingCurrent, emergingPrevious) : []),
+    [emergingCurrent, emergingPrevious],
   );
 
   const coverageLine = brands !== undefined ? runCoverageLine(brands, finishedRuns, runs) : null;
 
+  const comparedBrandsCount =
+    cohortKey === null && comparable.size > 0
+      ? `${comparable.size} of ${scope?.brands.length ?? 0} brands with two checks`
+      : null;
+  const comparedBrandsNote =
+    cohortKey === null && comparable.size > 0
+      ? `${comparable.size} of ${scope?.brands.length ?? 0} ${
+          comparable.size === 1 ? "brand has" : "brands have"
+        } two checks`
+      : null;
+  const comparisonLabel =
+    cohortKey === null
+      ? comparedBrandsNote
+        ? `vs each brand's previous check · ${comparedBrandsNote}`
+        : undefined
+      : pinned.previous
+        ? `vs ${formatStamp(pinned.previous.requestedAt)}`
+        : undefined;
+  const comparisonColumnLabel =
+    cohortKey === null
+      ? comparedBrandsNote
+        ? "vs previous check"
+        : undefined
+      : pinned.previous
+        ? `vs ${formatStamp(pinned.previous.requestedAt)}`
+        : undefined;
+  const hasAnyCheck = cohortKey === null ? (scope?.brands.length ?? 0) > 0 : pinnedRun !== null;
   const gaps = coverageGaps(coverage);
-  const isPartial = current?.status === "partial" || gaps.length > 0;
+  const anyPartial =
+    cohortKey === null
+      ? (scope?.brands ?? []).some((brand) => brand.status === "partial")
+      : pinnedRun?.status === "partial";
+  const isPartial = anyPartial || gaps.length > 0;
   const singleBrand = brandIds.length === 1;
   const totalChecks = coverage.reduce((total, brand) => total + brand.cells.length, 0);
   const okChecks = coverage.reduce(
@@ -154,11 +212,19 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       total + brand.cells.filter((cell) => cell.status === "ok").length,
     0,
   );
+  const checkedAtByBrand = new Map(
+    (scope?.brands ?? []).map((brand) => [String(brand.brandId), brand.checkedAt]),
+  );
   const cohortBrands = brandIds.map((id) => ({
     id,
     name: brandNames[id] ?? REMOVED_BRAND_LABEL,
     isOwn: id === ownBrandId,
+    checkedAt: cohortKey === null ? (checkedAtByBrand.get(id) ?? null) : null,
   }));
+  const stamps = (scope?.brands ?? []).map((brand) => brand.checkedAt).sort();
+  const oldestStamp = stamps[0] ?? null;
+  const newestStamp = stamps[stamps.length - 1] ?? null;
+  const spansOneMoment = oldestStamp !== null && oldestStamp === newestStamp;
   const ownBrandInView = ownBrandId !== null && brandIds.includes(ownBrandId);
   const ownBrandNotInView = ownBrand != null && ownBrandId !== null && !ownBrandInView;
   const rivalCountInView = brandIds.length - (ownBrandInView ? 1 : 0);
@@ -173,7 +239,9 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       value: brandIds.length,
       hint: ownBrandInView
         ? `you plus ${rivalCountInView} ${rivalCountInView === 1 ? "rival" : "rivals"}`
-        : "no brand of yours in this check",
+        : cohortKey === null
+          ? "no brand of yours is tracked"
+          : "no brand of yours in this check",
     },
     {
       label: "Findings held",
@@ -193,7 +261,17 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
       <header className="flex flex-col gap-2 border-b border-border pb-5">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <h1 className="type-display text-fg">Signals</h1>
-          {current ? <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>{current.status} · {formatStamp(current.requestedAt)}</Badge> : null}
+          {pinnedRun ? (
+            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
+              {pinnedRun.status} · {formatStamp(pinnedRun.requestedAt)}
+            </Badge>
+          ) : newestStamp !== null ? (
+            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
+              {spansOneMoment
+                ? formatStamp(newestStamp)
+                : `${formatStamp(oldestStamp as string)} — ${formatStamp(newestStamp)}`}
+            </Badge>
+          ) : null}
         </div>
         <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] leading-[1.5] text-fg-secondary">
           <span className="font-medium text-fg">
@@ -202,13 +280,18 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
                   <span key={brand.id}>
                     {index > 0 ? " · " : ""}
                     {brand.isOwn ? <>You — {brand.name}</> : brand.name}
+                    {brand.checkedAt !== null ? (
+                      <span className={cn(VALUE_CLASS, "ml-1 text-[11px] font-normal text-[var(--text-tertiary)]")}>
+                        {formatStamp(brand.checkedAt)}
+                      </span>
+                    ) : null}
                   </span>
                 ))
-              : "No brands in this check"}
+              : "No brands tracked yet"}
           </span>
-          {current !== null ? (
+          {pinnedRun !== null ? (
             <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
-              checked {formatStamp(current.requestedAt)} · {current.status}
+              checked {formatStamp(pinnedRun.requestedAt)} · {pinnedRun.status}
             </span>
           ) : null}
         </p>
@@ -228,14 +311,15 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
       {singleBrand ? (
         <p className="max-w-[68ch] type-caption text-fg-secondary">
-          This check covers one brand. A pooled read compares two or more, so
-          the mix below describes that brand alone.
+          {cohortKey === null
+            ? "You track one brand. A pooled read compares two or more, so the mix below describes that brand alone."
+            : "This check covers one brand. A pooled read compares two or more, so the mix below describes that brand alone."}
         </p>
       ) : null}
 
       {isPartial ? (
         <p className="max-w-[68ch] type-caption text-fg-secondary">
-          {current?.status === "partial" ? "This check is partial. " : ""}
+          {anyPartial ? (cohortKey === null ? "At least one brand's latest check is partial. " : "This check is partial. ") : ""}
           {gaps.length === 1
             ? "1 source could not be checked; it is named per rival below."
             : gaps.length > 1
@@ -245,7 +329,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         </p>
       ) : null}
 
-      {current && claims !== undefined ? (
+      {hasAnyCheck && claims !== undefined ? (
         <div className="grid gap-2.5 sm:grid-cols-3" aria-label="Board summary">
           {summaryStats.map((stat) => (
             <Panel key={stat.label} interactive={false} className="p-3.5">
@@ -263,7 +347,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
       {runsLoading ? (
         <BoardSkeleton />
-      ) : current === null ? (
+      ) : !hasAnyCheck ? (
         <EmptyState
           icon={<BarChart3 {...iconProps} size={20} />}
           title="No finished checks yet."
@@ -288,8 +372,14 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
               title="Funnel distribution"
               formatLabel={(label) => stageName(label)}
               loading={claims === undefined}
-              summaryLabel={claims !== undefined ? taggedShareLabel(claims) : undefined}
-              previousLabel={previous ? `vs ${formatStamp(previous.requestedAt)}` : undefined}
+              summaryLabel={
+                claims !== undefined
+                  ? comparedBrandsNote
+                    ? `${taggedShareLabel(claims)} · change covers ${comparedBrandsCount}`
+                    : taggedShareLabel(claims)
+                  : undefined
+              }
+              previousLabel={comparisonColumnLabel}
               emptyTitle="No funnel mix in this check yet."
               emptyDescription="Every tagged finding carries a funnel stage. The mix appears here once at least one finding has been tagged."
             />
@@ -303,9 +393,9 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           <EngineCoverage coverage={coverage} loading={snapshots === undefined} />
           <EmergingMoves
             moves={emerging}
-            hasPrevious={previous !== null}
-            loading={previous !== null && previousClaims === undefined}
-            previousLabel={previous ? `vs ${formatStamp(previous.requestedAt)}` : undefined}
+            hasPrevious={hasPrevious}
+            loading={cohortKey === null ? scope === undefined : pinned.previous !== null && pinnedPrevious === undefined}
+            previousLabel={comparisonLabel}
           />
         </>
       )}

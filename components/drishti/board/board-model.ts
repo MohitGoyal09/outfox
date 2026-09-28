@@ -286,3 +286,13 @@ export function deriveOwnBrandHookComparison(
     text: `${hookName(best.hook)}: ${best.rivalsWithEvidence} of ${rivalIds.length} ${rivalWord} show it. ${ownClause}`,
   };
 }
+
+export function scopeEmergingToComparable(
+  brands: readonly { brandId: string; hasPrevious: boolean }[],
+  current: readonly BoardClaim[],
+  previous: readonly BoardClaim[],
+): { current: BoardClaim[]; previous: BoardClaim[]; comparedBrands: number; totalBrands: number } {
+  const comparable = new Set(
+    brands.filter((brand) => brand.hasPrevious).map((brand) => String(brand.brandId)),
+  );
+}
