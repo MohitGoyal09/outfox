@@ -102,7 +102,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     pinnedRun ? { runId: pinnedRun._id } : "skip",
   );
 
-  const claims = cohortKey === null ? scope?.current : pinnedClaims;
+  const claims = cohortKey === null ? scope?.currentClaims : pinnedClaims;
   const snapshots = cohortKey === null ? scope?.snapshots : pinnedSnapshots;
 
   const brandNames = useMemo(() => {
@@ -121,26 +121,35 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     [cohortKey, scope, pinnedRun],
   );
 
+  const scopeBrands = scope?.brands;
+  const scopeCurrent = scope?.currentClaims;
+  const scopePrevious = scope?.previousClaims;
   const emergingScope = useMemo(
     () =>
       scopeEmergingToComparable(
-        (scope?.brands ?? []).map((b) => ({ brandId: String(b.brandId), hasPrevious: b.hasPrevious })),
-        scope?.current ?? [],
-        scope?.previous ?? [],
+        (scopeBrands ?? []).map((b) => ({ brandId: String(b.brandId), hasPrevious: b.hasPrevious })),
+        scopeCurrent ?? [],
+        scopePrevious ?? [],
       ),
-    [scope],
+    [scopeBrands, scopeCurrent, scopePrevious],
   );
-  const comparable = { size: emergingScope.comparedBrands };
-  const emergingCurrent = cohortKey === null ? emergingScope.current : (pinnedClaims ?? []);
-  const emergingPrevious =
-    cohortKey === null
-      ? emergingScope.comparedBrands > 0
-        ? emergingScope.previous
-        : null
-      : (pinnedPrevious ?? null);
-  const hasPrevious = cohortKey === null ? emergingScope.comparedBrands > 0 : pinned.previous !== null;
+  const comparedBrands = emergingScope.comparedBrands;
+  const emergingCurrent = useMemo(
+    () => (cohortKey === null ? emergingScope.currentClaims : (pinnedClaims ?? [])),
+    [cohortKey, emergingScope, pinnedClaims],
+  );
+  const emergingPrevious = useMemo(
+    () =>
+      cohortKey === null
+        ? comparedBrands > 0
+          ? emergingScope.previousClaims
+          : null
+        : (pinnedPrevious ?? null),
+    [cohortKey, comparedBrands, emergingScope, pinnedPrevious],
+  );
+  const hasPrevious = cohortKey === null ? comparedBrands > 0 : pinned.previous !== null;
 
-  const priorClaims = cohortKey === null ? (scope?.previous ?? null) : (pinned.previous === null ? null : (pinnedPrevious ?? null));
+  const priorClaims = cohortKey === null ? (scope?.previousClaims ?? null) : (pinned.previous === null ? null : (pinnedPrevious ?? null));
 
   const hookItems = useMemo(
     () => (claims !== undefined ? deriveHookDistribution(claims, priorClaims) : []),
@@ -173,13 +182,13 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const coverageLine = brands !== undefined ? runCoverageLine(brands, finishedRuns, runs) : null;
 
   const comparedBrandsCount =
-    cohortKey === null && comparable.size > 0
-      ? `${comparable.size} of ${scope?.brands.length ?? 0} brands with two checks`
+    cohortKey === null && comparedBrands > 0
+      ? `${comparedBrands} of ${scope?.brands.length ?? 0} brands with two checks`
       : null;
   const comparedBrandsNote =
-    cohortKey === null && comparable.size > 0
-      ? `${comparable.size} of ${scope?.brands.length ?? 0} ${
-          comparable.size === 1 ? "brand has" : "brands have"
+    cohortKey === null && comparedBrands > 0
+      ? `${comparedBrands} of ${scope?.brands.length ?? 0} ${
+          comparedBrands === 1 ? "brand has" : "brands have"
         } two checks`
       : null;
   const comparisonLabel =

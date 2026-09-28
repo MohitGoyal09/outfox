@@ -223,8 +223,8 @@ export const signalsScope = query({
         hasPrevious: v.boolean(),
       }),
     ),
-    current: v.array(claimDocValidator),
-    previous: v.array(claimDocValidator),
+    currentClaims: v.array(claimDocValidator),
+    previousClaims: v.array(claimDocValidator),
     snapshots: v.array(snapshotDocValidator),
   }),
   handler: async (ctx) => {

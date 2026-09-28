@@ -1,5 +1,4 @@
 
-import type { Doc } from "@/convex/_generated/dataModel";
 import { eventStatusTone } from "./ask-model";
 import type { ToolCallCardView } from "./ask-model";
 

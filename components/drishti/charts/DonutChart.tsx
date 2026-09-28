@@ -4,7 +4,7 @@ import type { ReactNode } from "react";
 import { PieChart as RechartIcon } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart, Tooltip } from "recharts";
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { ChartContainer, ChartTooltipContent } from "@/components/ui/chart";
 import { EmptyState } from "../EmptyState";
 import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";

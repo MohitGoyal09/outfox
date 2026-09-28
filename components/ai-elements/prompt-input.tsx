@@ -808,6 +808,7 @@ export const PromptInput = ({
       try {
         const convertedFiles: FileUIPart[] = await Promise.all(
           files.map(async ({ id: _id, ...item }) => {
+            void _id; // destructured only to exclude it from the outgoing FileUIPart
             if (item.url?.startsWith("blob:")) {
               const dataUrl = await convertBlobUrlToDataUrl(item.url);
               return {

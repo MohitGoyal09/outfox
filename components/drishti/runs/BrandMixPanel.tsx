@@ -5,6 +5,7 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { DistributionPanel } from "@/components/drishti";
+import { hookName, stageName } from "@/components/drishti/labels";
 import {
   countFindings,
   funnelDistributionItems,
@@ -50,8 +51,9 @@ export function BrandMixPanel({
     <DistributionPanel
       kind={kind}
       title={brand.name}
-      summaryLabel={`${taggedClaims(current ?? []).length} tagged of ${countFindings(current ?? [])} claims`}
+      summaryLabel={`${taggedClaims(current ?? []).length} tagged of ${countFindings(current ?? [])} findings`}
       previousLabel={previousLabel}
+      formatLabel={(label) => (kind === "hook" ? hookName(label) : stageName(label))}
       loading={loading}
       items={
         kind === "hook"

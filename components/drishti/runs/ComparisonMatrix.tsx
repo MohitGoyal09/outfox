@@ -55,14 +55,14 @@ function deltaCell(summary: BrandMixSummary, row: RowKey): DeltaCell {
     const change = summary.hookChange;
     if (change === null) return { text: "no hook change", tone: "neutral" };
     return {
-      text: `${formatDelta(change.delta)} ${change.hook}`,
+      text: `${formatDelta(change.delta)} ${HOOK_WORD[change.hook] ?? change.hook}`,
       tone: deltaTone(change.delta),
     };
   }
   const change = summary.funnelChange;
   if (change === null) return { text: "no funnel change", tone: "neutral" };
   return {
-    text: `${formatDelta(change.delta)} ${change.stage}`,
+    text: `${formatDelta(change.delta)} ${FUNNEL_WORD[change.stage] ?? change.stage}`,
     tone: deltaTone(change.delta),
   };
 }

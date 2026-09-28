@@ -12,6 +12,11 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // Convex rewrites these on every `convex dev`, carrying their own
+    // eslint-disable headers. Linting them only ever reports that those
+    // headers are unnecessary -- a warning about generated text that any
+    // fix would undo on the next codegen.
+    "convex/_generated/**",
   ]),
 ]);
 

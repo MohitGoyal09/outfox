@@ -108,7 +108,7 @@ function OverviewBody() {
   const claims: FeedClaim[] = useMemo(
     () =>
       (feedQuery ?? []).flatMap((entry) =>
-        [...entry.recent, ...entry.tags].map((claim) => ({
+        [...entry.recent, ...(entry.tags ?? [])].map((claim) => ({
           id: String(claim._id),
           runId: String(claim.runId),
           brandId: String(claim.brandId),

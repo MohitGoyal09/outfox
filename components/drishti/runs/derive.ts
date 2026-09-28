@@ -495,14 +495,14 @@ export function changeCopy(change: ChangeSummary): ChangeCopy {
   return {
     headline: `${change.brandName} moved ${direction} ${word} hooks.`,
     body:
-      `This run has ${change.after} ${word} ${change.after === 1 ? "claim" : "claims"} ` +
+      `This run has ${change.after} ${word} ${change.after === 1 ? "finding" : "findings"} ` +
       `for ${change.brandName}; the run of ${formatRunDayMonth(change.previousAt)} ` +
       `had ${change.before}. Across the cohort, ${change.tagCount} of ` +
-      `${change.cohortClaimCount} claims carry a content tag.`,
+      `${change.cohortClaimCount} findings carry a content tag.`,
     facts: [
       change.brandName,
-      `${change.brandClaimCount} claims`,
-      `${formatDelta(change.delta)} ${change.hook}`,
+      `${change.brandClaimCount} findings`,
+      `${formatDelta(change.delta)} ${word}`,
     ],
   };
 }
