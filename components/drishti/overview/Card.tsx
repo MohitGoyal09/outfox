@@ -15,6 +15,7 @@ export type CardProps = {
   ariaLabel?: string;
   className?: string;
   bodyClassName?: string;
+  unframed?: boolean;
 };
 
 export function Card({
@@ -27,17 +28,22 @@ export function Card({
   ariaLabel,
   className,
   bodyClassName,
+  unframed = false,
 }: CardProps) {
+  const Frame = unframed ? (as as PanelTag) : Panel;
+  const frameProps = unframed
+    ? { "aria-label": ariaLabel ?? title, className: cn("block", className) }
+    : {
+        as,
+        interactive: false,
+        ariaLabel: ariaLabel ?? title,
+        className: cn(
+          "rounded-lg shadow-xs motion-safe:transition-shadow hover:shadow-sm",
+          className,
+        ),
+      };
   return (
-    <Panel
-      as={as}
-      interactive={false}
-      ariaLabel={ariaLabel ?? title}
-      className={cn(
-        "rounded-lg shadow-xs motion-safe:transition-shadow hover:shadow-sm",
-        className,
-      )}
-    >
+    <Frame {...frameProps}>
       <div className="flex items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="flex min-w-0 items-start gap-2.5">
           {icon ? (
@@ -55,6 +61,6 @@ export function Card({
         {trailing ? <div className="shrink-0">{trailing}</div> : null}
       </div>
       <div className={cn("px-5 py-4", bodyClassName)}>{children}</div>
-    </Panel>
+    </Frame>
   );
 }

@@ -56,6 +56,7 @@ export function NewestEvidence({ loading, hasBrands, feed, claimsById, brandById
       icon={<Quote {...iconProps} size={16} aria-hidden="true" className="size-4" />}
       bodyClassName="py-4"
       className="h-full"
+      unframed
     >
       {loading ? (
         <NewestEvidenceSkeleton />

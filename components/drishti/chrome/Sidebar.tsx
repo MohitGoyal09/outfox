@@ -9,6 +9,7 @@ import {
   Building2,
   BookOpen,
   Bookmark,
+  Home,
   MessageSquare,
   PanelLeftClose,
   PanelLeftOpen,
@@ -37,6 +38,7 @@ import { BrandMark } from "@/components/drishti/brands/BrandMark";
 
 
 const NAV = [
+  { href: "/", label: "Home", icon: Home },
   { href: "/brands", label: "Brands", icon: Building2 },
   { href: "/feed", label: "Feed", icon: Rss, strokeWidth: 1.5 },
   { href: "/signals", label: "Signals", icon: BarChart3 },
@@ -45,6 +47,7 @@ const NAV = [
 ] as const;
 
 function isActive(pathname: string, href: string) {
+  if (href === "/") return pathname === "/";
   return pathname === href || pathname.startsWith(`${href}/`);
 }
 
