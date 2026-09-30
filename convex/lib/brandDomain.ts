@@ -57,4 +57,15 @@ export function normalizeBrandDomain(input: string): string {
   return (hostnameOf(withScheme) ?? "").replace(/\.$/, "");
 }
 
+export function resultsShowDomain(data: unknown, domain: string): boolean {
+  const target = normalizeBrandDomain(domain);
+  if (!isPlausibleBrandDomain(target)) return false;
+  const onTarget = (link: unknown): boolean => {
+  };
+  const root = data as { organic_results?: unknown; knowledge_graph?: { website?: unknown } } | null;
+  const results = root?.organic_results;
+  if (!Array.isArray(results)) return false;
+  return results.some((item) => onTarget((item as { link?: unknown } | null)?.link));
+}
+
 const DNS_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;
