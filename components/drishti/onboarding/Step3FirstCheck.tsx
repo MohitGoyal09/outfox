@@ -7,7 +7,13 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { Button, EmptyState, Panel, Trail, iconProps, type TrailStep } from "@/components/drishti";
 import { sourceName, hookName } from "@/components/drishti/labels";
-import { deriveCheckTrailRows, deriveComparisonSummary, hasComparisonToShow, hasFailedSource } from "./onboarding-model";
+import {
+  deriveCheckTrailRows,
+  deriveComparisonSummary,
+  hasComparisonToShow,
+  hasFailedSource,
+  noSearchesLeftMessage,
+} from "./onboarding-model";
 import type { SelectedCompetitor } from "./Step2Competitors";
 
 const SOURCES_CHECKED = "Google, YouTube, Google Trends, Google News, and Ads Transparency (where available)";
@@ -115,6 +121,7 @@ export function Step3FirstCheck({
   }
 
   const showPartialWarning = run.status === "partial" && hasFailedSource(trailRows);
+  const zeroCreditsMessage = noSearchesLeftMessage(run.searchesLeftBefore);
   const competitorIds = competitors.map((row) => row.id);
   const nameById = new Map<string, string>([[ownBrandId, ownBrandName], ...competitors.map((row): [string, string] => [row.id, row.name])]);
   const summary =
@@ -135,7 +142,7 @@ export function Step3FirstCheck({
       {showPartialWarning ? (
         <p className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--warn)]">
           <TriangleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
-          Some sources couldn&rsquo;t be checked this time. Here&rsquo;s what we did find.
+          {zeroCreditsMessage ?? "Some sources couldn't be checked this time. Here's what we did find."}
         </p>
       ) : null}
 
@@ -172,7 +179,7 @@ export function Step3FirstCheck({
           description={
             competitors.length === 0
               ? "You didn't add any competitors, so there's nothing to compare against yet. Add some anytime from Brands."
-              : "Whatever we found didn't show a clear difference yet. Check back once the next run finishes."
+              : "Whatever we found didn't show a clear difference yet. You can run a new check anytime from your brand's page — look for Re-run."
           }
         />
       )}

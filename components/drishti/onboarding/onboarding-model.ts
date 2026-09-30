@@ -137,3 +137,8 @@ export function deriveCheckTrailRows(
 export function hasFailedSource(rows: readonly CheckTrailRow[]): boolean {
   return rows.some((row) => row.status === "failed");
 }
+
+export function noSearchesLeftMessage(searchesLeftBefore: number | undefined): string | null {
+  if (searchesLeftBefore !== 0) return null;
+  return "Your SerpApi account had no searches left when this check started, so nothing could be fetched.";
+}

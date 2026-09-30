@@ -1,14 +1,32 @@
 "use client";
 
-import { useQuery } from "convex/react";
+import { useEffect, useState } from "react";
+import { useAction, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { CONTROL_SHELL_CLASS, VALUE_CLASS } from "@/components/drishti/tokens";
-import { creditsChipView } from "./creditsChipLogic";
+import { creditsChipView, type LiveCredits } from "./creditsChipLogic";
 
 export function CreditsChip() {
-  const credits = useQuery(api.runs.latestCredits, {});
-  const { text, tone } = creditsChipView(credits);
+  const fallback = useQuery(api.runs.latestCredits, {});
+  const getAccountCredits = useAction(api.credits.getAccountCredits);
+  const [live, setLive] = useState<LiveCredits>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    getAccountCredits({})
+      .then((result) => {
+        if (!cancelled) setLive(result);
+      })
+      .catch(() => {
+        if (!cancelled) setLive({ ok: false, error: "The live credits check failed." });
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const { text, tone } = creditsChipView(live, fallback);
   return (
     <span
       className={cn(

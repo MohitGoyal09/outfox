@@ -207,6 +207,7 @@ export function Step2Competitors({
                       disabled={pending}
                       onClick={() => void handleAdd(entry)}
                       icon={pending ? <Loader2 {...iconProps} size={14} className="animate-spin" /> : <Plus {...iconProps} size={14} />}
+                      aria-label={`Add ${entry.name}`}
                     >
                       Add
                     </Button>

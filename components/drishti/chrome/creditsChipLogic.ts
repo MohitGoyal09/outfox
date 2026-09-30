@@ -7,6 +7,11 @@ export type LatestCredits = {
   searchesLeftAfter: number | null;
 } | null;
 
+export type LiveCredits =
+  | { ok: true; data: { totalSearchesLeft: number; searchesPerMonth: number } }
+  | { ok: false; error: string }
+  | null;
+
 export type CreditsChipTone = "neutral" | "danger";
 
 export type CreditsChipView = {
@@ -14,19 +19,26 @@ export type CreditsChipView = {
   tone: CreditsChipTone;
 };
 
-export function creditsChipView(credits: LatestCredits | undefined): CreditsChipView {
-  if (credits === undefined) {
+export function creditsChipView(live: LiveCredits, fallback: LatestCredits | undefined): CreditsChipView {
+  if (live !== null && live.ok) {
+    const left = live.data.totalSearchesLeft;
+    return {
+      text: `${left} of ${live.data.searchesPerMonth} credits left`,
+      tone: left <= 0 ? "danger" : "neutral",
+    };
+  }
+  if (fallback === undefined) {
     return { text: "Checking credits…", tone: "neutral" };
   }
-  if (credits === null) {
+  if (fallback === null) {
     return { text: "No checks yet", tone: "neutral" };
   }
-  if (credits.searchesLeftAfter === null) {
+  if (fallback.searchesLeftAfter === null) {
     return { text: "Credits not recorded", tone: "neutral" };
   }
-  const left = credits.searchesLeftAfter;
+  const left = fallback.searchesLeftAfter;
   return {
-    text: `${left} of ${SERPAPI_PLAN_SEARCH_LIMIT} credits left`,
+    text: `${left} left as of last check`,
     tone: left <= 0 ? "danger" : "neutral",
   };
 }
