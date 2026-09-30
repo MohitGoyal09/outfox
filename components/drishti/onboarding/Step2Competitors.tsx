@@ -15,9 +15,15 @@ import {
   validateBrandDraft,
   type BrandDraft,
   type CatalogEntry,
+  unconfirmedCompetitorsNote,
 } from "./onboarding-model";
 
-export type SelectedCompetitor = { id: string; name: string; domain: string };
+export type SelectedCompetitor = {
+  id: string;
+  name: string;
+  domain: string;
+  unconfirmed?: boolean;
+};
 
 export function Step2Competitors({
   ownBrandName,
@@ -73,7 +79,7 @@ export function Step2Competitors({
     setPendingIds((prev) => new Set(prev).add(id));
     try {
       const result = await follow({ catalogId: entry._id as Id<"brandCatalog"> });
-      onAdd({ id: String(result.brandId), name: entry.name, domain: entry.domain });
+      onAdd({ id: String(result.brandId), name: entry.name, domain: entry.domain, unconfirmed: result.status !== "ready" });
     } catch (caught) {
       setFollowError(caught instanceof Error && caught.message !== "" ? caught.message : "This brand could not be added.");
     } finally {
@@ -97,7 +103,12 @@ export function Step2Competitors({
         domain: customDraft.domain,
         vertical,
       });
-      onAdd({ id: String(result.brandId), name: customDraft.name.trim(), domain: customDraft.domain.trim() });
+      onAdd({
+        id: String(result.brandId),
+        name: customDraft.name.trim(),
+        domain: customDraft.domain.trim(),
+        unconfirmed: result.status !== "ready",
+      });
       setCustomDraft({ name: "", domain: "" });
       setCustomTouched(false);
       setCustomOpen(false);
@@ -109,6 +120,9 @@ export function Step2Competitors({
   }
 
   const customErrors = customTouched ? validateBrandDraft(customDraft) : {};
+  const unconfirmedNote = unconfirmedCompetitorsNote(
+    selected.filter((row) => row.unconfirmed === true).map((row) => row.name),
+  );
 
   return (
     <div className="flex flex-col gap-6">
@@ -123,6 +137,11 @@ export function Step2Competitors({
                 <Chip size="md" dot={false}>
                   <span className="inline-flex items-center gap-1.5">
                     {row.name}
+                    {row.unconfirmed ? (
+                      <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+                        not confirmed
+                      </span>
+                    ) : null}
                     <button
                       type="button"
                       aria-label={`Remove ${row.name}`}
@@ -136,6 +155,9 @@ export function Step2Competitors({
               </li>
             ))}
           </ul>
+          {unconfirmedNote !== null ? (
+            <p className="mt-2.5 text-[12.5px] leading-[1.5] text-[var(--text-secondary)]">{unconfirmedNote}</p>
+          ) : null}
         </Panel>
       ) : null}
 

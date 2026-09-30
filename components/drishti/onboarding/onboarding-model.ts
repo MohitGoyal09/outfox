@@ -142,3 +142,13 @@ export function noSearchesLeftMessage(searchesLeftBefore: number | undefined): s
   if (searchesLeftBefore !== 0) return null;
   return "Your SerpApi account had no searches left when this check started, so nothing could be fetched.";
 }
+
+export function unconfirmedCompetitorsNote(names: readonly string[]): string | null {
+  const list =
+    names.length === 1
+      ? names[0]
+      : `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+  return `${list} couldn't be confirmed yet: the profile lookup didn't come back. The first check will still try ${
+    names.length === 1 ? "it" : "them"
+  }.`;
+}
