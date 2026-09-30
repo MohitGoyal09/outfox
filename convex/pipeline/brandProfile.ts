@@ -6,6 +6,7 @@ import { v, ConvexError } from "convex/values";
 import type { Doc, Id } from "../_generated/dataModel";
 import { fetchGoogleSearch, resolveAdsTransparencyAdvertiser } from "./fetchEngines";
 import { requireUserId } from "../lib/auth";
+import { isPlausibleBrandDomain, normalizeBrandDomain } from "../lib/brandDomain";
 
 export type ProfileStatus = Doc<"brands">["profileStatus"];
 
@@ -71,15 +72,6 @@ export function normalizeBrandName(name: string): string {
   return name.trim().replace(/\s+/g, " ");
 }
 
-export function normalizeBrandDomain(domain: string): string {
-  return domain
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/$/, "");
-}
-
 export function buildCohortKey(brandIds: string[]): string {
   return [...brandIds].sort().join(":");
 }
@@ -92,4 +84,62 @@ function toCandidate(brand: Doc<"brands">): BrandCandidate {
     vertical: brand.vertical,
     profileStatus: brand.profileStatus,
   };
+}
+
+export async function createBrandProfileCore(
+  io: CreateBrandProfileIO,
+  args: CreateBrandProfileInput,
+  deps: CreateBrandProfileDeps = {},
+): Promise<CreateBrandProfileResult> {
+  const fetchGoogleSearchFn = deps.fetchGoogleSearchFn ?? fetchGoogleSearch;
+  const domain = normalizeBrandDomain(args.domain);
+  const vertical = args.vertical.trim();
+
+  if (name === "" || args.domain.trim() === "" || vertical === "") {
+    throw new ConvexError("name, domain, and vertical must be non-empty");
+  }
+  if (!isPlausibleBrandDomain(domain)) {
+    throw new ConvexError("domain must be a website, e.g. example.in");
+  }
+
+  const all = await io.listOwnerBrands();
+
+  if (exact !== null) {
+    if (exact.profileStatus !== "ready") {
+    }
+    return {
+      brandId: exact._id,
+      status: exact.profileStatus,
+      needsConfirmation: exact.profileStatus === "needs_confirmation",
+    };
+  }
+
+  const lowered = name.toLowerCase();
+
+  const adsTransparencyAdvertiserId = await maybeResolveAdvertiserId(
+    { name, domain },
+    args.adsTransparencyAdvertiserId,
+    deps.resolveAdvertiserFn ?? resolveAdsTransparencyAdvertiser,
+  );
+
+  if (candidates.length > 0) {
+    return {
+      brandId,
+      status: "needs_confirmation",
+      needsConfirmation: true,
+      candidates,
+    };
+  }
+
+  const brandId = await io.insertBrand({
+    name,
+    domain,
+    vertical,
+    aliases,
+    profileStatus: "pending",
+    adsTransparencyAdvertiserId,
+  });
+  if (profile.status === "ok") {
+    return { brandId, status: "ready", needsConfirmation: false };
+  }
 }

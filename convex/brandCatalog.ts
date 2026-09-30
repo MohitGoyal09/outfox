@@ -4,6 +4,7 @@ import { api, internal } from "./_generated/api";
 import type { Doc } from "./_generated/dataModel";
 import { requireUserId } from "./lib/auth";
 import type { CreateBrandProfileResult } from "./pipeline/brandProfile";
+import { normalizeBrandDomain } from "./lib/brandDomain";
 
 export type CatalogEntry = Doc<"brandCatalog">;
 
@@ -24,15 +25,6 @@ const profileStatusValidator = v.union(
   v.literal("ready"),
   v.literal("needs_confirmation"),
 );
-
-function normalizeBrandDomain(domain: string): string {
-  return domain
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/$/, "");
-}
 
 export type CatalogSeedRow = {
   name: string;

@@ -48,3 +48,13 @@ export function deriveDomainFromGoogleResults(name: string, data: unknown): stri
   if (counts.size === 0) return null;
   return ranked[0]?.[0] ?? null;
 }
+
+
+export function normalizeBrandDomain(input: string): string {
+  const raw = input.trim().toLowerCase();
+  if (raw === "" || /\s|@/.test(raw)) return "";
+  const withScheme = /^[a-z][a-z0-9+.-]*:\/\//.test(raw) ? raw : `https://${raw}`;
+  return (hostnameOf(withScheme) ?? "").replace(/\.$/, "");
+}
+
+const DNS_LABEL = /^[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?$/;

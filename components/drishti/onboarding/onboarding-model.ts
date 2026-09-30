@@ -1,18 +1,10 @@
 
 import type { Doc } from "@/convex/_generated/dataModel";
+import { isPlausibleBrandDomain, normalizeBrandDomain } from "@/convex/lib/brandDomain";
 import { MAX_RIVALS_PER_COHORT } from "@/components/drishti/cohorts/cohorts-model";
 
 export type CatalogEntry = Doc<"brandCatalog">;
 export type BrandDoc = Doc<"brands">;
-
-function normalizeDomain(domain: string): string {
-  return domain
-    .trim()
-    .toLowerCase()
-    .replace(/^https?:\/\//, "")
-    .replace(/^www\./, "")
-    .replace(/\/$/, "");
-}
 
 export type CatalogGroup = { vertical: string; entries: CatalogEntry[] };
 
@@ -31,19 +23,6 @@ export const MAX_ONBOARDING_COMPETITORS = MAX_ONBOARDING_FOLLOWS - 1;
 
 export type BrandDraft = { name: string; domain: string };
 export type BrandDraftErrors = { name?: string; domain?: string };
-
-export function validateBrandDraft(draft: BrandDraft): BrandDraftErrors {
-  const errors: BrandDraftErrors = {};
-  if (draft.name.trim() === "") {
-    errors.name = "Enter the brand's name.";
-  }
-  if (domain === "") {
-    errors.domain = "Enter the brand's website.";
-  } else if (!domain.includes(".")) {
-    errors.domain = "That doesn't look like a website. Try something like example.com.";
-  }
-  return errors;
-}
 
 export function isBrandDraftValid(draft: BrandDraft): boolean {
   const errors = validateBrandDraft(draft);
