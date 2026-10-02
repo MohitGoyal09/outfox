@@ -86,33 +86,3 @@ export const getEntryInternal = internalQuery({
   returns: v.union(catalogEntryValidator, v.null()),
   handler: async (ctx, args) => await ctx.db.get(args.catalogId),
 });
-
-
-export const follow = action({
-  args: { catalogId: v.id("brandCatalog") },
-  returns: v.object({
-    brandId: v.id("brands"),
-    status: profileStatusValidator,
-    needsConfirmation: v.boolean(),
-    candidates: v.optional(
-      v.array(
-        v.object({
-          _id: v.id("brands"),
-          name: v.string(),
-          domain: v.string(),
-          vertical: v.string(),
-          profileStatus: profileStatusValidator,
-        }),
-      ),
-    ),
-  }),
-  handler: async (ctx, args): Promise<CreateBrandProfileResult> => {
-    await requireUserId(ctx);
-    const entry = await ctx.runQuery(internal.brandCatalog.getEntryInternal, {
-      catalogId: args.catalogId,
-    });
-    if (entry === null) {
-      throw new ConvexError("Catalog entry not found");
-    }
-  },
-});

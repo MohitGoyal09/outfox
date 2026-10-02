@@ -46,6 +46,23 @@ export const getOwnBrand = query({
   },
 });
 
+export const removeUncheckedBrand = mutation({
+  args: { brandId: v.id("brands") },
+  returns: v.object({ removed: v.boolean(), reason: v.optional(v.string()) }),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    if (brand === null || brand.ownerId !== ownerId) return { removed: false, reason: "not found" };
+
+    const hasSnapshot = (await ctx.db.query("snapshots").withIndex("by_brand", (q) => q.eq("brandId", args.brandId)).first()) !== null;
+    const hasClaim = (await ctx.db.query("claims").withIndex("by_brand", (q) => q.eq("brandId", args.brandId)).first()) !== null;
+    const hasInsight =
+      (await ctx.db
+        .query("brandInsights")
+        .withIndex("by_brand_and_generatedAt", (q) => q.eq("brandId", args.brandId))
+        .first()) !== null;
+  },
+});
+
 export const setOwnBrand = mutation({
   args: { brandId: v.id("brands") },
   returns: v.id("brands"),

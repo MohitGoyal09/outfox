@@ -1,8 +1,8 @@
 "use client";
 
 
-import { useMemo, useState } from "react";
-import { useAction, useQuery } from "convex/react";
+import { useEffect, useMemo, useState } from "react";
+import { useAction, useMutation, useQuery } from "convex/react";
 import { ArrowRight, CircleAlert, Loader2, Plus, Search, X } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -16,6 +16,8 @@ import {
   type BrandDraft,
   type CatalogEntry,
   unconfirmedCompetitorsNote,
+  firstCheckCost,
+  ADD_COMPETITOR_COST_NOTE,
 } from "./onboarding-model";
 
 export type SelectedCompetitor = {
@@ -23,6 +25,7 @@ export type SelectedCompetitor = {
   name: string;
   domain: string;
   unconfirmed?: boolean;
+  createdHere?: boolean;
 };
 
 export function Step2Competitors({
@@ -51,6 +54,47 @@ export function Step2Competitors({
   const [query, setQuery] = useState("");
   const [pendingIds, setPendingIds] = useState<ReadonlySet<string>>(() => new Set());
   const [followError, setFollowError] = useState<string | null>(null);
+  const removeUncheckedBrand = useMutation(api.brands.removeUncheckedBrand);
+  const getAccountCredits = useAction(api.credits.getAccountCredits);
+  const [removingIds, setRemovingIds] = useState<ReadonlySet<string>>(() => new Set());
+  const [searchesLeft, setSearchesLeft] = useState<number | null>(null);
+  useEffect(() => {
+    let cancelled = false;
+    getAccountCredits({})
+      .then((result) => {
+        if (!cancelled) setSearchesLeft(result.ok ? result.data.totalSearchesLeft : null);
+      })
+      .catch(() => {
+        if (!cancelled) setSearchesLeft(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [getAccountCredits]);
+
+  async function handleRemove(row: SelectedCompetitor) {
+    if (row.createdHere !== true) {
+      onRemove(row.id);
+      return;
+    }
+    setRemovingIds((prev) => new Set(prev).add(row.id));
+    try {
+      const result = await removeUncheckedBrand({ brandId: row.id as Id<"brands"> });
+      if (!result.removed) {
+        setFollowError(`${row.name} stays in your tracked brands: ${result.reason ?? "it could not be removed"}.`);
+      }
+      onRemove(row.id);
+    } catch (caught) {
+      setFollowError(caught instanceof Error && caught.message !== "" ? caught.message : `${row.name} could not be removed.`);
+    } finally {
+      setRemovingIds((prev) => {
+        const next = new Set(prev);
+        next.delete(row.id);
+        return next;
+      });
+    }
+  }
+  const cost = firstCheckCost(selected.length + 1, searchesLeft);
   const [customOpen, setCustomOpen] = useState(false);
   const [customDraft, setCustomDraft] = useState<BrandDraft>({ name: "", domain: "" });
   const [customTouched, setCustomTouched] = useState(false);
@@ -79,7 +123,13 @@ export function Step2Competitors({
     setPendingIds((prev) => new Set(prev).add(id));
     try {
       const result = await follow({ catalogId: entry._id as Id<"brandCatalog"> });
-      onAdd({ id: String(result.brandId), name: entry.name, domain: entry.domain, unconfirmed: result.status !== "ready" });
+      onAdd({
+        id: String(result.brandId),
+        name: entry.name,
+        domain: entry.domain,
+        unconfirmed: result.status !== "ready",
+        createdHere: result.created,
+      });
     } catch (caught) {
       setFollowError(caught instanceof Error && caught.message !== "" ? caught.message : "This brand could not be added.");
     } finally {
@@ -108,6 +158,7 @@ export function Step2Competitors({
         name: customDraft.name.trim(),
         domain: customDraft.domain.trim(),
         unconfirmed: result.status !== "ready",
+        createdHere: result.created,
       });
       setCustomDraft({ name: "", domain: "" });
       setCustomTouched(false);
@@ -145,7 +196,8 @@ export function Step2Competitors({
                     <button
                       type="button"
                       aria-label={`Remove ${row.name}`}
-                      onClick={() => onRemove(row.id)}
+                      onClick={() => void handleRemove(row)}
+                      disabled={removingIds.has(row.id)}
                       className="rounded-full p-0.5 text-[var(--text-tertiary)] hover:text-[var(--danger)]"
                     >
                       <X {...iconProps} size={12} aria-hidden="true" className="size-3" />
@@ -282,11 +334,27 @@ export function Step2Competitors({
         )
       ) : null}
 
-      <div className="flex items-center gap-2 border-t border-[var(--border)] pt-5">
+      <div className="flex flex-col gap-1 border-t border-[var(--border)] pt-5 text-[12.5px] leading-[1.5] text-[var(--text-secondary)]">
+        <p>{ADD_COMPETITOR_COST_NOTE}</p>
+        <p>{cost.summary}</p>
+        {cost.warning !== null ? (
+          <p className="flex items-start gap-1.5 text-[var(--text-primary)]">
+            <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+            {cost.warning}
+          </p>
+        ) : null}
+      </div>
+
+      <div className="flex items-center gap-2">
         <Button type="button" variant="ghost" onClick={onBack}>
           Back
         </Button>
-        <Button type="button" onClick={onContinue} iconRight={<ArrowRight {...iconProps} size={14} />}>
+        <Button
+          type="button"
+          onClick={onContinue}
+          disabled={cost.blocked}
+          iconRight={<ArrowRight {...iconProps} size={14} />}
+        >
           Continue
         </Button>
       </div>

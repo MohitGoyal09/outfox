@@ -1,6 +1,7 @@
 
 import type { Doc } from "@/convex/_generated/dataModel";
 import { isPlausibleBrandDomain, normalizeBrandDomain } from "@/convex/lib/brandDomain";
+import { SEARCHES_PER_BRAND_ADD, maxSearchesForRun } from "@/lib/constants";
 import { MAX_RIVALS_PER_COHORT } from "@/components/drishti/cohorts/cohorts-model";
 
 export type CatalogEntry = Doc<"brandCatalog">;
@@ -146,3 +147,28 @@ export function unconfirmedCompetitorsNote(names: readonly string[]): string | n
     names.length === 1 ? "it" : "them"
   }.`;
 }
+
+export type FirstCheckCost = {
+  summary: string;
+  warning: string | null;
+  blocked: boolean;
+};
+
+export function firstCheckCost(brandCount: number, searchesLeft: number | null): FirstCheckCost {
+  const summary =
+    `Your first check covers ${brands} and uses up to ${estimate} searches.` +
+    (searchesLeft === null ? "" : ` You have ${searchesLeft} left.`);
+  if (searchesLeft === 0) {
+    return {
+      summary,
+      warning: "Your SerpApi account has no searches left, so a check now would fetch nothing. Add credit first.",
+      blocked: true,
+    };
+  }
+  if (searchesLeft !== null && searchesLeft < estimate) {
+    return { summary, warning: "That is more than you have left, so some sources may not be checked.", blocked: false };
+  }
+  return { summary, warning: null, blocked: false };
+}
+
+export const ADD_COMPETITOR_COST_NOTE = `Each competitor you add uses ${SEARCHES_PER_BRAND_ADD} searches to confirm it.`;

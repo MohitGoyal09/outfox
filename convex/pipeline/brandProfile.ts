@@ -33,6 +33,7 @@ export type CreateBrandProfileResult = {
   brandId: Id<"brands">;
   status: ProfileStatus;
   needsConfirmation: boolean;
+  created: boolean;
   candidates?: BrandCandidate[];
 };
 
@@ -85,3 +86,108 @@ function toCandidate(brand: Doc<"brands">): BrandCandidate {
     profileStatus: brand.profileStatus,
   };
 }
+
+export async function createBrandProfileCore(
+  io: CreateBrandProfileIO,
+  args: CreateBrandProfileInput,
+  deps: CreateBrandProfileDeps = {},
+): Promise<CreateBrandProfileResult> {
+  const fetchGoogleSearchFn = deps.fetchGoogleSearchFn ?? fetchGoogleSearch;
+  const domain = normalizeBrandDomain(args.domain);
+  const vertical = args.vertical.trim();
+
+  if (name === "" || args.domain.trim() === "" || vertical === "") {
+    throw new ConvexError("name, domain, and vertical must be non-empty");
+  }
+  if (!isPlausibleBrandDomain(domain)) {
+    throw new ConvexError("domain must be a website, e.g. example.in");
+  }
+
+  const all = await io.listOwnerBrands();
+
+  if (exact !== null) {
+    return {
+      brandId: exact._id,
+      status: exact.profileStatus,
+      needsConfirmation: exact.profileStatus === "needs_confirmation",
+      created: false,
+    };
+  }
+
+  const lowered = name.toLowerCase();
+
+  const adsTransparencyAdvertiserId = await maybeResolveAdvertiserId(
+    { name, domain },
+    args.adsTransparencyAdvertiserId,
+    deps.resolveAdvertiserFn ?? resolveAdsTransparencyAdvertiser,
+  );
+
+  if (candidates.length > 0) {
+    return {
+      brandId,
+      status: "needs_confirmation",
+      needsConfirmation: true,
+      candidates,
+      created: true,
+    };
+  }
+
+  const brandId = await io.insertBrand({
+    name,
+    domain,
+    vertical,
+    aliases,
+    profileStatus: "pending",
+    adsTransparencyAdvertiserId,
+  });
+  if (profile.status === "ok" && resultsShowDomain(profile.data, domain)) {
+  }
+  return { brandId, status: "pending", needsConfirmation: false, created: true };
+}
+
+export const createBrandProfile = action({
+  args: {
+    name: v.string(),
+    domain: v.string(),
+    vertical: v.string(),
+    aliases: v.optional(v.array(v.string())),
+    adsTransparencyAdvertiserId: v.optional(v.string()),
+  },
+  returns: v.object({
+    brandId: v.id("brands"),
+    status: profileStatusValidator,
+    needsConfirmation: v.boolean(),
+    created: v.boolean(),
+    candidates: v.optional(
+      v.array(
+        v.object({
+          _id: v.id("brands"),
+          name: v.string(),
+          domain: v.string(),
+          vertical: v.string(),
+          profileStatus: profileStatusValidator,
+        }),
+      ),
+    ),
+  }),
+  handler: async (ctx, args): Promise<CreateBrandProfileResult> => {
+    const ownerId = await requireUserId(ctx);
+    const io: CreateBrandProfileIO = {
+      listOwnerBrands: async () =>
+        (await ctx.runQuery(api.brands.listBrands, {})) as Doc<"brands">[],
+      insertBrand: async (insertArgs) =>
+        (await ctx.runMutation(internal.pipeline.brandProfileDb.insertBrandProfileInternal, {
+          ownerId,
+          ...insertArgs,
+        })) as Id<"brands">,
+      markReady: async (brandId, lastRefreshedAt) => {
+        await ctx.runMutation(internal.pipeline.brandProfileDb.markReadyInternal, {
+          brandId,
+          lastRefreshedAt,
+          ownerId,
+        });
+      },
+    };
+    return await createBrandProfileCore(io, args);
+  },
+});
