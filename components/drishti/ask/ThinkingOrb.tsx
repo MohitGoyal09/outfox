@@ -4,6 +4,7 @@
 import dynamic from "next/dynamic";
 import { useState } from "react";
 import { useReducedMotion } from "motion/react";
+import { OrbErrorBoundary } from "./OrbErrorBoundary";
 
 const Orb19 = dynamic(() => import("@/components/orbs/orb-19"), { ssr: false });
 
@@ -34,6 +35,7 @@ export function ThinkingOrb({
       <span className="absolute inset-0 rounded-full bg-accent" style={HALFTONE} />
       {hasGpu ? (
         <span className="absolute inset-0">
+          <OrbErrorBoundary>
           <Orb19
             size={size}
             state={state}
@@ -41,6 +43,7 @@ export function ThinkingOrb({
             maxDpr={size < 64 ? 1 : undefined}
             ariaLabel={label}
           />
+          </OrbErrorBoundary>
         </span>
       ) : null}
     </span>
