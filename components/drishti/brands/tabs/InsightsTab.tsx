@@ -18,6 +18,7 @@ import { hookName } from "@/components/drishti/labels";
 import { countClaimsByEngine, hookTypeFrequency, signalClaims, type ClaimDoc } from "../brand-model";
 import { displayClaimText } from "../format";
 import { RankedCatalogChart } from "../RankedCatalogChart";
+import { RelativeTime } from "@/components/drishti/RelativeTime";
 
 
 type BrandInsightSection = "positioning" | "audience" | "problem";
@@ -72,18 +73,6 @@ function bucketSentences(sentences: InsightSentence[]): Record<BrandInsightSecti
     }
   }
   return buckets;
-}
-
-function relativeTime(iso: string, now: number): string {
-  const diffMs = now - new Date(iso).getTime();
-  if (!Number.isFinite(diffMs)) return "just now";
-  const minutes = Math.floor(diffMs / 60_000);
-  if (minutes < 1) return "just now";
-  if (minutes < 60) return `${minutes} minute${minutes === 1 ? "" : "s"} ago`;
-  const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `${hours} hour${hours === 1 ? "" : "s"} ago`;
-  const days = Math.floor(hours / 24);
-  return `${days} day${days === 1 ? "" : "s"} ago`;
 }
 
 function CitationLinks({ citedClaimIds, claimsById }: { citedClaimIds: Id<"claims">[]; claimsById: Map<string, ClaimDoc> }) {
@@ -257,13 +246,11 @@ export function InsightsTab({
   claims,
   latestClaims,
   tags,
-  now,
 }: {
   brandId: Id<"brands">;
   claims: ClaimDoc[];
   latestClaims: ClaimDoc[];
   tags: ClaimDoc[];
-  now: number;
 }) {
   const feed = useQuery(api.brandInsights.feedForBrand, { brandId });
   const generateInsight = useAction(api.pipeline.brandInsights.generateBrandInsight);
@@ -330,7 +317,7 @@ export function InsightsTab({
           <Panel interactive={false} className="overflow-hidden border-accent/25 bg-accent/[0.03]">
             <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
               <Sparkles className="size-4 text-fg" aria-hidden />
-              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Positioning — {relativeTime(latest.generatedAt, now)}</h3>
+              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Positioning — <RelativeTime iso={latest.generatedAt} /></h3>
               {templateMode ? (
                 <Badge variant="outline" className="ml-auto h-5 rounded-full border-warn/30 bg-warn/10 px-2 text-[10px] font-normal text-warn">
                   Template fallback
@@ -421,7 +408,7 @@ export function InsightsTab({
             <ul className="space-y-1.5">
               {earlierVerdicts.map((row) => (
                 <li key={row.id} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
-                  <span className="shrink-0 text-muted-foreground">{relativeTime(row.generatedAt, now)}</span>
+                  <span className="shrink-0 text-muted-foreground"><RelativeTime iso={row.generatedAt} /></span>
                   {row.kind === "failed" ? (
                     <span className="min-w-0 truncate text-danger">Check failed{row.reason ? ` — ${row.reason}` : ""}</span>
                   ) : (

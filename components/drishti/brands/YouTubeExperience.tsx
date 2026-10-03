@@ -2,7 +2,6 @@
 
 import { useMemo, useState } from "react";
 import { Filter, Tag, Video } from "lucide-react";
-import { NumberTicker } from "@/components/ui/number-ticker";
 import { HOOK_TYPES, FUNNEL_STAGES, iconProps } from "../tokens";
 import { hookName, stageName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
@@ -127,7 +126,7 @@ export function YouTubeExperience({
         <div className="mb-3 flex items-center gap-2">
           <Video className="size-4 text-fg" aria-hidden />
           <h2 className="type-headline text-fg">
-            <NumberTicker value={groups.length} />{" "}
+            {groups.length}{" "}
             <MetricInfo
               label={groups.length === 1 ? "video" : "videos"}
               definition="Real stored YouTube videos for this check, one card per video rather than one row per field. Missing view or like counts stay missing, never zero."

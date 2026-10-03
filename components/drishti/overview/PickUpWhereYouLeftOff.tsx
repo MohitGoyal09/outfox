@@ -4,10 +4,11 @@ import { ArrowUpRight, LayoutGrid, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 import { EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
+import { RelativeTime } from "@/components/drishti/RelativeTime";
 import { cn } from "@/lib/utils";
 
 import { Card } from "./Card";
-import { relativeTime, threadHref, type BoardLike, type ThreadLike } from "./overview-model";
+import { threadHref, type BoardLike, type ThreadLike } from "./overview-model";
 
 export type PickUpWhereYouLeftOffProps = {
   loading: boolean;
@@ -28,7 +29,7 @@ function ListSkeleton() {
   );
 }
 
-export function PickUpWhereYouLeftOff({ loading, threads, boards, nowMs }: PickUpWhereYouLeftOffProps) {
+export function PickUpWhereYouLeftOff({ loading, threads, boards }: PickUpWhereYouLeftOffProps) {
   return (
     <section aria-label="Pick up where you left off" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card
@@ -65,7 +66,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, nowMs }: PickU
                 >
                   <span className="min-w-0 truncate">{thread.title}</span>
                   <span className={cn(VALUE_CLASS, "shrink-0 text-[11px] text-fg-tertiary")}>
-                    {relativeTime(thread.lastMessageAt, nowMs)}
+                    <RelativeTime iso={thread.lastMessageAt} />
                   </span>
                 </Link>
               </li>

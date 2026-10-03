@@ -352,7 +352,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               {/* Brand DNA: the model's cited read of this brand, now its own
                   reachable tab (it used to sit under Overview, below an
                   unbounded evidence grid nobody would ever scroll past). */}
-              <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} now={now} />
+              <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} />
               {/* Problem folds in here rather than getting its own tab or
                   staying stuffed inside Position (its previous, mismatched
                   home): Insights already promises "what it's selling
