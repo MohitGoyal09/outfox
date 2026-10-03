@@ -5,6 +5,7 @@ import { TrendingUp } from "lucide-react";
 import { Chip, EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 
+import { ActionLink } from "./ActionLink";
 import { Card } from "./Card";
 import { hookName } from "../labels";
 import { pluralize, type Emerging } from "./overview-model";
@@ -34,6 +35,11 @@ export function EmergingPanel({ loading, coveredBrandCount, emerging }: Emerging
       description="The pooled hook pattern across brands with a finished check."
       icon={<TrendingUp {...iconProps} size={16} aria-hidden="true" className="size-4" />}
       className="h-full"
+      trailing={
+        <ActionLink href="/signals" size="sm">
+          See Signals
+        </ActionLink>
+      }
     >
       {loading ? (
         <EmergingSkeleton />

@@ -2,8 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useAction, useQuery } from "convex/react";
-import { useReducedMotion } from "motion/react";
-import { Bar, BarChart, CartesianGrid, Legend, XAxis, YAxis } from "recharts";
+import { CartesianGrid, Legend, Line, LineChart, XAxis, YAxis } from "recharts";
 import { CalendarDays, Globe2, Info, Loader2, Map as MapIcon, TrendingUp } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -121,7 +120,6 @@ function regionLabel(code: string): string {
 }
 
 export function TrendsExperience({ snapshot, claims, brandId, brandName, latestRunAt }: { snapshot?: SnapshotDoc; claims: ClaimDoc[]; brandId: Id<"brands">; brandName: string; latestRunAt?: string | null }) {
-  const reduceMotion = useReducedMotion();
   const refreshTrends = useAction(api.pipeline.refreshTrends.refreshTrends);
   const storedDate = record(snapshot?.queryParams)?.date;
   const initialDate: TrendsDate = typeof storedDate === "string" && ["now 7-d", "today 1-m", "today 3-m", "today 12-m", "today 5-y"].includes(storedDate) ? storedDate as TrendsDate : "today 3-m";
@@ -198,25 +196,32 @@ export function TrendsExperience({ snapshot, claims, brandId, brandName, latestR
         </div>
         <div className="px-3 pb-4 pt-6 sm:px-5">
           <ChartContainer config={config} className="h-[340px] w-full aspect-auto">
-            <BarChart accessibilityLayer data={rows.data} margin={{ left: -12, right: 12, top: 8 }}>
+            <LineChart accessibilityLayer data={rows.data} margin={{ left: 4, right: 12, top: 8 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
               <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={10} minTickGap={36} />
-              <YAxis domain={[0, 100]} tickLine={false} axisLine={false} width={38} />
-              <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent indicator="line" />} />
+              <YAxis
+                domain={[0, 100]}
+                tickLine={false}
+                axisLine={false}
+                width={52}
+                label={{ value: "Relative interest (100 = peak in this comparison)", angle: -90, position: "insideLeft", offset: 8, style: { textAnchor: "middle", fontSize: 10, fill: "var(--text-secondary)" } }}
+              />
+              <ChartTooltip cursor={{ stroke: "var(--border-strong)" }} content={<ChartTooltipContent indicator="line" />} />
               <Legend verticalAlign="top" align="right" height={28} wrapperStyle={{ fontSize: 11 }} />
               {rows.names.map((name) => (
-                <Bar
+                <Line
                   key={name}
+                  type="monotone"
                   dataKey={rows.keyOf(name)}
                   name={name}
-                  fill={`var(--color-${rows.keyOf(name)})`}
-                  radius={[3, 3, 0, 0]}
-                  fillOpacity={name === target ? 1 : 0.55}
-                  maxBarSize={rows.names.length > 1 ? 14 : 22}
-                  isAnimationActive={!reduceMotion}
+                  stroke={`var(--color-${rows.keyOf(name)})`}
+                  strokeWidth={name === target ? 2.5 : 1.75}
+                  strokeOpacity={name === target ? 1 : 0.7}
+                  dot={false}
+                  isAnimationActive={false}
                 />
               ))}
-            </BarChart>
+            </LineChart>
           </ChartContainer>
         </div>
       </Panel>

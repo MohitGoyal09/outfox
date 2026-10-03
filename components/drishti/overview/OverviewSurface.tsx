@@ -22,6 +22,7 @@ import { StatTile } from "./StatTile";
 import { WhatChanged } from "./WhatChanged";
 import {
   brandCoverage,
+  composeBiggestMove,
   composeEmerging,
   composeNeedsAttention,
   composeNewestEvidence,
@@ -205,13 +206,19 @@ function OverviewBody() {
       })),
     [sourceCountsQuery],
   );
-  const whatChangedFeed = useMemo(
+  const signalsScope = useQuery(api.claims.signalsScope, {});
+  const biggestMove = useMemo(
     () =>
-      panelsLoading || sourceCountsLoading
+      signalsScope === undefined
         ? null
-        : composeWhatChanged(brandLikes, runLikes, sourceCounts, brandNameById, nowMs, ownBrandId),
-    [panelsLoading, sourceCountsLoading, brandLikes, runLikes, sourceCounts, brandNameById, nowMs, ownBrandId],
+        : composeBiggestMove(signalsScope.brands, signalsScope.currentClaims, signalsScope.previousClaims),
+    [signalsScope],
   );
+  const whatChangedFeed = useMemo(() => {
+    if (panelsLoading || sourceCountsLoading || signalsScope === undefined) return null;
+    const composed = composeWhatChanged(brandLikes, runLikes, sourceCounts, brandNameById, nowMs, ownBrandId);
+    return { changes: [], comparableBrandCount: 0, ...composed, biggestMove };
+  }, [panelsLoading, sourceCountsLoading, signalsScope, brandLikes, runLikes, sourceCounts, brandNameById, nowMs, ownBrandId, biggestMove]);
 
   const threads = useMemo(() => recentThreads(threadsQuery ?? []), [threadsQuery]);
   const boards = useMemo(

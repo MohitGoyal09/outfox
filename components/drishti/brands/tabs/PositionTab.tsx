@@ -4,15 +4,15 @@ import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { ArrowUpRight, Layers, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowUpRight, Sparkles, TrendingUp } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { EmptyState } from "../../EmptyState";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
-import { iconProps, HOOK_COLOR, type HookType } from "../../tokens";
+import { HOOK_COLOR, type HookType } from "../../tokens";
 import { hookName, humanize } from "@/components/drishti/labels";
+import { NotFoundInCheck } from "../NotFoundInCheck";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   aiOverviewClaims,
@@ -32,11 +32,15 @@ import { displayClaimText, shortDate } from "../format";
 const PLACEHOLDER_TAG_VALUES = new Set(["unspecified", "none", "n/a", "unknown", ""]);
 export function isPlaceholderTagValue(value: string): boolean {
   const normalized = value.trim().toLowerCase();
-  return normalized === "" || PLACEHOLDER_TAG_VALUES.has(normalized) || normalized.startsWith("unspecified");
+  return (
+    normalized === "" ||
+    PLACEHOLDER_TAG_VALUES.has(normalized) ||
+    normalized.startsWith("unspecified") ||
+    normalized.includes("placeholder")
+  );
 }
 
-function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
-  const blocks = aiOverviewClaims(claims);
+function AiOverviewPanel({ blocks }: { blocks: ClaimDoc[] }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
@@ -48,14 +52,6 @@ function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
         <p className="mb-3 text-[11px] leading-5 text-muted-foreground">
           Google&apos;s own generated summary of this brand, not a primary source and not Drishti&apos;s analysis. Every line below links to the page Google actually cited.
         </p>
-        {blocks.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<Sparkles {...iconProps} size={16} />}
-            title="No AI Overview yet."
-            description="Fills in once a check captures Google's AI Overview for this brand, not every query triggers one."
-          />
-        ) : (
           <ul className="space-y-2.5">
             {blocks.map((claim) => (
               <li key={String(claim._id)} className="rounded-sm border border-border bg-bg-inset/40 p-3">
@@ -71,7 +67,6 @@ function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
               </li>
             ))}
           </ul>
-        )}
       </div>
     </Panel>
   );
@@ -92,25 +87,16 @@ export function sellerLabel(point: { claimId: string; hostname: string | null },
   return sellerFromListingText(claimTextById.get(point.claimId) ?? "") ?? "unknown retailer";
 }
 
-function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
-  const points = useMemo(() => pricePoints(claims), [claims]);
+function PriceLadderCard({ claims, points }: { claims: ClaimDoc[]; points: ReturnType<typeof pricePoints> }) {
   const claimTextById = useMemo(() => new Map(claims.map((claim) => [String(claim._id), claim.text])), [claims]);
-  const min = points.length ? points[0].price : null;
-  const max = points.length ? points[points.length - 1].price : null;
+  const min = points[0].price;
+  const max = points[points.length - 1].price;
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="border-b border-border px-4 py-3">
         <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Price ladder</h3>
       </div>
       <div className="p-4">
-        {points.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<Layers {...iconProps} size={16} />}
-            title="No product listing prices yet."
-            description="Fills in once a check captures real SERP product listings for this brand, each price keeps the date it was observed, never shown as current truth."
-          />
-        ) : (
           <div className="space-y-3">
             <p className="flex flex-wrap items-center gap-1 font-mono text-xs text-muted-foreground">
               <MetricInfo
@@ -131,15 +117,19 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
               ))}
             </ul>
           </div>
-        )}
       </div>
     </Panel>
   );
 }
 
-function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previous: ClaimDoc[] | null }) {
+function driftRows(current: ClaimDoc[], previous: ClaimDoc[] | null) {
+  if (previous === null) return [];
+  const rows = hookMixDrift(current, previous).slice(0, 9);
+  return rows.every((row) => row.current === 0 && row.previous === 0) ? [] : rows;
+}
+
+function HookMixDriftChart({ rows }: { rows: ReturnType<typeof hookMixDrift> }) {
   const reduceMotion = useReducedMotion();
-  const rows = useMemo(() => (previous === null ? [] : hookMixDrift(current, previous).slice(0, 9)), [current, previous]);
   const chartConfig = { current: { label: "This check" }, previous: { label: "Previous check" } } satisfies ChartConfig;
   return (
     <Panel interactive={false} className="overflow-hidden">
@@ -153,21 +143,6 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
         </h3>
       </div>
       <div className="p-4">
-        {previous === null ? (
-          <EmptyState
-            size="sm"
-            icon={<TrendingUp {...iconProps} size={16} />}
-            title="No earlier check to compare."
-            description="Drift needs a second tagged check. Check again later and this chart will compare hook counts check over check, never a guessed baseline."
-          />
-        ) : rows.every((row) => row.current === 0 && row.previous === 0) ? (
-          <EmptyState
-            size="sm"
-            icon={<TrendingUp {...iconProps} size={16} />}
-            title="No hook tags in either check."
-            description="Neither this check nor the earlier one has real hook tags to compare yet."
-          />
-        ) : (
           <>
             <div className="mb-2 flex items-center gap-4 text-[11px] text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
@@ -198,7 +173,6 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
             </BarChart>
             </ChartContainer>
           </>
-        )}
       </div>
     </Panel>
   );
@@ -214,22 +188,6 @@ export function normalizeCtaRows(facet: readonly { value: string; count: number 
   return [...counts.entries()]
     .map(([label, count]) => ({ label, count }))
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-}
-
-function CtaMixCard({ brandId }: { brandId: BrandDoc["_id"] }) {
-  const facet = useQuery(api.claims.ctaFacetByBrand, { brandId });
-  const rows = useMemo(() => normalizeCtaRows(facet), [facet]);
-  return (
-    <RankedCatalogChart
-      title="CTA mix"
-      definition="How often a call-to-action (the action a piece of creative asks for, e.g. 'shop now' or 'learn more') was assigned by an enrichment check. Counts are of the same bounded, tagged sample as the hook and theme catalogs above, not of every finding, post, view, or spend."
-      rows={rows}
-      formatLabel={humanize}
-      emptyTitle="No tagged CTAs yet."
-      emptyDescription="Ranks the real call-to-action text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
-      loading={facet === undefined}
-    />
-  );
 }
 
 export function PositionTab({
@@ -264,45 +222,33 @@ export function PositionTab({
     [filteredTags],
   );
 
+  const ctaFacet = useQuery(api.claims.ctaFacetByBrand, { brandId: brand._id });
+  const ctaRows = useMemo(() => normalizeCtaRows(ctaFacet), [ctaFacet]);
+  const aiBlocks = useMemo(() => aiOverviewClaims(filteredLatest), [filteredLatest]);
+  const pricePointRows = useMemo(() => pricePoints(filteredLatest), [filteredLatest]);
+  const driftData = useMemo(() => driftRows(filteredLatest, filteredPrevious), [filteredLatest, filteredPrevious]);
+
+  const notFound = [
+    hookTypeRows.length === 0 ? "Hook types" : null,
+    themeRows.length === 0 ? "Themes" : null,
+    valuePropRows.length === 0 ? "Value propositions" : null,
+    ctaFacet !== undefined && ctaRows.length === 0 ? "CTA mix" : null,
+    aiBlocks.length === 0 ? "Google AI Overview" : null,
+    pricePointRows.length === 0 ? "Price ladder" : null,
+    driftData.length === 0 ? "Hook-mix drift" : null,
+  ].filter((item): item is string => item !== null);
+
+  const neutralBar = () => "var(--text-secondary)";
+
   return (
     <div className="space-y-4">
-      {/*
-        No knowledge-graph card here, deliberately. Google does return a panel
-        for these brands -- q=Mamaearth gives title, description, rating and
-        review count -- but only for a bare ENTITY query. Our Google call
-        qualifies the name with the vertical ("Mamaearth skincare") because a
-        one-word brand that is also a common word returns the wrong results
-        unqualified: q=Minimalist comes back with decluttering habits and
-        lifestyle articles, which is what the qualifier was added to stop.
-        The two cannot both be had from one call, and a second Google call per
-        brand per run would double the most metered cost this product has, for
-        a card that is a bonus by its own description. Measured: 0 of 56 ok
-        Google snapshots ever carried a knowledge_graph block.
-
-        The EXTRACTOR stays in convex/pipeline/extractClaims.ts -- it costs
-        nothing and captures a panel on the rare call that returns one. If a
-        knowledge card is ever wanted, the fix is a second entity-query call,
-        not a change here.
-      */}
-      <AiOverviewPanel claims={filteredLatest} />
-      {/*
-        Ranked hook catalog, two levels of the same enrichment pass, both
-        real server-side faceted counts from get_tags, never re-derived here:
-        the fixed 9-value hookType vocabulary (colored on DESIGN.md's
-        hookType hue scale, the Data-Color Rule, so a hue means the same
-        thing here as it does in a chip elsewhere in the product), then the
-        theme and valueProp free-text long tail underneath it, where the
-        real specificity lives.
-      */}
-      <div>
-        <h2 className="type-headline text-fg">Ranked hook catalog</h2>
-        <p className="mb-3 text-[11px] text-muted-foreground">
-          The fixed hookType vocabulary, then the free-text theme and value-proposition long tail underneath it, every count real and server-computed.
-        </p>
-        {/* Hook type stands alone, full width: its labels are single words, so
-            the width is better spent on the free-text long tail below, whose
-            sentence-length labels need the room lg:grid-cols-2 already gives
-            them elsewhere in this tab. */}
+      {/* No knowledge-graph card, deliberately: Google returns one only for a
+          bare entity query, and our vertical-qualified query never triggers it
+          (measured 0 of 56 ok Google snapshots). The extractor stays in
+          convex/pipeline/extractClaims.ts; the fix, if ever wanted, is a
+          second entity-query call, not a change here. */}
+      {aiBlocks.length > 0 ? <AiOverviewPanel blocks={aiBlocks} /> : null}
+      {hookTypeRows.length > 0 ? (
         <RankedCatalogChart
           title="Hook type"
           definition="How often an enrichment check assigned each fixed hook type to a finding. Counts are of tagged findings, not of posts, views, or spend."
@@ -310,30 +256,53 @@ export function PositionTab({
           colorFor={(label) => HOOK_COLOR[label as HookType] ?? HOOK_COLOR.not_applicable}
           formatLabel={hookName}
           emptyTitle="No tagged hook types yet."
-          emptyDescription="Ranks the real, fixed hook-type vocabulary an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
+          emptyDescription="Fills in after a tagged check."
         />
-        <div className="mt-4 grid gap-4 lg:grid-cols-2">
-          <RankedCatalogChart
-            title="Themes"
-            definition="How often an enrichment check assigned each theme to a finding. The tag is free text, so two rows can mean the same thing in different words."
-            rows={themeRows}
-            emptyTitle="No tagged themes yet."
-            emptyDescription="Ranks the real theme text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
-          />
-          <RankedCatalogChart
-            title="Value propositions"
-            definition="How often an enrichment check assigned each value proposition to a finding. The tag is free text, so two rows can mean the same thing in different words."
-            rows={valuePropRows}
-            emptyTitle="No tagged value propositions yet."
-            emptyDescription="Ranks the real value-proposition text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
-          />
-          <CtaMixCard brandId={brand._id} />
+      ) : null}
+      {themeRows.length > 0 || valuePropRows.length > 0 || ctaRows.length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {themeRows.length > 0 ? (
+            <RankedCatalogChart
+              title="Themes"
+              definition="How often an enrichment check assigned each theme to a finding. The tag is free text, so two rows can mean the same thing in different words."
+              rows={themeRows}
+              colorFor={neutralBar}
+              formatLabel={humanize}
+              emptyTitle="No tagged themes yet."
+              emptyDescription="Fills in after a tagged check."
+            />
+          ) : null}
+          {valuePropRows.length > 0 ? (
+            <RankedCatalogChart
+              title="Value propositions"
+              definition="How often an enrichment check assigned each value proposition to a finding. The tag is free text, so two rows can mean the same thing in different words."
+              rows={valuePropRows}
+              colorFor={neutralBar}
+              formatLabel={humanize}
+              emptyTitle="No tagged value propositions yet."
+              emptyDescription="Fills in after a tagged check."
+            />
+          ) : null}
+          {ctaRows.length > 0 ? (
+            <RankedCatalogChart
+              title="CTA mix"
+              definition="How often a call-to-action (the action a piece of creative asks for, e.g. 'shop now' or 'learn more') was assigned by an enrichment check. Counts are of the same bounded, tagged sample as the hook and theme catalogs above, not of every finding, post, view, or spend."
+              rows={ctaRows}
+              colorFor={neutralBar}
+              formatLabel={humanize}
+              emptyTitle="No tagged CTAs yet."
+              emptyDescription="Fills in after a tagged check."
+            />
+          ) : null}
         </div>
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <PriceLadderCard claims={filteredLatest} />
-        <HookMixDriftChart current={filteredLatest} previous={filteredPrevious} />
-      </div>
+      ) : null}
+      {pricePointRows.length > 0 || driftData.length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {pricePointRows.length > 0 ? <PriceLadderCard claims={filteredLatest} points={pricePointRows} /> : null}
+          {driftData.length > 0 ? <HookMixDriftChart rows={driftData} /> : null}
+        </div>
+      ) : null}
+      <NotFoundInCheck items={notFound} />
     </div>
   );
 }

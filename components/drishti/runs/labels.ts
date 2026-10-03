@@ -1,4 +1,5 @@
 import { ABSENT, type FunnelStage, type HookType, type Tone } from "@/components/drishti";
+import { sourceName } from "@/components/drishti/labels";
 import type {
   CostProvenance,
   EngineCellStatus,
@@ -25,6 +26,10 @@ const ENGINE_LABEL: Record<string, string> = {
   google_trends: "Google Trends",
   llm_tag: "Content tag",
 };
+
+export function engineLabel(engine: string): string {
+  return ENGINE_LABEL[engine] ?? sourceName(engine);
+}
 
 export const ENGINE_STATUS_WORD: Record<EngineCellStatus, string> = {
   ok: "returned",
@@ -123,3 +128,11 @@ export function formatUsd(value: number | null | undefined): string {
 }
 
 export const READOUT_SEPARATOR = "·";
+
+export function plainReason(reason: string | null): string | null {
+  if (reason === null) return null;
+  if (/adsTransparencyAdvertiserId/i.test(reason)) {
+    return "This brand has no ad account ID yet, so Ads Transparency was not checked.";
+  }
+  return reason;
+}

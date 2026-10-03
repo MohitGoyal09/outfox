@@ -22,7 +22,8 @@ export function NewsEvidenceCard({
   const info = readGoogleNewsRawItem(raw);
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   if (info.thumbnailUrl === null || thumbnailFailed) return <EvidenceCard claim={claim} pageLabel={pageLabel} />;
-  const publishedLabel = periodWindow(claim.period) ?? shortDate(claim.fetchedAt);
+  const publishedWindow = periodWindow(claim.period);
+  const publishedLabel = publishedWindow !== null ? `Published ${publishedWindow}` : `Fetched ${shortDate(claim.fetchedAt)}`;
   return (
     <Panel
       as="article"

@@ -1,19 +1,15 @@
 "use client";
 
 import { useMemo } from "react";
-import { useReducedMotion } from "motion/react";
-import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ExternalLink, Globe2, Link2 } from "lucide-react";
-import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { formatStamp } from "../cohorts/cohorts-model";
+import { shortDate } from "./format";
 import { sourceName } from "@/components/drishti/labels";
-import { CategoryAxisTick } from "../charts/CategoryAxisTick";
 import { EmptyState } from "../EmptyState";
 import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
-import { categoricalColorFor, iconProps } from "../tokens";
+import { iconProps } from "../tokens";
 import { signalClaims, type ClaimDoc } from "./brand-model";
 
 type Destination = { key: string; url: string; count: number; firstSeen: string; lastSeen: string; engines: string[] };
@@ -48,11 +44,12 @@ export function destinationRows(claims: ClaimDoc[]): { rows: Destination[]; arti
   return { rows: [...map.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)), artifactCount };
 }
 
+function seenLabel(first: string, last: string): string {
+  return first.slice(0, 10) === last.slice(0, 10) ? shortDate(first) : `${shortDate(first)} to ${shortDate(last)}`;
+}
+
 export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
-  const reduceMotion = useReducedMotion();
   const { rows, artifactCount } = useMemo(() => destinationRows(claims), [claims]);
-  const top = rows.slice(0, 5).map((row) => ({ label: row.key, count: row.count, fill: categoricalColorFor(row.key) }));
-  const chartConfig = { count: { label: "Evidence", color: "var(--accent)" } } satisfies ChartConfig;
   return (
     <section className="space-y-4" aria-label="Destination intelligence">
       <div className="flex flex-wrap items-end justify-between gap-3">
@@ -83,29 +80,6 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
         />
       ) : (
         <>
-          <Panel interactive={false} className="overflow-hidden">
-            <div className="border-b border-border px-4 py-3">
-              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-                <MetricInfo
-                  label="Evidence count by destination"
-                  definition="How many stored findings point at each destination URL. It counts evidence rows, not visits, clicks, or page traffic."
-                />
-              </h3>
-            </div>
-            <div className="p-4">
-              <ChartContainer config={chartConfig} className="h-[240px] w-full aspect-auto">
-                <BarChart accessibilityLayer data={top} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
-                  <CartesianGrid horizontal={false} stroke="var(--border)" />
-                  <XAxis type="number" allowDecimals={false} hide />
-                  <YAxis dataKey="label" type="category" width={188} tickLine={false} axisLine={false} tick={CategoryAxisTick(26)} interval={0} />
-                  <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08, radius: 4 }} content={<ChartTooltipContent />} />
-                  <Bar dataKey="count" fill="var(--color-count)" radius={4} barSize={22} isAnimationActive={!reduceMotion}>
-                    {top.map((row) => <Cell key={row.label} fill={row.fill} />)}
-                  </Bar>
-                </BarChart>
-              </ChartContainer>
-            </div>
-          </Panel>
           <Panel interactive={false} className="overflow-hidden">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <p className="text-sm font-semibold tracking-[-0.01em] text-fg">Ranked landing pages</p>
@@ -156,9 +130,7 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
                       </TableCell>
                       <TableCell className="font-mono text-xs tabular-nums">{row.count}</TableCell>
                       <TableCell className="whitespace-nowrap font-mono text-[11px] tabular-nums text-muted-foreground">
-                        {formatStamp(row.firstSeen)}
-                        <br />
-                        <span className="text-[10px]">to {formatStamp(row.lastSeen)}</span>
+                        {seenLabel(row.firstSeen, row.lastSeen)}
                       </TableCell>
                       <TableCell>
                         <div className="flex max-w-[180px] flex-wrap gap-1">

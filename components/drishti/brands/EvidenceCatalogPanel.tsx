@@ -1,6 +1,6 @@
 "use client";
 
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { ExternalLink } from "lucide-react";
 import { EmptyState } from "../EmptyState";
 import { MetricInfo } from "../MetricInfo";
@@ -15,6 +15,7 @@ export function EvidenceCatalogPanel({
   emptyTitle,
   emptyDescription,
   capNote,
+  previewCount,
 }: {
   title: string;
   definition: string;
@@ -23,7 +24,10 @@ export function EvidenceCatalogPanel({
   emptyTitle: string;
   emptyDescription: string;
   capNote: string;
+  previewCount?: number;
 }) {
+  const [expanded, setExpanded] = useState(false);
+  const shown = previewCount !== undefined && !expanded ? rows.slice(0, previewCount) : rows;
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
@@ -44,7 +48,7 @@ export function EvidenceCatalogPanel({
           <>
             <p className="mb-3 text-[10.5px] leading-4 text-muted-foreground">{capNote}</p>
             <ul className="space-y-2">
-              {rows.map((row) => (
+              {shown.map((row) => (
                 <li key={row.key} className="flex items-center justify-between gap-3 text-xs">
                   <span className="min-w-0 flex-1 truncate" title={row.primary}>
                     <a
@@ -63,6 +67,16 @@ export function EvidenceCatalogPanel({
                 </li>
               ))}
             </ul>
+            {previewCount !== undefined && rows.length > previewCount ? (
+              <button
+                type="button"
+                onClick={() => setExpanded((value) => !value)}
+                aria-expanded={expanded}
+                className="mt-3 text-xs font-medium text-fg hover:underline"
+              >
+                {expanded ? "Show fewer" : `Show all ${rows.length}`}
+              </button>
+            ) : null}
           </>
         )}
       </div>

@@ -73,32 +73,7 @@ function adRunDays(claim: ClaimDoc): number {
 
 const CONFIDENCE_RANK: Record<string, number> = { high: 3, medium: 2, low: 1 };
 
-export function sortFeedCards(cards: FeedCard[], sort: SortValue): FeedCard[] {
-  if (sort === "highest_rank") {
-    return sorted.sort((a, b) => {
-      const aRank = cardRank(a) ?? Number.POSITIVE_INFINITY;
-      const bRank = cardRank(b) ?? Number.POSITIVE_INFINITY;
-      return aRank - bRank || (a.sortAt < b.sortAt ? 1 : -1);
-    });
-  }
-  if (sort === "most_views") {
-    return sorted.sort((a, b) => {
-      const bViews = b.kind === "video" ? (b.group.viewCount ?? -1) : -1;
-    });
-  }
-  if (sort === "most_likes") {
-    return sorted.sort((a, b) => {
-      const aLikes = a.kind === "video" ? (a.group.likeCount ?? -1) : -1;
-      return bLikes - aLikes || (a.sortAt < b.sortAt ? 1 : -1);
-    });
-  }
-  if (sort === "longest_run") {
-    return sorted.sort((a, b) => {
-      const aDays = a.kind === "claim" && a.claim.metric === "ads_transparency_creative" ? adRunDays(a.claim) : -1;
-    });
-  }
-  return interleaveByEngine(sorted, cardEngine, (card) => card.sortAt);
-}
+const DAY_KEY_LENGTH = 10;
 
 
 const FRESHNESS_LABEL: Record<string, string> = {

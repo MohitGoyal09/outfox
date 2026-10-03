@@ -21,6 +21,13 @@ export function stageName(stage: string): string {
   return STAGE_NAMES[stage] ?? humanize(stage);
 }
 
+export function nameEnumsInText(text: string): string {
+  return text.replace(/\b[a-z]+(?:_[a-z]+)+\b/g, (token) => {
+    const name = HOOK_NAMES[token] ?? STAGE_NAMES[token];
+    return name === undefined ? token : name.charAt(0).toLowerCase() + name.slice(1);
+  });
+}
+
 const MEASURE_NAMES: Readonly<Record<string, string>> = {
   ads_transparency_active_creative_count: "Ads running",
   ads_transparency_creative: "Ad creative",

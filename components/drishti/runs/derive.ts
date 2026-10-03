@@ -21,6 +21,7 @@ import {
   FETCH_ENGINES,
   HOOK_WORD,
   engineLabel,
+  plainReason,
   formatRunDateTime,
   formatRunDayMonth,
   isTerminalRunStatus,
@@ -130,7 +131,7 @@ export function engineRows(
     }
     const brandId = String(snapshot.brandId);
     const status: EngineCellStatus = snapshot.status;
-    const reason = snapshot.status === "ok" ? null : (snapshot.errorMessage ?? null);
+    const reason = snapshot.status === "ok" ? null : plainReason(snapshot.errorMessage ?? null);
     const existing = cells.get(brandId);
     if (existing === undefined || engineRank(status) > engineRank(existing.status)) {
       cells.set(brandId, { status, reason });

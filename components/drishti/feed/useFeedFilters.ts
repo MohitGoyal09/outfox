@@ -28,7 +28,7 @@ export function useFeedFilters(): {
     [filters, push],
   );
 
-  const resetFilters = useCallback(() => push(DEFAULT_FEED_FILTERS), [push]);
+  const resetFilters = useCallback(() => push({ ...DEFAULT_FEED_FILTERS, offtopic: filters.offtopic }), [filters.offtopic, push]);
 
   return { filters, setFilter, resetFilters };
 }

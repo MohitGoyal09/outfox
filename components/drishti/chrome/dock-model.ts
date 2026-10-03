@@ -14,3 +14,19 @@ export function pageBrandIdFromPath(pathname: string): string | null {
 export function turnCount(messages: readonly { role: string }[]): number {
   return messages.filter((message) => message.role === "user").length;
 }
+
+export const DOCK_SCROLL_JITTER_PX = 6;
+export const DOCK_EDGE_PX = 80;
+
+export function dockHiddenAfterScroll(input: {
+  prevY: number;
+  y: number;
+  hidden: boolean;
+  viewportHeight: number;
+  pageHeight: number;
+}): boolean {
+  const { prevY, y, hidden, viewportHeight, pageHeight } = input;
+  if (pageHeight - (y + viewportHeight) <= DOCK_EDGE_PX) return false;
+  const delta = y - prevY;
+  if (Math.abs(delta) < DOCK_SCROLL_JITTER_PX) return hidden;
+}

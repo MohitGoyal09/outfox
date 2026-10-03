@@ -2,6 +2,7 @@
 import { displayClaimText } from "../brands/format";
 import { sourceName } from "../labels";
 import { hookName } from "../labels";
+import { deriveEmerging } from "../board/board-model";
 import { HOOK_TYPES, isHookType, isValidEvidenceHref, type HookType } from "../tokens";
 
 
@@ -123,12 +124,18 @@ export type BrandChange = {
   sentence: string;
   actionHref: string;
   isOwnBrand: boolean;
+  isQuiet?: boolean;
 };
 
 export type WhatChangedFeed = {
   changes: BrandChange[];
+  biggestMove?: BiggestMove | null;
   comparableBrandCount: number;
 };
+
+export type BiggestMove = { brandName: string; hook: string; deltaPct: number; sentence: string };
+
+type MoveClaim = Parameters<typeof deriveEmerging>[0][number];
 
 function describeSourceChange(change: SourceChange): string {
   const count = Math.abs(change.delta);
@@ -148,6 +155,23 @@ export function composeWhatChanged(
 ): WhatChangedFeed | null {
   const coverage = brandCoverage(brands, runs);
   let comparableBrandCount = 0;
+
+  for (const brand of brands) {
+    if (cov === undefined || cov.lastFinishedRun === null || cov.previousFinishedRun === null) continue;
+    comparableBrandCount += 1;
+    const sources = new Set([...latest.keys(), ...prior.keys()]);
+
+    const sourceChanges: SourceChange[] = [];
+
+    const brandName = brandNameById[brand.id] ?? brand.name;
+    const sinceIso = cov.previousFinishedRun.completedAt ?? cov.previousFinishedRun.requestedAt;
+    const since = relativeTime(sinceIso, nowMs);
+
+    const changeDescription = joinWithAnd(sourceChanges.map(describeSourceChange));
+    const sentence = isOwnBrand
+      ? `Your brand, ${brandName}, now has ${changeDescription} since your last check, ${since}.`
+      : `${brandName} now has ${changeDescription} since your last check, ${since}.`;
+  }
 
   return { changes: dated.map((row) => row.change), comparableBrandCount };
 }

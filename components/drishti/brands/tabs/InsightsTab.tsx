@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useAction, useQuery } from "convex/react";
-import { ArrowUpRight, BarChart3, Layers, RefreshCw, Sparkles, Tag, Target, TrendingUp, Users } from "lucide-react";
+import { ArrowUpRight, ChevronDown, RefreshCw, Sparkles, Target, TrendingUp, Users } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -10,14 +10,14 @@ import { computeCreativeMix, diffMix } from "@/convex/pipeline/rollup";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { EmptyState } from "../../EmptyState";
 import { Panel } from "../../Panel";
 import { Skeleton, SkeletonRegion } from "../../Skeleton";
 import { HOOK_COLOR, iconProps, type HookType } from "../../tokens";
 import { hookName } from "@/components/drishti/labels";
-import { countClaimsByEngine, hookTypeFrequency, signalClaims, type ClaimDoc } from "../brand-model";
-import { displayClaimText } from "../format";
-import { RankedCatalogChart } from "../RankedCatalogChart";
+import type { ClaimDoc } from "../brand-model";
+import { displayClaimText, shortDate } from "../format";
 import { RelativeTime } from "@/components/drishti/RelativeTime";
 
 
@@ -92,36 +92,6 @@ function CitationLinks({ citedClaimIds, claimsById }: { citedClaimIds: Id<"claim
         </a>
       ))}
     </div>
-  );
-}
-
-function InsightsStatRow({ latestClaims, tags }: { latestClaims: ClaimDoc[]; tags: ClaimDoc[] }) {
-  const signalCount = useMemo(() => signalClaims(latestClaims).length, [latestClaims]);
-  const engineCount = useMemo(() => countClaimsByEngine(latestClaims).length, [latestClaims]);
-  const stats = [
-    { label: "Findings", value: signalCount, icon: BarChart3 },
-    { label: "Tagged findings", value: tags.length, icon: Tag },
-    { label: "Sources represented", value: engineCount, icon: Layers },
-  ];
-  return (
-    <Panel interactive={false} className="overflow-hidden">
-      <div className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Evidence at a glance</h3>
-      </div>
-      <div className="grid grid-cols-3 gap-4 p-4">
-        {stats.map(({ label, value, icon: Icon }) => (
-          <div key={label} className="flex items-center gap-2.5">
-            <Icon className="size-4 text-fg" aria-hidden />
-            <div>
-              <p className="font-mono text-lg font-semibold leading-none tabular-nums text-fg">
-                {Intl.NumberFormat("en-US").format(value)}
-              </p>
-              <p className="mt-1 text-[11px] text-muted-foreground">{label}</p>
-            </div>
-          </div>
-        ))}
-      </div>
-    </Panel>
   );
 }
 
@@ -213,12 +183,17 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
             title="No earlier check to compare."
-            description="Only one check exists for this brand yet. Change needs a second check, never a guessed baseline."
+            description="Only one check exists for this brand yet. Change needs a second check."
           />
         ) : movers.length === 0 ? (
-          <p className="text-sm text-muted-foreground">No measurable change in hook mix since the earlier check.</p>
+          <p className="text-sm text-muted-foreground">No measurable change in hook mix since the previous check.</p>
         ) : (
           <ul className="space-y-2">
+            <li aria-hidden className="grid grid-cols-[1fr_auto_auto] gap-2 font-mono text-[10px] uppercase tracking-[0.06em] text-fg-tertiary">
+              <span>Hook</span>
+              <span>Previous check → this check</span>
+              <span>Change</span>
+            </li>
             {movers.map((row) => (
               <li key={row.hook} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[12px]">
                 <span className="flex min-w-0 items-center gap-2 capitalize">
@@ -244,13 +219,9 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
 export function InsightsTab({
   brandId,
   claims,
-  latestClaims,
-  tags,
 }: {
   brandId: Id<"brands">;
   claims: ClaimDoc[];
-  latestClaims: ClaimDoc[];
-  tags: ClaimDoc[];
 }) {
   const feed = useQuery(api.brandInsights.feedForBrand, { brandId });
   const generateInsight = useAction(api.pipeline.brandInsights.generateBrandInsight);
@@ -280,7 +251,6 @@ export function InsightsTab({
   }
 
   const claimsById = useMemo(() => new Map(claims.map((claim) => [String(claim._id), claim])), [claims]);
-  const hookRows = useMemo(() => hookTypeFrequency(tags), [tags]);
   const [latest, ...earlier] = feed ?? [];
   const buckets = useMemo(() => (latest ? bucketSentences(latest.sentences) : null), [latest]);
   const templateMode = latest?.mode === "template";
@@ -292,7 +262,7 @@ export function InsightsTab({
         <div>
           <h2 className="type-headline text-fg">Brand DNA</h2>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            Four cited reads on this brand: how it positions itself, who it talks to, what it sells against, and what changed, refreshed automatically as new evidence comes in.
+            How this brand positions itself, who it talks to, what it sells against, and what changed since the previous check. Every claim cites its source.
           </p>
         </div>
         <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => void refreshNow()} disabled={generating}>
@@ -305,6 +275,13 @@ export function InsightsTab({
         <SkeletonRegion label="Loading Brand DNA">
           <Skeleton variant="block" height={160} />
         </SkeletonRegion>
+      ) : latest?.mode === "failed" ? (
+        <EmptyState
+          size="sm"
+          icon={<Sparkles {...iconProps} size={16} />}
+          title="The last Brand DNA read failed."
+          description={latest.failureReason?.trim() || "No reason was recorded. Refresh to try again."}
+        />
       ) : latest === undefined || buckets === null ? (
         <EmptyState
           size="sm"
@@ -379,36 +356,17 @@ export function InsightsTab({
         </>
       )}
 
-      <div>
-        <h3 className="mb-3 text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground">The receipts</h3>
-        <div className="space-y-3">
-          <InsightsStatRow latestClaims={latestClaims} tags={tags} />
-          <RankedCatalogChart
-            title="Top hooks"
-            rows={hookRows}
-            colorFor={(label) => HOOK_COLOR[label as HookType] ?? HOOK_COLOR.not_applicable}
-            formatLabel={hookName}
-            emptyTitle="No tagged hooks yet."
-            emptyDescription="Ranks the real hook type an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
-          />
-        </div>
-      </div>
-
-      {earlier.length > 0 ? (
-        <div>
-          <h3 className="mb-2 text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground">Earlier verdicts</h3>
-          {earlierVerdicts.length === 0 ? (
-            <EmptyState
-              size="sm"
-              icon={<Sparkles {...iconProps} size={16} />}
-              title="No earlier verdicts."
-              description="Every earlier read either used the template fallback (raw claim text, not a model read) or failed outright, so there's nothing real to show yet."
-            />
-          ) : (
-            <ul className="space-y-1.5">
+      {earlierVerdicts.length > 0 ? (
+        <Collapsible>
+          <CollapsibleTrigger className="group inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground hover:text-fg">
+            Earlier reads ({earlierVerdicts.length})
+            <ChevronDown aria-hidden className="size-3.5 transition-transform duration-150 group-data-[state=open]:rotate-180" />
+          </CollapsibleTrigger>
+          <CollapsibleContent>
+            <ul className="mt-2 space-y-1.5">
               {earlierVerdicts.map((row) => (
                 <li key={row.id} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
-                  <span className="shrink-0 text-muted-foreground"><RelativeTime iso={row.generatedAt} /></span>
+                  <span className="shrink-0 font-mono text-muted-foreground">{shortDate(row.generatedAt)}</span>
                   {row.kind === "failed" ? (
                     <span className="min-w-0 truncate text-danger">Check failed{row.reason ? `: ${row.reason}` : ""}</span>
                   ) : (
@@ -417,8 +375,8 @@ export function InsightsTab({
                 </li>
               ))}
             </ul>
-          )}
-        </div>
+          </CollapsibleContent>
+        </Collapsible>
       ) : null}
     </div>
   );

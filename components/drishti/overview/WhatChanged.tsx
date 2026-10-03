@@ -15,10 +15,19 @@ export type WhatChangedProps = {
 
 export function WhatChanged({ feed }: WhatChangedProps) {
   if (feed === null) return null;
+  const move = feed.biggestMove ?? null;
+  const rows = [...feed.changes].sort((a, b) => Number(a.isQuiet === true) - Number(b.isQuiet === true));
 
   return (
     <Card title="What changed since your last check" className="h-full">
-      {feed.changes.length === 0 ? (
+      {move !== null ? (
+        <p className="type-body mb-3 max-w-[64ch] border-b border-border pb-3 font-medium text-fg">
+          {move.sentence}
+        </p>
+      ) : feed.comparableBrandCount === 0 ? (
+        <p className="type-body text-fg-secondary">No brand has two checks to compare yet.</p>
+      ) : null}
+      {feed.comparableBrandCount === 0 ? null : feed.changes.length === 0 ? (
         <EmptyState
           size="sm"
           bounded
@@ -27,7 +36,7 @@ export function WhatChanged({ feed }: WhatChangedProps) {
         />
       ) : (
         <ul className="flex flex-col divide-y divide-border">
-          {feed.changes.map((change) => (
+          {rows.map((change) => (
             <li
               key={change.brandId}
               className={cn(

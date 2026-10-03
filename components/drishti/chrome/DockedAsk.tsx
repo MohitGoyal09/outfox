@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
 import { usePathname } from "next/navigation";
@@ -23,6 +23,7 @@ import {
 import { DockedAskPanel } from "@/components/drishti/chrome/DockedAskPanel";
 import {
   canSubmitAsk,
+  dockHiddenAfterScroll,
   isChatRoute,
   pageBrandIdFromPath,
   scopeChipLabel,
@@ -48,6 +49,8 @@ export function DockedAsk() {
   const [dismissedForPath, setDismissedForPath] = useState<string | null>(null);
   const [openCitation, setOpenCitation] = useState<{ claimId: string; question: string | null } | null>(null);
   const trackedBrands = useQuery(api.brands.listBrands);
+  const [scrollHidden, setScrollHidden] = useState(false);
+  const [hasFocus, setHasFocus] = useState(false);
 
   const [mentionSource, setMentionSource] = useState<"typed" | null>(null);
   const [mentionToken, setMentionToken] = useState("");
@@ -156,6 +159,25 @@ export function DockedAsk() {
     setPanelOpen(false);
   }
 
+  useEffect(() => {
+    let lastY = window.scrollY;
+    const onScroll = () => {
+      const y = window.scrollY;
+      setScrollHidden((hidden) =>
+        dockHiddenAfterScroll({
+          prevY: lastY,
+          y,
+          hidden,
+          viewportHeight: window.innerHeight,
+          pageHeight: document.documentElement.scrollHeight,
+        }),
+      );
+      lastY = y;
+    };
+    window.addEventListener("scroll", onScroll, { passive: true });
+    return () => window.removeEventListener("scroll", onScroll);
+  }, []);
+
   if (isChatRoute(pathname)) return null;
 
   function closeMentionMenu() {
@@ -250,9 +272,19 @@ export function DockedAsk() {
 
   const activeOption = visibleMentionBrands[safeHighlightedIndex];
   const wide = expanded || panelOpen;
+  const tucked = scrollHidden && !panelOpen && !expanded && !hasFocus;
 
   return (
-    <div className="pointer-events-none fixed inset-x-0 bottom-6 z-40 flex flex-col items-center px-4">
+    <div
+      onFocusCapture={() => setHasFocus(true)}
+      onBlurCapture={() => setHasFocus(false)}
+      inert={tucked}
+      className={cn(
+        "pointer-events-none fixed inset-x-0 bottom-6 z-40 flex flex-col items-center px-4",
+        "motion-safe:transition-[transform,opacity] motion-safe:duration-200 motion-safe:ease-out",
+        tucked && "translate-y-[calc(100%+1.5rem)] opacity-0",
+      )}
+    >
       {/* One width for panel and pill so their edges land on the same pixels. It follows the
           PANEL, not just input focus: submitting collapses the input, and the answer needs room. */}
       <div className={cn("flex w-full flex-col", wide ? "max-w-3xl" : "max-w-sm")}>

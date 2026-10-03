@@ -11,6 +11,8 @@ import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { HOOK_COLOR, VALUE_CLASS, iconProps } from "../tokens";
 import type { DistributionItem } from "../DistributionPanel";
+import { DeltaMark } from "../DeltaMark";
+import type { EmergingMove } from "./board-model";
 
 const config = {
   findings: { label: "Findings", color: "var(--accent)" },
@@ -20,7 +22,11 @@ export function BoardMixChart({
   items,
   unclearCount = 0,
   loading = false,
+  moves = [],
+  changeNote,
 }: {
+  moves?: EmergingMove[];
+  changeNote?: string;
   items: DistributionItem[];
   unclearCount?: number;
   loading?: boolean;
@@ -36,6 +42,7 @@ export function BoardMixChart({
       findings: item.count,
       fill: HOOK_COLOR[item.label as keyof typeof HOOK_COLOR] ?? "var(--accent)",
     }));
+  const changeRows = moves.filter((move) => move.deltaPct !== null);
   const total = data.reduce((sum, row) => sum + row.findings, 0);
 
   return (
@@ -113,6 +120,33 @@ export function BoardMixChart({
           </p>
         ) : null}
       </div>
+      {!loading && changeRows.length > 0 ? (
+        <div className="border-t border-border px-5 py-3">
+          <table className="w-full text-[13px]">
+            <caption className="pb-1.5 text-left type-caption text-fg-secondary">
+              Change in share of findings with a clear hook, since each brand&apos;s previous check
+              {changeNote ? ` · ${changeNote}` : ""}.
+            </caption>
+            <thead className="sr-only">
+              <tr>
+                <th scope="col">Hook</th>
+                <th scope="col">Change</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-border">
+              {changeRows.map((move) => (
+                <tr key={move.hook}>
+                  <td className="py-1.5 text-fg">{hookName(move.hook)}</td>
+                  <td className={cn(VALUE_CLASS, "py-1.5 text-right text-fg-secondary")}>
+                    {move.deltaGlyph ? <DeltaMark direction={move.deltaGlyph} /> : null}
+                    {move.deltaText}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ) : null}
     </Panel>
   );
 }

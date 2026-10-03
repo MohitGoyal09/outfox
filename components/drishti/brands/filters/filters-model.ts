@@ -15,17 +15,7 @@ export type BrandFilters = {
   from: string | null;
   to: string | null;
   view: "cards" | "table";
-};
-
-export const DEFAULT_BRAND_FILTERS: BrandFilters = {
-  engine: "all",
-  hook: "all",
-  funnel: "all",
-  freshness: "all",
-  sort: "newest",
-  from: null,
-  to: null,
-  view: "cards",
+  offtopic: "hide" | "show";
 };
 
 const FRESHNESS_VALUES: readonly FreshnessValue[] = ["all", "24h", "7d", "30d", "90d"];
@@ -49,28 +39,6 @@ export const SORT_LABEL: Record<SortValue, string> = {
   longest_run: "Longest run",
 };
 
-export function parseBrandFilters(params: URLSearchParams): BrandFilters {
-  const engine = params.get("engine") ?? DEFAULT_BRAND_FILTERS.engine;
-  const hook = params.get("hook") ?? DEFAULT_BRAND_FILTERS.hook;
-  const funnel = params.get("funnel") ?? DEFAULT_BRAND_FILTERS.funnel;
-  const freshnessRaw = params.get("freshness");
-  const freshness = FRESHNESS_VALUES.includes(freshnessRaw as FreshnessValue)
-    ? (freshnessRaw as FreshnessValue)
-    : DEFAULT_BRAND_FILTERS.freshness;
-  const sortRaw = params.get("sort");
-  const to = params.get("to");
-  return {
-    engine,
-    hook,
-    funnel,
-    freshness,
-    sort,
-    from: from !== null && isDateString(from) ? from : null,
-    to: to !== null && isDateString(to) ? to : null,
-    view: params.get("view") === "table" ? "table" : "cards",
-  };
-}
-
 export function filtersToParams(filters: BrandFilters, base: URLSearchParams): URLSearchParams {
   const next = new URLSearchParams(base);
   const write = (key: string, value: string | null, isDefault: boolean) => {
@@ -81,6 +49,7 @@ export function filtersToParams(filters: BrandFilters, base: URLSearchParams): U
   write("freshness", filters.freshness, filters.freshness === DEFAULT_BRAND_FILTERS.freshness);
   write("sort", filters.sort, filters.sort === DEFAULT_BRAND_FILTERS.sort);
   write("view", filters.view, filters.view === DEFAULT_BRAND_FILTERS.view);
+  write("offtopic", filters.offtopic, filters.offtopic === DEFAULT_BRAND_FILTERS.offtopic);
   return next;
 }
 

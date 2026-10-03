@@ -73,18 +73,25 @@ const CHIP_CLASS = cn(
   FOCUS_RING_CLASS,
 );
 
+const PILL_CLASS = cn(
+  "mx-0.5 inline-flex h-4 min-w-4 cursor-pointer items-center justify-center rounded-sm border border-border px-1 align-baseline font-mono text-[10px] leading-none text-fg-secondary tabular-nums transition-colors duration-150 ease-out hover:border-border-strong hover:text-fg",
+  FOCUS_RING_CLASS,
+);
+
 function CitationChip({
   claimId,
   fallbackLabel,
   source,
   onOpenCitation,
   animateIn = false,
+  compact = false,
 }: {
   claimId: string;
   fallbackLabel: string;
   source: SourceView | undefined;
   onOpenCitation: (claimId: string) => void;
   animateIn?: boolean;
+  compact?: boolean;
 }) {
   const host = source !== undefined ? engineDomain(source.engine, source.url) : null;
   return (
@@ -93,17 +100,20 @@ function CitationChip({
       type="button"
       onClick={() => onOpenCitation(claimId)}
       title={source !== undefined ? `${sourceName(source.engine)} · view the evidence behind this` : "View the evidence behind this"}
+      aria-label={`Source ${fallbackLabel}${host !== null ? `: ${host}` : ""}`}
       className={cn(
         animateIn && "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200",
-        CHIP_CLASS,
+        compact ? PILL_CLASS : CHIP_CLASS,
       )}
     >
+      {compact ? fallbackLabel : (<>
       {/* The citation's own reference number stays the leading label: it is
           the one token that maps the prose marker to this chip. Colour never
           touches it -- only the engine's own brand mark beside it. */}
       <span className="tabular-nums font-semibold">{fallbackLabel}</span>
       {source !== undefined ? <PlatformLogo engine={source.engine} className="size-[11px]" /> : null}
       {host !== null ? <span className="text-fg-tertiary">{host}</span> : null}
+      </>)}
     </button>
     </CitationPreview>
   );
@@ -128,14 +138,14 @@ function MergedCitationChip({
         <button
           type="button"
           title={`${entries.length} citations from ${host} · view them`}
+          aria-label={`${entries.length} sources from ${host}`}
           className={cn(
             "motion-safe:animate-in motion-safe:fade-in motion-safe:zoom-in-95 motion-safe:duration-200",
-            CHIP_CLASS,
+            PILL_CLASS,
+            "px-1.5",
           )}
         >
-          {firstSource !== undefined ? <PlatformLogo engine={firstSource.engine} className="size-[11px]" /> : null}
-          {host}
-          <span className="tabular-nums">×{entries.length}</span>
+          {entries.length} sources
         </button>
       </PopoverTrigger>
       <PopoverContent align="start" className="w-auto min-w-0 rounded-lg border border-border bg-bg-raised p-1.5 shadow-[var(--shadow-md)]">
@@ -208,6 +218,7 @@ export function AnswerMarkdown({
               source={citationSources.get(claimId)}
               onOpenCitation={onOpenCitation}
               animateIn
+              compact
             />
           );
         },

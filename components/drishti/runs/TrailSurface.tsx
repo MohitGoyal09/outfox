@@ -31,7 +31,7 @@ import type {
   EngineGap,
 } from "./types";
 
-export const DEFAULT_VISIBLE_STEPS = 20;
+export const DEFAULT_VISIBLE_STEPS = 5;
 
 export type TrailSurfaceProps = {
   composition: BriefComposition;

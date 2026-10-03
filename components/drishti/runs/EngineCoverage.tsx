@@ -5,7 +5,6 @@ import { RefreshCw } from "lucide-react";
 import {
   Button,
   EmptyState,
-  LABEL_CLASS,
   Panel,
   Skeleton,
   SkeletonRegion,
@@ -135,8 +134,8 @@ export function EngineCoverage({
               </caption>
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th scope="col" className={cn(LABEL_CLASS, "pb-2 text-[var(--text-tertiary)]")}>
-                    engine
+                  <th scope="col" className="whitespace-nowrap pb-2 text-[12px] font-medium text-[var(--text-tertiary)]">
+                    Engine
                   </th>
                   {brands.map((brand) => (
                     <th

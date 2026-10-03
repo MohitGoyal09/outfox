@@ -1,66 +1,19 @@
 "use client";
 
-import { useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
+import { assessTopicality } from "../topicality";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { checkedStateLabel, sourceName } from "@/components/drishti/labels";
-import { EmptyState } from "../../EmptyState";
-import { FETCH_ENGINES, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
+import { checkedStateLabel } from "@/components/drishti/labels";
+import { isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow } from "../brand-model";
 import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
-import { EvidenceSection } from "../EvidenceSection";
-import type { BrandFilters } from "../filters/filters-model";
-import { shortDate } from "../format";
+import { describeActiveBrandFilters, isDefaultBrandFilters, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import { displayClaimText, shortDate } from "../format";
 import type { DistributionItem } from "../../DistributionPanel";
-
-function EvidenceMix({ claims, previousClaims }: { claims: ClaimDoc[]; previousClaims: ClaimDoc[] | null }) {
-  const rows = useMemo(
-    () =>
-      FETCH_ENGINES.map((engine) => {
-        const count = claims.filter((claim) => claim.sourceEngine === engine).length;
-        const delta = previousClaims ? count - previousClaims.filter((claim) => claim.sourceEngine === engine).length : null;
-        return { engine, label: sourceName(engine).replace("Google ", ""), count, delta };
-      }).filter((row) => row.count > 0),
-    [claims, previousClaims],
-  );
-  const total = rows.reduce((sum, row) => sum + row.count, 0);
-  return (
-    <div className="space-y-3">
-      {rows.length ? (
-        rows.map((row) => (
-          <div key={row.engine} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 text-xs">
-            <span className="flex items-center gap-2 truncate">
-              <PlatformLogo engine={row.engine} className="size-3.5" />
-              {row.label}
-            </span>
-            <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
-            <span className="font-mono text-[11px] text-ok">{total ? `${Math.round((row.count / total) * 100)}%` : "-"}</span>
-            <DeltaTag delta={row.delta} />
-          </div>
-        ))
-      ) : (
-        <EmptyState
-          size="sm"
-          icon={<PlatformLogo engine="google" className="size-4" />}
-          title="No evidence mix for this check."
-          description="This breaks the latest check's findings down by source. It fills in once an engine returns at least one finding."
-        />
-      )}
-      <div className="flex h-2 overflow-hidden rounded-full bg-muted">
-        {rows.map((row) => (
-          <span
-            key={row.engine}
-            style={{
-              width: `${total ? (row.count / total) * 100 : 0}%`,
-              backgroundColor: sourceColor(row.engine),
-            }}
-          />
-        ))}
-      </div>
-    </div>
-  );
-}
 
 function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: EngineCoverageRow[]; latestClaims: ClaimDoc[]; previousClaims: ClaimDoc[] | null }) {
   const total = rows.reduce(
@@ -92,7 +45,78 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
           </div>
         );
       })}
+      <div className="flex h-2 overflow-hidden rounded-full bg-muted">
+        {rows.map((row) => {
+          const count = latestClaims.filter((claim) => claim.sourceEngine === row.engine).length;
+          return row.status === "ok" && total ? (
+            <span key={row.engine} style={{ width: `${(count / total) * 100}%`, backgroundColor: sourceColor(row.engine) }} />
+          ) : null;
+        })}
+      </div>
     </div>
+  );
+}
+
+const NEWEST_COUNT = 4;
+
+function NewestFindings({
+  latestClaims,
+  tags,
+  filters,
+  now,
+  evidenceHref,
+  resetFilters,
+}: {
+  latestClaims: ClaimDoc[];
+  tags: ClaimDoc[];
+  filters: BrandFilters;
+  now: number;
+  evidenceHref: string;
+  resetFilters: () => void;
+}) {
+  const brandId = latestClaims[0]?.brandId;
+  const brand = useQuery(api.brands.getBrand, brandId ? { brandId } : "skip");
+  const showOffTopic = filters.offtopic === "show";
+  const matching = latestClaims.filter(
+    (claim) =>
+      isContentClaim(claim) &&
+      matchesBrandFilters(claim, tagsForClaim(tags, claim), filters, now) &&
+      (showOffTopic || !brand || assessTopicality(claim, brand) === "on_topic"),
+  );
+  const newest = [...matching].sort((a, b) => b.fetchedAt.localeCompare(a.fetchedAt)).slice(0, NEWEST_COUNT);
+  const activeFilters = isDefaultBrandFilters(filters) ? null : describeActiveBrandFilters(filters);
+  return (
+    <section aria-label="Newest findings" className="space-y-3">
+      <div className="flex flex-wrap items-end justify-between gap-3">
+        <h2 className="type-headline text-fg">Newest findings</h2>
+        {activeFilters ? (
+          <p className="text-xs text-muted-foreground">
+            Filtered to {activeFilters}.{" "}
+            <button type="button" onClick={resetFilters} className="text-accent hover:underline">
+              Clear
+            </button>
+          </p>
+        ) : null}
+      </div>
+      {newest.length === 0 ? (
+        <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-fg-secondary">No findings to show for this check.</p>
+      ) : (
+        <ul className="divide-y divide-border rounded-lg border border-border">
+          {newest.map((claim) => (
+            <li key={String(claim._id)} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-2.5 text-sm">
+              <PlatformLogo engine={claim.sourceEngine} className="size-4" />
+              <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="min-w-0 truncate text-fg hover:underline">
+                {displayClaimText(claim.text)}
+              </a>
+              <span className="font-mono text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <Link href={evidenceHref} className="inline-flex text-sm text-accent hover:underline">
+        See all {Intl.NumberFormat("en-US").format(matching.length)} in Evidence
+      </Link>
+    </section>
   );
 }
 
@@ -109,10 +133,7 @@ export function OverviewTab({
   setFilter,
   resetFilters,
   now,
-  youtubeSnapshot,
-  newsSnapshot,
-  googleSnapshot,
-  latestRunAt,
+  evidenceHref = "?tab=evidence",
 }: {
   latestClaims: ClaimDoc[];
   previousClaims: ClaimDoc[] | null;
@@ -126,31 +147,18 @@ export function OverviewTab({
   setFilter: <K extends keyof BrandFilters>(key: K, value: BrandFilters[K]) => void;
   resetFilters: () => void;
   now: number;
-  youtubeSnapshot?: SnapshotDoc;
-  newsSnapshot?: SnapshotDoc;
-  googleSnapshot?: SnapshotDoc;
-  latestRunAt?: string | null;
+  evidenceHref?: string;
 }) {
   const handleSelectHook = (hookType: string) => setFilter("hook", filters.hook === hookType ? "all" : hookType);
   const handleSelectFunnel = (stage: FunnelStage) => setFilter("funnel", filters.funnel === stage ? "all" : stage);
   return (
-    <div className="space-y-5">
-      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+    <div className="space-y-6">
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <SummaryPanel
           title={
             <MetricInfo
-              label="Evidence mix"
-              definition="Each source's share of this latest check's findings, plus the change from the previous check. It is a share of findings, not of the brand's posts, and a source that returned nothing is left out rather than shown as zero."
-            />
-          }
-        >
-          <EvidenceMix claims={latestClaims} previousClaims={previousClaims} />
-        </SummaryPanel>
-        <SummaryPanel
-          title={
-            <MetricInfo
-              label="What we checked"
-              definition="The sources this check queried and what each returned. “Not checked yet” and “nothing found” are different facts: the first means we did not look, the second that we looked and found nothing. Percentages are each source's share of this check's findings."
+              label="Sources"
+              definition="The sources this check queried, how many findings each returned, and each one's share of this check's findings. “Not checked yet” and “nothing found” are different facts: the first means we did not look, the second that we looked and found nothing. A share is of findings, not of the brand's posts."
             />
           }
         >
@@ -183,36 +191,7 @@ export function OverviewTab({
           <FunnelPanel items={funnelItems} taggedCount={tags.length} totalFindings={totalFindings} selectedStage={filters.funnel} onSelectStage={handleSelectFunnel} />
         </SummaryPanel>
       </div>
-      {/* SimilarBrandsPanel moved to the brand header as a chip (BrandProfile.tsx),
-          next to the evidence-signal and tagged-findings badges, a whole row for
-          one chip was too much page for the data it held. */}
-      <EvidenceSection
-        latestClaims={latestClaims}
-        tags={tags}
-        filters={filters}
-        setFilter={setFilter}
-        resetFilters={resetFilters}
-        now={now}
-        youtubeSnapshot={youtubeSnapshot}
-        newsSnapshot={newsSnapshot}
-        googleSnapshot={googleSnapshot}
-        heading={(count) => (
-          <div className="flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <h2 className="type-headline text-fg">{Intl.NumberFormat("en-US").format(count)} evidence cards</h2>
-              {/* Reconciles the header's broader "N findings" badge (BrandProfile.tsx,
-                  counts every real signal, including pure-count metrics like view/like
-                  counts that never render as their own card) against this narrower count (only
-                  findings with something to actually read, see brand-model.ts's isContentClaim).
-                  Two real, differently-scoped numbers, both labelled, instead of one page stating
-                  two different figures as if they measured the same thing. */}
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Browsable findings below, the header&apos;s findings count also includes measured values (views, likes, rank) shown in the panels above, not as standalone cards.</p>
-            </div>
-            <span className="text-xs text-muted-foreground">Findings as of {shortDate(latestRunAt)}</span>
-          </div>
-        )}
-        tabLabel="Overview"
-      />
+      <NewestFindings latestClaims={latestClaims} tags={tags} filters={filters} now={now} evidenceHref={evidenceHref} resetFilters={resetFilters} />
     </div>
   );
 }

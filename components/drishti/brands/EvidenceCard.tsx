@@ -40,6 +40,31 @@ function organicRank(claim: ClaimDoc): number | null {
     : null;
 }
 
+export function adFormatWord(format: string): string {
+  const key = format.trim().toLowerCase();
+  return key === "text" || key === "image" || key === "video" ? `${key[0].toUpperCase()}${key.slice(1)} ad` : "Ad";
+}
+
+const isPlaceholderAdText = (text: string) => /^Ad creative \(/.test(text);
+
+function CompactAdCard({ claim, format, pageLabel }: { claim: ClaimDoc; format: string; pageLabel?: string }) {
+  return (
+    <Panel as="article" interactive className="flex items-center gap-2 bg-bg-raised px-3 py-2">
+      <PlatformLogo engine={claim.sourceEngine} className="size-4 shrink-0" />
+      <p className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">
+        <span className="font-semibold text-foreground">{adFormatWord(format)}</span>
+        {" · Fetched "}
+        {shortDate(claim.fetchedAt)}
+        {" · "}
+        <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="text-foreground hover:text-accent hover:underline">
+          View in Ads Transparency
+        </a>
+      </p>
+      <SaveToBoardButton claimId={claim._id} variant="icon" context={pageLabel ? { pageLabel } : undefined} />
+    </Panel>
+  );
+}
+
 export function EvidenceCard({
   claim,
   raw,
@@ -60,6 +85,7 @@ export function EvidenceCard({
   const adWindow = isAdsCreative ? adCreativeWindow(claim) : null;
   const runWindowLabel = isAdsCreative ? periodWindow(claim.period) : null;
   const trendPeriodLabel = lane.largeStat ? periodWindow(claim.period) : null;
+  if (isAdsCreative && !claim.image && isPlaceholderAdText(claim.text)) return <CompactAdCard claim={claim} format={adWindow?.format ?? ""} pageLabel={pageLabel} />;
   return (
     <Panel
       as="article"
@@ -100,7 +126,7 @@ export function EvidenceCard({
           </span>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-bold text-foreground">{raw?.sourceName ?? hostnameOf(claim.evidenceUrl) ?? source}</p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</p>
+            <p className="mt-0.5 text-[11px] text-muted-foreground">Fetched {shortDate(claim.fetchedAt)}</p>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5">
@@ -112,7 +138,10 @@ export function EvidenceCard({
         </div>
       </div>
       <div className="mt-4">
-        <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{displayClaimText(claim.text)}</a>
+        <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{isAdsCreative && isPlaceholderAdText(claim.text) ? adFormatWord(adWindow?.format ?? "") : displayClaimText(claim.text)}</a>
+        {isAdsCreative && claim.image ? (
+          <img src={claim.image} alt="Ad creative" loading="lazy" className="mt-2 max-h-48 w-full rounded-md border border-border object-contain" />
+        ) : null}
         {raw?.snippet ? <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-muted-foreground">{raw.snippet}</p> : null}
         {lane.largeStat && claim.value !== undefined ? (
           <div className="mt-2 flex flex-wrap items-baseline gap-1.5">
@@ -122,7 +151,6 @@ export function EvidenceCard({
           </div>
         ) : adWindow ? (
           <div className="mt-2 flex flex-col gap-1">
-            <span className="font-mono text-[11px] font-semibold uppercase tracking-wide text-foreground">{adWindow.format} creative</span>
             {runWindowLabel ? <span className="font-mono text-[11px] tabular-nums text-muted-foreground">Ran {runWindowLabel}</span> : null}
           </div>
         ) : claim.metric ? (

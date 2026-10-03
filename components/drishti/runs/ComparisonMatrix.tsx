@@ -37,10 +37,10 @@ export type ComparisonMatrixProps = {
 type RowKey = "claims" | "tags" | "hook" | "funnel";
 
 const ROW_LABEL: Record<RowKey, string> = {
-  claims: "claims",
-  tags: "content tags",
-  hook: "top hook",
-  funnel: "top funnel stage",
+  claims: "Claims",
+  tags: "Content tags",
+  hook: "Top hook",
+  funnel: "Top funnel stage",
 };
 
 type DeltaCell = { text: string; tone: ReturnType<typeof deltaTone> };
@@ -223,8 +223,8 @@ export function ComparisonMatrix({
               </caption>
               <thead>
                 <tr className="border-b border-[var(--border)]">
-                  <th scope="col" className={cn(LABEL_CLASS, "pb-2 text-[var(--text-tertiary)]")}>
-                    dimension
+                  <th scope="col" className="whitespace-nowrap pb-2 text-[12px] font-medium text-[var(--text-tertiary)]">
+                    Dimension
                   </th>
                   {brands.map((brand) => (
                     <th
@@ -245,7 +245,7 @@ export function ComparisonMatrix({
                   {previousLabel === null ? null : (
                     <th
                       scope="col"
-                      className={cn(LABEL_CLASS, "pb-2 pl-4 text-[var(--text-secondary)]")}
+                      className="whitespace-nowrap pb-2 pl-4 text-[12px] font-medium text-[var(--text-secondary)]"
                     >
                       Δ vs run of {previousLabel}
                     </th>
@@ -257,10 +257,7 @@ export function ComparisonMatrix({
                   <tr key={row} className="border-b border-[var(--border)] last:border-b-0">
                     <th
                       scope="row"
-                      className={cn(
-                        LABEL_CLASS,
-                        "py-3 pr-4 align-top font-semibold text-[var(--text-secondary)]",
-                      )}
+                      className="whitespace-nowrap py-3 pr-4 align-top text-[12.5px] font-medium text-[var(--text-secondary)]"
                     >
                       {ROW_LABEL[row]}
                     </th>

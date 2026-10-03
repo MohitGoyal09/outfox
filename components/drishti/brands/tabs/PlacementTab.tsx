@@ -3,12 +3,11 @@
 import { useMemo } from "react";
 import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { BadgeDollarSign, Clapperboard, Newspaper, Store, TrendingUp } from "lucide-react";
+import { BadgeDollarSign, Clapperboard, Newspaper, Store } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { EmptyState } from "../../EmptyState";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
-import { categoricalColor, iconProps } from "../../tokens";
+import { categoricalColor } from "../../tokens";
 import {
   adCreativeClaims,
   adRuntimeLeaderboard,
@@ -27,10 +26,11 @@ import {
   type EvidenceCatalogRow,
 } from "../brand-model";
 import { CountListPanel } from "../CountListPanel";
-import { DestinationsPanel } from "../DestinationsPanel";
+import { DestinationsPanel, destinationRows } from "../DestinationsPanel";
 import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
-import { EvidenceGrid } from "../EvidenceGrid";
-import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import { EvidenceLink } from "../EvidenceLink";
+import { NotFoundInCheck } from "../NotFoundInCheck";
+import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { isGarbledDescriptionLinkAnchor, isVideoTimestampAnchor, parseListingVendor, shortDate } from "../format";
 import { PlatformLogo } from "../PlatformLogo";
 
@@ -56,10 +56,17 @@ export function sanitizeDescriptionLinkRows(rows: readonly EvidenceCatalogRow[])
     );
 }
 
-function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
+const LAST_CHECKED_RANK = 10;
+
+export function emptyBucketNotes(buckets: readonly { label: string; min: number; count: number }[]): { label: string; note: string }[] {
+  return buckets
+    .filter((bucket) => bucket.count === 0)
+    .map((bucket) => ({ label: bucket.label, note: bucket.min > LAST_CHECKED_RANK ? "Not checked" : "None seen" }));
+}
+
+function OrganicRankChart({ buckets }: { buckets: ReturnType<typeof organicRankBuckets> }) {
   const reduceMotion = useReducedMotion();
-  const buckets = useMemo(() => organicRankBuckets(claims), [claims]);
-  const total = buckets.reduce((sum, bucket) => sum + bucket.count, 0);
+  const emptyNotes = emptyBucketNotes(buckets);
   const chartConfig = { count: { label: "Organic results", color: "var(--cat-1)" } } satisfies ChartConfig;
   return (
     <Panel interactive={false} className="overflow-hidden">
@@ -72,14 +79,6 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
         </h3>
       </div>
       <div className="p-4">
-        {total === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<TrendingUp {...iconProps} size={16} />}
-            title="No organic results yet."
-            description="Buckets the real rank SerpApi reported for each Google organic result, fills in after a Google Search check."
-          />
-        ) : (
           <ChartContainer config={chartConfig} className="h-[200px] w-full aspect-auto">
             <BarChart accessibilityLayer data={buckets} margin={{ left: -12, right: 12, top: 8 }}>
               <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />
@@ -93,7 +92,11 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
               </Bar>
             </BarChart>
           </ChartContainer>
-        )}
+        {emptyNotes.length > 0 ? (
+          <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+            {emptyNotes.map((item) => `${item.label}: ${item.note}`).join(" · ")}
+          </p>
+        ) : null}
       </div>
     </Panel>
   );
@@ -111,8 +114,7 @@ function formatMixFromRuntimeRows(rows: readonly AdRuntimeRow[]): { label: strin
     .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
 }
 
-function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
-  const rows = useMemo(() => adRuntimeLeaderboard(claims), [claims]);
+function AdRunLengthLeaderboard({ rows }: { rows: AdRuntimeRow[] }) {
   const showTable = useMemo(() => shouldShowRunLengthTable(rows), [rows]);
   const formatMix = useMemo(() => formatMixFromRuntimeRows(rows), [rows]);
   return (
@@ -132,19 +134,10 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
         ) : null}
       </div>
       <div className="p-4">
-        {rows.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<Clapperboard {...iconProps} size={16} />}
-            title="No Google Ads data for this brand."
-            description="Many brands have no resolvable advertiser id, so this source genuinely returns nothing for them, this is not an error, and it fills in once a check resolves one."
-          />
-        ) : !showTable ? (
+        {!showTable ? (
           <>
             <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
-              None of these {rows.length} creative{rows.length === 1 ? "" : "s"} carries a real first/last-seen date
-              from this source, so run length, and any ranking by it, is not available for this batch. Showing
-              what IS known instead: format and creative count.
+              Ad run length was not available for these {rows.length} creative{rows.length === 1 ? "" : "s"}.
             </p>
             <ul className="space-y-2">
               {formatMix.map((row) => (
@@ -267,71 +260,98 @@ export function PlacementTab({
     ];
   }, [filtered]);
 
+  const rankBuckets = useMemo(() => organicRankBuckets(filtered), [filtered]);
+  const hasOrganic = rankBuckets.some((bucket) => bucket.count > 0);
+  const runtimeRows = useMemo(() => adRuntimeLeaderboard(filtered), [filtered]);
+  const hasDestinations = useMemo(() => destinationRows(filtered).rows.length > 0, [filtered]);
+
+  const notFound = [
+    hasOrganic ? null : "Organic rank distribution",
+    runtimeRows.length > 0 ? null : "Google Ads creatives",
+    hasDestinations ? null : "Destination URLs",
+    retailerRows.length > 0 ? null : "Retailers carrying this brand",
+    publisherRows.length > 0 ? null : "News outlets",
+    shoppingResultRows.length > 0 ? null : "In-video shopping results",
+    descriptionLinkRows.length > 0 ? null : "Description link destinations",
+  ].filter((item): item is string => item !== null);
+
+  const countPanels = [
+    adFormatRows.length > 0 ? (
+      <CountListPanel
+        key="formats"
+        title="Ad formats"
+        definition="How many captured Google Ads creatives use each format. It counts stored creatives, not impressions or how well each format performed."
+        icon={<BadgeDollarSign className="size-4 text-accent" />}
+        rows={adFormatRows}
+        emptyTitle="No ad creatives yet."
+        emptyDescription="Groups real Google Ads creatives by format once a check captures them."
+      />
+    ) : null,
+    retailerRows.length > 0 ? (
+      <CountListPanel
+        key="retailers"
+        title="Retailers carrying this brand"
+        definition="How many product listings each named retailer contributed. It counts listings we captured, not sales or stock."
+        icon={<Store className="size-4 text-accent" />}
+        rows={retailerRows}
+        emptyTitle="No named retailers yet."
+        emptyDescription="Ranks the real retailer named in each SERP product listing, fills in once a listing names one."
+      />
+    ) : null,
+    publisherRows.length > 0 ? (
+      <CountListPanel
+        key="news"
+        title="News outlets"
+        definition="How many news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage."
+        icon={<Newspaper className="size-4 text-accent" />}
+        rows={publisherRows}
+        emptyTitle="No publisher evidence yet."
+        emptyDescription="Ranks real Google News publisher names once that data is available."
+      />
+    ) : null,
+  ].filter((panel) => panel !== null);
+
+  const catalogPanels = [
+    shoppingResultRows.length > 0 ? (
+      <EvidenceCatalogPanel
+        key="shopping"
+        title="In-video shopping results"
+        definition="Real products the source surfaced for sale on this brand's videos, title, vendor, and price folded from the video page. Not the brand's whole catalog, and not proof of a sale: it is what the source showed."
+        icon={<PlatformLogo engine="youtube_video" className="size-4" />}
+        rows={shoppingResultRows}
+        emptyTitle="No shopping results yet."
+        emptyDescription="Lists real products the source surfaced for sale on this brand's videos, once a check captures shopping-result evidence."
+        capNote="Up to 10 shopping results per video, as the source surfaced them, never the brand's full product catalog."
+      />
+    ) : null,
+    descriptionLinkRows.length > 0 ? (
+      <EvidenceCatalogPanel
+        key="links"
+        title="Description link destinations"
+        definition="Real outbound links the brand placed in its own video descriptions, where its videos push traffic. This is a sample of those links, not the brand's full link roster."
+        icon={<PlatformLogo engine="youtube_video" className="size-4" />}
+        rows={descriptionLinkRows}
+        emptyTitle="No description links yet."
+        emptyDescription="Lists real outbound links found in this brand's video descriptions, once a check captures that evidence."
+        capNote="Up to 10 description links per video, as stored by the pipeline, never the brand's full link roster."
+      />
+    ) : null,
+  ].filter((panel) => panel !== null);
+
   return (
     <div className="space-y-4">
-      <OrganicRankChart claims={filtered} />
-      <AdRunLengthLeaderboard claims={filtered} />
-      <DestinationsPanel claims={filtered} />
-      <div className="grid gap-4 lg:grid-cols-3">
-        <CountListPanel
-          title="Ad formats"
-          definition="How many captured Google Ads creatives use each format. It counts stored creatives, not impressions or how well each format performed."
-          icon={<BadgeDollarSign className="size-4 text-accent" />}
-          rows={adFormatRows}
-          emptyTitle="No ad creatives yet."
-          emptyDescription="Groups real Google Ads creatives by format once a check captures them."
-        />
-        <CountListPanel
-          title="Retailers carrying this brand"
-          definition="How many product listings each named retailer contributed. It counts listings we captured, not sales or stock."
-          icon={<Store className="size-4 text-accent" />}
-          rows={retailerRows}
-          emptyTitle="No named retailers yet."
-          emptyDescription="Ranks the real retailer named in each SERP product listing, fills in once a listing names one."
-        />
-        <CountListPanel
-          title="News outlets"
-          definition="How many news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage."
-          icon={<Newspaper className="size-4 text-accent" />}
-          rows={publisherRows}
-          emptyTitle="No publisher evidence yet."
-          emptyDescription="Ranks real Google News publisher names once that data is available."
-        />
-      </div>
-      <div className="grid gap-4 lg:grid-cols-2">
-        <EvidenceCatalogPanel
-          title="In-video shopping results"
-          definition="Real products the source surfaced for sale on this brand's videos, title, vendor, and price folded from the video page. Not the brand's whole catalog, and not proof of a sale: it is what the source showed."
-          icon={<PlatformLogo engine="youtube_video" className="size-4" />}
-          rows={shoppingResultRows}
-          emptyTitle="No shopping results yet."
-          emptyDescription="Lists real products the source surfaced for sale on this brand's videos, once a check captures shopping-result evidence."
-          capNote="Up to 10 shopping results per video, as the source surfaced them, never the brand's full product catalog."
-        />
-        <EvidenceCatalogPanel
-          title="Description link destinations"
-          definition="Real outbound links the brand placed in its own video descriptions, where its videos push traffic. This is a sample of those links, not the brand's full link roster."
-          icon={<PlatformLogo engine="youtube_video" className="size-4" />}
-          rows={descriptionLinkRows}
-          emptyTitle="No description links yet."
-          emptyDescription="Lists real outbound links found in this brand's video descriptions, once a check captures that evidence."
-          capNote="Up to 10 description links per video, as stored by the pipeline, never the brand's full link roster."
-        />
-      </div>
+      {hasOrganic ? <OrganicRankChart buckets={rankBuckets} /> : null}
+      {runtimeRows.length > 0 ? <AdRunLengthLeaderboard rows={runtimeRows} /> : null}
+      {hasDestinations ? <DestinationsPanel claims={filtered} /> : null}
+      {countPanels.length > 0 ? <div className={`grid gap-4 ${countPanels.length >= 3 ? "lg:grid-cols-3" : countPanels.length === 2 ? "lg:grid-cols-2" : ""}`}>{countPanels}</div> : null}
+      {catalogPanels.length > 0 ? <div className={`grid gap-4 ${catalogPanels.length === 2 ? "lg:grid-cols-2" : ""}`}>{catalogPanels}</div> : null}
       {shortsCount > 0 || youtubeAdCount > 0 ? (
         <p className="font-mono text-[11px] text-muted-foreground">
           {shortsCount} YouTube Shorts result{shortsCount === 1 ? "" : "s"} · {youtubeAdCount} YouTube ad result{youtubeAdCount === 1 ? "" : "s"} stamped {shortDate(filtered[0]?.fetchedAt)}
         </p>
       ) : null}
-      <div>
-        <h2 className="type-headline text-fg">Real placements</h2>
-        <EvidenceGrid
-          claims={placementEvidenceClaims}
-          sort={filters.sort}
-          emptyMessage="No placement evidence yet. Ad creatives, ranked organic results, product listings, and video placements will fill this in once a check captures them."
-          pageLabel={evidencePageLabel("Placement tab", filters)}
-        />
-      </div>
+      <NotFoundInCheck items={notFound} />
+      <EvidenceLink claims={placementEvidenceClaims} />
     </div>
   );
 }

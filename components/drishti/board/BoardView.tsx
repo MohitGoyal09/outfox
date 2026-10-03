@@ -3,10 +3,10 @@
 import { useMemo } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { BarChart3 } from "lucide-react";
+import { BarChart3, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
-import { Badge } from "@/components/ui/badge";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { buttonClasses } from "../Button";
 import { DistributionPanel } from "../DistributionPanel";
 import { EmptyState } from "../EmptyState";
@@ -18,7 +18,6 @@ import { VALUE_CLASS, iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
 import { useAllRuns } from "../cohorts/useAllRuns";
 import { BrandLeaderboard } from "./BrandLeaderboard";
-import { EmergingMoves } from "./EmergingMoves";
 import { EngineCoverage } from "./EngineCoverage";
 import { BoardMixChart } from "./BoardMixChart";
 import { REMOVED_BRAND_LABEL } from "../runs/derive";
@@ -28,6 +27,8 @@ import {
   countUnclear,
   coverageGaps,
   deriveEmerging,
+  formatDay,
+  formatDayRange,
   deriveEngineCoverage,
   deriveFunnelDistribution,
   deriveHookDistribution,
@@ -194,14 +195,6 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           comparedBrands === 1 ? "brand has" : "brands have"
         } two checks`
       : null;
-  const comparisonLabel =
-    cohortKey === null
-      ? comparedBrandsNote
-        ? `vs each brand's previous check · ${comparedBrandsNote}`
-        : undefined
-      : pinned.previous
-        ? `vs ${formatStamp(pinned.previous.requestedAt)}`
-        : undefined;
   const comparisonColumnLabel =
     cohortKey === null
       ? comparedBrandsNote
@@ -231,12 +224,16 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     id,
     name: brandNames[id] ?? REMOVED_BRAND_LABEL,
     isOwn: id === ownBrandId,
-    checkedAt: cohortKey === null ? (checkedAtByBrand.get(id) ?? null) : null,
+    checkedAt: cohortKey === null ? (checkedAtByBrand.get(id) ?? null) : (pinnedRun?.requestedAt ?? null),
   }));
   const stamps = (scope?.brands ?? []).map((brand) => brand.checkedAt).sort();
   const oldestStamp = stamps[0] ?? null;
   const newestStamp = stamps[stamps.length - 1] ?? null;
-  const spansOneMoment = oldestStamp !== null && oldestStamp === newestStamp;
+  const checkedLine = pinnedRun
+    ? `Checked ${formatDay(pinnedRun.requestedAt)} · ${pinnedRun.status}`
+    : oldestStamp !== null && newestStamp !== null
+      ? `Checked ${formatDayRange(oldestStamp, newestStamp)}`
+      : null;
   const ownBrandInView = ownBrandId !== null && brandIds.includes(ownBrandId);
   const ownBrandNotInView = ownBrand != null && ownBrandId !== null && !ownBrandInView;
   const rivalCountInView = brandIds.length - (ownBrandInView ? 1 : 0);
@@ -275,65 +272,69 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex flex-col gap-2 border-b border-border pb-5">
-        <div className="flex flex-wrap items-center justify-between gap-3">
+      <header className="flex flex-col gap-1.5 border-b border-border pb-4">
+        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
           <h1 className="type-display text-fg">Signals</h1>
-          {pinnedRun ? (
-            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
-              {pinnedRun.status} · {formatStamp(pinnedRun.requestedAt)}
-            </Badge>
-          ) : newestStamp !== null ? (
-            <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
-              {spansOneMoment
-                ? formatStamp(newestStamp)
-                : `${formatStamp(oldestStamp as string)} to ${formatStamp(newestStamp)}`}
-            </Badge>
-          ) : null}
-        </div>
-        <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[13px] leading-[1.4]">
-          {cohortBrands.length > 0 ? (
-            <ul className="flex flex-wrap gap-2" aria-label="Brands in view">
-              {cohortBrands.map((brand) => (
-                <li
-                  key={brand.id}
-                  className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md border border-border bg-bg-raised px-2.5 py-1"
-                >
-                  <span className="font-medium text-fg">
-                    {brand.name}
-                    {brand.isOwn ? (
-                      <span className="ml-1.5 rounded-sm bg-[var(--bg-inset)] px-1 py-px text-[10.5px] font-normal text-fg-secondary">
-                        You
-                      </span>
-                    ) : null}
-                  </span>
-                  {brand.checkedAt !== null ? (
-                    <span className={cn(VALUE_CLASS, "text-[11px] font-normal text-[var(--text-tertiary)]")}>
-                      {formatStamp(brand.checkedAt)}
-                    </span>
-                  ) : null}
-                </li>
-              ))}
-            </ul>
+          {checkedLine !== null ? (
+            <div className="flex items-center gap-2 text-[13px] text-fg-secondary">
+              <span className={cn(VALUE_CLASS, "font-normal")}>{checkedLine}</span>
+              {cohortBrands.length > 0 ? (
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <button
+                      type="button"
+                      className="inline-flex items-center gap-1 rounded-md border border-border bg-bg-raised px-2 py-1 text-[12px] font-medium text-fg hover:bg-bg-raised-2"
+                    >
+                      Per brand
+                      <ChevronDown {...iconProps} size={12} aria-hidden="true" />
+                    </button>
+                  </PopoverTrigger>
+                  <PopoverContent align="end" className="w-80">
+                    <p className="mb-1.5 text-[12px] text-fg-secondary">
+                      Each brand is read at its own latest check.
+                    </p>
+                    <ul aria-label="Brands in view" className="flex flex-col gap-1">
+                      {cohortBrands.map((brand) => (
+                        <li key={brand.id} className="flex items-baseline justify-between gap-3 text-[13px]">
+                          <span className="font-medium text-fg">
+                            {brand.name}
+                            {brand.isOwn ? (
+                              <span className="ml-1.5 rounded-sm bg-[var(--bg-inset)] px-1 py-px text-[10.5px] font-normal text-fg-secondary">
+                                You
+                              </span>
+                            ) : null}
+                          </span>
+                          <span className={cn(VALUE_CLASS, "text-[11px] font-normal text-[var(--text-tertiary)]")}>
+                            {formatStamp(brand.checkedAt)}
+                          </span>
+                        </li>
+                      ))}
+                    </ul>
+                  </PopoverContent>
+                </Popover>
+              ) : null}
+            </div>
           ) : (
-            <span className="font-medium text-fg-secondary">No brands tracked yet</span>
+            <span className="text-[13px] font-medium text-fg-secondary">No brands tracked yet</span>
           )}
-          {pinnedRun !== null ? (
-            <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
-              checked {formatStamp(pinnedRun.requestedAt)} · {pinnedRun.status}
-            </span>
-          ) : null}
         </div>
-        <p className="max-w-[68ch] type-body text-fg-secondary">
-          {BOARD_HONESTY_LINE}
-        </p>
+        <p className="max-w-[68ch] type-body text-fg-secondary">{BOARD_HONESTY_LINE}</p>
         {ownBrandNotInView ? (
           <p className="max-w-[68ch] type-caption text-fg-secondary">
-            {ownBrand?.name} is set as your brand, but it has not appeared in a finished
-            check yet, so there is nothing to compare it against until it has.
+            {ownBrand?.name} is your brand but has no finished check yet, so there is nothing to compare.
           </p>
         ) : null}
         {coverageLine !== null ? (
           <p className="max-w-[68ch] type-caption text-fg-secondary">{coverageLine}</p>
+        ) : null}
+        {isPartial ? (
+          <p className="max-w-[68ch] type-caption text-fg-secondary">
+            {anyPartial ? "Partial check. " : ""}
+            {gaps.length > 0
+              ? `${gaps.length} ${gaps.length === 1 ? "source" : "sources"} could not be checked, named per rival below. `
+              : "Some sources could not be checked. "}
+            A gap is never counted as a zero.
+          </p>
         ) : null}
       </header>
 
@@ -342,18 +343,6 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           {cohortKey === null
             ? "You track one brand. A pooled read compares two or more, so the mix below describes that brand alone."
             : "This check covers one brand. A pooled read compares two or more, so the mix below describes that brand alone."}
-        </p>
-      ) : null}
-
-      {isPartial ? (
-        <p className="max-w-[68ch] type-caption text-fg-secondary">
-          {anyPartial ? (cohortKey === null ? "At least one brand's latest check is partial. " : "This check is partial. ") : ""}
-          {gaps.length === 1
-            ? "1 source could not be checked; it is named per rival below."
-            : gaps.length > 1
-              ? `${gaps.length} sources could not be checked; each is named per rival below.`
-              : "Some sources could not be checked for this check."}{" "}
-          A gap is never counted as a zero.
         </p>
       ) : null}
 
@@ -394,6 +383,8 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
               items={hookItems}
               unclearCount={claims !== undefined ? countUnclear(claims, "hookType") : 0}
               loading={claims === undefined}
+              moves={hasPrevious ? emerging : []}
+              changeNote={comparedBrandsNote ?? undefined}
             />
             <DistributionPanel
               items={funnelItems}
@@ -410,7 +401,6 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
               }
               previousLabel={comparisonColumnLabel}
               previousInfo="Change in share, in percentage points (pp), since the previous check."
-              sentenceLabels
               totalLabel="with a clear stage"
               footnote={
                 claims !== undefined && funnelUnclear > 0
@@ -428,12 +418,6 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
             loading={claims === undefined}
           />
           <EngineCoverage coverage={coverage} loading={snapshots === undefined} />
-          <EmergingMoves
-            moves={emerging}
-            hasPrevious={hasPrevious}
-            loading={cohortKey === null ? scope === undefined : pinned.previous !== null && pinnedPrevious === undefined}
-            previousLabel={comparisonLabel}
-          />
         </>
       )}
     </div>

@@ -18,10 +18,21 @@ export type BoardClaim = Doc<"claims">;
 export type BoardSnapshot = Doc<"snapshots">;
 export type BoardBrand = Doc<"brands">;
 
-export const BOARD_HONESTY_LINE =
-  "Every ranking here goes by evidence, never performance. Public search shows what a rival publishes, not what sells, so this page ranks by how much evidence we found and what kind it is (never by how a campaign performed).";
+export const LEADERBOARD_RULE_LINE =
+  "Brands ranked by how much public evidence we hold, not by performance.";
 
-export const LEADERBOARD_RULE_LINE = "Ranked by evidence volume and mix, not performance.";
+const DAY_MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+
+export function formatDay(iso: string): string {
+  return `${date.getUTCDate()} ${DAY_MONTHS[date.getUTCMonth()]}`;
+}
+
+export function formatDayRange(from: string, to: string): string {
+  const b = formatDay(to);
+  if (a === b) return a;
+  const [dayA, monthA] = a.split(" ");
+  return monthA === monthB ? `${dayA} to ${b}` : `${a} to ${b}`;
+}
 
 export const EMERGING_BASIS_LINE =
   "Change in each hook's share of findings with a clear hook, in percentage points, between the last two checks for these brands.";

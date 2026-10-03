@@ -1,7 +1,7 @@
 "use client";
 
 
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { stripEmDashes } from "@/lib/noEmDash";
 import { FOCUS_RING_CLASS, STATE_TRANSITION_CLASS } from "../tokens";
@@ -33,7 +33,7 @@ export function FollowUpList({
           style={{ animationDuration: "250ms", animationDelay: `${index * 90}ms`, animationFillMode: "backwards" }}
         >
           {stripEmDashes(question)}
-          <ArrowUpRight aria-hidden className="size-3.5 shrink-0 text-fg-tertiary" />
+          <ArrowRight aria-hidden className="size-3.5 shrink-0 text-fg-tertiary" />
         </button>
       ))}
     </div>

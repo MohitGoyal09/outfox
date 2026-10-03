@@ -32,10 +32,10 @@ export function BrandLeaderboard({
   const ownRow = rows.find((row) => row.isOwnBrand) ?? null;
   const rivalRows = rows.filter((row) => !row.isOwnBrand);
   return (
-    <Panel interactive={false} className={cn("flex flex-col", className)} ariaLabel="Brand leaderboard">
+    <Panel interactive={false} className={cn("flex flex-col", className)} ariaLabel="Evidence volume">
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
         <div className="min-w-0">
-          <h3 className="type-headline text-fg">Brand leaderboard</h3>
+          <h3 className="type-headline text-fg">Evidence volume</h3>
           <p className="mt-1 type-caption text-fg-secondary">{LEADERBOARD_RULE_LINE}</p>
         </div>
         {loading ? null : (

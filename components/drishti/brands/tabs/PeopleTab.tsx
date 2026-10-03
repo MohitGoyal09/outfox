@@ -5,10 +5,9 @@ import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart } from "recharts";
 import { Newspaper, Trophy, Users, Video } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { EmptyState } from "../../EmptyState";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
-import { categoricalColorFor, iconProps } from "../../tokens";
+import { categoricalColorFor } from "../../tokens";
 import { CountListPanel } from "../CountListPanel";
 import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
 import { RankedCatalogChart } from "../RankedCatalogChart";
@@ -30,11 +29,14 @@ import {
   type ClaimDoc,
   type SnapshotDoc,
 } from "../brand-model";
-import { EvidenceGrid } from "../EvidenceGrid";
+import { EvidenceLink } from "../EvidenceLink";
+import { NotFoundInCheck } from "../NotFoundInCheck";
 import { PlatformLogo } from "../PlatformLogo";
 import { YouTubeVideoCard } from "../YouTubeVideoCard";
-import { evidencePageLabel, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { compactCount } from "../format";
+
+const RELATED_VIDEO_PREVIEW = 5;
 
 function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): ClaimDoc[] {
   const byId = new Map(claims.map((claim) => [String(claim._id), claim]));
@@ -46,14 +48,7 @@ function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): Cl
   return [...resolved.values()];
 }
 
-function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, brand }: { claims: ClaimDoc[]; youtubeSnapshot?: SnapshotDoc; youtubeSearchSnapshot?: SnapshotDoc; brand: BrandDoc }) {
-  const groups = useMemo(() => groupYoutubeVideoClaims(claims), [claims]);
-  const rows = useMemo(() => {
-    const base = creatorRowsFromGroups(groups, youtubeSnapshot?.rawResponse, brand.name);
-    const searchRows = youtubeSearchResultRows(youtubeSearchSnapshot?.rawResponse);
-    return mergeCreatorRows(base, searchRows, brand.name).slice(0, 8);
-  }, [groups, youtubeSnapshot?.rawResponse, youtubeSearchSnapshot?.rawResponse, brand.name]);
-
+function CreatorLeaderboard({ rows }: { rows: ReturnType<typeof mergeCreatorRows> }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
@@ -66,14 +61,6 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
         </h3>
       </div>
       <div className="p-4">
-        {rows.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<Trophy {...iconProps} size={16} />}
-            title="No real channel data yet."
-            description="Ranks real YouTube channels by real total view count once a check captures video or search evidence with a channel name."
-          />
-        ) : (
           <ul className="space-y-2">
             {rows.map((row, index) => (
               <li key={row.channelName} className="grid grid-cols-[20px_1fr_auto_auto] items-center gap-2 text-xs">
@@ -89,7 +76,6 @@ function CreatorLeaderboard({ claims, youtubeSnapshot, youtubeSearchSnapshot, br
               </li>
             ))}
           </ul>
-        )}
       </div>
     </Panel>
   );
@@ -131,11 +117,8 @@ export function SingleSideStat({ row }: { row: { label: string; value: number; c
   );
 }
 
-function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: ClaimDoc[]; youtubeSnapshot?: SnapshotDoc; brand: BrandDoc }) {
+function OwnedVsCreatorSplit({ data }: { data: ReturnType<typeof ownedVsCreatorData> }) {
   const reduceMotion = useReducedMotion();
-  const groups = useMemo(() => groupYoutubeVideoClaims(claims), [claims]);
-  const rows = useMemo(() => creatorRowsFromGroups(groups, youtubeSnapshot?.rawResponse, brand.name), [groups, youtubeSnapshot?.rawResponse, brand.name]);
-  const data = useMemo(() => ownedVsCreatorData(rows), [rows]);
   const totalViews = data.reduce((sum, row) => sum + row.value, 0);
   const chartConfig = Object.fromEntries(data.map((row) => [row.label, { label: row.label, color: row.color }])) satisfies ChartConfig;
 
@@ -151,14 +134,7 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
         </h3>
       </div>
       <div className="p-4">
-        {data.length === 0 ? (
-          <EmptyState
-            size="sm"
-            icon={<Users {...iconProps} size={16} />}
-            title="Not enough channel data yet."
-            description="Splits real view totals between the brand's own channel (matched by name) and third-party creators once video evidence with a channel name is available."
-          />
-        ) : data.length < TWO_WAY_DONUT_MIN_DISTINCT ? (
+        {data.length < TWO_WAY_DONUT_MIN_DISTINCT ? (
           <SingleSideStat row={data[0]} />
         ) : (
           <div className="grid grid-cols-[92px_1fr] items-center gap-4">
@@ -198,11 +174,7 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
   );
 }
 
-function BreakoutVideos({ claims, youtubeSnapshot }: { claims: ClaimDoc[]; youtubeSnapshot?: SnapshotDoc }) {
-  const groups = useMemo(
-    () => breakoutVideoRanking(groupYoutubeVideoClaims(claims)).slice(0, 8),
-    [claims],
-  );
+function BreakoutVideos({ groups, youtubeSnapshot }: { groups: ReturnType<typeof breakoutVideoRanking>; youtubeSnapshot?: SnapshotDoc }) {
   return (
     <section className="space-y-3">
       <div className="flex flex-row items-center gap-2">
@@ -213,23 +185,13 @@ function BreakoutVideos({ claims, youtubeSnapshot }: { claims: ClaimDoc[]; youtu
             definition="The brand's stored YouTube videos ranked by real view count, highest first. Likes are shown beside views so a gap is visible; we never compute an outlier score."
           />
         </h3>
-        {groups.length > 0 ? (
-          <MetricInfo
-            label="ranked by views"
-            definition="Order is the real stored view count, highest first. A video with no stored view count sorts last and is never treated as zero."
-            className="ml-auto font-mono text-[11px] text-muted-foreground"
-          />
-        ) : null}
-      </div>
-      {groups.length === 0 ? (
-        <EmptyState
-          bounded
-          size="sm"
-          icon={<Video {...iconProps} size={16} />}
-          title="No YouTube videos yet."
-          description="Ranks the brand's real YouTube videos by real view count, likes shown alongside where available, once video evidence is captured."
+        <MetricInfo
+          label="ranked by views"
+          definition="Order is the real stored view count, highest first. A video with no stored view count sorts last and is never treated as zero."
+          className="ml-auto font-mono text-[11px] text-muted-foreground"
         />
-      ) : (
+      </div>
+      {(
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {groups.map((group, index) => {
             const raw = readYoutubeRawVideo(findYoutubeRawVideo(youtubeSnapshot?.rawResponse, group.videoId));
@@ -285,47 +247,70 @@ export function PeopleTab({
     return [...merged.values()];
   }, [peopleVideoClaims, peopleAudienceHintClaims]);
 
+  const videoGroups = useMemo(() => groupYoutubeVideoClaims(filtered), [filtered]);
+  const baseCreatorRows = useMemo(
+    () => creatorRowsFromGroups(videoGroups, youtubeSnapshot?.rawResponse, brand.name),
+    [videoGroups, youtubeSnapshot?.rawResponse, brand.name],
+  );
+  const creatorRows = useMemo(() => {
+    const searchRows = youtubeSearchResultRows(youtubeSearchSnapshot?.rawResponse);
+    return mergeCreatorRows(baseCreatorRows, searchRows, brand.name).slice(0, 8);
+  }, [baseCreatorRows, youtubeSearchSnapshot?.rawResponse, brand.name]);
+  const splitData = useMemo(() => ownedVsCreatorData(baseCreatorRows), [baseCreatorRows]);
+  const breakoutGroups = useMemo(() => breakoutVideoRanking(videoGroups).slice(0, 8), [videoGroups]);
+
+  const notFound = [
+    creatorRows.length === 0 ? "Creator leaderboard" : null,
+    splitData.length === 0 ? "Owned vs. creator views" : null,
+    breakoutGroups.length === 0 ? "YouTube videos" : null,
+    relatedVideoRows.length === 0 ? "Related videos" : null,
+    audienceHintRows.length === 0 ? "Audience hints" : null,
+    publisherRows.length === 0 ? "Publishers talking about this brand" : null,
+  ].filter((item): item is string => item !== null);
+
   return (
     <div className="space-y-4">
-      <div className="grid gap-4 lg:grid-cols-2">
-        <CreatorLeaderboard claims={filtered} youtubeSnapshot={youtubeSnapshot} youtubeSearchSnapshot={youtubeSearchSnapshot} brand={brand} />
-        <OwnedVsCreatorSplit claims={filtered} youtubeSnapshot={youtubeSnapshot} brand={brand} />
-      </div>
-      <BreakoutVideos claims={filtered} youtubeSnapshot={youtubeSnapshot} />
-      <EvidenceCatalogPanel
-        title="Related videos"
-        definition="Other channels' videos YouTube surfaces as related to this brand's own videos, a free creator-and-competitor discovery graph: who else YouTube associates with this brand, not a ranked or complete list."
-        icon={<PlatformLogo engine="youtube_video" className="size-4" />}
-        rows={relatedVideoRows}
-        emptyTitle="No related videos yet."
-        emptyDescription="Lists other channels' videos YouTube associates with this brand's own videos, once a check captures YouTube video detail evidence."
-        capNote="Up to 10 related videos per video we checked, as YouTube itself surfaced them, never the brand's full competitive graph."
-      />
-      <RankedCatalogChart
-        title="Audience hints"
-        definition="How often an enrichment check assigned each audience hint to a finding. The tag is free text, so two rows can mean the same audience in different words."
-        rows={audienceHintRows}
-        emptyTitle="No tagged audience hints yet."
-        emptyDescription="Ranks the real audience-hint text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
-      />
-      <CountListPanel
-        title="Publishers talking about this brand"
-        definition="How many real news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage of the brand."
-        icon={<Newspaper className="size-4 text-fg" aria-hidden />}
-        rows={publisherRows}
-        emptyTitle="No publisher evidence yet."
-        emptyDescription="Ranks real Google News publisher names once that data is available."
-      />
-      <div>
-        <h2 className="type-headline text-fg">Real people evidence</h2>
-        <EvidenceGrid
-          claims={peopleEvidenceClaims}
-          youtubeSnapshot={youtubeSnapshot}
-          sort={filters.sort}
-          emptyMessage="No creator, video, or audience-hint evidence yet. This fills in once a check captures YouTube videos or a tagged check assigns a real audience hint."
-          pageLabel={evidencePageLabel("People tab", filters)}
+      {creatorRows.length > 0 || splitData.length > 0 ? (
+        <div className="grid gap-4 lg:grid-cols-2">
+          {creatorRows.length > 0 ? <CreatorLeaderboard rows={creatorRows} /> : null}
+          {splitData.length > 0 ? <OwnedVsCreatorSplit data={splitData} /> : null}
+        </div>
+      ) : null}
+      {breakoutGroups.length > 0 ? <BreakoutVideos groups={breakoutGroups} youtubeSnapshot={youtubeSnapshot} /> : null}
+      {relatedVideoRows.length > 0 ? (
+        <EvidenceCatalogPanel
+          title="Related videos"
+          definition="Other channels' videos YouTube surfaces as related to this brand's own videos, a free creator-and-competitor discovery graph: who else YouTube associates with this brand, not a ranked or complete list."
+          icon={<PlatformLogo engine="youtube_video" className="size-4" />}
+          rows={relatedVideoRows}
+          emptyTitle="No related videos yet."
+          emptyDescription="Lists other channels' videos YouTube associates with this brand's own videos, once a check captures YouTube video detail evidence."
+          capNote="Up to 10 related videos per video we checked, as YouTube itself surfaced them, never the brand's full competitive graph."
+          previewCount={RELATED_VIDEO_PREVIEW}
         />
-      </div>
+      ) : null}
+      {audienceHintRows.length > 0 ? (
+        <RankedCatalogChart
+          title="Audience hints"
+          definition="How often an enrichment check assigned each audience hint to a finding. The tag is free text, so two rows can mean the same audience in different words."
+          rows={audienceHintRows}
+          colorFor={() => "var(--text-secondary)"}
+          emptyTitle="No tagged audience hints yet."
+          emptyDescription="Fills in after a tagged check."
+        />
+      ) : null}
+      {publisherRows.length > 0 ? (
+        <CountListPanel
+          title="Publishers talking about this brand"
+          definition="How many real news articles each publisher contributed. It counts articles we captured, not the publisher's total coverage of the brand."
+          icon={<Newspaper className="size-4 text-fg" aria-hidden />}
+          rows={publisherRows}
+          emptyTitle="No publisher evidence yet."
+          emptyDescription="Ranks real Google News publisher names once that data is available."
+        />
+      ) : null}
+      <NotFoundInCheck items={notFound} />
+      <EvidenceLink claims={peopleEvidenceClaims} />
     </div>
   );
 }

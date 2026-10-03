@@ -28,7 +28,7 @@ export function useBrandFilters(): {
     [filters, push],
   );
 
-  const resetFilters = useCallback(() => push({ ...DEFAULT_BRAND_FILTERS, view: filters.view }), [filters.view, push]);
+  const resetFilters = useCallback(() => push({ ...DEFAULT_BRAND_FILTERS, view: filters.view, offtopic: filters.offtopic }), [filters.view, filters.offtopic, push]);
 
   return { filters, setFilter, resetFilters };
 }

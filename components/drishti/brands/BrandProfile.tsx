@@ -33,9 +33,6 @@ import {
   type RunHistoryRow,
 } from "./brand-model";
 import { BrandMark } from "./BrandMark";
-import { NarrativeBlock } from "./NarrativeBlock";
-import { bucketNarrativeSections, narrativeFrom, pinnedVerdictFromInsight, positionSupportingNarrative } from "./narrative-model";
-import { PinnedVerdict } from "./PinnedVerdict";
 import { OwnBrandToggle } from "./OwnBrandToggle";
 import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
 import { shortDate } from "./format";
@@ -113,7 +110,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   );
   const brand = useQuery(api.brands.getBrand, { brandId });
   const claims = useQuery(api.claims.byBrand, { brandId });
-  const insight = useQuery(api.brandInsights.latestForBrand, { brandId });
   const { runs, isLoading: runsLoading } = useAllRuns();
   const { filters, setFilter, resetFilters } = useBrandFilters();
   const [now] = useState(() => Date.now());
@@ -139,20 +135,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
     [snapshots, brandId],
   );
   const tags = tagBearingClaims(latestClaims);
-  const claimsById = useMemo(
-    () => new Map((claims ?? []).map((claim) => [String(claim._id), claim])),
-    [claims],
-  );
-  const narratives = useMemo(() => {
-    if (!insight || insight.mode !== "llm") return null;
-    const buckets = bucketNarrativeSections(insight.sentences);
-    return {
-      position: positionSupportingNarrative(buckets.positioning, claimsById),
-      people: narrativeFrom(buckets.audience, claimsById),
-      evidence: narrativeFrom(buckets.problem, claimsById),
-    };
-  }, [insight, claimsById]);
-  const pinnedVerdict = useMemo(() => pinnedVerdictFromInsight(insight, claimsById), [insight, claimsById]);
   const history = useMemo(
     () => runs.filter((run) => run.brandIds.some((id) => String(id) === String(brandId))).sort((a, b) => b.requestedAt.localeCompare(a.requestedAt)),
     [runs, brandId],
@@ -224,6 +206,10 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
       </div>
     );
   }
+
+  const evidenceParams = new URLSearchParams(searchParams);
+  evidenceParams.set("tab", "evidence");
+  const evidenceHref = `${pathname}?${evidenceParams.toString()}`;
 
   const latestTrendSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google_trends" && String(snapshot.brandId) === String(brandId));
   const latestYoutubeVideoSnapshot = snapshots?.find((snapshot) => snapshot.engine === "youtube_video" && String(snapshot.brandId) === String(brandId));
@@ -300,7 +286,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
           </div>
         </Panel>
       </header>
-      <PinnedVerdict state={pinnedVerdict} className="mb-5" />
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
         <div className="overflow-x-auto border-b border-border">
           <TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">
@@ -328,9 +313,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
         ) : (
           <>
             <TabsContent value="overview" className="mt-0 py-5">
-              {/* No narrative block here: PinnedVerdict above the tabs
-                  already shows the verdict, so Overview would otherwise
-                  duplicate it (and its provenance line) on the same screen. */}
               <OverviewTab
                 latestClaims={latestClaims}
                 previousClaims={previousClaims}
@@ -344,23 +326,11 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 setFilter={setFilter}
                 resetFilters={resetFilters}
                 now={now}
-                youtubeSnapshot={latestYoutubeVideoSnapshot}
-                newsSnapshot={latestGoogleNewsSnapshot}
-                googleSnapshot={latestGoogleSnapshot}
-                latestRunAt={latestRun?.requestedAt}
+                evidenceHref={evidenceHref}
               />
             </TabsContent>
             <TabsContent value="insights" className="mt-0 py-5">
-              {/* Brand DNA: the model's cited read of this brand, now its own
-                  reachable tab (it used to sit under Overview, below an
-                  unbounded evidence grid nobody would ever scroll past). */}
-              <InsightsTab brandId={brandId} claims={claims ?? []} latestClaims={latestClaims} tags={tags} />
-              {/* Problem folds in here rather than getting its own tab or
-                  staying stuffed inside Position (its previous, mismatched
-                  home): Insights already promises "what it's selling
-                  against" as one of its four Brand DNA reads, and these
-                  related-question/funnel-gap/evidence panels are that
-                  read's own supporting ground truth. */}
+              <InsightsTab brandId={brandId} claims={claims ?? []} />
               <div className="mt-8 border-t border-border pt-6">
                 <ProblemTab
                   brand={brand}
@@ -375,20 +345,12 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               </div>
             </TabsContent>
             <TabsContent value="position" className="mt-0 py-5">
-              {/* narratives.position never repeats the pinned verdict's
-                  headline or provenance line (positionSupportingNarrative,
-                  narrative-model.ts) -- only the real supporting bullets
-                  that aren't shown anywhere above the tabs. */}
-              {narratives?.position ? <NarrativeBlock className="mb-5" {...narratives.position} /> : null}
               <PositionTab brand={brand} latestClaims={latestClaims} previousClaims={previousClaims} tags={tags} filters={filters} now={now} />
             </TabsContent>
             <TabsContent value="placement" className="mt-0 py-5">
-              {/* Brand DNA has no distribution section, so Placement opens on
-                  its evidence with no narrative rather than a fabricated one. */}
               <PlacementTab latestClaims={latestClaims} tags={tags} filters={filters} now={now} />
             </TabsContent>
             <TabsContent value="people" className="mt-0 py-5">
-              {narratives?.people ? <NarrativeBlock className="mb-5" {...narratives.people} /> : null}
               <PeopleTab
                 brand={brand}
                 latestClaims={latestClaims}
@@ -400,7 +362,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               />
             </TabsContent>
             <TabsContent value="evidence" className="mt-0 py-5">
-              {narratives?.evidence ? <NarrativeBlock className="mb-5" {...narratives.evidence} /> : null}
               <EvidenceTab
                 latestClaims={latestClaims}
                 tags={tags}

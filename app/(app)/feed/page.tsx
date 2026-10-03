@@ -26,6 +26,8 @@ import {
   matchesBrandFilters,
 } from "@/components/drishti/brands/filters/filters-model";
 import type { FeedBrandInfo } from "@/components/drishti/feed/FeedCard";
+import { OffTopicNotice } from "@/components/drishti/brands/filters/OffTopicNotice";
+import { assessTopicality } from "@/components/drishti/brands/topicality";
 import { FeedFilterBar } from "@/components/drishti/feed/FeedFilterBar";
 import { FeedGrid } from "@/components/drishti/feed/FeedGrid";
 import {
@@ -115,7 +117,7 @@ function FeedBody() {
 
   const { filters, setFilter, resetFilters } = useFeedFilters();
 
-  const filtered = useMemo(
+  const matching = useMemo(
     () =>
       contentClaims.filter(
         (claim) =>
@@ -123,6 +125,20 @@ function FeedBody() {
           matchesBrandFilters(claim, tagsForClaim(tags, claim), filters, nowMs),
       ),
     [contentClaims, tags, filters, nowMs],
+  );
+  const offTopicClaims = useMemo(() => {
+    const brandDocById = new Map(brands.map((brand) => [String(brand._id), brand]));
+    return new Set(
+        matching.filter((claim) => {
+          const brand = brandDocById.get(String(claim.brandId));
+          return brand !== undefined && assessTopicality(claim, brand) === "possibly_off_topic";
+        }),
+    );
+  }, [matching, brands]);
+  const showOffTopic = filters.offtopic === "show";
+  const filtered = useMemo(
+    () => (showOffTopic ? matching : matching.filter((claim) => !offTopicClaims.has(claim))),
+    [matching, offTopicClaims, showOffTopic],
   );
 
   const brandOptions = useMemo(() => brandOptionsFrom(contentClaims, brands), [contentClaims, brands]);
@@ -185,6 +201,11 @@ function FeedBody() {
         {isBounded ? (
           <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>newest {recentCount} shown</span>
         ) : null}
+        {offTopicClaims.size > 0 ? (
+          <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
+            {filtered.length.toLocaleString()} shown of {matching.length.toLocaleString()} matching
+          </span>
+        ) : null}
       </div>
       <FeedFilterBar
         filters={filters}
@@ -197,6 +218,12 @@ function FeedBody() {
         freshnessOptions={freshnessOptions}
         sortOptions={sortOptions}
         isDefault={isDefault}
+      />
+      <OffTopicNotice
+        hiddenCount={offTopicClaims.size}
+        subject="the brand they were found for"
+        showing={showOffTopic}
+        onToggle={() => setFilter("offtopic", showOffTopic ? "hide" : "show")}
       />
       <FeedGrid
         claims={filtered}

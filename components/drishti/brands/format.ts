@@ -1,4 +1,5 @@
 import { formatStamp } from "../cohorts/cohorts-model";
+import { nameEnumsInText } from "../labels";
 
 export function runTickLabel(value: string | undefined | null): string {
   if (!value) return "Not yet";
@@ -13,12 +14,6 @@ export function periodWindow(period: string | undefined | null): string | null {
 
 export function decodeClaimEntities(text: string): string {
   if (!text.includes("&")) return text;
-}
-
-export function displayClaimText(text: string): string {
-  const match = text.match(/^(?:Organic|News) result "([\s\S]*?)"([\s\S]*)$/);
-  const body = match ? `${match[1]}${match[2]}` : text;
-  return decodeClaimEntities(body.replace(/\s+in trends-chunk-\d+/g, "").replace(/\s*trends-chunk-\d+/g, ""));
 }
 
 export function parseRelatedVideoViews(text: string): number | null {

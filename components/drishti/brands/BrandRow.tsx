@@ -151,8 +151,8 @@ export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engine
         </div>
         <div className="col-span-2 flex flex-wrap items-center gap-x-4 gap-y-2 md:contents">
           <span className="text-xs text-muted-foreground">
-            <span className="font-mono text-sm font-medium tabular-nums text-fg">{claimCount ?? "-"}</span>{" "}
-            evidence
+            <span className="font-mono text-sm font-medium tabular-nums text-fg">{claimCount === undefined ? "-" : claimCount.toLocaleString("en-US")}</span>{" "}
+            stored findings
           </span>
           <SourceMarks engines={engines} />
           <span className="whitespace-nowrap text-xs text-muted-foreground">

@@ -1,5 +1,6 @@
 "use client";
 
+import { MetricInfo } from "../MetricInfo";
 import { Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
@@ -121,7 +122,13 @@ export function BrandList({ brands, isLoading = false, emptyAction, className }:
             <span>
               {filtered.length} of {competitors.length} {competitors.length === 1 ? "rival" : "rivals"}
             </span>
-            <span className="font-mono">Sorted by recently added</span>
+            <span className="flex items-center gap-3">
+              <MetricInfo
+                label="Stored findings"
+                definition="Every finding we hold for this brand, across all checks. Signals counts only each brand's latest check."
+              />
+              <span className="font-mono">Sorted by recently added</span>
+            </span>
           </div>
           {filtered.length === 0 ? (
             <EmptyState

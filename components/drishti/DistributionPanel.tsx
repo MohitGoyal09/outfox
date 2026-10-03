@@ -15,7 +15,6 @@ import {
   FUNNEL_COLOR,
   FUNNEL_STAGE_INDEX,
   HOOK_COLOR,
-  LABEL_CLASS,
   TONE_COLOR,
   VALUE_CLASS,
   barWidthPct,
@@ -195,7 +194,6 @@ export type DistributionPanelProps = {
   summaryLabel?: string;
   previousLabel?: string;
   previousInfo?: string;
-  sentenceLabels?: boolean;
   totalLabel?: string;
   footnote?: ReactNode;
   formatLabel?: (label: string, kind: DistributionKind) => string;
@@ -209,6 +207,7 @@ export type DistributionPanelProps = {
 };
 
 const COLUMN = "sm:text-right";
+const HEADER_CLASS = "whitespace-nowrap text-[12px] font-medium";
 
 export function DistributionPanel({
   items,
@@ -218,7 +217,6 @@ export function DistributionPanel({
   summaryLabel,
   previousLabel,
   previousInfo,
-  sentenceLabels = false,
   totalLabel = "total",
   footnote,
   formatLabel,
@@ -305,27 +303,26 @@ export function DistributionPanel({
       ) : (
         <>
           <div className="mt-3 hidden items-center gap-x-3 border-b border-[var(--border)] pb-1.5 sm:flex">
-            <span className={cn(LABEL_CLASS, "min-w-0 flex-1 text-[var(--text-tertiary)]")}>
-              {kind === "hook" ? "hook type" : "funnel stage"}
+            <span className={cn(HEADER_CLASS, "min-w-0 flex-1 text-[var(--text-tertiary)]")}>
+              {kind === "hook" ? "Hook type" : "Funnel stage"}
             </span>
-            <span className={cn(LABEL_CLASS, "w-10 text-[var(--text-tertiary)]", COLUMN)}>
-              count
+            <span className={cn(HEADER_CLASS, "w-12 text-[var(--text-tertiary)]", COLUMN)}>
+              Count
             </span>
-            <span className={cn(LABEL_CLASS, "w-12 text-[var(--text-tertiary)]", COLUMN)}>
-              share
+            <span className={cn(HEADER_CLASS, "w-14 text-[var(--text-tertiary)]", COLUMN)}>
+              Share
             </span>
             <span
               className={cn(
-                LABEL_CLASS,
+                HEADER_CLASS,
                 "w-28 text-[var(--text-secondary)]",
-                previousInfo && "normal-case tracking-normal",
                 COLUMN,
               )}
             >
               {previousInfo ? (
                 <MetricInfo label={previousLabel ?? "Change"} definition={previousInfo} />
               ) : (
-                (previousLabel ?? "change")
+                (previousLabel ?? "Change")
               )}
             </span>
             <span aria-hidden="true" className="w-24" />
@@ -345,8 +342,7 @@ export function DistributionPanel({
                   />
                   <span
                     className={cn(
-                      sentenceLabels ? "text-[13px] leading-[1.4]" : LABEL_CLASS,
-                      "break-words text-[var(--text-primary)]",
+                      "break-words text-[13px] leading-[1.4] text-[var(--text-primary)]",
                     )}
                   >
                     {formatLabel ? formatLabel(row.label, kind) : row.label}
@@ -361,7 +357,7 @@ export function DistributionPanel({
                     <span
                       className={cn(
                         VALUE_CLASS,
-                        "w-10 shrink-0 text-[12.5px] text-[var(--text-primary)]",
+                        "w-12 shrink-0 text-[12.5px] text-[var(--text-primary)]",
                         COLUMN,
                       )}
                     >
@@ -370,7 +366,7 @@ export function DistributionPanel({
                     <span
                       className={cn(
                         VALUE_CLASS,
-                        "w-12 shrink-0 text-[11px] text-[var(--text-tertiary)]",
+                        "w-14 shrink-0 text-[11px] text-[var(--text-tertiary)]",
                         COLUMN,
                       )}
                     >
