@@ -12,6 +12,7 @@ import { PlatformLogo } from "../brands/PlatformLogo";
 import { FOCUS_RING_CLASS } from "../tokens";
 import { CitationPreview } from "./CitationPreview";
 import { collapseAdjacentSameHostCitations, engineDomain } from "./agentChat-model";
+import { splitMidLineHeadings } from "./answerMarkdownText";
 import type { SourceView } from "./agentChat-model";
 
 const CLAIM_LINK_HREF_RE = /\]\(claim:([^)\s]+)\)/g;
@@ -53,6 +54,16 @@ function numberLabelOf(children: unknown): string {
 
 const TABLE_WRAPPER_CLASS =
   "my-2 w-0 min-w-full overflow-x-auto rounded-md border border-border";
+const COVER = "var(--bg-raised, var(--background))";
+const SHADOW = "color-mix(in oklab, currentColor 16%, transparent)";
+const TABLE_WRAPPER_STYLE = {
+  background: [
+    `linear-gradient(to right, ${COVER} 30%, transparent) 0 0 / 2.5rem 100% no-repeat local`,
+    `linear-gradient(to left, ${COVER} 30%, transparent) 100% 0 / 2.5rem 100% no-repeat local`,
+    `linear-gradient(to right, ${SHADOW}, transparent) 0 0 / 1.25rem 100% no-repeat scroll`,
+    `linear-gradient(to left, ${SHADOW}, transparent) 100% 0 / 1.25rem 100% no-repeat scroll`,
+  ].join(", "),
+} as const;
 const TABLE_HEAD_CLASS =
   "whitespace-nowrap px-3 py-2 text-left align-middle font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-secondary tabular-nums";
 const TABLE_CELL_CLASS = "px-3 py-2 align-top text-fg tabular-nums";
@@ -161,7 +172,10 @@ export function AnswerMarkdown({
   const reduceMotion = useReducedMotion();
   const animate = isStreaming && !reduceMotion;
   const renderedText = toHashHref(
-    collapseAdjacentSameHostCitations(stripCitationCodeFences(stripEmDashes(text)), citationSources),
+    collapseAdjacentSameHostCitations(
+      stripCitationCodeFences(splitMidLineHeadings(stripEmDashes(text))),
+      citationSources,
+    ),
   );
 
   return (
@@ -198,7 +212,7 @@ export function AnswerMarkdown({
           );
         },
         table: (props) => (
-          <div className={TABLE_WRAPPER_CLASS}>
+          <div className={TABLE_WRAPPER_CLASS} style={TABLE_WRAPPER_STYLE}>
             <table
               className={cn("w-full border-collapse text-[13px] tabular-nums", props.className)}
             >
