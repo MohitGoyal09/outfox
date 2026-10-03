@@ -178,12 +178,17 @@ export function AskView({
         if (row.role !== "assistant" || row.citations.length === 0) {
           return { id: row.id, role: row.role, parts: [textPart] };
         }
-        const citationSources: Record<string, { url: string; engine: string }> = {};
+        const citationSources: Record<string, { url: string; engine: string; claimText?: string; fetchedAt?: string }> = {};
         const sourcesByUrl = new Map<string, { url: string; engine: string }>();
         for (const claimId of row.citations) {
           const claim = evidenceById.get(claimId);
           if (claim === undefined) continue;
-          citationSources[claimId] = { url: claim.evidenceUrl, engine: claim.sourceEngine };
+          citationSources[claimId] = {
+            url: claim.evidenceUrl,
+            engine: claim.sourceEngine,
+            claimText: claim.text.slice(0, 280),
+            fetchedAt: claim.fetchedAt,
+          };
           sourcesByUrl.set(claim.evidenceUrl, { url: claim.evidenceUrl, engine: claim.sourceEngine });
         }
         if (Object.keys(citationSources).length === 0) {

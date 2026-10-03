@@ -28,7 +28,7 @@ export function precedingUserTextOf(
   return null;
 }
 
-export type SourceView = { url: string; engine: string };
+export type SourceView = { url: string; engine: string; claimText?: string; fetchedAt?: string };
 
 function isSourcesMetaPart(type: unknown): boolean {
   return type === "data-answer-meta" || type === "data-hydrated-citations";
@@ -83,6 +83,14 @@ export function answerProvenanceOf(messages: PartsHolder[]): AnswerProvenance | 
 }
 
 export function citationSourcesOf(messages: PartsHolder[]): Map<string, SourceView> {
+  for (const message of messages) {
+    for (const part of partsOf(message)) {
+      if (!isSourcesMetaPart(part["type"])) continue;
+      const data = part["data"];
+      const citationSources = (data as Record<string, unknown>)["citationSources"];
+      if (typeof citationSources !== "object" || citationSources === null) continue;
+    }
+  }
   return byClaimId;
 }
 

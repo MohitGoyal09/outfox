@@ -71,6 +71,14 @@
   color: var(--accent, #15171b);
 }
 
+.thought-line[data-working] .thought-line__glyph {
+  display: none;
+}
+.thought-line__orb {
+  display: inline-flex;
+  flex: none;
+}
+
 .thought-line__label {
   display: inline-grid;
 }
@@ -92,6 +100,19 @@
 }
 .thought-line__breath {
   display: inline-block;
+}
+/* Live label only: a text-clipped gradient sweeping tertiary -> fg -> tertiary. */
+.thought-line[data-working] .thought-line__breath[data-shimmer] {
+  background: linear-gradient(90deg, var(--fg-tertiary), var(--fg), var(--fg-tertiary)) 0 0 / 200% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: thought-line-shimmer 2s linear infinite;
+}
+@keyframes thought-line-shimmer {
+  to {
+    background-position: -200% 0;
+  }
 }
 
 .thought-line__timer {
@@ -260,6 +281,11 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+  .thought-line[data-working] .thought-line__breath[data-shimmer] {
+    background: none;
+    color: inherit;
+    animation: none;
+  }
   .thought-line__text {
     filter: none !important;
     transition: opacity var(--tl-settle) ease;

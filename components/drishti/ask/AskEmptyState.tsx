@@ -4,6 +4,7 @@
 import { useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
 import { ConversationEmptyState } from "@/components/ai-elements/conversation";
+import { ThinkingOrb } from "./ThinkingOrb";
 import { PromptCategories } from "./PromptCategories";
 
 function greetingWord(hour: number): string {
@@ -29,6 +30,7 @@ export function AskEmptyState({
     <ConversationEmptyState className="flex-1">
       <div className="w-full max-w-3xl space-y-8">
         <div className="mx-auto max-w-xl space-y-5 text-center">
+          <ThinkingOrb size={112} state="idle" className="mx-auto mb-3 block" />
           <motion.span
             aria-hidden="true"
             className="mx-auto flex size-12 items-center justify-center rounded-2xl bg-accent text-[15px] font-semibold text-accent-ink shadow-[var(--shadow-sm)]"
@@ -50,7 +52,7 @@ export function AskEmptyState({
               )}
             </h1>
             <p className="measure-prose mx-auto text-[15px] leading-6 text-fg-secondary">
-              Ask about your rivals — a comparison, a trend, or the evidence behind
+              Ask about your rivals: a comparison, a trend, or the evidence behind
               any signal. Every useful sentence links back to a real tool result.
             </p>
           </div>

@@ -1,6 +1,7 @@
 "use client";
 
 
+import { stripEmDashes } from "@/lib/noEmDash";
 import {
   Compass,
   Database,
@@ -167,7 +168,7 @@ export function ToolCallCard({ card }: { card: ToolCallCardView }) {
         </div>
 
         {card.detail !== null ? (
-          <p className="mt-1 text-[12px] leading-[1.5] text-fg-secondary">{card.detail}</p>
+          <p className="mt-1 text-[12px] leading-[1.5] text-fg-secondary">{stripEmDashes(card.detail)}</p>
         ) : null}
 
         {rawDetail !== null ? (

@@ -6,9 +6,11 @@ import { useReducedMotion } from "motion/react";
 import { MessageResponse } from "@/components/ai-elements/message";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { cn } from "@/lib/utils";
+import { stripEmDashes } from "@/lib/noEmDash";
 import { sourceName } from "@/components/drishti/labels";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { FOCUS_RING_CLASS } from "../tokens";
+import { CitationPreview } from "./CitationPreview";
 import { collapseAdjacentSameHostCitations, engineDomain } from "./agentChat-model";
 import type { SourceView } from "./agentChat-model";
 
@@ -75,6 +77,7 @@ function CitationChip({
 }) {
   const host = source !== undefined ? engineDomain(source.engine, source.url) : null;
   return (
+    <CitationPreview source={source}>
     <button
       type="button"
       onClick={() => onOpenCitation(claimId)}
@@ -91,6 +94,7 @@ function CitationChip({
       {source !== undefined ? <PlatformLogo engine={source.engine} className="size-[11px]" /> : null}
       {host !== null ? <span className="text-fg-tertiary">{host}</span> : null}
     </button>
+    </CitationPreview>
   );
 }
 
@@ -157,7 +161,7 @@ export function AnswerMarkdown({
   const reduceMotion = useReducedMotion();
   const animate = isStreaming && !reduceMotion;
   const renderedText = toHashHref(
-    collapseAdjacentSameHostCitations(stripCitationCodeFences(text), citationSources),
+    collapseAdjacentSameHostCitations(stripCitationCodeFences(stripEmDashes(text)), citationSources),
   );
 
   return (

@@ -1,6 +1,7 @@
 "use client";
 
 
+import { stripEmDashes } from "@/lib/noEmDash";
 import { ExternalLink } from "lucide-react";
 import {
   Sheet,
@@ -66,7 +67,7 @@ export function CitationDrawer({
         {claim !== undefined ? (
           <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-6">
             <div className="rounded-lg border border-border bg-bg-inset p-4">
-              <p className="text-sm leading-6 text-fg">{claim.text}</p>
+              <p className="text-sm leading-6 text-fg">{stripEmDashes(claim.text)}</p>
             </div>
 
             {!isStoredClaim ? (

@@ -6,6 +6,8 @@ import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animate, useReducedMotion } from "motion/react";
 import { ChevronDown, Sparkles } from "lucide-react";
 import { iconProps } from "../tokens";
+import { stripEmDashes } from "@/lib/noEmDash";
+import { ThinkingOrb } from "./ThinkingOrb";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import "./thought-line.css";
 
@@ -194,6 +196,13 @@ export function ThoughtLine({
 
   const head = (
     <>
+      {/* The one live orb for this turn: mounted only while working, so a
+          settled turn holds no canvas. The sparkle glyph hides meanwhile. */}
+      {isWorking ? (
+        <span className="thought-line__orb" aria-hidden="true">
+          <ThinkingOrb size={20} state="thinking" />
+        </span>
+      ) : null}
       <span ref={glyphRef} className="thought-line__glyph" aria-hidden="true">
         <Sparkles {...iconProps} />
       </span>
@@ -287,7 +296,7 @@ export function ThoughtLine({
                     <i className="thought-line__dot" />
                   </span>
                   {step.engine ? <PlatformLogo engine={step.engine} className="size-3.5" /> : null}
-                  <span className="thought-line__step-text">{step.text}</span>
+                  <span className="thought-line__step-text">{stripEmDashes(step.text)}</span>
                   {/* The dot's shape and hue are the visual status cue; this
                       is the same state for a screen reader, since the mark
                       itself is aria-hidden. */}
