@@ -112,6 +112,7 @@ function CanvasInner({ boardId, canvas, shared }: { boardId: Id<"boards">; canva
           onNodesChange={onNodesChange}
           onEdgesChange={onEdgesChange}
           onConnect={actions.connect}
+          deleteKeyCode={["Backspace", "Delete"]}
           onNodeDragStart={(_, node) => {
             setDragging(true);
             if (node.type !== "frame") return;

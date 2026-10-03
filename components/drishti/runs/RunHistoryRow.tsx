@@ -154,8 +154,8 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
           <Chip tone={RUN_STATUS_TONE[status]} label={status} className="rounded-full" />
         </div>
       </Link>
-      <div className="flex items-center justify-between border-t border-border bg-bg-inset/50 px-5 py-2.5 text-[10px] text-muted-foreground">
-        <span className="uppercase tracking-[0.15em]">Open run details</span>
+      <div className="flex items-center justify-between border-t border-border bg-bg-inset/50 px-5 py-2.5 text-[12px] font-medium text-fg-secondary">
+        <span>Open run details</span>
         <ChevronRight className="size-3.5 transition-transform group-hover:translate-x-0.5" />
       </div>
       </Panel>

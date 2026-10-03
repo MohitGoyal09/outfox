@@ -60,7 +60,7 @@ function hrefForThread(threadKey: string): string {
 }
 
 const GROUP_LABEL_CLASS =
-  "px-2 font-mono text-[10px] uppercase tracking-[0.12em] text-sidebar-foreground/45 group-data-[collapsible=icon]:hidden";
+  "px-2 font-mono text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/45 group-data-[collapsible=icon]:hidden";
 
 const RAIL_ICON_BUTTON_CLASS =
   "rounded-md p-1 text-sidebar-foreground/55 transition-colors duration-150 ease-out hover:bg-sidebar-accent hover:text-sidebar-accent-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring";
@@ -110,7 +110,7 @@ export function Sidebar() {
               </span>
               <span className="flex min-w-0 flex-col">
                 <span className="truncate text-[15px] font-semibold tracking-[-0.02em]">Drishti</span>
-                <span className="truncate font-mono text-[10px] uppercase tracking-[0.16em] text-sidebar-foreground/55">
+                <span className="truncate text-[12px] font-medium text-sidebar-foreground/60">
                   Evidence atlas
                 </span>
               </span>

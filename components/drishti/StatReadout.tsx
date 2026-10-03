@@ -101,7 +101,7 @@ export function StatReadout({
       )}
     >
       {hideLabel ? null : (
-        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
+        <span className={cn(LABEL_CLASS, "text-fg-secondary")}>
           {labelInfo ? <MetricInfo label={label} definition={labelInfo} /> : label}
         </span>
       )}
@@ -151,7 +151,7 @@ export function StatTile({
       )}
     >
       {hideLabel ? null : (
-        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
+        <span className={cn(LABEL_CLASS, "text-fg-secondary")}>
           {labelInfo ? <MetricInfo label={label} definition={labelInfo} /> : label}
         </span>
       )}

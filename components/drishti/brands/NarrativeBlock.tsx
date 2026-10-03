@@ -62,7 +62,7 @@ export function NarrativeBlock({
           <Lightbulb {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
         </span>
         <div className="min-w-0">
-          <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-tertiary">
+          <p className="text-[12px] font-medium text-fg-secondary">
             What this means
           </p>
           {lead.length > 0 ? (

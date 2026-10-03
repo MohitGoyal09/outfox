@@ -6,11 +6,13 @@ import { assessTopicality } from "../topicality";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { checkedStateLabel } from "@/components/drishti/labels";
-import { isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow } from "../brand-model";
+import { adCreativeWindow, adFormatWord, isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow } from "../brand-model";
 import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
+import { SourceFreshness } from "../SourceFreshness";
+import { sourceName } from "@/components/drishti/labels";
 import { describeActiveBrandFilters, isDefaultBrandFilters, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { displayClaimText, shortDate } from "../format";
 import type { DistributionItem } from "../../DistributionPanel";
@@ -59,6 +61,13 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
 
 const NEWEST_COUNT = 4;
 
+function findingLabel(claim: ClaimDoc): string {
+  if (claim.metric !== "ads_transparency_creative") return displayClaimText(claim.text);
+  const win = adCreativeWindow(claim);
+  const seen = win.lastShown ?? win.firstShown ?? claim.fetchedAt;
+  return `${adFormatWord(win.format)} on ${sourceName(claim.sourceEngine)} · seen ${shortDate(seen)}`;
+}
+
 function NewestFindings({
   latestClaims,
   tags,
@@ -106,7 +115,7 @@ function NewestFindings({
             <li key={String(claim._id)} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-2.5 text-sm">
               <PlatformLogo engine={claim.sourceEngine} className="size-4" />
               <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="min-w-0 truncate text-fg hover:underline">
-                {displayClaimText(claim.text)}
+                {findingLabel(claim)}
               </a>
               <span className="font-mono text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</span>
             </li>
@@ -163,6 +172,7 @@ export function OverviewTab({
           }
         >
           <EngineCoverageList rows={coverage} latestClaims={latestClaims} previousClaims={previousClaims} />
+          <SourceFreshness coverage={coverage} latestClaims={latestClaims} now={now} />
         </SummaryPanel>
         <SummaryPanel
           title={

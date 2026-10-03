@@ -83,7 +83,7 @@ export function PinnedVerdict({ state, className }: { state: PinnedVerdictState 
           </span>
           <div className="min-w-0 flex-1">
             <div className="flex items-center justify-between gap-2">
-              <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-tertiary">
+              <p className="text-[12px] font-medium text-fg-secondary">
                 {failed ? "Brand DNA read failed" : "What this means"}
               </p>
               <CollapsibleTrigger asChild>

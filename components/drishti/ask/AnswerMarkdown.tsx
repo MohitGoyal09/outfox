@@ -65,7 +65,7 @@ const TABLE_WRAPPER_STYLE = {
   ].join(", "),
 } as const;
 const TABLE_HEAD_CLASS =
-  "whitespace-nowrap px-3 py-2 text-left align-middle font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-fg-secondary tabular-nums";
+  "whitespace-nowrap px-3 py-2 text-left align-middle text-[12px] font-medium text-fg-tertiary";
 const TABLE_CELL_CLASS = "px-3 py-2 align-top text-fg tabular-nums";
 
 const CHIP_CLASS = cn(

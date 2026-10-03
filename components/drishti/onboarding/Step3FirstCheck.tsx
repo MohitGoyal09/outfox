@@ -158,7 +158,7 @@ export function Step3FirstCheck({
         </Panel>
       ) : hasComparisonToShow(summary) ? (
         <Panel as="section" interactive={false} padded ariaLabel="Your first comparison">
-          <p className="mb-3 font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
+          <p className="mb-3 text-[12px] font-medium text-[var(--text-secondary)]">
             What stood out
           </p>
           <ul className="flex flex-col gap-2.5">

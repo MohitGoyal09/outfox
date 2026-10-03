@@ -3,7 +3,7 @@
 import { useMemo } from "react";
 import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { BadgeDollarSign, Clapperboard, Newspaper, Store } from "lucide-react";
+import { BadgeDollarSign, Newspaper, Store } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
@@ -25,6 +25,7 @@ import {
   type ClaimDoc,
   type EvidenceCatalogRow,
 } from "../brand-model";
+import { AdsGallery } from "../AdsGallery";
 import { CountListPanel } from "../CountListPanel";
 import { DestinationsPanel, destinationRows } from "../DestinationsPanel";
 import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
@@ -104,108 +105,6 @@ function OrganicRankChart({ buckets }: { buckets: ReturnType<typeof organicRankB
 
 export function shouldShowRunLengthTable(rows: readonly AdRuntimeRow[]): boolean {
   return rows.some((row) => row.runDays !== null);
-}
-
-function formatMixFromRuntimeRows(rows: readonly AdRuntimeRow[]): { label: string; count: number }[] {
-  const counts = new Map<string, number>();
-  for (const row of rows) counts.set(row.format, (counts.get(row.format) ?? 0) + 1);
-  return [...counts.entries()]
-    .map(([label, count]) => ({ label: label.replaceAll("_", " "), count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
-}
-
-function AdRunLengthLeaderboard({ rows }: { rows: AdRuntimeRow[] }) {
-  const showTable = useMemo(() => shouldShowRunLengthTable(rows), [rows]);
-  const formatMix = useMemo(() => formatMixFromRuntimeRows(rows), [rows]);
-  return (
-    <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <Clapperboard className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo
-            label="Longest-running ads"
-            definition="Real Ads Transparency creatives ranked by how long each was observed live. It shows which creatives the brand kept running, not budget, reach, or spend."
-          />
-        </h3>
-        {rows.length > 0 ? (
-          <span className="ml-auto font-mono text-[11px] text-muted-foreground">
-            {rows.length} creative{rows.length === 1 ? "" : "s"}
-          </span>
-        ) : null}
-      </div>
-      <div className="p-4">
-        {!showTable ? (
-          <>
-            <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
-              Ad run length was not available for these {rows.length} creative{rows.length === 1 ? "" : "s"}.
-            </p>
-            <ul className="space-y-2">
-              {formatMix.map((row) => (
-                <li key={row.label} className="flex items-center justify-between gap-3 text-xs">
-                  <span className="truncate capitalize">{row.label}</span>
-                  <span className="font-mono tabular-nums text-muted-foreground">{row.count}</span>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : (
-          <>
-            <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
-              Run length is how long we observed each creative live, our honest proxy for spend, not spend itself. A longer-running ad is one the brand kept live, nothing more.
-            </p>
-            <div className="max-h-[420px] overflow-auto rounded-sm border border-border">
-              <table className="w-full min-w-[560px] border-collapse text-xs">
-                <thead className="sticky top-0 bg-bg-raised">
-                  <tr className="border-b border-border text-left text-[10.5px] uppercase tracking-[0.06em] text-muted-foreground">
-                    <th className="py-2 pl-3 pr-2 font-normal">#</th>
-                    <th className="py-2 pr-2 font-normal">Creative</th>
-                    <th className="py-2 pr-2 font-normal">Format</th>
-                    <th className="py-2 pr-2 font-normal">Window</th>
-                    <th className="py-2 pr-3 text-right font-normal">
-                      <MetricInfo
-                        label="Run length"
-                        definition="Days between the first and last time we saw the creative live. Our honest proxy for spend, not spend itself, a longer run means the brand kept it live, nothing more."
-                        className="justify-end"
-                      />
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {rows.map((row, index) => (
-                    <tr key={row.claimId} className="border-b border-border last:border-0 hover:bg-accent/[0.03]">
-                      <td className="py-2 pl-3 pr-2 font-mono text-[10px] tabular-nums text-muted-foreground">{index + 1}</td>
-                      <td className="max-w-[240px] truncate py-2 pr-2 text-fg" title={row.title}>
-                        <a href={row.evidenceUrl} target="_blank" rel="noreferrer noopener" className="hover:text-fg hover:underline">
-                          {row.title}
-                        </a>
-                      </td>
-                      <td className="py-2 pr-2 capitalize text-muted-foreground">{row.format.replaceAll("_", " ")}</td>
-                      <td className="py-2 pr-2 font-mono text-[11px] tabular-nums text-muted-foreground">
-                        {row.firstShown && row.lastShown
-                          ? `${shortDate(row.firstShown)} – ${shortDate(row.lastShown)}`
-                          : row.firstShown
-                            ? shortDate(row.firstShown)
-                            : row.lastShown
-                              ? shortDate(row.lastShown)
-                              : "unknown"}
-                      </td>
-                      <td className="py-2 pr-3 text-right">
-                        {row.runDays !== null ? (
-                          <span className="font-mono text-[12px] font-semibold tabular-nums text-fg">{row.runDays}d</span>
-                        ) : (
-                          <span className="font-mono text-[11px] tabular-nums text-muted-foreground">unknown</span>
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </>
-        )}
-      </div>
-    </Panel>
-  );
 }
 
 export function PlacementTab({
@@ -341,7 +240,7 @@ export function PlacementTab({
   return (
     <div className="space-y-4">
       {hasOrganic ? <OrganicRankChart buckets={rankBuckets} /> : null}
-      {runtimeRows.length > 0 ? <AdRunLengthLeaderboard rows={runtimeRows} /> : null}
+      <AdsGallery claims={filtered} />
       {hasDestinations ? <DestinationsPanel claims={filtered} /> : null}
       {countPanels.length > 0 ? <div className={`grid gap-4 ${countPanels.length >= 3 ? "lg:grid-cols-3" : countPanels.length === 2 ? "lg:grid-cols-2" : ""}`}>{countPanels}</div> : null}
       {catalogPanels.length > 0 ? <div className={`grid gap-4 ${catalogPanels.length === 2 ? "lg:grid-cols-2" : ""}`}>{catalogPanels}</div> : null}

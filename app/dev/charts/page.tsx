@@ -94,7 +94,7 @@ const missingEngineResult: TrendsChartResult = {
 function Demo({ title, result }: { title: string; result: TrendsChartResult }) {
   return (
     <section className="flex flex-col gap-3 border-b border-[var(--border)] py-8">
-      <h2 className="font-mono text-[11px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
+      <h2 className="text-[12px] font-medium text-[var(--text-secondary)]">
         {title}
       </h2>
       <TrendsChart result={result} brandLabel={label} />

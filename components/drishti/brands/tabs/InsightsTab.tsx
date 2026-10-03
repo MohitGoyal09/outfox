@@ -189,7 +189,7 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
           <p className="text-sm text-muted-foreground">No measurable change in hook mix since the previous check.</p>
         ) : (
           <ul className="space-y-2">
-            <li aria-hidden className="grid grid-cols-[1fr_auto_auto] gap-2 font-mono text-[10px] uppercase tracking-[0.06em] text-fg-tertiary">
+            <li aria-hidden className="grid grid-cols-[1fr_auto_auto] gap-2 text-[12px] font-medium text-fg-tertiary">
               <span>Hook</span>
               <span>Previous check → this check</span>
               <span>Change</span>
@@ -358,7 +358,7 @@ export function InsightsTab({
 
       {earlierVerdicts.length > 0 ? (
         <Collapsible>
-          <CollapsibleTrigger className="group inline-flex items-center gap-1.5 text-[12px] font-medium uppercase tracking-[0.06em] text-muted-foreground hover:text-fg">
+          <CollapsibleTrigger className="group inline-flex items-center gap-1.5 text-[12px] font-medium text-fg-secondary hover:text-fg">
             Earlier reads ({earlierVerdicts.length})
             <ChevronDown aria-hidden className="size-3.5 transition-transform duration-150 group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>

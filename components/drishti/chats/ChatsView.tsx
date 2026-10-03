@@ -128,7 +128,7 @@ export function ChatsView() {
       ) : (
         groups.map((group) => (
           <section key={group.label} aria-label={group.label} className="flex flex-col gap-2">
-            <h2 className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+            <h2 className="text-[12px] font-medium text-fg-secondary">
               {group.label}
             </h2>
             <ul className="flex flex-col gap-2">

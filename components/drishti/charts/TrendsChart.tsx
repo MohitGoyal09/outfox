@@ -153,7 +153,7 @@ function ChunkPanel({
               if (!active || !payload || payload.length === 0) return null;
               return (
                 <div className={cn(CHART_TOOLTIP_SURFACE, "min-w-40")}>
-                  <p className={cn(VALUE_CLASS, "text-[10.5px] uppercase tracking-[0.07em] text-fg-tertiary")}>
+                  <p className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
                     {formatAxisDate(String(label))}
                   </p>
                   {payload.map((entry) => (

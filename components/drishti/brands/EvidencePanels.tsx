@@ -233,7 +233,7 @@ export function HookChart({
               REAL-hook subset of the tagged sample (docs/HANDOFF.md §2 /
               §10's honest-percentages rule, "tagged" only ever means
               `taggedCount` on this page now). */}
-          <span className="text-[7px] uppercase tracking-wide text-muted-foreground">with hook</span>
+          <span className="text-[11px] font-medium text-fg-secondary">with hook</span>
         </div>
       </div>
       <div className="space-y-2">

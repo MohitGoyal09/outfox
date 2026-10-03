@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Panel } from "../Panel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
-import { adCreativeWindow, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
+import { adCreativeWindow, adFormatWord, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
 import { displayClaimText, periodWindow, shortDate } from "./format";
 import { hookName, measureName, sourceName } from "@/components/drishti/labels";
 
@@ -40,10 +40,6 @@ function organicRank(claim: ClaimDoc): number | null {
     : null;
 }
 
-export function adFormatWord(format: string): string {
-  const key = format.trim().toLowerCase();
-  return key === "text" || key === "image" || key === "video" ? `${key[0].toUpperCase()}${key.slice(1)} ad` : "Ad";
-}
 
 const isPlaceholderAdText = (text: string) => /^Ad creative \(/.test(text);
 

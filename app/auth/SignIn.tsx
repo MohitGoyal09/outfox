@@ -59,13 +59,13 @@ export function SignIn() {
           </span>
           <div>
             <p className="font-semibold tracking-tight">Drishti</p>
-            <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-ink/55">
+            <p className="text-[12px] font-medium text-accent-ink/55">
               Evidence atlas
             </p>
           </div>
         </div>
         <div className="relative">
-          <p className="font-mono text-[10px] uppercase tracking-[0.18em] text-accent-ink/55">
+          <p className="font-mono text-[10px] uppercase tracking-[0.16em] text-accent-ink/55">
             Research desk
           </p>
           <h1

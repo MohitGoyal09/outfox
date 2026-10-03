@@ -71,7 +71,7 @@ function CreatorLeaderboard({ rows }: { rows: ReturnType<typeof mergeCreatorRows
                     <span className="ml-1.5 font-mono text-[10px] text-muted-foreground">({compactCount(row.subscribers)} subs)</span>
                   ) : null}
                 </span>
-                <span className="rounded-full border border-border px-1.5 py-0.5 font-mono text-[9px] uppercase text-muted-foreground">{row.owned ? "owned" : "creator"}</span>
+                <span className="rounded-full border border-border px-1.5 py-0.5 text-[11px] font-medium text-fg-secondary">{row.owned ? "owned" : "creator"}</span>
                 <span className="font-mono tabular-nums text-fg">{compactCount(row.totalViews)}</span>
               </li>
             ))}

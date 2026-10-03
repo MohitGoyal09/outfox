@@ -9,7 +9,9 @@ import {
   Handle,
   NodeResizer,
   Position,
+  useInternalNode,
   type EdgeProps,
+  type InternalNode,
   type NodeProps,
 } from "@xyflow/react";
 import { ArrowUpRight } from "lucide-react";
@@ -263,12 +265,40 @@ export function FrameNode({ id, data, selected }: NodeProps) {
   );
 }
 
-export function LabeledEdge({ id, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, data, selected }: EdgeProps) {
+function facingPoint(node: InternalNode, toward: { x: number; y: number }): { x: number; y: number; position: Position } {
+  const { x, y } = node.internals.positionAbsolute;
+  const w = node.measured.width ?? 0;
+  const h = node.measured.height ?? 0;
+  const cx = x + w / 2;
+  const cy = y + h / 2;
+  const dx = toward.x - cx;
+  const dy = toward.y - cy;
+  if (Math.abs(dx) * h > Math.abs(dy) * w) {
+    return dx > 0 ? { x: x + w, y: cy, position: Position.Right } : { x, y: cy, position: Position.Left };
+  }
+  return dy > 0 ? { x: cx, y: y + h, position: Position.Bottom } : { x: cx, y, position: Position.Top };
+}
+
+function centreOf(node: InternalNode): { x: number; y: number } {
+  const { x, y } = node.internals.positionAbsolute;
+  return { x: x + (node.measured.width ?? 0) / 2, y: y + (node.measured.height ?? 0) / 2 };
+}
+
+export function LabeledEdge({ id, source, target, sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition, markerEnd, data, selected }: EdgeProps) {
+  const sourceNode = useInternalNode(source);
+  const targetNode = useInternalNode(target);
+  const measured = Boolean(sourceNode?.measured.width && targetNode?.measured.width);
+  const from = measured && sourceNode && targetNode ? facingPoint(sourceNode, centreOf(targetNode)) : null;
+  const to = measured && sourceNode && targetNode ? facingPoint(targetNode, centreOf(sourceNode)) : null;
   const actions = useContext(CanvasActionsContext);
   const label = (data?.label as string | undefined) ?? "";
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(label);
-  const [path, labelX, labelY] = getBezierPath({ sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition });
+  const [path, labelX, labelY] = getBezierPath(
+    from && to
+      ? { sourceX: from.x, sourceY: from.y, sourcePosition: from.position, targetX: to.x, targetY: to.y, targetPosition: to.position }
+      : { sourceX, sourceY, targetX, targetY, sourcePosition, targetPosition },
+  );
 
   function commit() {
     setEditing(false);

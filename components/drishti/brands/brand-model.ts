@@ -675,3 +675,77 @@ export function adRuntimeLeaderboard(claims: ClaimDoc[]): AdRuntimeRow[] {
 export function themeFrequency(tags: ClaimDoc[]): LabeledCount[] {
   const counts = new Map<string, number>();
 }
+
+
+export type SourceCheckState = "ok" | "empty" | "failed" | "unavailable" | "not_run";
+
+export type SourceCheck = {
+  engine: FetchEngine;
+  label: string;
+  state: SourceCheckState;
+  checkedAt: string | null;
+  reason: string | null;
+  isStale: boolean;
+};
+const FAILURE_REASON_MAX = 120;
+
+export function latestCheckBySource(
+  coverage: readonly EngineCoverageRow[],
+  latestClaims: readonly ClaimDoc[],
+  now: number,
+): SourceCheck[] {
+  return coverage.map((row) => {
+    const found = latestClaims.some((claim) => claim.sourceEngine === row.engine);
+    const state: SourceCheckState = row.status === "ok" && !found ? "empty" : row.status;
+    return {
+      engine: row.engine,
+      label: row.label,
+      state,
+      checkedAt: row.fetchedAt,
+      reason,
+      isStale: !Number.isNaN(checked) && now - checked > STALE_CHECK_DAYS * 24 * 60 * 60 * 1000,
+    };
+  });
+}
+
+
+export function adFormatWord(format: string): string {
+}
+
+export function safeHttpUrl(value: string | undefined | null): string | null {
+  if (!value) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "http:" || url.protocol === "https:" ? url.href : null;
+  } catch {
+    return null;
+  }
+}
+
+export type AdGalleryRow = {
+  claimId: string;
+  formatWord: string;
+  imageUrl: string | null;
+  firstShown: string | null;
+  lastShown: string | null;
+  runDays: number | null;
+  linkUrl: string | null;
+};
+
+export function adGalleryRows(claims: ClaimDoc[]): AdGalleryRow[] {
+  const dateKey = (row: AdGalleryRow) => row.lastShown ?? row.firstShown ?? "";
+  return adCreativeClaims(claims)
+    .map((claim): AdGalleryRow => {
+      const win = adCreativeWindow(claim);
+      return {
+        claimId: win.claimId,
+        formatWord: adFormatWord(win.format),
+        imageUrl: safeHttpUrl(claim.image),
+        firstShown: win.firstShown,
+        lastShown: win.lastShown,
+        runDays: win.runDays,
+        linkUrl: safeHttpUrl(claim.evidenceUrl),
+      };
+    })
+    .sort((a, b) => dateKey(b).localeCompare(dateKey(a)) || a.claimId.localeCompare(b.claimId));
+}

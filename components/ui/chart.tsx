@@ -162,7 +162,7 @@ function ChartTooltipContent({
 
     if (labelFormatter) {
       return (
-        <div className={cn("font-mono text-[10.5px] uppercase tracking-[0.07em] text-fg-tertiary", labelClassName)}>
+        <div className={cn("font-sans text-[12px] font-medium text-fg-secondary", labelClassName)}>
           {labelFormatter(value, payload)}
         </div>
       )
@@ -173,7 +173,7 @@ function ChartTooltipContent({
     }
 
     return (
-      <div className={cn("font-mono text-[10.5px] uppercase tracking-[0.07em] text-fg-tertiary", labelClassName)}>
+      <div className={cn("font-sans text-[12px] font-medium text-fg-secondary", labelClassName)}>
         {value}
       </div>
     )

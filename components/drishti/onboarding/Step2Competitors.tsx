@@ -179,7 +179,7 @@ export function Step2Competitors({
     <div className="flex flex-col gap-6">
       {selected.length > 0 ? (
         <Panel as="section" interactive={false} padded ariaLabel="Selected competitors">
-          <p className="mb-2.5 font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
+          <p className="mb-2.5 text-[12px] font-medium text-[var(--text-secondary)]">
             Comparing against {selected.length} of {MAX_ONBOARDING_COMPETITORS}
           </p>
           <ul className="flex flex-wrap gap-2">
@@ -189,7 +189,7 @@ export function Step2Competitors({
                   <span className="inline-flex items-center gap-1.5">
                     {row.name}
                     {row.unconfirmed ? (
-                      <span className="font-mono text-[10px] uppercase tracking-[0.06em] text-[var(--text-tertiary)]">
+                      <span className="text-[12px] font-medium text-[var(--text-tertiary)]">
                         not confirmed
                       </span>
                     ) : null}

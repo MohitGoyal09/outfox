@@ -87,7 +87,7 @@ export function EngineTag({ engine, className }: { engine: string; className?: s
   return (
     <span
       className={cn(
-        "inline-flex shrink-0 items-center gap-1 font-mono text-[9px] font-semibold uppercase tracking-wide text-fg-secondary",
+        "inline-flex shrink-0 items-center gap-1 text-[11px] font-medium text-fg-secondary",
         className,
       )}
     >

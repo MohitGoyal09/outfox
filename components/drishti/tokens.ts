@@ -302,8 +302,7 @@ export type IconSize = (typeof ICON_SIZES)[number];
 export const iconProps = { strokeWidth: ICON_STROKE_WIDTH } as const;
 
 
-export const LABEL_CLASS =
-  "font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em]";
+export const LABEL_CLASS = "font-sans text-[12px] font-medium leading-snug";
 
 export const VALUE_CLASS = "font-mono tabular-nums";
 

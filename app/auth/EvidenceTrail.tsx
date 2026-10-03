@@ -12,7 +12,7 @@ const TRAIL = [
 export function EvidenceTrail() {
   return (
     <div aria-hidden="true">
-      <p className="mb-5 font-mono text-[10px] uppercase tracking-[0.16em] text-accent-ink/45">
+      <p className="mb-5 text-[12px] font-medium text-accent-ink/55">
         Every claim links to its source
       </p>
       <div className="space-y-3">
