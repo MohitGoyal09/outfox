@@ -7,6 +7,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { DrishtiMark } from "@/components/drishti/chrome/DrishtiMark";
 
 export function SignIn() {
   const { signIn } = useAuthActions();
@@ -40,13 +41,13 @@ export function SignIn() {
       <div className="mx-auto grid max-w-5xl overflow-hidden rounded-xl border border-border bg-bg-raised lg:min-h-[600px] lg:grid-cols-[1.05fr_0.95fr]">
         <section className="hidden flex-col justify-between bg-sidebar p-10 text-sidebar-foreground lg:flex">
           <div>
-            <div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-md bg-sidebar-primary text-lg font-semibold text-sidebar-primary-foreground">D</span><div><p className="font-semibold tracking-tight">Drishti</p><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/55">Evidence atlas</p></div></div>
+            <div className="flex items-center gap-3"><span className="flex size-10 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground"><DrishtiMark size={24} /></span><div><p className="font-semibold tracking-tight">Drishti</p><p className="font-mono text-[10px] uppercase tracking-[0.18em] text-sidebar-foreground/55">Evidence atlas</p></div></div>
             <div className="mt-24 max-w-sm"><p className="font-mono text-[10px] uppercase tracking-[0.16em] text-sidebar-primary">Research desk</p><h1 className="mt-4 text-4xl font-semibold leading-tight tracking-[-0.035em]">See the trail behind every claim.</h1><p className="mt-5 text-sm leading-6 text-sidebar-foreground/65">Compare brands with public signals that stay inspectable from first search to final brief.</p></div>
           </div>
           <div className="grid gap-3 text-xs text-sidebar-foreground/65"><p className="flex items-center gap-2"><Check className="size-4 text-sidebar-primary" /> Search, ads, creator and demand signals</p><p className="flex items-center gap-2"><Check className="size-4 text-sidebar-primary" /> Evidence stored with provenance</p><p className="flex items-center gap-2"><Check className="size-4 text-sidebar-primary" /> Answers grounded in your research</p></div>
         </section>
         <section className="flex items-center px-6 py-10 sm:px-12"><div className="mx-auto w-full max-w-md">
-          <div className="flex items-center gap-3 lg:hidden"><span className="flex size-9 items-center justify-center rounded-md bg-sidebar text-sm font-semibold text-sidebar-primary">D</span><p className="font-semibold tracking-tight">Drishti</p></div>
+          <div className="flex items-center gap-3 lg:hidden"><span className="flex size-9 items-center justify-center rounded-md bg-sidebar text-sidebar-primary"><DrishtiMark size={22} /></span><p className="font-semibold tracking-tight">Drishti</p></div>
           <p className="mt-10 font-mono text-[10px] uppercase tracking-[0.16em] text-accent lg:mt-0">Private research desk</p>
           <h2 className="mt-3 text-3xl font-semibold tracking-[-0.035em]">{mode === "signIn" ? "Welcome back" : "Create your account"}</h2>
           <p className="mt-3 max-w-sm text-sm leading-6 text-fg-secondary">{mode === "signIn" ? "Continue your brand research with the evidence still attached." : "Start a private evidence desk for the brands you follow."}</p>

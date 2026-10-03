@@ -35,6 +35,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/drishti/brands/BrandMark";
+import { DrishtiMark } from "./DrishtiMark";
 
 
 const NAV = [
@@ -100,8 +101,8 @@ export function Sidebar() {
               className="flex h-full min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-md transition-opacity duration-150 ease-out hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
               aria-label="Drishti home"
             >
-              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sm font-semibold text-sidebar-primary-foreground">
-                D
+              <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
+                <DrishtiMark size={22} />
               </span>
               <span className="flex min-w-0 flex-col">
                 <span className="truncate text-[15px] font-semibold tracking-[-0.02em]">Drishti</span>
