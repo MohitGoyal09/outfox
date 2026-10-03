@@ -199,6 +199,13 @@ export default defineSchema({
     .index("by_owner", ["ownerId"])
     .index("by_thread_and_createdAt", ["threadKey", "createdAt"]),
 
+  threadTitles: defineTable({
+    ownerId: v.id("users"),
+    threadKey: v.string(),
+    title: v.string(),
+    updatedAt: v.string(),
+  }).index("by_owner_and_threadKey", ["ownerId", "threadKey"]),
+
   llmUsage: defineTable({
     ownerId: v.optional(v.id("users")),
     runId: v.optional(v.id("runs")),

@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 import { Bookmark, Check, Loader2, Plus } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -61,14 +62,14 @@ export function SaveAllToBoardButton({
         missingClaim: missingClaim + result.missingClaim,
         overCap: result.overCap,
       };
-      setRowState({ boardId, kind: "done", message: bulkSaveOutcomeMessage(outcome, boardName), isError: false });
+      const message = bulkSaveOutcomeMessage(outcome, boardName);
+      setRowState({ boardId, kind: "done", message, isError: false });
+      if (result.saved > 0) toast.success(message);
+      else toast(message);
     } catch (caught) {
-      setRowState({
-        boardId,
-        kind: "done",
-        message: caught instanceof Error ? caught.message : "Could not save these sources.",
-        isError: true,
-      });
+      const message = caught instanceof Error ? caught.message : "Could not save these sources.";
+      setRowState({ boardId, kind: "done", message, isError: true });
+      toast.error(message);
     }
   }
 
@@ -87,12 +88,9 @@ export function SaveAllToBoardButton({
       setNewBoardName("");
       await saveAllTo(boardId, name);
     } catch (caught) {
-      setRowState({
-        boardId: "new" as Id<"boards">,
-        kind: "done",
-        message: caught instanceof Error ? caught.message : "Could not create the board.",
-        isError: true,
-      });
+      const message = caught instanceof Error ? caught.message : "Could not create the board.";
+      setRowState({ boardId: "new" as Id<"boards">, kind: "done", message, isError: true });
+      toast.error(message);
     } finally {
       setCreating(false);
     }
@@ -101,7 +99,6 @@ export function SaveAllToBoardButton({
   if (claimIds.length === 0) return null;
 
   const isBusy = rowState?.kind === "busy";
-  const feedback = rowState?.kind === "done" ? rowState.message : null;
 
   return (
     <Popover open={open} onOpenChange={(next) => { setOpen(next); if (!next) setRowState(null); }}>
@@ -173,11 +170,6 @@ export function SaveAllToBoardButton({
           )}
         </div>
 
-        {feedback !== null ? (
-          <p className={cn("border-t border-border px-3 py-2 text-[12px]", rowState?.kind === "done" && rowState.isError ? "text-danger" : "text-fg-secondary")}>
-            {feedback}
-          </p>
-        ) : null}
       </PopoverContent>
     </Popover>
   );

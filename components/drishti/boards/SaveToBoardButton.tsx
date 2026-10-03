@@ -3,6 +3,7 @@
 
 import { useState } from "react";
 import { useConvex, useMutation, useQuery } from "convex/react";
+import { toast } from "sonner";
 import { Bookmark, Check, Loader2, Plus } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -27,6 +28,13 @@ import {
 
 type BoardRow = { _id: Id<"boards">; name: string; createdAt: string };
 type RowState = { boardId: Id<"boards">; kind: "busy" } | { boardId: Id<"boards">; kind: "done"; outcome: SaveOutcome };
+
+function notify(outcome: SaveOutcome) {
+  const message = saveOutcomeMessage(outcome);
+  if (outcome.kind === "saved") toast.success(message);
+  else if (outcome.kind === "duplicate") toast(message);
+  else toast.error(message);
+}
 
 export function SaveToBoardButton({
   claimId,
@@ -71,6 +79,7 @@ export function SaveToBoardButton({
       outcome = { kind: "error", message: caught instanceof Error ? caught.message : "Could not save this evidence." };
     }
     setRowState({ boardId, kind: "done", outcome });
+    notify(outcome);
   }
 
   async function saveToDefault() {
@@ -88,19 +97,15 @@ export function SaveToBoardButton({
       setNewBoardName("");
       await saveTo(boardId, name);
     } catch (caught) {
-      setRowState({
-        boardId: "new" as Id<"boards">,
-        kind: "done",
-        outcome: { kind: "error", message: caught instanceof Error ? caught.message : "Could not create the board." },
-      });
+      const outcome: SaveOutcome = { kind: "error", message: caught instanceof Error ? caught.message : "Could not create the board." };
+      setRowState({ boardId: "new" as Id<"boards">, kind: "done", outcome });
+      notify(outcome);
     } finally {
       setCreating(false);
     }
   }
 
   const isBusy = rowState?.kind === "busy";
-  const feedback = rowState?.kind === "done" ? saveOutcomeMessage(rowState.outcome) : null;
-  const feedbackIsError = rowState?.kind === "done" && (rowState.outcome.kind === "error" || rowState.outcome.kind === "full");
 
   return (
     <Popover open={open} onOpenChange={(next) => { setOpen(next); if (!next) setRowState(null); }}>
@@ -173,11 +178,6 @@ export function SaveToBoardButton({
           )}
         </div>
 
-        {feedback !== null ? (
-          <p className={cn("border-t border-border px-3 py-2 text-[12px]", feedbackIsError ? "text-danger" : "text-fg-secondary")}>
-            {feedback}
-          </p>
-        ) : null}
       </PopoverContent>
     </Popover>
   );

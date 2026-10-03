@@ -11,6 +11,7 @@ import {
   Bookmark,
   Home,
   MessageSquare,
+  MessagesSquare,
   PanelLeftClose,
   PanelLeftOpen,
   Plus,
@@ -45,6 +46,7 @@ const NAV = [
   { href: "/signals", label: "Signals", icon: BarChart3 },
   { href: "/boards", label: "Boards", icon: Bookmark },
   { href: "/ask", label: "Ask", icon: MessageSquare },
+  { href: "/chats", label: "Chats", icon: MessagesSquare },
 ] as const;
 
 function isActive(pathname: string, href: string) {

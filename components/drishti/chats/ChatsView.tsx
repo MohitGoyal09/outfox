@@ -1,23 +1,45 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useQuery } from "convex/react";
-import { ArrowRight, MessageSquare, Plus, Search } from "lucide-react";
+import { useMutation, useQuery } from "convex/react";
+import { ConvexError } from "convex/values";
+import { toast } from "sonner";
+import { ArrowRight, MessageSquare, MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { EmptyState } from "../EmptyState";
 import { SkeletonRows } from "../Skeleton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 import { iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
+import { groupThreadsByActivity, type ThreadSummary } from "./chat-groups";
 
 export function ChatsView() {
   const router = useRouter();
   const threads = useQuery(api.messages.listThreads);
+  const deleteThread = useMutation(api.threads.deleteThread);
   const [query, setQuery] = useState("");
+  const [renamingKey, setRenamingKey] = useState<string | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<ThreadSummary | null>(null);
 
   const filtered = useMemo(() => {
     const list = threads ?? [];
@@ -25,6 +47,20 @@ export function ChatsView() {
     if (needle === "") return list;
     return list.filter((thread) => thread.title.toLowerCase().includes(needle));
   }, [threads, query]);
+
+  const groups = useMemo(() => groupThreadsByActivity(filtered, new Date()), [filtered]);
+
+  async function confirmDelete() {
+    if (pendingDelete === null) return;
+    try {
+      await deleteThread({ threadKey: pendingDelete.threadKey });
+      toast.success("Chat deleted");
+    } catch (error) {
+      toast.error(errorMessage(error, "Could not delete this chat. Try again."));
+    } finally {
+      setPendingDelete(null);
+    }
+  }
 
   if (threads === undefined) {
     return (
@@ -90,37 +126,187 @@ export function ChatsView() {
           description={`Nothing titled like "${query.trim()}". Try a different word.`}
         />
       ) : (
-        <ul className="flex flex-col gap-2">
-          {filtered.map((thread) => (
-            <li key={thread.threadKey}>
-              <Link
-                href={`/ask?chat=${encodeURIComponent(thread.threadKey)}`}
-                className={cn(
-                  "group flex items-center gap-3 rounded-lg border border-border bg-bg-raised p-4 shadow-xs",
-                  "transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:shadow-sm",
-                  "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
-                )}
-              >
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-bg-inset text-fg-secondary transition-colors duration-150 ease-out group-hover:bg-bg-raised-2 group-hover:text-fg">
-                  <MessageSquare aria-hidden className="size-4" />
-                </span>
-                <span className="min-w-0 flex-1">
-                  <span className="block truncate text-[14px] font-medium text-fg">
-                    {thread.title}
-                  </span>
-                  <span className="mt-0.5 block font-mono text-[11px] tabular-nums text-muted-foreground">
-                    {formatStamp(thread.lastMessageAt).split(" · ")[0]}
-                  </span>
-                </span>
-                <ArrowRight
-                  aria-hidden
-                  className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100"
+        groups.map((group) => (
+          <section key={group.label} aria-label={group.label} className="flex flex-col gap-2">
+            <h2 className="font-mono text-[11px] uppercase tracking-[0.12em] text-muted-foreground">
+              {group.label}
+            </h2>
+            <ul className="flex flex-col gap-2">
+              {group.threads.map((thread) => (
+                <ChatRow
+                  key={thread.threadKey}
+                  thread={thread}
+                  isRenaming={renamingKey === thread.threadKey}
+                  onStartRename={() => setRenamingKey(thread.threadKey)}
+                  onStopRename={() => setRenamingKey(null)}
+                  onDelete={() => setPendingDelete(thread)}
                 />
-              </Link>
-            </li>
-          ))}
-        </ul>
+              ))}
+            </ul>
+          </section>
+        ))
       )}
+      <AlertDialog
+        open={pendingDelete !== null}
+        onOpenChange={(open) => {
+          if (!open) setPendingDelete(null);
+        }}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this chat?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Its messages and answer steps are removed for good. Boards keep any evidence you saved from it.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              variant="destructive"
+              onClick={(event) => {
+                event.preventDefault();
+                void confirmDelete();
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
+  );
+}
+
+function errorMessage(error: unknown, fallback: string): string {
+  if (error instanceof ConvexError && typeof error.data === "string") return error.data;
+  return fallback;
+}
+
+function ChatRow({
+  thread,
+  isRenaming,
+  onStartRename,
+  onStopRename,
+  onDelete,
+}: {
+  thread: ThreadSummary;
+  isRenaming: boolean;
+  onStartRename: () => void;
+  onStopRename: () => void;
+  onDelete: () => void;
+}) {
+  const renameThread = useMutation(api.threads.renameThread);
+  const [draft, setDraft] = useState(thread.title);
+  const [error, setError] = useState<string | null>(null);
+  const finished = useRef(false);
+
+  function begin() {
+    finished.current = false;
+    setDraft(thread.title);
+    setError(null);
+    onStartRename();
+  }
+
+  async function save() {
+    if (finished.current) return;
+    if (draft.trim().replace(/\s+/g, " ") === thread.title) {
+      finished.current = true;
+      onStopRename();
+      return;
+    }
+    try {
+      await renameThread({ threadKey: thread.threadKey, title: draft });
+      finished.current = true;
+      onStopRename();
+      toast.success("Chat renamed");
+    } catch (err) {
+      setError(errorMessage(err, "Could not rename this chat. Try again."));
+    }
+  }
+
+  const stamp = formatStamp(thread.lastMessageAt).split(" · ")[0];
+  const rowClass = cn(
+    "group flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-border bg-bg-raised p-4 shadow-xs",
+    "transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:shadow-sm",
+  );
+  const icon = (
+    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-bg-inset text-fg-secondary transition-colors duration-150 ease-out group-hover:bg-bg-raised-2 group-hover:text-fg">
+      <MessageSquare aria-hidden className="size-4" />
+    </span>
+  );
+
+  return (
+    <li className="flex items-center gap-2">
+      {isRenaming ? (
+        <div className={rowClass}>
+          {icon}
+          <span className="min-w-0 flex-1">
+            <Input
+              autoFocus
+              value={draft}
+              aria-label="Chat name"
+              aria-invalid={error !== null}
+              onFocus={(event) => event.currentTarget.select()}
+              onChange={(event) => {
+                setDraft(event.target.value);
+                setError(null);
+              }}
+              onBlur={() => void save()}
+              onKeyDown={(event) => {
+                if (event.key === "Enter") {
+                  event.preventDefault();
+                  void save();
+                } else if (event.key === "Escape") {
+                  event.preventDefault();
+                  finished.current = true;
+                  onStopRename();
+                }
+              }}
+              className="h-8 text-[14px] font-medium"
+            />
+            {error !== null ? (
+              <span role="alert" className="mt-1 block text-xs text-destructive">
+                {error}
+              </span>
+            ) : null}
+          </span>
+        </div>
+      ) : (
+        <Link
+          href={`/ask?chat=${encodeURIComponent(thread.threadKey)}`}
+          className={cn(
+            rowClass,
+            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
+          )}
+        >
+          {icon}
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-[14px] font-medium text-fg">{thread.title}</span>
+            <span className="mt-0.5 block font-mono text-[11px] tabular-nums text-muted-foreground">{stamp}</span>
+          </span>
+          <ArrowRight
+            aria-hidden
+            className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100"
+          />
+        </Link>
+      )}
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button variant="ghost" size="icon" aria-label={`Chat options for ${thread.title}`}>
+            <MoreHorizontal aria-hidden className="size-4" />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end" onCloseAutoFocus={(event) => event.preventDefault()}>
+          <DropdownMenuItem onSelect={begin}>
+            <Pencil aria-hidden className="size-4" />
+            Rename
+          </DropdownMenuItem>
+          <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+            <Trash2 aria-hidden className="size-4" />
+            Delete
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </li>
   );
 }

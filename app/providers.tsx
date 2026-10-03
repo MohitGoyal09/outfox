@@ -3,6 +3,7 @@
 import { ConvexAuthProvider, useConvexAuth } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { SignIn } from "@/app/auth/SignIn";
+import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -18,6 +19,7 @@ export function Providers({ children }: { children: React.ReactNode }) {
     <ConvexAuthProvider client={convex}>
       <TooltipProvider>
         <AuthGate>{children}</AuthGate>
+        <Toaster />
       </TooltipProvider>
     </ConvexAuthProvider>
   );
