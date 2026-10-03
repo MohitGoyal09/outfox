@@ -36,6 +36,7 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
 import { BrandMark } from "@/components/drishti/brands/BrandMark";
+import { useAddBrandHref } from "@/components/drishti/brands/useAddBrandHref";
 import { DrishtiMark } from "./DrishtiMark";
 
 
@@ -67,6 +68,7 @@ const RAIL_ICON_BUTTON_CLASS =
 export function Sidebar() {
   const pathname = usePathname();
   const router = useRouter();
+  const addBrandHref = useAddBrandHref();
   const searchParams = useSearchParams();
   const activeThreadKey =
     pathname === "/ask" ? searchParams.get("chat") ?? searchParams.get("cohort") ?? "" : null;
@@ -232,10 +234,9 @@ export function Sidebar() {
             <SidebarGroupLabel className={cn(GROUP_LABEL_CLASS, "p-0")}>
               Tracked brands
             </SidebarGroupLabel>
-            {/* `?add=1` opens the add-rival form on the brands page. A search
-                param, not a `#hash`: the router publishes it, so the page hears
-                the click even when it is already on /brands. */}
-            <Link href="/brands?add=1" className={RAIL_ICON_BUTTON_CLASS} aria-label="Add a brand">
+            {/* `?add=1` on the current page opens the add-brand wizard in the
+                app shell. A search param, not a `#hash`: the router publishes it. */}
+            <Link href={addBrandHref} scroll={false} className={RAIL_ICON_BUTTON_CLASS} aria-label="Add a brand">
               <Plus aria-hidden className="size-3.5" />
             </Link>
           </div>

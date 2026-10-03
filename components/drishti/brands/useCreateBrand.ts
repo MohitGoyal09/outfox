@@ -4,7 +4,7 @@
 import { useCallback, useState } from "react";
 import { useAction } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import type { BrandCreatePath, BrandFormValues } from "./BrandForm";
+import type { BrandCreatePath, BrandFormValues } from "./add-brand-model";
 
 const CREATE_ERROR_FALLBACK = "The rival could not be saved.";
 
@@ -16,6 +16,7 @@ export type UseCreateBrand = {
   isSaving: boolean;
   error: string | null;
   success: string | null;
+  brandId: string | null;
   reset: () => void;
 };
 
@@ -24,10 +25,12 @@ export function useCreateBrand(): UseCreateBrand {
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [brandId, setBrandId] = useState<string | null>(null);
 
   const reset = useCallback(() => {
     setError(null);
     setSuccess(null);
+    setBrandId(null);
   }, []);
 
   const submit = useCallback(
@@ -35,6 +38,7 @@ export function useCreateBrand(): UseCreateBrand {
       void path;
       setError(null);
       setSuccess(null);
+      setBrandId(null);
       setIsSaving(true);
       try {
         const args = {
@@ -50,6 +54,7 @@ export function useCreateBrand(): UseCreateBrand {
         const outcome = result.needsConfirmation
           ? "needs confirmation"
           : result.status;
+        setBrandId(String(result.brandId));
         setSuccess(`Saved "${values.name}" as ${outcome}.`);
         return true;
       } catch (caught) {
@@ -66,5 +71,5 @@ export function useCreateBrand(): UseCreateBrand {
     [createBrandProfile],
   );
 
-  return { submit, isSaving, error, success, reset };
+  return { submit, isSaving, error, success, brandId, reset };
 }

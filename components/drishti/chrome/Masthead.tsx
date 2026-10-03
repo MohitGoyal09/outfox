@@ -8,6 +8,7 @@ import { useQuery } from "convex/react";
 import { LogOut, MessageSquare, Plus, Search, UserRound } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
+import { useAddBrandHref } from "@/components/drishti/brands/useAddBrandHref";
 import { CreditsChip } from "@/components/drishti/chrome/CreditsChip";
 import { NAV } from "@/components/drishti/chrome/Sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -36,6 +37,7 @@ function readModKey(): "⌘" | "Ctrl" {
 
 export function Masthead() {
   const router = useRouter();
+  const addBrandHref = useAddBrandHref();
   const { signOut } = useAuthActions();
   const brands = useQuery(api.brands.listBrands) ?? [];
   const me = useQuery(api.users.me);
@@ -111,7 +113,7 @@ export function Masthead() {
             size="sm"
             className="hidden h-9 shrink-0 rounded-sm bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"
           >
-            <Link href="/brands?add=1">
+            <Link href={addBrandHref} scroll={false}>
               <Plus {...iconProps} aria-hidden className="size-4" />
               Add brand
             </Link>

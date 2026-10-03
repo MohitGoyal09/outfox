@@ -34,6 +34,7 @@ import {
   isDefaultFeedFilters,
 } from "@/components/drishti/feed/feed-model";
 import { useFeedFilters } from "@/components/drishti/feed/useFeedFilters";
+import { useAddBrandHref } from "@/components/drishti/brands/useAddBrandHref";
 import { cn } from "@/lib/utils";
 
 export function FeedSkeleton() {
@@ -70,6 +71,7 @@ export default function FeedPage() {
 }
 
 function FeedBody() {
+  const addBrandHref = useAddBrandHref();
   const [nowMs] = useState(() => Date.now());
 
   const brandsQuery = useQuery(api.brands.listBrands);
@@ -143,7 +145,8 @@ function FeedBody() {
           description="Add a tracked brand, and its evidence appears here the moment the first check completes."
           action={
             <Link
-              href="/brands?add=1"
+              href={addBrandHref}
+              scroll={false}
               className="inline-flex h-8 items-center rounded-sm border border-border-strong px-3 text-[13px] text-fg hover:bg-bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
             >
               Add a brand

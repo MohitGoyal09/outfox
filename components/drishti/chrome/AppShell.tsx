@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 
 import { Masthead } from "@/components/drishti/chrome/Masthead";
 import { Sidebar } from "@/components/drishti/chrome/Sidebar";
+import { AddBrandDialog } from "@/components/drishti/brands/AddBrandDialog";
 import { ContextualAsk } from "@/components/drishti/chrome/ContextualAsk";
 import { SidebarProvider } from "@/components/ui/sidebar";
 
@@ -33,6 +34,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
       <ContextualAsk />
+      <AddBrandDialog />
     </SidebarProvider>
   );
 }

@@ -1,20 +1,18 @@
 "use client";
 
-import { Suspense, useMemo, useState } from "react";
+import { Suspense, useMemo } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
 import { Compass, Plus } from "lucide-react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { BrandForm } from "@/components/drishti/brands/BrandForm";
 import { BrandList } from "@/components/drishti/brands/BrandList";
 import { splitOwnBrand } from "@/components/drishti/brands/brand-model";
-import { useCreateBrand } from "@/components/drishti/brands/useCreateBrand";
+import { useAddBrandHref } from "@/components/drishti/brands/useAddBrandHref";
 import { QueryBoundary } from "@/components/drishti/cohorts/QueryBoundary";
 import { Button } from "@/components/ui/button";
-import { Sheet, SheetContent } from "@/components/ui/sheet";
 
 export default function BrandsPage() {
+  const addBrandHref = useAddBrandHref();
   return (
     <div className="flex flex-col gap-8">
       <header className="flex flex-col gap-3 border-b border-border pb-7">
@@ -27,7 +25,7 @@ export default function BrandsPage() {
           </div>
           <div className="flex flex-wrap items-center gap-2">
             <Button asChild className="w-fit gap-2">
-              <Link href="/brands?add=1">
+              <Link href={addBrandHref} scroll={false}>
                 <Plus className="size-4" aria-hidden />
                 Add brand
               </Link>
@@ -52,11 +50,7 @@ export default function BrandsPage() {
 
 function BrandsBody() {
   const brands = useQuery(api.brands.listBrands);
-  const { submit, isSaving, error, success } = useCreateBrand();
-  const [tracking, setTracking] = useState(false);
-  const router = useRouter();
-  const searchParams = useSearchParams();
-  const formOpen = tracking || searchParams.get("add") === "1";
+  const addBrandHref = useAddBrandHref();
   const list = useMemo(() => brands ?? [], [brands]);
   const isLoading = brands === undefined;
   const { own, competitors } = useMemo(() => splitOwnBrand(list), [list]);
@@ -86,27 +80,16 @@ function BrandsBody() {
                   Set up your brand
                 </Link>
               </Button>
-              <Button variant="outline" size="sm" onClick={() => setTracking(true)} className="gap-1.5">
-                <Plus className="size-3.5" aria-hidden />
-                Track one manually
+              <Button asChild variant="outline" size="sm" className="gap-1.5">
+                <Link href={addBrandHref} scroll={false}>
+                  <Plus className="size-3.5" aria-hidden />
+                  Track one manually
+                </Link>
               </Button>
             </div>
           }
         />
       </section>
-      <Sheet
-        open={formOpen}
-        onOpenChange={(open) => {
-          if (!open) {
-            router.replace("/brands");
-            setTracking(false);
-          }
-        }}
-      >
-        <SheetContent side="right" className="w-full gap-0 overflow-y-auto p-0 sm:max-w-[420px]">
-          <BrandForm existingBrands={list} onSubmit={submit} isSaving={isSaving} error={error} success={success} />
-        </SheetContent>
-      </Sheet>
     </div>
   );
 }
