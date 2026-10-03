@@ -35,6 +35,7 @@ type ChatRequest = {
   brandIds?: string[];
   cohortKey?: string;
   chatId?: string;
+  pageBrand?: { brandId?: string };
 };
 
 function convexClient(token: string): ConvexHttpClient | null {
@@ -53,3 +54,99 @@ function toolErrorTextFor(error: unknown): string {
 type RunCloseStatus = "complete" | "partial" | "failed";
 
 type RunCloseDecision = { status: RunCloseStatus; errorMessage?: string };
+
+export async function POST(request: Request): Promise<Response> {
+
+  const brandIds = Array.isArray(body.brandIds) ? body.brandIds : [];
+  if (brandIds.length > MAX_BRANDS_PER_RUN || brandIds.some((id) => typeof id !== "string" || !ID_RE.test(id))) {
+    return Response.json({ error: `Invalid brand scope (maximum ${MAX_BRANDS_PER_RUN} brands)` }, { status: 400 });
+  }
+
+  const token = await resolveAuthToken(request);
+
+  const threadKey =
+    typeof body.chatId === "string" && body.chatId !== ""
+      ? body.chatId
+      : typeof body.cohortKey === "string" && body.cohortKey !== ""
+        ? body.cohortKey
+        : "";
+  if (uiMessages.length === 0) return Response.json({ error: "Provide message or messages" }, { status: 400 });
+  const isApprovalContinuation = uiMessages.some((message) =>
+    (message.parts ?? []).some(
+      (part) => (part as { state?: string }).state === "approval-responded",
+    ),
+  );
+  const isDeniedApproval = uiMessages.some((message) =>
+    (message.parts ?? []).some((part) => {
+      const p = part as { state?: string; approval?: { approved?: boolean } };
+      return p.state === "approval-responded" && p.approval?.approved === false;
+    }),
+  );
+  if (!isApprovalContinuation && latestUserText.length > MAX_MESSAGE_CHARS) {
+    return Response.json({ error: `Message is too long (maximum ${MAX_MESSAGE_CHARS} characters)` }, { status: 400 });
+  }
+  if (fastModel === null || reasoningModel === null) {
+    return createUIMessageStreamResponse({ stream });
+  }
+  const threadHasEvidence = priorRefs.length > 0;
+  let ownBrand: { _id: unknown; name: string } | null = null;
+  try {
+    ownBrand = await convex.query(api.brands.getOwnBrand, {});
+  } catch {
+  }
+  const pageBrand = ID_RE.test(pageBrandId)
+    ? ownedBrands.find((brand) => String(brand._id) === pageBrandId)
+    : undefined;
+  const namedMentions = brandsMentionedIn(latestUserText, ownedBrands, undefined, ownBrand);
+  const combinedBrandIds = [...new Set([...brandIds, ...mentioned.map((match) => match.brandId)])];
+  const scopedBrandIds = combinedBrandIds.slice(0, MAX_BRANDS_PER_RUN);
+
+  if (!isApprovalContinuation) {
+    await appendTurn(convex, { threadKey, role: "user", text: latestUserText, citations: [] });
+  }
+
+  if (classification.needsClarification && !threadHasEvidence) {
+    const clarifyText =
+      scopedBrandIds.length === 0
+        ? "Which brand would you like to know about? Name it (or pick one you're tracking) and I'll look it up."
+        : "What would you like to know about the selected brand(s) -- a specific metric, a comparison, or a time window?";
+    await logEvent(convex, {
+      threadKey,
+      kind: "plan",
+      name: "classify",
+      status: "complete",
+      detail: classification.reason,
+      payload: { tier: classification.tier, needsClarification: true },
+    });
+    return createUIMessageStreamResponse({ stream });
+  }
+
+  const tier = classification.tier;
+  const tools = buildTools({ convex, threadKey, state });
+
+  const history = isApprovalContinuation
+    ? uiMessages
+    : await buildHistoryMessages(convex, threadKey, uiMessages, fastModel);
+  const baseMessages: ModelMessage[] = await convertToModelMessages(history);
+  const system = buildAgentSystemPrompt({
+    trackedBrandCount: ownedBrands.length,
+    matchedBrands: mentioned.map((match) => ({ id: match.brandId, name: match.brandName })),
+    ownBrand: ownBrand !== null ? { id: String(ownBrand._id), name: ownBrand.name } : null,
+    omittedBrands: omittedBrandNames,
+    pageBrandName,
+  });
+  const maxSteps = tier === "COMPLEX" ? COMPLEX_MAX_STEPS : MAX_STEPS;
+  const phase1Messages: ModelMessage[] =
+    planText !== null
+      ? [
+          ...baseMessages,
+          { role: "assistant", content: planText },
+          { role: "user", content: "Execute that plan now, one step at a time, using the tools available." },
+        ]
+      : baseMessages;
+
+  let budgetExhausted = false;
+  let pendingApproval = false;
+
+  return createUIMessageStreamResponse({ stream });
+}
