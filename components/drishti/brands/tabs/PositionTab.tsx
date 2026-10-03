@@ -53,7 +53,7 @@ function AiOverviewPanel({ claims }: { claims: ClaimDoc[] }) {
             size="sm"
             icon={<Sparkles {...iconProps} size={16} />}
             title="No AI Overview yet."
-            description="Fills in once a check captures Google's AI Overview for this brand — not every query triggers one."
+            description="Fills in once a check captures Google's AI Overview for this brand, not every query triggers one."
           />
         ) : (
           <ul className="space-y-2.5">
@@ -108,7 +108,7 @@ function PriceLadderCard({ claims }: { claims: ClaimDoc[] }) {
             size="sm"
             icon={<Layers {...iconProps} size={16} />}
             title="No product listing prices yet."
-            description="Fills in once a check captures real SERP product listings for this brand — each price keeps the date it was observed, never shown as current truth."
+            description="Fills in once a check captures real SERP product listings for this brand, each price keeps the date it was observed, never shown as current truth."
           />
         ) : (
           <div className="space-y-3">
@@ -148,7 +148,7 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
         <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
           <MetricInfo
             label="Hook-mix drift"
-            definition="The change in hook-tag counts between this check and the previous tagged check. Bars show counts, not rates, so a larger check can lift every bar — a taller bar is more tags, not automatically a bigger share."
+            definition="The change in hook-tag counts between this check and the previous tagged check. Bars show counts, not rates, so a larger check can lift every bar, a taller bar is more tags, not automatically a bigger share."
           />
         </h3>
       </div>
@@ -158,7 +158,7 @@ function HookMixDriftChart({ current, previous }: { current: ClaimDoc[]; previou
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
             title="No earlier check to compare."
-            description="Drift needs a second tagged check. Check again later and this chart will compare hook counts check over check — never a guessed baseline."
+            description="Drift needs a second tagged check. Check again later and this chart will compare hook counts check over check, never a guessed baseline."
           />
         ) : rows.every((row) => row.current === 0 && row.previous === 0) ? (
           <EmptyState
@@ -222,11 +222,11 @@ function CtaMixCard({ brandId }: { brandId: BrandDoc["_id"] }) {
   return (
     <RankedCatalogChart
       title="CTA mix"
-      definition="How often a call-to-action (the action a piece of creative asks for, e.g. 'shop now' or 'learn more') was assigned by an enrichment check. Counts are of the same bounded, tagged sample as the hook and theme catalogs above — not of every finding, post, view, or spend."
+      definition="How often a call-to-action (the action a piece of creative asks for, e.g. 'shop now' or 'learn more') was assigned by an enrichment check. Counts are of the same bounded, tagged sample as the hook and theme catalogs above, not of every finding, post, view, or spend."
       rows={rows}
       formatLabel={humanize}
       emptyTitle="No tagged CTAs yet."
-      emptyDescription="Ranks the real call-to-action text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+      emptyDescription="Ranks the real call-to-action text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
       loading={facet === undefined}
     />
   );
@@ -286,10 +286,10 @@ export function PositionTab({
       */}
       <AiOverviewPanel claims={filteredLatest} />
       {/*
-        Ranked hook catalog — two levels of the same enrichment pass, both
+        Ranked hook catalog, two levels of the same enrichment pass, both
         real server-side faceted counts from get_tags, never re-derived here:
         the fixed 9-value hookType vocabulary (colored on DESIGN.md's
-        hookType hue scale — the Data-Color Rule, so a hue means the same
+        hookType hue scale, the Data-Color Rule, so a hue means the same
         thing here as it does in a chip elsewhere in the product), then the
         theme and valueProp free-text long tail underneath it, where the
         real specificity lives.
@@ -297,7 +297,7 @@ export function PositionTab({
       <div>
         <h2 className="type-headline text-fg">Ranked hook catalog</h2>
         <p className="mb-3 text-[11px] text-muted-foreground">
-          The fixed hookType vocabulary, then the free-text theme and value-proposition long tail underneath it — every count real and server-computed.
+          The fixed hookType vocabulary, then the free-text theme and value-proposition long tail underneath it, every count real and server-computed.
         </p>
         {/* Hook type stands alone, full width: its labels are single words, so
             the width is better spent on the free-text long tail below, whose
@@ -310,7 +310,7 @@ export function PositionTab({
           colorFor={(label) => HOOK_COLOR[label as HookType] ?? HOOK_COLOR.not_applicable}
           formatLabel={hookName}
           emptyTitle="No tagged hook types yet."
-          emptyDescription="Ranks the real, fixed hook-type vocabulary an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+          emptyDescription="Ranks the real, fixed hook-type vocabulary an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
         />
         <div className="mt-4 grid gap-4 lg:grid-cols-2">
           <RankedCatalogChart
@@ -318,14 +318,14 @@ export function PositionTab({
             definition="How often an enrichment check assigned each theme to a finding. The tag is free text, so two rows can mean the same thing in different words."
             rows={themeRows}
             emptyTitle="No tagged themes yet."
-            emptyDescription="Ranks the real theme text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+            emptyDescription="Ranks the real theme text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
           />
           <RankedCatalogChart
             title="Value propositions"
             definition="How often an enrichment check assigned each value proposition to a finding. The tag is free text, so two rows can mean the same thing in different words."
             rows={valuePropRows}
             emptyTitle="No tagged value propositions yet."
-            emptyDescription="Ranks the real value-proposition text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+            emptyDescription="Ranks the real value-proposition text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
           />
           <CtaMixCard brandId={brand._id} />
         </div>

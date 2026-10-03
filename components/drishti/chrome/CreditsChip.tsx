@@ -28,17 +28,22 @@ export function CreditsChip() {
   }, []);
 
   const { text, tone, meter } = creditsChipView(live, fallback);
+  const leftCount = /^\d+/.exec(text)?.[0];
+  const shortText = leftCount ? `${leftCount} left` : "Credits";
   return (
     <span
       className={cn(
         CONTROL_SHELL_CLASS,
-        "shrink-0 cursor-default select-none hover:border-border",
+        "shrink-0 cursor-default select-none px-2 hover:border-border sm:px-3",
         tone === "danger" && "border-danger text-danger",
       )}
       aria-label="SerpApi credits remaining this month"
     >
-      <span className={cn(VALUE_CLASS, tone === "danger" ? "text-danger" : "text-fg-secondary")}>
+      <span className={cn(VALUE_CLASS, tone === "danger" ? "text-danger" : "text-fg-secondary", "hidden sm:inline")}>
         {text}
+      </span>
+      <span className={cn(VALUE_CLASS, tone === "danger" ? "text-danger" : "text-fg-secondary", "sm:hidden")} aria-hidden="true">
+        {shortText}
       </span>
       {meter ? (
         <Meter
@@ -46,6 +51,7 @@ export function CreditsChip() {
           max={meter.total}
           fill={meter.fill}
           aria-label="SerpApi searches left"
+          className="hidden sm:block"
         />
       ) : null}
     </span>

@@ -126,7 +126,7 @@ export function BoardDetail({
 
       {atCap ? (
         <p className="max-w-[68ch] text-[12px] leading-[1.5] text-fg-secondary">
-          This board is full at {MAX_ITEMS_PER_BOARD} items — the most this surface holds. Remove one to save another here, or use a different board.
+          This board is full at {MAX_ITEMS_PER_BOARD} items, the most this surface holds. Remove one to save another here, or use a different board.
         </p>
       ) : null}
 

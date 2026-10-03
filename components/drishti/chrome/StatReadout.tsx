@@ -35,11 +35,11 @@ export function StatReadout({
     return <Skeleton variant="stat" width={112} height={14} className={className} />;
   }
 
-  const searches = used !== null && limit !== null ? `${used}/${limit}` : "—";
+  const searches = used !== null && limit !== null ? `${used}/${limit}` : "-";
   const costText =
     cost !== null
       ? `${formatUsd(cost)}${costProvenance === "estimated" ? " est." : ""}`
-      : "—";
+      : "-";
 
   return (
     <p

@@ -35,7 +35,7 @@ function EvidenceMix({ claims, previousClaims }: { claims: ClaimDoc[]; previousC
               {row.label}
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
-            <span className="font-mono text-[11px] text-ok">{total ? `${Math.round((row.count / total) * 100)}%` : "—"}</span>
+            <span className="font-mono text-[11px] text-ok">{total ? `${Math.round((row.count / total) * 100)}%` : "-"}</span>
             <DeltaTag delta={row.delta} />
           </div>
         ))
@@ -86,7 +86,7 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{row.status === "ok" ? Intl.NumberFormat("en-US").format(count) : checkedStateLabel(row.status)}</span>
             <span className="font-mono text-[11px] text-muted-foreground">
-              {row.status === "ok" && total ? `${Math.round((count / total) * 100)}%` : "—"}
+              {row.status === "ok" && total ? `${Math.round((count / total) * 100)}%` : "-"}
             </span>
             <DeltaTag delta={delta} />
           </div>
@@ -184,7 +184,7 @@ export function OverviewTab({
         </SummaryPanel>
       </div>
       {/* SimilarBrandsPanel moved to the brand header as a chip (BrandProfile.tsx),
-          next to the evidence-signal and tagged-findings badges — a whole row for
+          next to the evidence-signal and tagged-findings badges, a whole row for
           one chip was too much page for the data it held. */}
       <EvidenceSection
         latestClaims={latestClaims}
@@ -203,10 +203,10 @@ export function OverviewTab({
               {/* Reconciles the header's broader "N findings" badge (BrandProfile.tsx,
                   counts every real signal, including pure-count metrics like view/like
                   counts that never render as their own card) against this narrower count (only
-                  findings with something to actually read — see brand-model.ts's isContentClaim).
+                  findings with something to actually read, see brand-model.ts's isContentClaim).
                   Two real, differently-scoped numbers, both labelled, instead of one page stating
                   two different figures as if they measured the same thing. */}
-              <p className="mt-0.5 text-[11px] text-muted-foreground">Browsable findings below — the header&apos;s findings count also includes measured values (views, likes, rank) shown in the panels above, not as standalone cards.</p>
+              <p className="mt-0.5 text-[11px] text-muted-foreground">Browsable findings below, the header&apos;s findings count also includes measured values (views, likes, rank) shown in the panels above, not as standalone cards.</p>
             </div>
             <span className="text-xs text-muted-foreground">Findings as of {shortDate(latestRunAt)}</span>
           </div>

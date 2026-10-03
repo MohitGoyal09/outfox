@@ -106,7 +106,7 @@ export default function DevChartsPage() {
   return (
     <main className="mx-auto flex max-w-[1000px] flex-col gap-2 bg-[var(--bg)] px-4 py-8 sm:px-8">
       <h1 className="text-[1.4rem] font-semibold text-[var(--text-primary)]">
-        TrendsChart — dev harness
+        TrendsChart: dev harness
       </h1>
       <p className="text-[13px] text-[var(--text-secondary)]">
         Not a product route. For browser verification of components/drishti/charts/TrendsChart.tsx only.

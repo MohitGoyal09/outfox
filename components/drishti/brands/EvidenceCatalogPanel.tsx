@@ -56,7 +56,7 @@ export function EvidenceCatalogPanel({
                       {row.primary}
                     </a>
                     {row.meta !== null ? (
-                      <span className="ml-1.5 tabular-nums text-muted-foreground">— {row.meta}</span>
+                      <span className="ml-1.5 tabular-nums text-muted-foreground">({row.meta})</span>
                     ) : null}
                   </span>
                   <ExternalLink className="size-3 shrink-0 text-muted-foreground" aria-hidden />

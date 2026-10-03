@@ -77,7 +77,7 @@ function OrganicRankChart({ claims }: { claims: ClaimDoc[] }) {
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
             title="No organic results yet."
-            description="Buckets the real rank SerpApi reported for each Google organic result — fills in after a Google Search check."
+            description="Buckets the real rank SerpApi reported for each Google organic result, fills in after a Google Search check."
           />
         ) : (
           <ChartContainer config={chartConfig} className="h-[200px] w-full aspect-auto">
@@ -137,13 +137,13 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
             size="sm"
             icon={<Clapperboard {...iconProps} size={16} />}
             title="No Google Ads data for this brand."
-            description="Many brands have no resolvable advertiser id, so this source genuinely returns nothing for them — this is not an error, and it fills in once a check resolves one."
+            description="Many brands have no resolvable advertiser id, so this source genuinely returns nothing for them, this is not an error, and it fills in once a check resolves one."
           />
         ) : !showTable ? (
           <>
             <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
               None of these {rows.length} creative{rows.length === 1 ? "" : "s"} carries a real first/last-seen date
-              from this source, so run length — and any ranking by it — is not available for this batch. Showing
+              from this source, so run length, and any ranking by it, is not available for this batch. Showing
               what IS known instead: format and creative count.
             </p>
             <ul className="space-y-2">
@@ -158,7 +158,7 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
         ) : (
           <>
             <p className="mb-3 text-[11px] leading-4 text-muted-foreground">
-              Run length is how long we observed each creative live — our honest proxy for spend, not spend itself. A longer-running ad is one the brand kept live, nothing more.
+              Run length is how long we observed each creative live, our honest proxy for spend, not spend itself. A longer-running ad is one the brand kept live, nothing more.
             </p>
             <div className="max-h-[420px] overflow-auto rounded-sm border border-border">
               <table className="w-full min-w-[560px] border-collapse text-xs">
@@ -171,7 +171,7 @@ function AdRunLengthLeaderboard({ claims }: { claims: ClaimDoc[] }) {
                     <th className="py-2 pr-3 text-right font-normal">
                       <MetricInfo
                         label="Run length"
-                        definition="Days between the first and last time we saw the creative live. Our honest proxy for spend, not spend itself — a longer run means the brand kept it live, nothing more."
+                        definition="Days between the first and last time we saw the creative live. Our honest proxy for spend, not spend itself, a longer run means the brand kept it live, nothing more."
                         className="justify-end"
                       />
                     </th>
@@ -287,7 +287,7 @@ export function PlacementTab({
           icon={<Store className="size-4 text-accent" />}
           rows={retailerRows}
           emptyTitle="No named retailers yet."
-          emptyDescription="Ranks the real retailer named in each SERP product listing — fills in once a listing names one."
+          emptyDescription="Ranks the real retailer named in each SERP product listing, fills in once a listing names one."
         />
         <CountListPanel
           title="News outlets"
@@ -301,21 +301,21 @@ export function PlacementTab({
       <div className="grid gap-4 lg:grid-cols-2">
         <EvidenceCatalogPanel
           title="In-video shopping results"
-          definition="Real products the source surfaced for sale on this brand's videos — title, vendor, and price folded from the video page. Not the brand's whole catalog, and not proof of a sale: it is what the source showed."
+          definition="Real products the source surfaced for sale on this brand's videos, title, vendor, and price folded from the video page. Not the brand's whole catalog, and not proof of a sale: it is what the source showed."
           icon={<PlatformLogo engine="youtube_video" className="size-4" />}
           rows={shoppingResultRows}
           emptyTitle="No shopping results yet."
           emptyDescription="Lists real products the source surfaced for sale on this brand's videos, once a check captures shopping-result evidence."
-          capNote="Up to 10 shopping results per video, as the source surfaced them — never the brand's full product catalog."
+          capNote="Up to 10 shopping results per video, as the source surfaced them, never the brand's full product catalog."
         />
         <EvidenceCatalogPanel
           title="Description link destinations"
-          definition="Real outbound links the brand placed in its own video descriptions — where its videos push traffic. This is a sample of those links, not the brand's full link roster."
+          definition="Real outbound links the brand placed in its own video descriptions, where its videos push traffic. This is a sample of those links, not the brand's full link roster."
           icon={<PlatformLogo engine="youtube_video" className="size-4" />}
           rows={descriptionLinkRows}
           emptyTitle="No description links yet."
           emptyDescription="Lists real outbound links found in this brand's video descriptions, once a check captures that evidence."
-          capNote="Up to 10 description links per video, as stored by the pipeline — never the brand's full link roster."
+          capNote="Up to 10 description links per video, as stored by the pipeline, never the brand's full link roster."
         />
       </div>
       {shortsCount > 0 || youtubeAdCount > 0 ? (

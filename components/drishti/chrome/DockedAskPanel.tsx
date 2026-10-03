@@ -4,7 +4,7 @@
 import { useEffect, useRef, type ReactNode } from "react";
 import Link from "next/link";
 import { motion, useReducedMotion } from "motion/react";
-import { ChevronDown, ExternalLink, Trash2 } from "lucide-react";
+import { ArrowRight, ChevronDown, Trash2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 const NEAR_BOTTOM_PX = 80;
@@ -56,7 +56,7 @@ export function DockedAskPanel({
               className="flex items-center gap-1 rounded-md px-2 py-1 text-xs text-fg-secondary transition-colors hover:bg-bg-inset hover:text-fg"
             >
               Open full chat
-              <ExternalLink className="size-3" aria-hidden="true" />
+              <ArrowRight className="size-3" aria-hidden="true" />
             </Link>
           ) : null}
           <button

@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowUpRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, LayoutGrid, Link2, Layers, MapPin, Sparkles, Tag, Users } from "lucide-react";
+import { ArrowLeft, ArrowRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, LayoutGrid, Link2, Layers, MapPin, Sparkles, Tag, Users } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -270,7 +270,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
               {latestRun ? (
                 <Button asChild size="sm" className="h-8 gap-1.5">
                   <Link href={`/runs/${latestRun._id}`}>
-                    Latest check <ArrowUpRight className="size-3.5" />
+                    Latest check <ArrowRight className="size-3.5" />
                   </Link>
                 </Button>
               ) : null}

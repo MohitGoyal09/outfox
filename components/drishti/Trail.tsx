@@ -561,7 +561,7 @@ export function Trail({
   return (
     <div className={className} data-state="default">
       {/* Spacing between rows comes from each `<li>`'s own `pb-6 last:pb-0`
-          (see `TrailVertical`), not a container gap — that per-item
+          (see `TrailVertical`), not a container gap, that per-item
           padding is what lets the connector line's `top-X bottom-0` reach
           exactly into the next row's marker with no fragile negative-offset
           arithmetic. */}

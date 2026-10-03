@@ -4,7 +4,9 @@
 import type { InputHTMLAttributes } from "react";
 import { CircleAlert } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { FOCUS_RING_CLASS, LABEL_CLASS, iconProps } from "@/components/drishti";
+import { iconProps } from "@/components/drishti";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export type FieldProps = Omit<InputHTMLAttributes<HTMLInputElement>, "id" | "className"> & {
   id: string;
@@ -22,25 +24,15 @@ export function Field({ id, label, error = null, hint, className, ...rest }: Fie
 
   return (
     <div className={cn("flex flex-col gap-1.5", className)}>
-      <label htmlFor={id} className={cn(LABEL_CLASS, "text-[var(--text-secondary)]")}>
+      <Label htmlFor={id} className="text-[var(--text-secondary)]">
         {label}
-      </label>
-      <input
+      </Label>
+      <Input
         {...rest}
         id={id}
         aria-invalid={invalid ? true : undefined}
         aria-describedby={describedBy.length > 0 ? describedBy.join(" ") : undefined}
-        className={cn(
-          "h-10 w-full rounded-sm border bg-[var(--bg-inset)] px-3 text-[14px] text-[var(--text-primary)] outline-none",
-          "motion-safe:transition-colors motion-safe:duration-150 motion-safe:ease-out",
-          "placeholder:text-[var(--text-tertiary)]",
-          invalid
-            ? "border-[var(--danger)]"
-            : "border-[var(--border-strong)] hover:border-[var(--text-tertiary)]",
-          "focus:border-[var(--border-strong)]",
-          FOCUS_RING_CLASS,
-          "disabled:cursor-not-allowed disabled:bg-[var(--bg-raised)] disabled:text-[var(--text-tertiary)]",
-        )}
+        className="h-11 text-[14px]"
       />
       {hint !== undefined && !invalid ? (
         <span id={`${id}-hint`} className="text-[12px] leading-[1.45] text-[var(--text-secondary)]">

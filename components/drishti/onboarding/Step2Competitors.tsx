@@ -215,7 +215,7 @@ export function Step2Competitors({
 
       {atCap ? (
         <p className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-          You&rsquo;ve picked {MAX_ONBOARDING_COMPETITORS} competitors — the most a first check
+          You&rsquo;ve picked {MAX_ONBOARDING_COMPETITORS} competitors, the most a first check
           compares at once, alongside {ownBrandName}. Remove one to swap it for another.
         </p>
       ) : (
@@ -254,7 +254,7 @@ export function Step2Competitors({
           <EmptyState
             size="sm"
             title={`No catalog brands in ${vertical} yet`}
-            description="Add competitors by name and website instead — Drishti still runs the same check against them."
+            description="Add competitors by name and website instead, Drishti still runs the same check against them."
           />
         ) : noMatches ? (
           <EmptyState

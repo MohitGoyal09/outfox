@@ -216,10 +216,15 @@ export function formatSharePct(pct: number | null | undefined): string {
 
 export function formatDelta(
   delta: number | null | undefined,
-  unit: "count" | "pct" = "count",
+  unit: "count" | "pct" | "pp" = "count",
 ): string {
   if (delta === null || delta === undefined || !Number.isFinite(delta)) {
     return ABSENT;
+  }
+  if (unit === "pp") {
+    const pp = Math.round(Math.abs(delta) * 10) / 10;
+    if (pp === 0) return "0.0 pp";
+    return `${delta > 0 ? "+" : "-"}${pp.toFixed(1)} pp`;
   }
   if (delta === 0) return "0";
   const magnitude = formatPctNumber(Math.abs(delta));
@@ -327,7 +332,7 @@ const EMPTY_COPY_BANS: readonly string[] = [
   "no data.",
   "n/a",
   "-",
-  "—",
+  "\u2014",
   "...",
 ];
 

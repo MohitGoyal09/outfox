@@ -25,6 +25,7 @@ import { REMOVED_BRAND_LABEL } from "../runs/derive";
 import {
   BOARD_HONESTY_LINE,
   countFindings,
+  countUnclear,
   coverageGaps,
   deriveEmerging,
   deriveEngineCoverage,
@@ -159,6 +160,8 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     () => (claims !== undefined ? deriveFunnelDistribution(claims, priorClaims) : []),
     [claims, priorClaims],
   );
+  const funnelUnclear = claims !== undefined ? countUnclear(claims, "funnelStage") : 0;
+  const funnelClear = funnelItems.reduce((sum, item) => sum + (item.count ?? 0), 0);
   const leaders = useMemo(
     () => (claims !== undefined ? deriveLeaderboard(claims, brandIds, brandNames, ownBrandId) : []),
     [claims, brandIds, brandNames, ownBrandId],
@@ -202,7 +205,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const comparisonColumnLabel =
     cohortKey === null
       ? comparedBrandsNote
-        ? "vs previous check"
+        ? "Change since previous check"
         : undefined
       : pinned.previous
         ? `vs ${formatStamp(pinned.previous.requestedAt)}`
@@ -278,39 +281,50 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
             <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
               {spansOneMoment
                 ? formatStamp(newestStamp)
-                : `${formatStamp(oldestStamp as string)} — ${formatStamp(newestStamp)}`}
+                : `${formatStamp(oldestStamp as string)} to ${formatStamp(newestStamp)}`}
             </Badge>
           ) : null}
         </div>
-        <p className="flex flex-wrap items-baseline gap-x-3 gap-y-1 text-[13px] leading-[1.5] text-fg-secondary">
-          <span className="font-medium text-fg">
-            {cohortBrands.length > 0
-              ? cohortBrands.map((brand, index) => (
-                  <span key={brand.id}>
-                    {index > 0 ? " · " : ""}
-                    {brand.isOwn ? <>You — {brand.name}</> : brand.name}
-                    {brand.checkedAt !== null ? (
-                      <span className={cn(VALUE_CLASS, "ml-1 text-[11px] font-normal text-[var(--text-tertiary)]")}>
-                        {formatStamp(brand.checkedAt)}
+        <div className="flex flex-wrap items-center gap-x-2 gap-y-2 text-[13px] leading-[1.4]">
+          {cohortBrands.length > 0 ? (
+            <ul className="flex flex-wrap gap-2" aria-label="Brands in view">
+              {cohortBrands.map((brand) => (
+                <li
+                  key={brand.id}
+                  className="inline-flex flex-wrap items-baseline gap-x-2 gap-y-0.5 rounded-md border border-border bg-bg-raised px-2.5 py-1"
+                >
+                  <span className="font-medium text-fg">
+                    {brand.name}
+                    {brand.isOwn ? (
+                      <span className="ml-1.5 rounded-sm bg-[var(--bg-inset)] px-1 py-px text-[10.5px] font-normal text-fg-secondary">
+                        You
                       </span>
                     ) : null}
                   </span>
-                ))
-              : "No brands tracked yet"}
-          </span>
+                  {brand.checkedAt !== null ? (
+                    <span className={cn(VALUE_CLASS, "text-[11px] font-normal text-[var(--text-tertiary)]")}>
+                      {formatStamp(brand.checkedAt)}
+                    </span>
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          ) : (
+            <span className="font-medium text-fg-secondary">No brands tracked yet</span>
+          )}
           {pinnedRun !== null ? (
             <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
               checked {formatStamp(pinnedRun.requestedAt)} · {pinnedRun.status}
             </span>
           ) : null}
-        </p>
+        </div>
         <p className="max-w-[68ch] type-body text-fg-secondary">
           {BOARD_HONESTY_LINE}
         </p>
         {ownBrandNotInView ? (
           <p className="max-w-[68ch] type-caption text-fg-secondary">
             {ownBrand?.name} is set as your brand, but it has not appeared in a finished
-            check yet — nothing to compare it against until it has.
+            check yet, so there is nothing to compare it against until it has.
           </p>
         ) : null}
         {coverageLine !== null ? (
@@ -372,7 +386,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           <div className="grid gap-4 lg:grid-cols-2">
             <BoardMixChart
               items={hookItems}
-              totalFindings={claims !== undefined ? countFindings(claims) : null}
+              unclearCount={claims !== undefined ? countUnclear(claims, "hookType") : 0}
               loading={claims === undefined}
             />
             <DistributionPanel
@@ -389,6 +403,14 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
                   : undefined
               }
               previousLabel={comparisonColumnLabel}
+              previousInfo="Change in share, in percentage points (pp), since the previous check."
+              sentenceLabels
+              totalLabel="with a clear stage"
+              footnote={
+                claims !== undefined && funnelUnclear > 0
+                  ? `${funnelUnclear} ${funnelUnclear === 1 ? "finding had" : "findings had"} no clear stage and ${funnelUnclear === 1 ? "is" : "are"} left out of this table and its shares. Shares are of the ${funnelClear} tagged ${funnelClear === 1 ? "finding" : "findings"} with a clear stage.`
+                  : undefined
+              }
               emptyTitle="No funnel mix in this check yet."
               emptyDescription="Every tagged finding carries a funnel stage. The mix appears here once at least one finding has been tagged."
             />

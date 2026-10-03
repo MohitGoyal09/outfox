@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowUpRight, BarChart3, Building2, Quote, Radar, Search, TriangleAlert } from "lucide-react";
+import { ArrowRight, BarChart3, Building2, Quote, Radar, Search, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 
 import type { Id } from "@/convex/_generated/dataModel";
@@ -244,7 +244,7 @@ function OverviewBody() {
             href="/ask"
             variant="primary"
             size="sm"
-            icon={<ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+            icon={<ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
           >
             Ask Drishti
           </ActionLink>
@@ -346,7 +346,7 @@ function Onboarding() {
             <ActionLink
               href="/ask"
               variant="ghost"
-              icon={<ArrowUpRight {...iconProps} size={16} aria-hidden="true" className="size-4" />}
+              icon={<ArrowRight {...iconProps} size={16} aria-hidden="true" className="size-4" />}
             >
               Ask Drishti
             </ActionLink>

@@ -212,7 +212,7 @@ export function ComparisonMatrix({
         <>
           {brands.length === 1 ? (
             <p className="mt-2 text-[12.5px] leading-[1.45] text-[var(--text-secondary)]">
-              One rival in this run — a comparison needs at least two.
+              One rival in this run, a comparison needs at least two.
             </p>
           ) : null}
 

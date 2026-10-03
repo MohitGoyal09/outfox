@@ -179,7 +179,7 @@ export function Step3FirstCheck({
           description={
             competitors.length === 0
               ? "You didn't add any competitors, so there's nothing to compare against yet. Add some anytime from Brands."
-              : "Whatever we found didn't show a clear difference yet. You can run a new check anytime from your brand's page — look for Re-run."
+              : "Whatever we found didn't show a clear difference yet. You can run a new check anytime from your brand's page, look for Re-run."
           }
         />
       )}

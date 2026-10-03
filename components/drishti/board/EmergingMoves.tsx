@@ -1,11 +1,12 @@
 import { TrendingUp } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { DeltaMark } from "../DeltaMark";
 import { EmptyState } from "../EmptyState";
 import { hookName } from "../labels";
 import { Panel } from "../Panel";
 import { SkeletonRows } from "../Skeleton";
-import { TONE_COLOR, VALUE_CLASS, iconProps } from "../tokens";
+import { VALUE_CLASS, iconProps } from "../tokens";
 import {
   EMERGING_BASIS_LINE,
   emergingHasChange,
@@ -76,10 +77,10 @@ export function EmergingMoves({
                 <span className={cn(VALUE_CLASS, "w-14 text-right text-[11px] text-fg-tertiary")}>
                   {move.shareText}
                 </span>
-                <span
-                  className={cn(VALUE_CLASS, "w-16 text-right text-[12.5px]")}
-                  style={{ color: TONE_COLOR[move.tone] }}
-                >
+                <span className={cn(VALUE_CLASS, "w-24 text-right text-[12.5px] text-fg-secondary")}>
+                  {move.deltaGlyph ? (
+                    <DeltaMark direction={move.deltaGlyph} />
+                  ) : null}
                   {move.deltaText}
                 </span>
               </li>

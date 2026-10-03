@@ -5,22 +5,26 @@ import { REMOVED_BRAND_LABEL } from "../runs/derive";
 import {
   FUNNEL_STAGES,
   HOOK_TYPES,
-  deltaTone,
   formatDelta,
   formatSharePct,
   shareOf,
   type Tone,
 } from "../tokens";
 
+const UNCLEAR = "not_applicable";
+
 export type BoardRun = Doc<"runs">;
 export type BoardClaim = Doc<"claims">;
 export type BoardSnapshot = Doc<"snapshots">;
 export type BoardBrand = Doc<"brands">;
 
+export const BOARD_HONESTY_LINE =
+  "Every ranking here goes by evidence, never performance. Public search shows what a rival publishes, not what sells, so this page ranks by how much evidence we found and what kind it is (never by how a campaign performed).";
+
 export const LEADERBOARD_RULE_LINE = "Ranked by evidence volume and mix, not performance.";
 
 export const EMERGING_BASIS_LINE =
-  "Hook share change between the last two checks for these brands.";
+  "Change in each hook's share of findings with a clear hook, in percentage points, between the last two checks for these brands.";
 
 export const DATA_ENGINES = [
   "google",
@@ -77,13 +81,24 @@ function countBy(values: Array<string | undefined>): Map<string, number> {
   }
 }
 
+export function countUnclear(
+  claims: readonly { hookType?: string; funnelStage?: string }[],
+  field: "hookType" | "funnelStage",
+): number {
+  return claims.filter((claim) => claim[field] === UNCLEAR).length;
+}
+
+function sumClear(counts: Map<string, number>): number {
+  return sumValues(counts) - (counts.get(UNCLEAR) ?? 0);
+}
+
 function presentOnScale(
   scale: readonly string[],
   current: Map<string, number>,
   previous: Map<string, number> | null,
 ): string[] {
   return scale.filter(
-    (value) => (current.get(value) ?? 0) > 0 || (previous?.get(value) ?? 0) > 0,
+    (value) => value !== UNCLEAR && ((current.get(value) ?? 0) > 0 || (previous?.get(value) ?? 0) > 0),
   );
 }
 
@@ -92,22 +107,7 @@ export function deriveFunnelDistribution(
   previous: BoardClaim[] | null,
 ): DistributionItem[] {
   const current = countBy(claims.map((claim) => claim.funnelStage));
-  const total = sumValues(current);
-  const priorTotal = prior === null ? null : sumValues(prior);
-  return presentOnScale(FUNNEL_STAGES, current, prior).map((stage) => {
-    const count = current.get(stage) ?? 0;
-    const sharePct = shareOf(count, total);
-    const priorShare = prior === null ? null : shareOf(prior.get(stage) ?? 0, priorTotal);
-    const delta =
-      sharePct === null || priorShare === null ? null : sharePct - priorShare;
-    return {
-      label: stage,
-      count,
-      sharePct,
-      delta,
-      deltaUnit: "pct" as const,
-    };
-  });
+  const total = sumClear(current);
 }
 
 export type BrandLeader = {
@@ -223,31 +223,9 @@ export type EmergingMove = {
   shareText: string;
   deltaPct: number | null;
   deltaText: string;
+  deltaGlyph: "up" | "down" | null;
   tone: Tone;
 };
-
-export function runCoverageLine(
-  brands: BoardBrand[],
-  finishedRuns: BoardRun[],
-  allRuns: BoardRun[] = finishedRuns,
-): string | null {
-  const checked = new Set<string>();
-  for (const run of finishedRuns) {
-    for (const brandId of run.brandIds) checked.add(String(brandId));
-  }
-
-  const missing = brands.filter((brand) => !checked.has(String(brand._id)));
-  const never = missing.filter((brand) => !attempted.has(String(brand._id)));
-
-  const covered = brands.length - missing.length;
-  const coveredHave = covered === 1 ? "has" : "have";
-
-  const parts: string[] = [];
-  if (never.length > 0) {
-    const it = never.length === 1 ? "it" : "them";
-    parts.push(`${joinNames(never.map((b) => b.name))} ${has} not been checked yet — check ${it} to include ${it} here.`);
-  }
-}
 
 export type HookComparisonLine = {
   hook: string;

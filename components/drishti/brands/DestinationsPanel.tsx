@@ -110,7 +110,7 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
               <p className="text-sm font-semibold tracking-[-0.01em] text-fg">Ranked landing pages</p>
               {/* Real findings only: `claims` can carry `llm_tag` rows (tag
-                  metadata, never evidence — brand-model.ts's `isSignalClaim`),
+                  metadata, never evidence, brand-model.ts's `isSignalClaim`),
                   and a raw `.length` here would count those as "scanned". */}
               <p className="font-mono text-xs tabular-nums text-muted-foreground">{signalClaims(claims).length} findings scanned</p>
             </div>
@@ -180,7 +180,7 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
             {artifactCount > 0 ? (
               <p className="border-t border-border px-4 py-2 text-[11px] leading-4 text-muted-foreground">
                 {artifactCount} further finding{artifactCount === 1 ? "" : "s"} pointed only at the search page we
-                queried, Google&apos;s Ads Transparency viewer, or Google&apos;s ad-serving infrastructure — never a
+                queried, Google&apos;s Ads Transparency viewer, or Google&apos;s ad-serving infrastructure, never a
                 brand
                 destination, so they are excluded from this ranking.
               </p>

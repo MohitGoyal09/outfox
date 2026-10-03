@@ -30,7 +30,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { iconProps } from "../tokens";
-import { formatStamp } from "../cohorts/cohorts-model";
+import { RelativeTime } from "../RelativeTime";
 import { groupThreadsByActivity, type ThreadSummary } from "./chat-groups";
 
 export function ChatsView() {
@@ -224,9 +224,8 @@ function ChatRow({
     }
   }
 
-  const stamp = formatStamp(thread.lastMessageAt).split(" · ")[0];
   const rowClass = cn(
-    "group flex min-w-0 flex-1 items-center gap-3 rounded-lg border border-border bg-bg-raised p-4 shadow-xs",
+    "group relative flex min-w-0 flex-1 items-center rounded-lg border border-border bg-bg-raised shadow-xs",
     "transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:shadow-sm",
   );
   const icon = (
@@ -236,9 +235,9 @@ function ChatRow({
   );
 
   return (
-    <li className="flex items-center gap-2">
+    <li className={rowClass}>
       {isRenaming ? (
-        <div className={rowClass}>
+        <div className="flex min-w-0 flex-1 items-center gap-3 p-4 pr-14">
           {icon}
           <span className="min-w-0 flex-1">
             <Input
@@ -274,15 +273,15 @@ function ChatRow({
       ) : (
         <Link
           href={`/ask?chat=${encodeURIComponent(thread.threadKey)}`}
-          className={cn(
-            rowClass,
-            "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2",
-          )}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-4 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
         >
           {icon}
           <span className="min-w-0 flex-1">
             <span className="block truncate text-[14px] font-medium text-fg">{thread.title}</span>
-            <span className="mt-0.5 block font-mono text-[11px] tabular-nums text-muted-foreground">{stamp}</span>
+            <RelativeTime
+              iso={thread.lastMessageAt}
+              className="mt-0.5 block font-mono text-[11px] tabular-nums text-muted-foreground"
+            />
           </span>
           <ArrowRight
             aria-hidden
@@ -292,7 +291,11 @@ function ChatRow({
       )}
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
-          <Button variant="ghost" size="icon" aria-label={`Chat options for ${thread.title}`}>
+          <Button
+            variant="ghost"
+            size="icon"
+            className="absolute right-2 top-1/2 -translate-y-1/2"
+            aria-label={`Chat options for ${thread.title}`}>
             <MoreHorizontal aria-hidden className="size-4" />
           </Button>
         </DropdownMenuTrigger>

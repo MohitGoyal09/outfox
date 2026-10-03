@@ -12,7 +12,7 @@ import {
   VALUE_CLASS,
 } from "@/components/drishti";
 import { cn } from "@/lib/utils";
-import { ArrowUpRight, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronRight } from "lucide-react";
 import {
   COST_PROVENANCE_LABEL,
   RUN_STATUS_TONE,
@@ -67,7 +67,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
               <span className="text-[15px] font-semibold tracking-[-0.02em] text-foreground">
                 {cohortLabel(run.brandIds, names)}
               </span>
-              <ArrowUpRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+              <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">

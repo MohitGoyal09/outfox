@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight, LayoutGrid, MessageSquare } from "lucide-react";
+import { ArrowRight, LayoutGrid, MessageSquare } from "lucide-react";
 import Link from "next/link";
 
 import { EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
@@ -52,7 +52,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards }: PickUpWhereY
                 className="inline-flex items-center gap-1.5 rounded-sm text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
               >
                 Ask Drishti
-                <ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+                <ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
               </Link>
             }
           />
@@ -95,7 +95,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards }: PickUpWhereY
                 className="inline-flex items-center gap-1.5 rounded-sm text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
               >
                 Open Boards
-                <ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+                <ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
               </Link>
             }
           />
@@ -108,7 +108,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards }: PickUpWhereY
                   className="flex items-center justify-between gap-3 rounded-md px-1 py-1 type-body text-fg transition-colors duration-150 ease-out hover:bg-bg-inset"
                 >
                   <span className="min-w-0 truncate">{board.name}</span>
-                  <ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5 shrink-0 text-fg-tertiary" />
+                  <ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5 shrink-0 text-fg-tertiary" />
                 </Link>
               </li>
             ))}

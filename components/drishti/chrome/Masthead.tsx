@@ -38,6 +38,8 @@ export function Masthead() {
   const router = useRouter();
   const { signOut } = useAuthActions();
   const brands = useQuery(api.brands.listBrands) ?? [];
+  const me = useQuery(api.users.me);
+  const displayName = me?.name?.trim() || null;
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [isSigningOut, setIsSigningOut] = useState(false);
@@ -77,13 +79,21 @@ export function Masthead() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group flex h-9 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-sm border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:h-10"
+          className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border bg-bg-raised text-fg-secondary shadow-xs transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:shadow-sm sm:hidden"
+          aria-label="Search"
+        >
+          <Search {...iconProps} aria-hidden className="size-4" />
+        </button>
+        <button
+          type="button"
+          onClick={() => setOpen(true)}
+          className="group hidden h-10 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-sm border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:flex"
           aria-label="Search brands and pages, or ask Drishti"
         >
           <Search {...iconProps} aria-hidden className="size-4 shrink-0 text-fg-secondary" />
           <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Drishti…</span>
           {mod ? (
-            <KbdGroup className="ml-auto hidden shrink-0 sm:inline-flex">
+            <KbdGroup className="ml-auto shrink-0">
               <Kbd>{mod}</Kbd>
               <Kbd>K</Kbd>
             </KbdGroup>
@@ -116,13 +126,13 @@ export function Masthead() {
               >
                 <Avatar size="sm">
                   <AvatarFallback className="border border-border bg-bg-raised text-xs font-semibold text-fg">
-                    M
+                    {displayName ? displayName.charAt(0).toUpperCase() : <UserRound {...iconProps} className="size-3.5" />}
                   </AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
-              <DropdownMenuLabel className="flex items-center gap-2"><UserRound {...iconProps} className="size-4" /> Account</DropdownMenuLabel>
+              <DropdownMenuLabel className="flex items-center gap-2"><UserRound {...iconProps} className="size-4" /> <span className="truncate">{displayName ?? "Account"}</span></DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem disabled={isSigningOut} onSelect={() => void handleSignOut()}><LogOut {...iconProps} className="size-4" /> Sign out</DropdownMenuItem>
             </DropdownMenuContent>

@@ -37,7 +37,7 @@ export function Step1YourBrand({
         <div className="mb-4 flex items-start gap-2.5 rounded-md border border-[var(--border)] bg-[var(--bg-inset)] px-3 py-2.5">
           <Compass {...iconProps} size={16} aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--accent)]" />
           <p className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-            This becomes the baseline every comparison reads against — every rival you add
+            This becomes the baseline every comparison reads against. Every rival you add
             later is measured next to it, not the other way around.
           </p>
         </div>
@@ -58,7 +58,7 @@ export function Step1YourBrand({
             value={draft.domain}
             onChange={(event) => onChange({ ...draft, domain: event.target.value })}
             error={errors.domain}
-            hint="Just the domain — no need for https:// or www."
+            hint="Just the domain, no need for https:// or www."
           />
         </div>
       </Panel>

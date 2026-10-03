@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowUpRight, History } from "lucide-react";
+import { ArrowRight, History } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
@@ -57,7 +57,7 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
                       <span className={cn("text-xs font-medium", STATUS_TEXT[tone])}>{row.status}</span>
                     </div>
                     <Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 text-[12px] text-fg hover:underline">
-                      View check <ArrowUpRight className="size-3" />
+                      View check <ArrowRight className="size-3" />
                     </Link>
                   </div>
                   <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">

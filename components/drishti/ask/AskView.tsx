@@ -498,7 +498,7 @@ export function AskView({
   );
 
   return (
-    <div className="-mb-24 -mt-6 flex h-[calc(100dvh-4rem)] min-h-[32rem] w-full flex-col overflow-hidden sm:-mt-8 lg:-mt-10">
+    <div className="-mb-32 -mt-6 flex h-[calc(100dvh-4rem-1px)] min-h-[32rem] w-full flex-col overflow-hidden sm:-mt-8 lg:-mt-10">
       {!hasTranscript ? (
         <div className="flex min-h-0 flex-1 items-center justify-center overflow-y-auto px-4 py-6 sm:px-6">
           <AskEmptyState

@@ -18,11 +18,11 @@ const config = {
 
 export function BoardMixChart({
   items,
-  totalFindings,
+  unclearCount = 0,
   loading = false,
 }: {
   items: DistributionItem[];
-  totalFindings?: number | null;
+  unclearCount?: number;
   loading?: boolean;
 }) {
   const reduceMotion = useReducedMotion();
@@ -37,7 +37,6 @@ export function BoardMixChart({
       fill: HOOK_COLOR[item.label as keyof typeof HOOK_COLOR] ?? "var(--accent)",
     }));
   const total = data.reduce((sum, row) => sum + row.findings, 0);
-  const hasFindingsTotal = totalFindings != null && totalFindings > 0;
 
   return (
     <Panel interactive={false} className="flex flex-col" ariaLabel="Hook mix">
@@ -50,7 +49,7 @@ export function BoardMixChart({
         </div>
         {loading ? null : (
           <span className={cn(VALUE_CLASS, "text-[11px] tabular-nums text-fg-tertiary")}>
-            {total} tagged{hasFindingsTotal ? ` of ${totalFindings} findings` : ""} · {data.length}{" "}
+            {total} with a clear hook · {data.length}{" "}
             {data.length === 1 ? "hook" : "hooks"}
           </span>
         )}
@@ -90,6 +89,12 @@ export function BoardMixChart({
             </BarChart>
           </ChartContainer>
         )}
+        {!loading && unclearCount > 0 ? (
+          <p className="mt-3 text-[12px] leading-[1.5] text-fg-secondary">
+            {unclearCount} {unclearCount === 1 ? "finding had" : "findings had"} no clear hook and{" "}
+            {unclearCount === 1 ? "is" : "are"} not charted.
+          </p>
+        ) : null}
       </div>
     </Panel>
   );

@@ -5,7 +5,9 @@ import type { ReactNode } from "react";
 import { RefreshCw } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "./Button";
+import { DeltaMark } from "./DeltaMark";
 import { EmptyState } from "./EmptyState";
+import { MetricInfo } from "./MetricInfo";
 import { Panel } from "./Panel";
 import { Skeleton, SkeletonRegion } from "./Skeleton";
 import {
@@ -37,7 +39,7 @@ export type DistributionItem = {
   sharePct: number | null;
   delta: number | null;
   tone?: Tone;
-  deltaUnit?: "count" | "pct";
+  deltaUnit?: "count" | "pct" | "pp";
   gap?: string;
 };
 
@@ -49,6 +51,7 @@ export type DistributionRow = {
   delta: number | null;
   deltaText: string;
   deltaTone: Tone;
+  deltaGlyph: "up" | "down" | null;
   deltaColor: string;
   dotColor: string;
   barWidthPct: number;
@@ -127,7 +130,7 @@ export function deriveDistributionRows(
         ? item.delta
         : null;
     const unit = item.deltaUnit ?? "count";
-    const tone = deltaTone(delta);
+    const tone = unit === "pp" ? "neutral" : deltaTone(delta);
     const dotColor = item.tone
       ? TONE_COLOR[item.tone]
       : distributionColor(item.label, kind);
@@ -139,7 +142,9 @@ export function deriveDistributionRows(
       delta,
       deltaText: formatDelta(delta, unit),
       deltaTone: tone,
-      deltaColor: TONE_COLOR[tone],
+      deltaGlyph:
+        unit === "pp" && delta !== null && Math.abs(delta) >= 0.05 ? (delta > 0 ? "up" : "down") : null,
+      deltaColor: unit === "pp" ? "var(--text-secondary)" : TONE_COLOR[tone],
       dotColor,
       barWidthPct: barWidthPct(count, maxCount),
       gap: count === null ? (item.gap ?? ABSENT) : null,
@@ -189,6 +194,10 @@ export type DistributionPanelProps = {
   order?: DistributionOrder;
   summaryLabel?: string;
   previousLabel?: string;
+  previousInfo?: string;
+  sentenceLabels?: boolean;
+  totalLabel?: string;
+  footnote?: ReactNode;
   formatLabel?: (label: string, kind: DistributionKind) => string;
   loading?: boolean;
   error?: string | null;
@@ -208,6 +217,10 @@ export function DistributionPanel({
   order,
   summaryLabel,
   previousLabel,
+  previousInfo,
+  sentenceLabels = false,
+  totalLabel = "total",
+  footnote,
   formatLabel,
   loading = false,
   error = null,
@@ -301,8 +314,19 @@ export function DistributionPanel({
             <span className={cn(LABEL_CLASS, "w-12 text-[var(--text-tertiary)]", COLUMN)}>
               share
             </span>
-            <span className={cn(LABEL_CLASS, "w-20 text-[var(--text-secondary)]", COLUMN)}>
-              {previousLabel ?? "change"}
+            <span
+              className={cn(
+                LABEL_CLASS,
+                "w-28 text-[var(--text-secondary)]",
+                previousInfo && "normal-case tracking-normal",
+                COLUMN,
+              )}
+            >
+              {previousInfo ? (
+                <MetricInfo label={previousLabel ?? "Change"} definition={previousInfo} />
+              ) : (
+                (previousLabel ?? "change")
+              )}
             </span>
             <span aria-hidden="true" className="w-24" />
           </div>
@@ -321,7 +345,7 @@ export function DistributionPanel({
                   />
                   <span
                     className={cn(
-                      LABEL_CLASS,
+                      sentenceLabels ? "text-[13px] leading-[1.4]" : LABEL_CLASS,
                       "break-words text-[var(--text-primary)]",
                     )}
                   >
@@ -353,9 +377,12 @@ export function DistributionPanel({
                       {row.shareText}
                     </span>
                     <span
-                      className={cn(VALUE_CLASS, "w-20 text-[12.5px]", COLUMN)}
+                      className={cn(VALUE_CLASS, "w-28 text-[12.5px]", COLUMN)}
                       style={{ color: row.deltaColor }}
                     >
+                      {row.deltaGlyph ? (
+                        <DeltaMark direction={row.deltaGlyph} />
+                      ) : null}
                       {row.deltaText}
                     </span>
                     <span
@@ -401,9 +428,12 @@ export function DistributionPanel({
                   "shrink-0 text-[10.5px] text-[var(--text-tertiary)]",
                 )}
               >
-                {total} total
+                {total} {totalLabel}
               </span>
             </div>
+          ) : null}
+          {footnote ? (
+            <p className="mt-3 text-[12px] leading-[1.5] text-[var(--text-secondary)]">{footnote}</p>
           ) : null}
         </>
       )}

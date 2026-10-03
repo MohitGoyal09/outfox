@@ -163,7 +163,7 @@ export function SearchExperience({
           />
         ) : (
           <div className="overflow-hidden rounded-lg border border-border bg-bg-raised px-3 pb-4 pt-5 sm:px-5">
-            <p className={cn(LABEL_CLASS, "mb-3 text-muted-foreground")}>{rows.length === 1 ? "Single stored run — one bar per engine" : "Across stored runs"}</p>
+            <p className={cn(LABEL_CLASS, "mb-3 text-muted-foreground")}>{rows.length === 1 ? "Single stored run: one bar per engine" : "Across stored runs"}</p>
             <ChartContainer config={chartConfig} className="h-[280px] w-full aspect-auto">
               <BarChart accessibilityLayer data={rows} margin={{ left: -12, right: 12, top: 8 }}>
                 <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="var(--border)" />

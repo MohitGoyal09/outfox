@@ -56,7 +56,7 @@ export function BoardsPageView() {
       <EmptyState
         icon={<LayoutGrid {...iconProps} size={16} />}
         title="No boards yet."
-        description="A board is a named shortlist of saved evidence — a swipe file. Save an evidence card from a brand's Evidence tab, or create one here to get started."
+        description="A board is a named shortlist of saved evidence (a swipe file). Save an evidence card from a brand's Evidence tab, or create one here to get started."
         action={
           <BoardCreateInline onCreate={handleCreate} />
         }

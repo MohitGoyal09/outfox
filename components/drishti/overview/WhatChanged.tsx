@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { EmptyState, iconProps } from "@/components/drishti";
 import { cn } from "@/lib/utils";
@@ -40,7 +40,7 @@ export function WhatChanged({ feed }: WhatChangedProps) {
                 <ActionLink
                   href={change.actionHref}
                   size="sm"
-                  icon={<ArrowUpRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
+                  icon={<ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
                 >
                   Open brand
                 </ActionLink>

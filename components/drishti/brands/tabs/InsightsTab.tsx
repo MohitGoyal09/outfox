@@ -213,7 +213,7 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
             size="sm"
             icon={<TrendingUp {...iconProps} size={16} />}
             title="No earlier check to compare."
-            description="Only one check exists for this brand yet. Change needs a second check — never a guessed baseline."
+            description="Only one check exists for this brand yet. Change needs a second check, never a guessed baseline."
           />
         ) : movers.length === 0 ? (
           <p className="text-sm text-muted-foreground">No measurable change in hook mix since the earlier check.</p>
@@ -292,7 +292,7 @@ export function InsightsTab({
         <div>
           <h2 className="type-headline text-fg">Brand DNA</h2>
           <p className="mt-0.5 text-[12px] text-muted-foreground">
-            Four cited reads on this brand: how it positions itself, who it talks to, what it sells against, and what changed — refreshed automatically as new evidence comes in.
+            Four cited reads on this brand: how it positions itself, who it talks to, what it sells against, and what changed, refreshed automatically as new evidence comes in.
           </p>
         </div>
         <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => void refreshNow()} disabled={generating}>
@@ -317,7 +317,7 @@ export function InsightsTab({
           <Panel interactive={false} className="overflow-hidden border-accent/25 bg-accent/[0.03]">
             <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
               <Sparkles className="size-4 text-fg" aria-hidden />
-              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Positioning — <RelativeTime iso={latest.generatedAt} /></h3>
+              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Positioning: <RelativeTime iso={latest.generatedAt} /></h3>
               {templateMode ? (
                 <Badge variant="outline" className="ml-auto h-5 rounded-full border-warn/30 bg-warn/10 px-2 text-[10px] font-normal text-warn">
                   Template fallback
@@ -362,7 +362,7 @@ export function InsightsTab({
               title="Who it's talking to"
               sentences={buckets.audience}
               claimsById={claimsById}
-              emptyDescription="No finding carries a real audience hint yet — this fills in once an enriched, tagged check captures who the content targets."
+              emptyDescription="No finding carries a real audience hint yet, this fills in once an enriched, tagged check captures who the content targets."
               templateMode={templateMode}
             />
             <DnaSectionCard
@@ -389,7 +389,7 @@ export function InsightsTab({
             colorFor={(label) => HOOK_COLOR[label as HookType] ?? HOOK_COLOR.not_applicable}
             formatLabel={hookName}
             emptyTitle="No tagged hooks yet."
-            emptyDescription="Ranks the real hook type an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+            emptyDescription="Ranks the real hook type an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
           />
         </div>
       </div>
@@ -410,7 +410,7 @@ export function InsightsTab({
                 <li key={row.id} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
                   <span className="shrink-0 text-muted-foreground"><RelativeTime iso={row.generatedAt} /></span>
                   {row.kind === "failed" ? (
-                    <span className="min-w-0 truncate text-danger">Check failed{row.reason ? ` — ${row.reason}` : ""}</span>
+                    <span className="min-w-0 truncate text-danger">Check failed{row.reason ? `: ${row.reason}` : ""}</span>
                   ) : (
                     <span className="min-w-0 truncate text-foreground">{row.text}</span>
                   )}

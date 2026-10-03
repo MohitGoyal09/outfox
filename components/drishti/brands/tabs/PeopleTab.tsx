@@ -116,8 +116,8 @@ export function ownedVsCreatorRenderMode(rows: { owned: boolean; totalViews: num
 export function SingleSideStat({ row }: { row: { label: string; value: number; color: string } }) {
   const owned = row.label === "Owned channel";
   const context = owned
-    ? "No third-party creator video is captured yet — not proof none exist."
-    : "Zero owned views here is a name-match miss against the brand's own name — not proof the brand has no channel.";
+    ? "No third-party creator video is captured yet, not proof none exist."
+    : "Zero owned views here is a name-match miss against the brand's own name, not proof the brand has no channel.";
   return (
     <div className="flex items-center gap-3">
       <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} />
@@ -146,7 +146,7 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
         <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
           <MetricInfo
             label="Owned vs. creator views"
-            definition="Real view totals split between the brand's own channel — matched by name — and third-party creators. It is a derived split of the videos we captured, not a category from the source data."
+            definition="Real view totals split between the brand's own channel, matched by name, and third-party creators. It is a derived split of the videos we captured, not a category from the source data."
           />
         </h3>
       </div>
@@ -185,14 +185,14 @@ function OwnedVsCreatorSplit({ claims, youtubeSnapshot, brand }: { claims: Claim
                 <div key={row.label} className="flex items-center gap-2">
                   <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} />
                   <span className="flex-1 truncate">{row.label}</span>
-                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{totalViews ? `${Math.round((row.value / totalViews) * 100)}%` : "—"}</span>
+                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{totalViews ? `${Math.round((row.value / totalViews) * 100)}%` : "-"}</span>
                   <span className="font-mono tabular-nums text-muted-foreground">{compactCount(row.value)}</span>
                 </div>
               ))}
             </div>
           </div>
         )}
-        <p className="mt-3 text-[10.5px] leading-4 text-muted-foreground">&quot;Owned&quot; is a name match against the brand&apos;s own name, computed here — not a category from the source data.</p>
+        <p className="mt-3 text-[10.5px] leading-4 text-muted-foreground">&quot;Owned&quot; is a name match against the brand&apos;s own name, computed here, not a category from the source data.</p>
       </div>
     </Panel>
   );
@@ -294,19 +294,19 @@ export function PeopleTab({
       <BreakoutVideos claims={filtered} youtubeSnapshot={youtubeSnapshot} />
       <EvidenceCatalogPanel
         title="Related videos"
-        definition="Other channels' videos YouTube surfaces as related to this brand's own videos — a free creator-and-competitor discovery graph: who else YouTube associates with this brand, not a ranked or complete list."
+        definition="Other channels' videos YouTube surfaces as related to this brand's own videos, a free creator-and-competitor discovery graph: who else YouTube associates with this brand, not a ranked or complete list."
         icon={<PlatformLogo engine="youtube_video" className="size-4" />}
         rows={relatedVideoRows}
         emptyTitle="No related videos yet."
         emptyDescription="Lists other channels' videos YouTube associates with this brand's own videos, once a check captures YouTube video detail evidence."
-        capNote="Up to 10 related videos per video we checked, as YouTube itself surfaced them — never the brand's full competitive graph."
+        capNote="Up to 10 related videos per video we checked, as YouTube itself surfaced them, never the brand's full competitive graph."
       />
       <RankedCatalogChart
         title="Audience hints"
         definition="How often an enrichment check assigned each audience hint to a finding. The tag is free text, so two rows can mean the same audience in different words."
         rows={audienceHintRows}
         emptyTitle="No tagged audience hints yet."
-        emptyDescription="Ranks the real audience-hint text an enrichment check assigned to findings, most frequent first — fills in after a tagged check."
+        emptyDescription="Ranks the real audience-hint text an enrichment check assigned to findings, most frequent first, fills in after a tagged check."
       />
       <CountListPanel
         title="Publishers talking about this brand"

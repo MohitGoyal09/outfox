@@ -9,7 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { iconProps } from "../tokens";
 import type { ChartCountRow } from "./DonutChart";
 
-export function RankedTable({ title, definition, rows, emptyTitle, emptyDescription }: { title: string; /** Plain-language explanation of what this count measures — rendered as a `?` beside the title. */ definition?: ReactNode; rows: ChartCountRow[]; emptyTitle: string; emptyDescription: string }) {
+export function RankedTable({ title, definition, rows, emptyTitle, emptyDescription }: { title: string; /** Plain-language explanation of what this count measures, rendered as a `?` beside the title. */ definition?: ReactNode; rows: ChartCountRow[]; emptyTitle: string; emptyDescription: string }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center justify-between border-b border-border px-4 py-3">

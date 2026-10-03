@@ -12,7 +12,7 @@ import { categoricalColorFor, iconProps } from "../tokens";
 
 export type ChartCountRow = { label: string; count: number };
 
-export function DonutChart({ title, definition, rows, emptyTitle, emptyDescription, colorFor }: { title: string; /** Plain-language explanation of what this count measures — rendered as a `?` beside the title. */ definition?: ReactNode; rows: ChartCountRow[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string }) {
+export function DonutChart({ title, definition, rows, emptyTitle, emptyDescription, colorFor }: { title: string; /** Plain-language explanation of what this count measures, rendered as a `?` beside the title. */ definition?: ReactNode; rows: ChartCountRow[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string }) {
   const total = rows.reduce((sum, row) => sum + row.count, 0);
   const colorForLabel = colorFor ?? categoricalColorFor;
   const reduceMotion = useReducedMotion();
@@ -51,8 +51,8 @@ export function DonutChart({ title, definition, rows, emptyTitle, emptyDescripti
             </ul>
           </div>
         )}
-        {/* This chart draws whatever `rows` it is bound to — sometimes a
-            tagged sample, sometimes another bounded slice — and has no way to
+        {/* This chart draws whatever `rows` it is bound to, sometimes a
+            tagged sample, sometimes another bounded slice, and has no way to
             know which from a label+count pair alone. So the denominator line
             names only what is provably true here: the real count these
             shares divide by is the rows bound to THIS chart, never implied

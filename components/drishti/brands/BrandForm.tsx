@@ -2,7 +2,7 @@
 
 
 import { useId, useMemo, useState } from "react";
-import { Building2, ExternalLink, Link2, Search } from "lucide-react";
+import { ArrowRight, Building2, Link2, Search } from "lucide-react";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Button } from "../Button";
@@ -387,7 +387,7 @@ export function BrandForm({
             className="inline-flex h-8 items-center gap-1.5 rounded-sm border border-[var(--border-strong)] px-3 text-[13px] text-[var(--text-primary)] hover:bg-[var(--bg-raised)] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
           >
             Open profile
-            <ExternalLink {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+            <ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
           </Link>
         </div>
       ) : null}

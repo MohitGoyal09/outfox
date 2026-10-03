@@ -74,7 +74,7 @@ function HookRow({
         <span className="truncate">{hookName(row.label)}</span>
       </span>
       <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
-      <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "—"}</span>
+      <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "-"}</span>
       <DeltaTag delta={row.delta} />
     </>
   );
@@ -114,7 +114,7 @@ function TaggedShareNote({
   return (
     <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
       {num(realCount)} of {num(taggedCount)} tagged finding{taggedCount === 1 ? "" : "s"} carry a real {dimensionNoun}
-      {hasFindings ? <> — {num(taggedCount)} of {num(totalFindings as number)} finding{totalFindings === 1 ? "" : "s"} were tagged at all</> : null}
+      {hasFindings ? <>, {num(taggedCount)} of {num(totalFindings as number)} finding{totalFindings === 1 ? "" : "s"} were tagged at all</> : null}
       . Shares above are of those {num(realCount)}, not of every tagged finding{hasFindings ? " or every finding" : ""}.
     </p>
   );
@@ -226,12 +226,12 @@ export function HookChart({
         </ChartContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="font-mono text-sm font-semibold tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(total)}</span>
-          {/* Was "EVIDENCE", then "TAGGED" — both read as the brand's tagged-
+          {/* Was "EVIDENCE", then "TAGGED", both read as the brand's tagged-
               findings count (the header badge's own word, `taggedCount`
               below), which this total is not: `not_applicable` findings are
               tagged too but excluded from this donut, so `total` is only the
               REAL-hook subset of the tagged sample (docs/HANDOFF.md §2 /
-              §10's honest-percentages rule — "tagged" only ever means
+              §10's honest-percentages rule, "tagged" only ever means
               `taggedCount` on this page now). */}
           <span className="text-[7px] uppercase tracking-wide text-muted-foreground">with hook</span>
         </div>
@@ -295,7 +295,7 @@ export function FunnelPanel({
       role={onSelectStage ? "group" : "img"}
       aria-label={
         onSelectStage
-          ? "Awareness-stage distribution — activate a stage to filter evidence to it"
+          ? "Awareness-stage distribution, activate a stage to filter evidence to it"
           : "Awareness-stage distribution, one bar per stage from a shared left baseline"
       }
     >
@@ -316,7 +316,7 @@ export function FunnelPanel({
                 <span className="block h-full rounded-[3px] border border-dashed border-border-strong/70" style={{ width: `${widthPct}%` }} />
               )}
             </span>
-            <span className="font-mono tabular-nums text-muted-foreground">{total ? `${sharePct}%` : "—"}</span>
+            <span className="font-mono tabular-nums text-muted-foreground">{total ? `${sharePct}%` : "-"}</span>
             <DeltaTag delta={row.delta} />
           </>
         );
