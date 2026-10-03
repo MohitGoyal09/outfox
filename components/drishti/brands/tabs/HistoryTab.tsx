@@ -1,9 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { AlertTriangle, ArrowUpRight, CheckCircle2, Clock3, History, XCircle } from "lucide-react";
+import { ArrowUpRight, History } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { EmptyState } from "../../EmptyState";
@@ -18,30 +17,19 @@ export function runStatusTone(status: string): "ok" | "warn" | "danger" | "neutr
   return "neutral";
 }
 
-const TONE_CLASS: Record<ReturnType<typeof runStatusTone>, string> = {
-  ok: "border-ok/30 bg-ok/10 text-ok",
-  warn: "border-warn/30 bg-warn/10 text-warn",
-  danger: "border-danger/30 bg-danger/10 text-danger",
-  neutral: "border-weak/30 bg-weak/10 text-weak",
+const NODE_CLASS: Record<ReturnType<typeof runStatusTone>, string> = {
+  ok: "border-fg bg-fg",
+  warn: "border-warn bg-[linear-gradient(90deg,var(--warn)_50%,transparent_50%)]",
+  danger: "border-danger bg-bg-raised",
+  neutral: "border-weak bg-bg-raised motion-safe:animate-pulse",
 };
 
-const TONE_ICON: Record<ReturnType<typeof runStatusTone>, typeof CheckCircle2> = {
-  ok: CheckCircle2,
-  warn: AlertTriangle,
-  danger: XCircle,
-  neutral: Clock3,
+const STATUS_TEXT: Record<ReturnType<typeof runStatusTone>, string> = {
+  ok: "text-fg",
+  warn: "text-warn",
+  danger: "text-danger",
+  neutral: "text-weak",
 };
-
-function statusBadge(status: string) {
-  const tone = runStatusTone(status);
-  const Icon = TONE_ICON[tone];
-  return (
-    <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", TONE_CLASS[tone])}>
-      <Icon className="mr-1 size-3" />
-      {status}
-    </Badge>
-  );
-}
 
 export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
   return (
@@ -57,15 +45,22 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
       </div>
       <div className="p-4">
         {rows.length ? (
-          <div className="space-y-2">
-            {rows.map((row) => (
-              <div key={row.runId} className="flex flex-wrap items-center justify-between gap-3 rounded-sm border border-border p-4">
-                <div className="min-w-0 space-y-1.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-mono text-xs text-muted-foreground">{formatStamp(row.requestedAt)}</span>
-                    {statusBadge(row.status)}
+          <ol className="relative border-l border-border">
+            {rows.map((row) => {
+              const tone = runStatusTone(row.status);
+              return (
+                <li key={row.runId} className="relative pb-6 pl-6 last:pb-0">
+                  <span aria-hidden className={cn("absolute -left-[5.5px] top-1 size-2.5 rounded-full border", NODE_CLASS[tone])} />
+                  <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-mono text-xs text-muted-foreground">{formatStamp(row.requestedAt)}</span>
+                      <span className={cn("text-xs font-medium", STATUS_TEXT[tone])}>{row.status}</span>
+                    </div>
+                    <Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 text-[12px] text-fg hover:underline">
+                      View check <ArrowUpRight className="size-3" />
+                    </Link>
                   </div>
-                  <div className="flex flex-wrap items-center gap-3 text-xs text-muted-foreground">
+                  <div className="mt-1.5 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-muted-foreground">
                     <span>{row.claimCount} findings</span>
                     <span>{row.topHook ? `Top hook: ${hookName(row.topHook)}` : "No hook tags"}</span>
                     <span>{row.topFunnel ? `Top funnel: ${stageName(row.topFunnel)}` : "No funnel tags"}</span>
@@ -77,13 +72,10 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
                       </span>
                     ) : null}
                   </div>
-                </div>
-                <Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 font-mono text-[11px] text-fg hover:underline">
-                  {row.runId.slice(-8)} <ArrowUpRight className="size-3" />
-                </Link>
-              </div>
-            ))}
-          </div>
+                </li>
+              );
+            })}
+          </ol>
         ) : (
           <EmptyState
             size="sm"

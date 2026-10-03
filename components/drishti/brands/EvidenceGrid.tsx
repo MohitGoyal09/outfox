@@ -18,6 +18,8 @@ import {
   type SnapshotDoc,
 } from "./brand-model";
 import { EvidenceCard } from "./EvidenceCard";
+import { EvidenceTable } from "./EvidenceTable";
+import { claimRow, videoRow } from "./evidence-table-model";
 import { NewsEvidenceCard } from "./NewsEvidenceCard";
 import { YouTubeVideoCard } from "./YouTubeVideoCard";
 import { SORT_LABEL, type FilterOption, type SortValue } from "./filters/filters-model";
@@ -134,6 +136,8 @@ export function EvidenceGrid({
   sort,
   emptyMessage,
   pageLabel,
+  view = "cards",
+  tags = [],
 }: {
   claims: ClaimDoc[];
   youtubeSnapshot?: SnapshotDoc;
@@ -142,6 +146,8 @@ export function EvidenceGrid({
   sort: SortValue;
   emptyMessage: string;
   pageLabel?: string;
+  view?: "cards" | "table";
+  tags?: ClaimDoc[];
 }) {
   const [limit, setLimit] = useState(PAGE_SIZE);
   const cards = useMemo(() => sortCards(buildCards(claims), sort), [claims, sort]);
@@ -157,10 +163,19 @@ export function EvidenceGrid({
     );
   }
 
+  const visible = cards.slice(0, limit);
+
   return (
     <>
+      {view === "table" ? (
+        <EvidenceTable
+          rows={visible.map((card) =>
+            card.kind === "video" ? videoRow(card.group, card.sortAt, tags) : claimRow(card.claim, tags),
+          )}
+        />
+      ) : (
       <div className="grid items-start gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        {cards.slice(0, limit).map((card) =>
+        {visible.map((card) =>
           card.kind === "video" ? (
             <YouTubeVideoCard
               key={card.group.evidenceUrl}
@@ -186,6 +201,7 @@ export function EvidenceGrid({
           ),
         )}
       </div>
+      )}
       {cards.length > limit ? (
         <div className="mt-4 flex justify-center">
           <Button variant="outline" size="sm" onClick={() => setLimit((current) => current + PAGE_SIZE)}>

@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, type ReactNode } from "react";
+import { LayoutGrid, Rows3 } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "@/components/ui/toggle-group";
 import { isContentClaim, tagsForClaim, type ClaimDoc, type SnapshotDoc } from "./brand-model";
 import { EvidenceGrid, evidenceCardCount, gridSortOptionsFrom } from "./EvidenceGrid";
 import { FilterBar } from "./filters/FilterBar";
@@ -69,8 +71,20 @@ export function EvidenceSection({
           sortOptions={sortOptions}
           isDefault={isDefaultBrandFilters(filters)}
         />
+        <ToggleGroup
+          type="single"
+          aria-label="Evidence view"
+          value={filters.view}
+          onValueChange={(next) => next && setFilter("view", next as BrandFilters["view"])}
+          className="mt-2"
+        >
+          <ToggleGroupItem value="cards"><LayoutGrid aria-hidden />Cards</ToggleGroupItem>
+          <ToggleGroupItem value="table"><Rows3 aria-hidden />Table</ToggleGroupItem>
+        </ToggleGroup>
       </div>
       <EvidenceGrid
+        view={filters.view}
+        tags={tags}
         claims={filtered}
         youtubeSnapshot={youtubeSnapshot}
         newsSnapshot={newsSnapshot}

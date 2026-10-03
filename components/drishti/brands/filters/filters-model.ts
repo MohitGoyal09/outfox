@@ -14,6 +14,7 @@ export type BrandFilters = {
   sort: SortValue;
   from: string | null;
   to: string | null;
+  view: "cards" | "table";
 };
 
 export const DEFAULT_BRAND_FILTERS: BrandFilters = {
@@ -24,6 +25,7 @@ export const DEFAULT_BRAND_FILTERS: BrandFilters = {
   sort: "newest",
   from: null,
   to: null,
+  view: "cards",
 };
 
 const FRESHNESS_VALUES: readonly FreshnessValue[] = ["all", "24h", "7d", "30d", "90d"];
@@ -65,7 +67,21 @@ export function parseBrandFilters(params: URLSearchParams): BrandFilters {
     sort,
     from: from !== null && isDateString(from) ? from : null,
     to: to !== null && isDateString(to) ? to : null,
+    view: params.get("view") === "table" ? "table" : "cards",
   };
+}
+
+export function filtersToParams(filters: BrandFilters, base: URLSearchParams): URLSearchParams {
+  const next = new URLSearchParams(base);
+  const write = (key: string, value: string | null, isDefault: boolean) => {
+    if (value === null || isDefault) next.delete(key);
+    else next.set(key, value);
+  };
+  write("engine", filters.engine, filters.engine === DEFAULT_BRAND_FILTERS.engine);
+  write("freshness", filters.freshness, filters.freshness === DEFAULT_BRAND_FILTERS.freshness);
+  write("sort", filters.sort, filters.sort === DEFAULT_BRAND_FILTERS.sort);
+  write("view", filters.view, filters.view === DEFAULT_BRAND_FILTERS.view);
+  return next;
 }
 
 export function matchesBrandFilters(
