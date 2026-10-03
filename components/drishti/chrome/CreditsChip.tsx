@@ -5,6 +5,7 @@ import { useAction, useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
 import { CONTROL_SHELL_CLASS, VALUE_CLASS } from "@/components/drishti/tokens";
+import { Meter } from "@/components/ui/meter";
 import { creditsChipView, type LiveCredits } from "./creditsChipLogic";
 
 export function CreditsChip() {
@@ -26,7 +27,7 @@ export function CreditsChip() {
     };
   }, []);
 
-  const { text, tone } = creditsChipView(live, fallback);
+  const { text, tone, meter } = creditsChipView(live, fallback);
   return (
     <span
       className={cn(
@@ -39,6 +40,14 @@ export function CreditsChip() {
       <span className={cn(VALUE_CLASS, tone === "danger" ? "text-danger" : "text-fg-secondary")}>
         {text}
       </span>
+      {meter ? (
+        <Meter
+          value={meter.left}
+          max={meter.total}
+          fill={meter.fill}
+          aria-label="SerpApi searches left"
+        />
+      ) : null}
     </span>
   );
 }

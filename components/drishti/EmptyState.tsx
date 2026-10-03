@@ -63,37 +63,33 @@ export function EmptyState({
   return (
     <section
       className={cn(
-        "flex flex-col items-start",
-        composed.size === "md" ? "gap-3 py-6" : "gap-2 py-3",
+        "flex flex-col items-center text-center",
+        composed.size === "md" ? "gap-3 py-8" : "gap-2 py-4",
         composed.bounded &&
-          "rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-inset)] px-5 py-6",
+          "rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-inset)] px-5 py-12",
         className,
       )}
     >
       {icon ? (
-        <span
-          aria-hidden="true"
-          className="flex size-8 items-center justify-center rounded-sm border border-[var(--border)] bg-[var(--bg-inset)] text-[var(--text-tertiary)]"
-        >
-          {icon}
+        <span aria-hidden="true" className="relative mb-1 flex size-10 items-center justify-center">
+          <span className="absolute inset-0 -translate-x-1.5 -rotate-6 rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] opacity-40 shadow-xs" />
+          <span className="absolute inset-0 translate-x-1.5 rotate-6 rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] opacity-40 shadow-xs" />
+          <span className="relative flex size-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] text-[var(--text-tertiary)] shadow-xs">
+            {icon}
+          </span>
         </span>
       ) : null}
       <h3
         style={{ fontFamily: DISPLAY_FONT_STACK }}
-        className={cn(
-          "text-balance font-semibold tracking-[-0.01em] text-[var(--text-primary)]",
-          composed.size === "md"
-            ? "text-[1.05rem] leading-[1.32]"
-            : "text-[0.95rem] leading-[1.35]",
-        )}
+        className="text-balance text-[15px] font-medium leading-snug text-[var(--text-primary)]"
       >
         {composed.title}
       </h3>
-      <p className="max-w-[56ch] text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+      <p className="max-w-[46ch] text-balance text-sm text-[var(--text-secondary)]">
         {composed.description}
       </p>
       {composed.hasAction ? (
-        <div className="mt-1 flex flex-wrap items-center gap-2">{action}</div>
+        <div className="mt-1 flex flex-wrap items-center justify-center gap-2">{action}</div>
       ) : null}
     </section>
   );

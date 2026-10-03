@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useSyncExternalStore } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useQuery } from "convex/react";
 import { LogOut, MessageSquare, Plus, Search, UserRound } from "lucide-react";
@@ -12,6 +12,7 @@ import { CreditsChip } from "@/components/drishti/chrome/CreditsChip";
 import { NAV } from "@/components/drishti/chrome/Sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import {
   Command,
   CommandDialog,
@@ -26,6 +27,13 @@ import {
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { iconProps } from "@/components/drishti";
 
+const subscribeNever = () => () => {};
+function readModKey(): "⌘" | "Ctrl" {
+  const nav = navigator as Navigator & { userAgentData?: { platform?: string } };
+  const platform = nav.userAgentData?.platform ?? navigator.platform ?? "";
+  return /mac|iphone|ipad/i.test(platform) ? "⌘" : "Ctrl";
+}
+
 export function Masthead() {
   const router = useRouter();
   const { signOut } = useAuthActions();
@@ -33,6 +41,7 @@ export function Masthead() {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const [isSigningOut, setIsSigningOut] = useState(false);
+  const mod = useSyncExternalStore(subscribeNever, readModKey, () => null);
 
   function navigateToAsk(question: string) {
     const trimmed = question.trim();
@@ -73,9 +82,12 @@ export function Masthead() {
         >
           <Search {...iconProps} aria-hidden className="size-4 shrink-0 text-fg-secondary" />
           <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Drishti…</span>
-          <kbd className="hidden shrink-0 rounded-sm border border-border bg-bg-inset px-1.5 py-0.5 font-mono text-[10px] text-fg-tertiary sm:inline-flex">
-            ⌘K
-          </kbd>
+          {mod ? (
+            <KbdGroup className="ml-auto hidden shrink-0 sm:inline-flex">
+              <Kbd>{mod}</Kbd>
+              <Kbd>K</Kbd>
+            </KbdGroup>
+          ) : null}
         </button>
         {/* Actions live in the top-right corner, not floating after the search:
             a spacer pins this cluster to the edge at every width. */}
@@ -159,7 +171,7 @@ export function Masthead() {
                   <CommandItem value={query} onSelect={() => navigateToAsk(query)}>
                     <MessageSquare {...iconProps} className="size-4" />
                     <span className="truncate">Ask Drishti: &ldquo;{query.trim()}&rdquo;</span>
-                    <CommandShortcut>⌘↵</CommandShortcut>
+                    {mod ? <CommandShortcut>{mod === "⌘" ? "⌘↵" : "Ctrl ↵"}</CommandShortcut> : null}
                   </CommandItem>
                 </CommandGroup>
               </>
