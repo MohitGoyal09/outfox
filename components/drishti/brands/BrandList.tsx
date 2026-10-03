@@ -1,31 +1,25 @@
 "use client";
 
-import Link from "next/link";
-import { ArrowUpRight, CircleCheck, Clock3, Search, SlidersHorizontal } from "lucide-react";
+import { Search, SlidersHorizontal } from "lucide-react";
 import { useMemo, useState } from "react";
 import { useQuery } from "convex/react";
 
 import { api } from "@/convex/_generated/api";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import type { BrandDoc, FetchEngine } from "./brand-model";
-import { formatStamp, profileStatusLabel } from "../cohorts/cohorts-model";
+import type { BrandDoc } from "./brand-model";
 import {
-  FETCH_ENGINES,
   enginesWithEvidence,
+  latestCheckAt,
   evidenceSummaryByBrandId,
   latestRunByBrand,
   splitOwnBrand,
 } from "./brand-model";
-import { sourceName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
-import { Panel } from "../Panel";
 import { SkeletonRows } from "../Skeleton";
 import { iconProps } from "../tokens";
-import { BrandMark } from "./BrandMark";
-import { OwnBrandToggle } from "./OwnBrandToggle";
+import { BrandRow } from "./BrandRow";
 
 export type BrandListProps = {
   brands: BrandDoc[];
@@ -33,103 +27,6 @@ export type BrandListProps = {
   emptyAction?: React.ReactNode;
   className?: string;
 };
-
-function StatusBadge({ status }: { status: string }) {
-  const ready = status === "ready";
-  return (
-    <Badge
-      variant="outline"
-      className={cn(
-        "h-6 gap-1.5 rounded-full px-2.5 text-[11px] font-medium",
-        ready ? "border-ok/30 bg-ok/10 text-ok" : "border-warn/30 bg-warn/10 text-warn",
-      )}
-    >
-      {ready ? <CircleCheck className="size-3" /> : <Clock3 className="size-3" />}
-      {profileStatusLabel(status)}
-    </Badge>
-  );
-}
-
-type BrandRowProps = {
-  brand: BrandDoc;
-  own?: boolean;
-  claimCount: number | undefined;
-  latestRunAt: string | undefined;
-  engines: Set<FetchEngine>;
-};
-
-function BrandRow({ brand, own = false, claimCount, latestRunAt, engines }: BrandRowProps) {
-  return (
-    <Panel
-      interactive
-      className={cn("group overflow-hidden", own && "border-accent/35 bg-accent/[0.03]")}
-      ariaLabel={brand.name}
-    >
-      <Link
-        href={`/brands/${brand._id}`}
-        className="block"
-      >
-        <div className="grid gap-4 p-5 sm:grid-cols-[minmax(0,1.6fr)_minmax(180px,0.9fr)_auto] sm:items-center">
-          <div className="flex min-w-0 items-center gap-3">
-            <BrandMark name={brand.name} domain={brand.domain} className="size-11 rounded-xl" />
-            <div className="min-w-0">
-              {own ? (
-                <p className={cn("font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-fg")}>
-                  Your brand
-                </p>
-              ) : null}
-              <div className="flex items-center gap-2">
-                <h3 className="truncate text-[15px] font-semibold tracking-[-0.015em] text-fg">{brand.name}</h3>
-                <ArrowUpRight className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
-              </div>
-              <p className="mt-1 truncate text-xs text-muted-foreground">{brand.domain} · {brand.vertical}</p>
-            </div>
-          </div>
-          <div className="grid grid-cols-2 gap-x-5 gap-y-1 text-xs sm:grid-cols-1">
-            <span className="text-muted-foreground">
-              Evidence{" "}
-              <strong className="font-mono font-medium tabular-nums text-fg">{claimCount ?? "—"}</strong>
-            </span>
-            <span className="text-muted-foreground">
-              Latest{" "}
-              <strong className="font-mono font-medium tabular-nums text-fg">
-                {latestRunAt ? formatStamp(latestRunAt).split(" · ")[0] : "Not checked yet"}
-              </strong>
-            </span>
-          </div>
-          <div className="flex flex-wrap items-center gap-2 sm:justify-end">
-            <StatusBadge status={brand.profileStatus} />
-            <span className="hidden font-mono text-[10px] tabular-nums text-muted-foreground lg:inline">
-              {brand.lastRefreshedAt ? formatStamp(brand.lastRefreshedAt).split(" · ")[0] : "never refreshed"}
-            </span>
-          </div>
-        </div>
-      </Link>
-      <div className="flex items-center gap-1 border-t border-border px-5 py-2.5 text-[10px] text-muted-foreground">
-        <span className="mr-2 uppercase tracking-[0.14em]">Evidence from</span>
-        {FETCH_ENGINES.map((engine) => {
-          const on = engines.has(engine);
-          return (
-            <span
-              key={engine}
-              title={`${sourceName(engine)}: ${on ? "evidence found" : "no evidence found"}`}
-              className={cn("size-1.5 rounded-full", on ? "bg-ok" : "bg-border-strong")}
-            />
-          );
-        })}
-        <span className="sr-only">
-          {FETCH_ENGINES.map(
-            (engine) => `${sourceName(engine)}: ${engines.has(engine) ? "evidence found" : "no evidence found"}`,
-          ).join("; ")}
-        </span>
-        <span className="ml-auto mr-2 font-mono tabular-nums">
-          {brand.createdAt ? `Added ${formatStamp(brand.createdAt).split(" · ")[0]}` : ""}
-        </span>
-        <OwnBrandToggle brandId={brand._id} isOwn={own} size="xs" />
-      </div>
-    </Panel>
-  );
-}
 
 export function BrandList({ brands, isLoading = false, emptyAction, className }: BrandListProps) {
   const [query, setQuery] = useState("");
@@ -145,7 +42,7 @@ export function BrandList({ brands, isLoading = false, emptyAction, className }:
   );
   const rowProps = (brand: BrandDoc) => ({
     claimCount: evidenceMap?.get(String(brand._id))?.evidenceCount,
-    latestRunAt: latestRunMap.get(String(brand._id))?.requestedAt,
+    latestCheckAt: latestCheckAt(evidenceMap?.get(String(brand._id)), latestRunMap.get(String(brand._id))),
     engines: enginesWithEvidence(evidenceMap?.get(String(brand._id))),
   });
   const filtered = useMemo(
@@ -163,7 +60,7 @@ export function BrandList({ brands, isLoading = false, emptyAction, className }:
   if (isLoading) {
     return (
       <div className={cn("grid gap-3", className)}>
-        <SkeletonRows count={3} variant="row" height={104} />
+        <SkeletonRows count={3} variant="row" height={72} />
       </div>
     );
   }

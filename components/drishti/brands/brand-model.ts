@@ -35,6 +35,7 @@ export type BrandEvidenceSummary = {
   brandId: string;
   evidenceCount: number;
   engines: string[];
+  latestEvidenceAt?: string;
 };
 
 export function isSignalClaim(claim: ClaimDoc): boolean {
