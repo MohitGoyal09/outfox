@@ -53,7 +53,7 @@ export function FeedCard({
   pageLabel?: string;
 }) {
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className="mb-4 flex break-inside-avoid flex-col gap-1.5">
       {brand ? <BrandAttribution brand={brand} /> : null}
       {group !== undefined ? (
         <YouTubeVideoCard group={group} raw={null} />

@@ -1,6 +1,7 @@
 
 import { displayClaimText } from "../brands/format";
 import { sourceName } from "../labels";
+import { hookName } from "../labels";
 import { HOOK_TYPES, isHookType, isValidEvidenceHref, type HookType } from "../tokens";
 
 
@@ -48,6 +49,7 @@ export const TRACKED_ENGINES = [
 ] as const;
 
 const TRACKED_ENGINE_SET: ReadonlySet<string> = new Set<string>(TRACKED_ENGINES);
+
 
 
 export type BrandCoverage = {
@@ -253,6 +255,22 @@ export type Emerging = {
   brandNames: string[];
   sharePct: number;
 };
+
+export function composeEmerging(
+  claims: readonly FeedClaim[],
+  coverage: ReadonlyMap<string, BrandCoverage>,
+  brandNameById: BrandNameById,
+): Emerging | null {
+  const leading = leadingHook(pooled);
+  return {
+    hook: leading.hook,
+    hookLabelText: hookName(leading.hook),
+    count: leading.count,
+    taggedCount: leading.taggedCount,
+    brandNames: leading.brandIds.map((id) => brandNameById[id] ?? id),
+    sharePct: Math.round((leading.count / leading.taggedCount) * 100),
+  };
+}
 
 
 export const MAX_RECENT_THREADS = 5;

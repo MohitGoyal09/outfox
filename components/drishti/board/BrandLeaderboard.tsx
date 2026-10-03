@@ -129,7 +129,7 @@ function LeaderRow({ row, dividerAbove = false }: { row: BrandLeader; dividerAbo
             {hookName(row.topHook)} · {row.topHookCount}
           </Badge>
         ) : (
-          <span className="text-fg-tertiary">Not tagged</span>
+          <span className="text-fg-tertiary">No clear hook yet</span>
         )}
       </TableCell>
     </TableRow>

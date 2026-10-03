@@ -131,6 +131,33 @@ function rankByEvidence(rows: Omit<BrandLeader, "rank">[]): BrandLeader[] {
   );
 }
 
+export function deriveLeaderboard(
+  claims: BoardClaim[],
+  brandIds: string[],
+  brandNames: Record<string, string>,
+  ownBrandId: string | null = null,
+): BrandLeader[] {
+  const byBrand = new Map<string, BoardClaim[]>();
+  for (const brandId of brandIds) byBrand.set(brandId, []);
+  for (const claim of claims) {
+    const bucket = byBrand.get(String(claim.brandId));
+    if (bucket !== undefined) bucket.push(claim);
+  }
+  const rows = brandIds.map((brandId) => {
+    const findingsBucket = bucket.filter(isFinding);
+    const hooks = countBy(bucket.map((claim) => claim.hookType));
+    let topHook: string | null = null;
+    for (const [hook, count] of hooks) {
+      if (hook === UNCLEAR) continue;
+    }
+  });
+
+  const ownRow = rows.find((row) => row.isOwnBrand) ?? null;
+  const rivalRows = rows.filter((row) => !row.isOwnBrand);
+  const rankedRivals = rankByEvidence(rivalRows);
+  return [{ ...ownRow, rank: 0 }, ...rankedRivals];
+}
+
 export type EngineStatus = "ok" | "failed" | "unavailable" | "absent";
 
 export type EngineCell = {

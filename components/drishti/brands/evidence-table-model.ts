@@ -31,6 +31,7 @@ export function sortEvidenceRows(rows: EvidenceRow[], key: EvidenceRowKey, dir: 
 }
 
 export function formatRowValue(row: Pick<EvidenceRow, "value" | "unit">): string {
+  const num = typeof row.value === "number" ? row.value : typeof row.value === "string" && row.value.trim() !== "" ? Number(row.value) : NaN;
 }
 
 function firstTag(tags: ClaimDoc[], pick: "hookType" | "funnelStage"): string | undefined {

@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 
 export type StatTileProps = {
   label: string;
+  labelInfo?: string;
   value: string | number | null | undefined;
   unit?: string;
   tone?: Tone;
@@ -19,6 +20,7 @@ export type StatTileProps = {
 
 export function StatTile({
   label,
+  labelInfo,
   value,
   unit,
   tone,
@@ -40,7 +42,7 @@ export function StatTile({
       )}
     >
       <div className="flex items-start justify-between gap-3">
-        <StatReadout label={label} value={value} unit={unit} tone={tone} size="md" loading={loading} />
+        <StatReadout label={label} labelInfo={labelInfo} value={value} unit={unit} tone={tone} size="md" loading={loading} />
         {icon ? (
           <span
             aria-hidden="true"

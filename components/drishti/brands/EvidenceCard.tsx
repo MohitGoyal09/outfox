@@ -137,8 +137,8 @@ export function EvidenceCard({
         ) : null}
       </div>
       <div className="mt-4 flex items-center gap-2 border-t border-border/70 pt-3">
-        <Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{claim.hookType ? hookName(claim.hookType) : "Signal"}</Badge>
-        <Badge variant="outline" className="h-6 rounded-full border-ok/30 bg-ok/10 px-2 text-[10px] text-ok"><span className="mr-1 size-1.5 rounded-full bg-ok" />{claim.confidence ?? "Unrated"}</Badge>
+        {claim.hookType ? <Badge variant="outline" className="h-6 max-w-[125px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{hookName(claim.hookType)}</Badge> : null}
+        {claim.confidence ? <Badge variant="outline" className="h-6 rounded-full px-2 text-[10px] capitalize text-muted-foreground">{claim.confidence} confidence</Badge> : null}
         <Button asChild variant="outline" size="sm" className="ml-auto h-7 rounded-md px-2 text-[11px]"><a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button>
       </div>
     </Panel>

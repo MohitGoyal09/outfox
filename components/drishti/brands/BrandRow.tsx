@@ -20,13 +20,9 @@ import { RelativeTime } from "../RelativeTime";
 import { Panel } from "../Panel";
 import { BrandMark } from "./BrandMark";
 import { PlatformLogo } from "./PlatformLogo";
+import { categoryLabel } from "./add-brand-model";
+import { statusLabel } from "./status-labels";
 import { FETCH_ENGINES, type BrandDoc, type FetchEngine } from "./brand-model";
-
-const STATUS_WORDS: Record<string, string> = {
-  ready: "Ready",
-  pending: "Pending",
-  needs_confirmation: "Needs confirmation",
-};
 
 function StatusBadge({ status }: { status: string }) {
   const ready = status === "ready";
@@ -37,7 +33,7 @@ function StatusBadge({ status }: { status: string }) {
         ready ? "border-ok/30 bg-ok/10 text-ok" : "border-warn/30 bg-warn/10 text-warn",
       )}
     >
-      {STATUS_WORDS[status] ?? "Unknown"}
+      {statusLabel(status)}
     </span>
   );
 }
@@ -126,7 +122,7 @@ export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engine
       className={cn("group relative", own && "border-accent/35 bg-accent/[0.03]")}
       ariaLabel={brand.name}
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 md:min-h-16 md:grid-cols-[minmax(0,1fr)_88px_auto_104px_88px_96px_32px] md:py-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 md:min-h-16 md:grid-cols-[minmax(0,1fr)_88px_auto_150px_104px_96px_32px] md:py-2">
         <div className="flex min-w-0 items-center gap-3">
           <BrandMark name={brand.name} domain={brand.domain} className="size-10 rounded-xl" />
           <div className="min-w-0">
@@ -146,7 +142,7 @@ export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engine
               ) : null}
             </div>
             <p className="truncate text-xs text-muted-foreground">
-              {brand.domain} · {brand.vertical}
+              {brand.domain} · {categoryLabel(brand.vertical)}
             </p>
           </div>
         </div>
@@ -159,7 +155,7 @@ export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engine
             evidence
           </span>
           <SourceMarks engines={engines} />
-          <span className="text-xs text-muted-foreground">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
             Latest check{" "}
             {latestCheckAt ? (
               <RelativeTime iso={latestCheckAt} className="relative z-10 font-mono tabular-nums text-fg" />
@@ -167,7 +163,7 @@ export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engine
               <span className="text-fg">none yet</span>
             )}
           </span>
-          <span className="text-xs text-muted-foreground">
+          <span className="whitespace-nowrap text-xs text-muted-foreground">
             Added{" "}
             {brand.createdAt ? (
               <RelativeTime iso={brand.createdAt} className="relative z-10 font-mono tabular-nums text-fg" />

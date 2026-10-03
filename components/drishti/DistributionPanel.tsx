@@ -335,7 +335,7 @@ export function DistributionPanel({
             {rows.map((row) => (
               <li
                 key={row.label}
-                className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2"
+                className="flex flex-wrap items-center gap-x-3 gap-y-1.5 py-2 sm:flex-nowrap"
               >
                 <span className="flex min-w-0 basis-full items-center gap-2 sm:basis-auto sm:flex-1">
                   <span
@@ -361,7 +361,7 @@ export function DistributionPanel({
                     <span
                       className={cn(
                         VALUE_CLASS,
-                        "w-10 text-[12.5px] text-[var(--text-primary)]",
+                        "w-10 shrink-0 text-[12.5px] text-[var(--text-primary)]",
                         COLUMN,
                       )}
                     >
@@ -370,14 +370,14 @@ export function DistributionPanel({
                     <span
                       className={cn(
                         VALUE_CLASS,
-                        "w-12 text-[11px] text-[var(--text-tertiary)]",
+                        "w-12 shrink-0 text-[11px] text-[var(--text-tertiary)]",
                         COLUMN,
                       )}
                     >
                       {row.shareText}
                     </span>
                     <span
-                      className={cn(VALUE_CLASS, "w-28 text-[12.5px]", COLUMN)}
+                      className={cn(VALUE_CLASS, "w-28 shrink-0 text-[12.5px]", COLUMN)}
                       style={{ color: row.deltaColor }}
                     >
                       {row.deltaGlyph ? (
@@ -387,7 +387,7 @@ export function DistributionPanel({
                     </span>
                     <span
                       aria-hidden="true"
-                      className="hidden items-center sm:flex sm:w-24"
+                      className="hidden items-center sm:flex sm:w-24 sm:shrink-0"
                     >
                       <span className="block h-1.5 w-full overflow-hidden rounded-full bg-[var(--bg-inset)]">
                         <span

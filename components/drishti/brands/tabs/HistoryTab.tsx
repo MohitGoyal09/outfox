@@ -8,6 +8,7 @@ import { Panel } from "../../Panel";
 import { EmptyState } from "../../EmptyState";
 import { formatStamp } from "../../cohorts/cohorts-model";
 import { hookName, stageName } from "@/components/drishti/labels";
+import { statusLabel } from "../status-labels";
 import type { RunHistoryRow } from "../brand-model";
 
 export function runStatusTone(status: string): "ok" | "warn" | "danger" | "neutral" {
@@ -54,7 +55,7 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
                   <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1">
                     <div className="flex items-center gap-2">
                       <span className="font-mono text-xs text-muted-foreground">{formatStamp(row.requestedAt)}</span>
-                      <span className={cn("text-xs font-medium", STATUS_TEXT[tone])}>{row.status}</span>
+                      <span className={cn("text-xs font-medium", STATUS_TEXT[tone])}>{statusLabel(row.status)}</span>
                     </div>
                     <Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 text-[12px] text-fg hover:underline">
                       View check <ArrowRight className="size-3" />

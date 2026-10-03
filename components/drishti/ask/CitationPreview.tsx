@@ -5,6 +5,7 @@ import type { ReactNode } from "react";
 import { HoverCard, HoverCardContent, HoverCardTrigger } from "@/components/ui/hover-card";
 import { stripEmDashes } from "@/lib/noEmDash";
 import { sourceName } from "@/components/drishti/labels";
+import { displayClaimText } from "../brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { engineDomain } from "./agentChat-model";
 import type { SourceView } from "./agentChat-model";
@@ -24,7 +25,7 @@ export function CitationPreview({ source, children }: { source: SourceView | und
   const { claimText, fetchedAt } = source;
   const host = engineDomain(source.engine, source.url);
   const hasRawId = typeof claimText === "string" && /\b[a-z]+_[a-z_]+\b/.test(claimText);
-  const text = typeof claimText === "string" && claimText.trim() !== "" && !hasRawId ? stripEmDashes(claimText) : null;
+  const text = typeof claimText === "string" && claimText.trim() !== "" && !hasRawId ? stripEmDashes(displayClaimText(claimText)) : null;
   const fetched = fetchedLabel(fetchedAt);
 
   return (

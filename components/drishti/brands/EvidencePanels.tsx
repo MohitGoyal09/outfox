@@ -5,7 +5,7 @@ import type { ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart } from "recharts";
 import { cn } from "@/lib/utils";
-import { hookName } from "@/components/drishti/labels";
+import { hookName, stageName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
 import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
@@ -69,9 +69,9 @@ function HookRow({
   const selected = isRowSelected(row.label, selectedHook);
   const content = (
     <>
-      <span className="flex min-w-0 items-center gap-2 capitalize">
-        <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
-        <span className="truncate">{hookName(row.label)}</span>
+      <span className="flex min-w-0 items-start gap-2">
+        <span className="mt-1 size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
+        <span className="min-w-0 break-words">{hookName(row.label)}</span>
       </span>
       <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
       <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "-"}</span>
@@ -199,7 +199,7 @@ export function HookChart({
     rows.map((row) => [row.label, { label: hookName(row.label), color: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }]),
   ) satisfies ChartConfig;
   return (
-    <div className="grid grid-cols-[92px_1fr] items-center gap-4">
+    <div className="grid items-center gap-4">
       {/* No hover tooltip on purpose. The legend to the right already carries
           every slice's label, count, share and delta, so a tooltip repeats it
           -- and at 92px a cursor-following card lands squarely on the centre
@@ -242,7 +242,7 @@ export function HookChart({
         ))}
       </div>
       {total > 0 ? (
-        <div className="col-span-2">
+        <div>
           <TaggedShareNote realCount={total} taggedCount={taggedCount} totalFindings={totalFindings} dimensionNoun="hook" />
         </div>
       ) : null}
@@ -250,13 +250,9 @@ export function HookChart({
   );
 }
 
-const FUNNEL_ORDER: readonly [FunnelStage, string][] = [
-  ["unaware", "Awareness"],
-  ["problem_aware", "Problem aware"],
-  ["solution_aware", "Solution aware"],
-  ["product_aware", "Product aware"],
-  ["most_aware", "Most aware"],
-];
+const FUNNEL_ORDER: readonly [FunnelStage, string][] = (
+  ["unaware", "problem_aware", "solution_aware", "product_aware", "most_aware"] as const
+).map((stage) => [stage, stageName(stage)]);
 
 const FUNNEL_EMPTY_BAND_PCT = 4;
 
@@ -305,7 +301,7 @@ export function FunnelPanel({
         const selected = isRowSelected(row.stage, selectedStage);
         const bar = (
           <>
-            <span className="truncate">{FUNNEL_STAGE_INDEX[row.stage] + 1}. {row.label}</span>
+            <span className="col-span-3 min-w-0 break-words">{FUNNEL_STAGE_INDEX[row.stage] + 1}. {row.label}</span>
             <span className="h-4 w-full overflow-hidden rounded-[3px] bg-muted/40">
               {row.count > 0 ? (
                 <span
@@ -322,7 +318,7 @@ export function FunnelPanel({
         );
         if (row.count === 0 || !onSelectStage) {
           return (
-            <div key={row.stage} className="grid grid-cols-[100px_1fr_auto_auto] items-center gap-2 text-[11px]">
+            <div key={row.stage} className="grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 text-[11px]">
               {bar}
             </div>
           );
@@ -335,7 +331,7 @@ export function FunnelPanel({
             aria-label={selected ? `Clear ${row.label} funnel stage filter` : `Filter evidence to ${row.label} funnel stage`}
             onClick={() => onSelectStage(row.stage)}
             className={cn(
-              "grid grid-cols-[100px_1fr_auto_auto] items-center gap-2 rounded-sm text-left text-[11px] hover:bg-muted/40",
+              "grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 rounded-sm text-left text-[11px] hover:bg-muted/40",
               selected && "bg-accent/10",
               FOCUS_RING_CLASS,
             )}

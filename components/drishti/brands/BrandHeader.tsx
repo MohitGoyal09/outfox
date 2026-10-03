@@ -7,8 +7,9 @@ import { cn } from "@/lib/utils";
 import { Chip } from "../Chip";
 import { LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
 import { FreshnessStamp } from "../cohorts/FreshnessStamp";
+import { statusLabel } from "./status-labels";
+import { categoryLabel } from "./add-brand-model";
 import {
-  profileStatusLabel,
   profileStatusTone,
   type BrandDoc,
 } from "../cohorts/cohorts-model";
@@ -47,14 +48,14 @@ export function BrandHeader({
               {brand.domain}
             </span>
             <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
-              {brand.vertical}
+              {categoryLabel(brand.vertical)}
             </span>
           </p>
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
           <Chip
-            label={profileStatusLabel(brand.profileStatus)}
+            label={statusLabel(brand.profileStatus)}
             tone={profileStatusTone(brand.profileStatus)}
           />
           <FreshnessStamp

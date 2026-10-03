@@ -16,7 +16,9 @@ import { EmptyState } from "../EmptyState";
 import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { useAllRuns } from "../cohorts/useAllRuns";
-import { formatStamp, profileStatusLabel } from "../cohorts/cohorts-model";
+import { categoryLabel } from "./add-brand-model";
+import { statusLabel } from "./status-labels";
+import { formatStamp } from "../cohorts/cohorts-model";
 import {
   engineCoverage,
   funnelDistribution,
@@ -70,7 +72,7 @@ function statusBadge(status: string) {
   return (
     <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good ? "border-ok/30 bg-ok/10 text-ok" : "border-warn/30 bg-warn/10 text-warn")}>
       {good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}
-      {profileStatusLabel(status)}
+      {statusLabel(status)}
     </Badge>
   );
 }
@@ -253,7 +255,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                   ) : null}
                 </div>
                 <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  <span>{brand.vertical}</span>
+                  <span>{categoryLabel(brand.vertical)}</span>
                   <span aria-hidden>·</span>
                   <span className="inline-flex items-center gap-1">
                     <Globe2 className="size-3.5" />

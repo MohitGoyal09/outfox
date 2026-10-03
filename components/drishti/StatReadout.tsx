@@ -1,5 +1,6 @@
 
 import { cn } from "@/lib/utils";
+import { MetricInfo } from "./MetricInfo";
 import { Skeleton } from "./Skeleton";
 import {
   ABSENT,
@@ -13,6 +14,7 @@ import {
 
 export type StatReadoutProps = {
   label: string;
+  labelInfo?: string;
   value: string | number | null | undefined;
   unit?: string;
   tone?: Tone;
@@ -51,6 +53,7 @@ export function statReadoutText(
 
 export function StatReadout({
   label,
+  labelInfo,
   value,
   unit,
   tone,
@@ -98,7 +101,9 @@ export function StatReadout({
       )}
     >
       {hideLabel ? null : (
-        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>{label}</span>
+        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
+          {labelInfo ? <MetricInfo label={label} definition={labelInfo} /> : label}
+        </span>
       )}
       {valueNode}
       {delta === null || delta === undefined ? null : (
@@ -120,6 +125,7 @@ export function StatReadout({
 
 export function StatTile({
   label,
+  labelInfo,
   value,
   unit,
   tone,
@@ -145,7 +151,9 @@ export function StatTile({
       )}
     >
       {hideLabel ? null : (
-        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>{label}</span>
+        <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
+          {labelInfo ? <MetricInfo label={label} definition={labelInfo} /> : label}
+        </span>
       )}
 
       {loading ? (

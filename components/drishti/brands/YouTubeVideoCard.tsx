@@ -83,8 +83,8 @@ export function YouTubeVideoCard({
         ) : null}
         {group.publishedDate ? <p className="text-[11px] text-muted-foreground">Published {group.publishedDate}</p> : null}
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
-          <Badge variant="outline" className="h-6 max-w-[140px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{tag?.hookType ? hookName(tag.hookType) : "Signal"}</Badge>
-          <Badge variant="outline" className="h-6 rounded-full border-ok/30 bg-ok/10 px-2 text-[10px] text-ok"><span className="mr-1 size-1.5 rounded-full bg-ok" />{tag?.confidence ?? "Unrated"}</Badge>
+          {tag?.hookType ? <Badge variant="outline" className="h-6 max-w-[140px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{hookName(tag.hookType)}</Badge> : null}
+          {tag?.confidence ? <Badge variant="outline" className="h-6 rounded-full px-2 text-[10px] capitalize text-muted-foreground">{tag.confidence} confidence</Badge> : null}
           {group.likeCount !== null ? <span className="ml-auto font-mono text-[11px] tabular-nums text-muted-foreground">{group.likeCount.toLocaleString()} likes</span> : null}
         </div>
         <Button asChild variant="outline" size="sm" className="mt-auto h-7 w-full justify-center rounded-md text-[11px]"><a href={group.evidenceUrl} target="_blank" rel="noreferrer noopener">View <ArrowUpRight className="ml-1 size-3" /></a></Button>

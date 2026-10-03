@@ -15,6 +15,7 @@ import { measureName } from "@/components/drishti/labels";
 import type { Id } from "@/convex/_generated/dataModel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import type { BoardItemContext } from "../boards/boards-model";
+import { displayClaimText } from "../brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { LABEL_CLASS, isValidEvidenceHref } from "../tokens";
 import { formatFetchedAt } from "./agentChat-model";
@@ -67,7 +68,7 @@ export function CitationDrawer({
         {claim !== undefined ? (
           <div className="flex flex-col gap-4 overflow-y-auto px-4 pb-6">
             <div className="rounded-lg border border-border bg-bg-inset p-4">
-              <p className="text-sm leading-6 text-fg">{stripEmDashes(claim.text)}</p>
+              <p className="text-sm leading-6 text-fg">{stripEmDashes(displayClaimText(claim.text))}</p>
             </div>
 
             {!isStoredClaim ? (

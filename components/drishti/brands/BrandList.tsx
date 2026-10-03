@@ -119,7 +119,7 @@ export function BrandList({ brands, isLoading = false, emptyAction, className }:
           </div>
           <div className="flex items-center justify-between text-xs text-muted-foreground">
             <span>
-              {filtered.length} of {competitors.length} tracked {competitors.length === 1 ? "brand" : "brands"}
+              {filtered.length} of {competitors.length} {competitors.length === 1 ? "rival" : "rivals"}
             </span>
             <span className="font-mono">Sorted by recently added</span>
           </div>

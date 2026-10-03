@@ -65,7 +65,7 @@ function BrandsBody() {
           </div>
           <div className="flex items-center gap-2">
             <span className="font-mono text-xs tabular-nums text-muted-foreground">
-              {isLoading ? "Loading" : `${trackedCount} tracked`}
+              {isLoading ? "Loading" : own ? `Your brand + ${trackedCount} ${trackedCount === 1 ? "rival" : "rivals"}` : `${trackedCount} tracked`}
             </span>
           </div>
         </div>

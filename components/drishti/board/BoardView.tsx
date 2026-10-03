@@ -244,6 +244,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     label: string;
     value: string | number;
     hint: string;
+    labelInfo?: string;
     loading?: boolean;
   }[] = [
     {
@@ -256,9 +257,13 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           : "no brand of yours in this check",
     },
     {
-      label: "Findings held",
+      label: "In the latest checks",
+      labelInfo:
+        cohortKey === null
+          ? "Findings from each brand's most recent finished check only. Home counts every stored finding across all checks, so its number is larger."
+          : "Findings from the one check this page is pinned to. Home counts every stored finding across all checks.",
       value: claims !== undefined ? countFindings(claims) : 0,
-      hint: `across ${brandIds.length} ${brandIds.length === 1 ? "brand" : "brands"}`,
+      hint: cohortKey === null ? "each brand's latest check" : "this check only",
     },
     {
       label: "What we checked",
@@ -360,6 +365,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
                 label={stat.label}
                 value={stat.value}
                 hint={stat.hint}
+                labelInfo={stat.labelInfo}
                 size="md"
                 loading={stat.loading}
               />

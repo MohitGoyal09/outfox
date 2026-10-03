@@ -262,11 +262,12 @@ function OverviewBody() {
             icon={<Building2 {...iconProps} size={16} aria-hidden="true" className="size-4" />}
           />
           <StatTile
-            label="Findings"
+            label="All stored findings"
+            labelInfo="Every finding stored for your tracked brands, summed across all of their checks. Signals counts only each brand's latest check, so its number is smaller."
             value={totalClaimCount}
             accent="ok"
             loading={panelsLoading}
-            hint={`across ${brandsWithFindings} of ${brands.length} brands`}
+            hint={`across ${brandsWithFindings} of ${brands.length} brands, every check`}
             icon={<Quote {...iconProps} size={16} aria-hidden="true" className="size-4" />}
           />
           <StatTile

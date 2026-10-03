@@ -68,21 +68,38 @@ export function BoardMixChart({
             description="Every tagged finding carries a hook. The mix appears here once at least one finding has been tagged."
           />
         ) : (
-          <ChartContainer config={config} className="h-52 w-full aspect-auto">
-            <BarChart accessibilityLayer data={data} margin={{ top: 18, right: 8, left: -18, bottom: 0 }}>
-              <CartesianGrid vertical={false} strokeDasharray="3 3" />
-              <XAxis dataKey="label" tickLine={false} axisLine={false} tickMargin={8} tick={{ fontSize: 10 }} interval={0} angle={-18} textAnchor="end" height={46} />
-              {/* width 30 fits two digits; a three-digit count (154 live) clipped to a
-                  single glyph stub, so the axis read ") ) ) )". */}
-              <YAxis allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} width={42} />
+          <ChartContainer
+            config={config}
+            className="w-full aspect-auto"
+            style={{ height: Math.max(160, data.length * 34 + 16) }}
+          >
+            <BarChart
+              accessibilityLayer
+              layout="vertical"
+              data={data}
+              margin={{ top: 4, right: 32, left: 4, bottom: 4 }}
+            >
+              <CartesianGrid horizontal={false} strokeDasharray="3 3" />
+              <XAxis type="number" hide allowDecimals={false} />
+              {/* Category names sit on the left at a fixed width, so a long hook
+                  name ("Problem and solution") is never clipped or rotated. */}
+              <YAxis
+                type="category"
+                dataKey="label"
+                tickLine={false}
+                axisLine={false}
+                width={132}
+                interval={0}
+                tick={{ fontSize: 12, fill: "var(--text-secondary)" }}
+              />
               <ChartTooltip cursor={{ fill: "var(--bg-inset)", opacity: 0.6 }} content={<ChartTooltipContent hideLabel />} />
-              <Bar dataKey="findings" radius={[4, 4, 0, 0]} fill="var(--color-findings)" isAnimationActive={!reduceMotion}>
+              <Bar dataKey="findings" radius={[0, 4, 4, 0]} fill="var(--color-findings)" isAnimationActive={!reduceMotion}>
                 {data.map((row) => <Cell key={row.label} fill={row.fill} />)}
                 <LabelList
                   dataKey="findings"
-                  position="top"
+                  position="right"
                   fill="var(--text-tertiary)"
-                  fontSize={10}
+                  fontSize={11}
                   fontFamily="var(--font-mono)"
                 />
               </Bar>

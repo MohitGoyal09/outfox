@@ -6,7 +6,8 @@ import { Chip, EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } fr
 import { cn } from "@/lib/utils";
 
 import { Card } from "./Card";
-import { hookLabel, pluralize, type Emerging } from "./overview-model";
+import { hookName } from "../labels";
+import { pluralize, type Emerging } from "./overview-model";
 
 export type EmergingPanelProps = {
   loading: boolean;
@@ -54,7 +55,7 @@ export function EmergingPanel({ loading, coveredBrandCount, emerging }: Emerging
       ) : (
         <div className="flex flex-col gap-3">
           <p className="type-body max-w-[52ch] text-fg-secondary">
-            The {emerging.hookLabelText} hook is the pooled pattern across the{" "}
+            {emerging.hookLabelText} is the pooled hook pattern across the{" "}
             {coveredBrandCount} {pluralize(coveredBrandCount, "brand")} with a finished check.
           </p>
           <p className={cn(VALUE_CLASS, "text-[12px] text-fg-secondary")}>
@@ -62,7 +63,7 @@ export function EmergingPanel({ loading, coveredBrandCount, emerging }: Emerging
             {emerging.taggedCount} tagged
           </p>
           <div className="flex flex-wrap items-center gap-2">
-            <Chip label={hookLabel(emerging.hook)} value={emerging.hook} scale="hook" />
+            <Chip label={hookName(emerging.hook)} value={emerging.hook} scale="hook" className="normal-case tracking-normal" />
             {emerging.brandNames.map((name) => (
               <span key={name} className="type-caption text-fg-tertiary">
                 {name}

@@ -6,6 +6,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { cn } from "@/lib/utils";
 import { hookName, sourceName, stageName } from "../labels";
 import { RelativeTime } from "../RelativeTime";
+import { displayClaimText } from "./format";
 import { PlatformLogo } from "./PlatformLogo";
 import { formatRowValue, sortEvidenceRows, type EvidenceRow, type EvidenceRowKey } from "./evidence-table-model";
 
@@ -77,7 +78,7 @@ export function EvidenceTable({ rows }: { rows: EvidenceRow[] }) {
                   rel="noreferrer"
                   className="line-clamp-2 rounded-sm outline-none hover:underline focus-visible:ring-3 focus-visible:ring-ring/50"
                 >
-                  {row.text}
+                  {displayClaimText(row.text)}
                 </a>
               </TableCell>
               <TableCell className="px-3">{row.hook ? hookName(row.hook) : NOT_TAGGED}</TableCell>
