@@ -2,6 +2,9 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   experimental: { turbopackUseBuiltinBabel: false },
+  async headers() {
+    return [{ source: "/share/:path*", headers: [{ key: "Referrer-Policy", value: "no-referrer" }] }];
+  },
   turbopack: {
     rules: {
       "*.{ts,tsx}": {

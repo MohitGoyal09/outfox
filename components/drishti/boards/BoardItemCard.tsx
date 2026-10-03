@@ -12,6 +12,7 @@ import { displayClaimText, periodWindow, shortDate } from "../brands/format";
 import { EngineTag, PlatformLogo } from "../brands/PlatformLogo";
 import { hookName, measureName, sourceName } from "../labels";
 import { VALUE_CLASS, iconProps, sourceColor } from "../tokens";
+import { isHttpUrl } from "@/convex/lib/canvasModel";
 import { boardItemThreadHref } from "./boards-model";
 
 export type BoardItem = FunctionReturnType<typeof api.boards.listItems>[number];
@@ -72,7 +73,7 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
       </div>
 
       <a
-        href={claim.evidenceUrl}
+        href={isHttpUrl(claim.evidenceUrl) ? claim.evidenceUrl : undefined}
         target="_blank"
         rel="noreferrer noopener"
         className="mt-3 line-clamp-3 text-[14px] font-semibold leading-5 text-fg hover:text-accent"
@@ -105,7 +106,7 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
           <EngineTag engine={claim.sourceEngine} />
         )}
         <a
-          href={claim.evidenceUrl}
+          href={isHttpUrl(claim.evidenceUrl) ? claim.evidenceUrl : undefined}
           target="_blank"
           rel="noreferrer noopener"
           className={cn(buttonClasses({ variant: "ghost", size: "sm" }), "ml-auto")}

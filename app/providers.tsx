@@ -2,6 +2,7 @@
 
 import { ConvexAuthProvider, useConvexAuth } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
+import { usePathname } from "next/navigation";
 import { SignIn } from "@/app/auth/SignIn";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -25,8 +26,13 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 }
 
+const PUBLIC_PATH_PREFIXES = ["/share/board/"];
+
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
+  const pathname = usePathname();
+
+  if (PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return children;
 
   if (isLoading) {
     return (

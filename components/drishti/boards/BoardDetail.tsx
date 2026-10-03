@@ -2,7 +2,8 @@
 
 
 import { useState } from "react";
-import { Bookmark, Loader2, Pencil, Trash2, X } from "lucide-react";
+import Link from "next/link";
+import { Bookmark, Loader2, Pencil, Shapes, Trash2, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   Dialog,
@@ -12,7 +13,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Button } from "../Button";
+import { Button, buttonClasses } from "../Button";
 import { EmptyState } from "../EmptyState";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { VALUE_CLASS, iconProps } from "../tokens";
@@ -113,6 +114,11 @@ export function BoardDetail({
             {atCap ? ` · full at ${MAX_ITEMS_PER_BOARD}` : ""}
           </p>
         </div>
+        <div className="flex items-center gap-2">
+        <Link href={`/boards/${board._id}`} className={buttonClasses({ variant: "primary", size: "sm" })}>
+          <Shapes {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+          Open canvas
+        </Link>
         <Button
           variant="ghost"
           size="sm"
@@ -122,6 +128,7 @@ export function BoardDetail({
         >
           Delete board
         </Button>
+        </div>
       </header>
 
       {atCap ? (

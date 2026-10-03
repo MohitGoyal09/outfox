@@ -291,8 +291,11 @@ export default defineSchema({
     ownerId: v.id("users"),
     name: v.string(),
     createdAt: v.string(),
+    shareToken: v.optional(v.string()),
+    sharedAt: v.optional(v.string()),
   })
-    .index("by_owner", ["ownerId"]),
+    .index("by_owner", ["ownerId"])
+    .index("by_shareToken", ["shareToken"]),
 
   boardItems: defineTable({
     ownerId: v.id("users"),
@@ -300,6 +303,8 @@ export default defineSchema({
     claimId: v.id("claims"),
     note: v.optional(v.string()),
     createdAt: v.string(),
+    x: v.optional(v.number()),
+    y: v.optional(v.number()),
     context: v.optional(
       v.object({
         question: v.optional(v.string()),
@@ -311,5 +316,51 @@ export default defineSchema({
     .index("by_owner", ["ownerId"])
     .index("by_board", ["boardId"])
     .index("by_board_and_claim", ["boardId", "claimId"]),
+
+  boardNotes: defineTable({
+    ownerId: v.id("users"),
+    boardId: v.id("boards"),
+    text: v.string(),
+    color: v.string(),
+    x: v.number(),
+    y: v.number(),
+    w: v.number(),
+    h: v.number(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_board", ["boardId"])
+    .index("by_owner", ["ownerId"]),
+
+  boardFrames: defineTable({
+    ownerId: v.id("users"),
+    boardId: v.id("boards"),
+    title: v.string(),
+    x: v.number(),
+    y: v.number(),
+    w: v.number(),
+    h: v.number(),
+    createdAt: v.string(),
+    updatedAt: v.string(),
+  })
+    .index("by_board", ["boardId"])
+    .index("by_owner", ["ownerId"]),
+
+  boardEdges: defineTable({
+    ownerId: v.id("users"),
+    boardId: v.id("boards"),
+    source: v.object({
+      kind: v.union(v.literal("item"), v.literal("note"), v.literal("frame")),
+      id: v.string(),
+    }),
+    target: v.object({
+      kind: v.union(v.literal("item"), v.literal("note"), v.literal("frame")),
+      id: v.string(),
+    }),
+    label: v.optional(v.string()),
+    createdAt: v.string(),
+  })
+    .index("by_board", ["boardId"])
+    .index("by_owner", ["ownerId"]),
   ...authTables,
 });

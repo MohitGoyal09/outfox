@@ -3,7 +3,13 @@ const BRAND_ID_RE = /^[a-z0-9_]+$/i;
 
 export function isChatRoute(pathname: string): boolean {
   const path = pathOnly(pathname);
-  return path === "/ask" || path.startsWith("/ask/") || path === "/chats" || path.startsWith("/chats/");
+  return (
+    path === "/ask" ||
+    path.startsWith("/ask/") ||
+    path === "/chats" ||
+    path.startsWith("/chats/") ||
+    /^\/boards\/[^/]+\/?$/.test(path)
+  );
 }
 
 export function pageBrandIdFromPath(pathname: string): string | null {
