@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { hookName } from "../labels";
 import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
-import { FOCUS_RING_CLASS, LABEL_CLASS, VALUE_CLASS, formatSharePct } from "../tokens";
+import { FOCUS_RING_CLASS, HOOK_COLOR, LABEL_CLASS, VALUE_CLASS, formatSharePct, isHookType } from "../tokens";
 import {
   MIN_HOOK_SAMPLE,
   type BrandHookMatrix as Matrix,
@@ -11,16 +11,20 @@ import {
   type HookOverIndex,
 } from "./board-model";
 
-const MAX_SHADE = 28;
+const MAX_SHADE = 55;
 
 function evidenceHref(brandId: string, hook: string): string {
   return `/brands/${brandId}?tab=evidence&hook=${hook}`;
 }
 
-function shade(sharePct: number | null): string | undefined {
+function hookColor(hook: string): string {
+  return isHookType(hook) ? HOOK_COLOR[hook] : "var(--accent)";
+}
+
+function shade(sharePct: number | null, hook: string): string | undefined {
   if (sharePct === null || sharePct <= 0) return undefined;
-  const pct = Math.min(MAX_SHADE, (sharePct / 100) * MAX_SHADE * 2);
-  return `color-mix(in oklab, var(--accent) ${pct.toFixed(1)}%, transparent)`;
+  const pct = Math.min(MAX_SHADE, 8 + (sharePct / 100) * MAX_SHADE * 1.6);
+  return `color-mix(in oklab, ${hookColor(hook)} ${pct.toFixed(1)}%, transparent)`;
 }
 
 export function BrandHookMatrixSkeleton() {
@@ -95,7 +99,10 @@ export function BrandHookMatrix({
                 </th>
                 {hooks.map((hook) => (
                   <th key={hook} scope="col" className={cn(LABEL_CLASS, "min-w-24 px-2 py-2 text-right text-fg-tertiary")}>
-                    {hookName(hook)}
+                    <span className="inline-flex items-center justify-end gap-1.5">
+                      <span aria-hidden="true" className="size-2 shrink-0 rounded-full" style={{ backgroundColor: hookColor(hook) }} />
+                      {hookName(hook)}
+                    </span>
                   </th>
                 ))}
                 <th scope="col" className={cn(LABEL_CLASS, "min-w-24 py-2 pl-2 pr-5 text-right text-fg-tertiary")}>
@@ -166,7 +173,7 @@ function HookCell({ row, hook }: { row: HookMatrixRow; hook: string }) {
   const noun = count === 1 ? "finding" : "findings";
   const label = `${row.name}, ${hookName(hook)}: ${count} ${noun}${share === null ? "" : `, ${formatSharePct(Math.round(share))}`}`;
   return (
-    <td className="p-0 align-middle" style={{ backgroundColor: shade(share) }}>
+    <td className="p-0 align-middle" style={{ backgroundColor: shade(share, hook) }}>
       <Link
         href={evidenceHref(row.brandId, hook)}
         aria-label={label}
