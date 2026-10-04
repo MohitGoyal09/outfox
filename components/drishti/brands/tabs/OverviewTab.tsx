@@ -6,7 +6,7 @@ import { api } from "@/convex/_generated/api";
 import { offTopicIds } from "../topicality";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
-import { checkedStateLabel } from "@/components/drishti/labels";
+import { checkedStateLabel, sameSource } from "@/components/drishti/labels";
 import { isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
 import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
@@ -19,17 +19,17 @@ import type { DistributionItem } from "../../DistributionPanel";
 
 function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: EngineCoverageRow[]; latestClaims: ClaimDoc[]; previousClaims: ClaimDoc[] | null }) {
   const total = rows.reduce(
-    (sum, row) => (row.status === "ok" ? sum + latestClaims.filter((claim) => claim.sourceEngine === row.engine).length : sum),
+    (sum, row) => (row.status === "ok" ? sum + latestClaims.filter((claim) => sameSource(claim.sourceEngine, row.engine)).length : sum),
     0,
   );
   return (
     <div className="space-y-2.5">
       {rows.map((row) => {
-        const count = latestClaims.filter((claim) => claim.sourceEngine === row.engine).length;
-        const delta = previousClaims && row.status === "ok" ? count - previousClaims.filter((claim) => claim.sourceEngine === row.engine).length : null;
+        const count = latestClaims.filter((claim) => sameSource(claim.sourceEngine, row.engine)).length;
+        const delta = previousClaims && row.status === "ok" ? count - previousClaims.filter((claim) => sameSource(claim.sourceEngine, row.engine)).length : null;
         return (
           <div key={row.engine} className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-3 text-xs">
-            <span className="flex items-center gap-2 truncate">
+            <span className="flex items-center gap-2 truncate" title={row.status === "ok" ? (row.reason ?? undefined) : undefined}>
               <PlatformLogo engine={row.engine} className="size-3.5" />
               <span
                 className={cn(
@@ -38,6 +38,7 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
                 )}
               />
               {row.label}
+              {row.status === "ok" && row.reason ? <span className="text-warn">(partial)</span> : null}
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{row.status === "ok" ? Intl.NumberFormat("en-US").format(count) : checkedStateLabel(row.status)}</span>
             <span className="font-mono text-[11px] text-muted-foreground">
@@ -49,7 +50,7 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
       })}
       <div className="flex h-2 overflow-hidden rounded-full bg-muted">
         {rows.map((row) => {
-          const count = latestClaims.filter((claim) => claim.sourceEngine === row.engine).length;
+          const count = latestClaims.filter((claim) => sameSource(claim.sourceEngine, row.engine)).length;
           return row.status === "ok" && total ? (
             <span key={row.engine} style={{ width: `${(count / total) * 100}%`, backgroundColor: sourceColor(row.engine) }} />
           ) : null;

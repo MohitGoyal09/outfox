@@ -25,7 +25,7 @@ import {
   formatRunDayMonth,
   isTerminalRunStatus,
 } from "./labels";
-import { hookName, nameEnumsInText } from "@/components/drishti/labels";
+import { hookName, nameEnumsInText, sameSource, sourceKey, sourcePartFailure } from "@/components/drishti/labels";
 import type {
   BrandRef,
   BriefComposition,
@@ -123,7 +123,7 @@ export function engineRows(
   const byEngine = new Map<string, Map<string, { status: EngineCellStatus; reason: string | null }>>();
   for (const snapshot of snapshots ?? []) {
     if (snapshot.engine === "llm_tag") continue;
-    const engine = snapshot.engine;
+    const engine = sourceKey(snapshot.engine);
     let cells = byEngine.get(engine);
     if (cells === undefined) {
       cells = new Map<string, { status: EngineCellStatus; reason: string | null }>();
@@ -131,7 +131,8 @@ export function engineRows(
     }
     const brandId = String(snapshot.brandId);
     const status: EngineCellStatus = snapshot.status;
-    const reason = snapshot.status === "ok" ? null : plainReason(snapshot.errorMessage ?? null);
+    const plain = snapshot.status === "ok" ? null : plainReason(snapshot.errorMessage ?? null);
+    const reason = plain !== null && engine === "youtube" ? `${sourcePartFailure(snapshot.engine)}${plain ? `. ${plain}` : ""}` : plain;
     const existing = cells.get(brandId);
     if (existing === undefined || engineRank(status) > engineRank(existing.status)) {
       cells.set(brandId, { status, reason });
@@ -611,7 +612,7 @@ export function filterClaims(
   filters: { engine: string | null; brandId: string | null },
 ): ClaimDoc[] {
   return claims.filter((claim) => {
-    if (filters.engine !== null && claim.sourceEngine !== filters.engine) return false;
+    if (filters.engine !== null && !sameSource(claim.sourceEngine, filters.engine)) return false;
     if (filters.brandId !== null && String(claim.brandId) !== filters.brandId) return false;
     return true;
   });
@@ -624,7 +625,8 @@ export function trailFilterOptions(
   const engineCounts = new Map<string, number>();
   const brandCounts = new Map<string, number>();
   for (const claim of claims) {
-    engineCounts.set(claim.sourceEngine, (engineCounts.get(claim.sourceEngine) ?? 0) + 1);
+    const engineKey = sourceKey(claim.sourceEngine);
+    engineCounts.set(engineKey, (engineCounts.get(engineKey) ?? 0) + 1);
     const brandId = String(claim.brandId);
     brandCounts.set(brandId, (brandCounts.get(brandId) ?? 0) + 1);
   }

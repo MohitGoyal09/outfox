@@ -44,7 +44,8 @@ export function statReadoutText(
   }
   if (typeof value === "number") {
     if (!Number.isFinite(value)) return { text: ABSENT, absent: true };
-    return { text: unit ? `${value} ${unit}` : String(value), absent: false };
+    const shown = new Intl.NumberFormat("en-US", { maximumFractionDigits: 20 }).format(value);
+    return { text: unit ? `${shown} ${unit}` : shown, absent: false };
   }
   const trimmed = value.trim();
   if (trimmed.length === 0) return { text: ABSENT, absent: true };

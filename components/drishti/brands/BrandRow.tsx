@@ -15,7 +15,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import { sourceName } from "@/components/drishti/labels";
+import { sameSource, sourceName, uniqueSources } from "@/components/drishti/labels";
 import { RelativeTime } from "../RelativeTime";
 import { Panel } from "../Panel";
 import { BrandMark } from "./BrandMark";
@@ -41,8 +41,8 @@ function StatusBadge({ status }: { status: string }) {
 function SourceMarks({ engines }: { engines: Set<FetchEngine> }) {
   return (
     <ul className="relative z-10 flex items-center gap-1.5" aria-label="Evidence sources">
-      {FETCH_ENGINES.map((engine) => {
-        const on = engines.has(engine);
+      {uniqueSources(FETCH_ENGINES).map((engine) => {
+        const on = [...engines].some((have) => sameSource(have, engine));
         const text = `${sourceName(engine)}: ${on ? "has evidence" : "no evidence yet"}`;
         return (
           <li key={engine}>

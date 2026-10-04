@@ -22,6 +22,12 @@ export function feedFiltersToParams(filters: FeedFilters, base: URLSearchParams)
   return next;
 }
 
+export function feedCountLine(counts: { shown: number; matching: number; recent: number; total: number; brands: number }): string {
+  const noun = (value: number) => (value === 1 ? "finding" : "findings");
+  const tail = total > recent ? `newest ${n(recent)} of ${n(total)} stored, across ${brandText}` : `across ${brandText}`;
+  return `${lead} (${tail})`;
+}
+
 export function isDefaultFeedFilters(filters: FeedFilters): boolean {
   return isDefaultBrandFilters(filters) && filters.brand === DEFAULT_FEED_FILTERS.brand;
 }

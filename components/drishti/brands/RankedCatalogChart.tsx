@@ -5,7 +5,7 @@ import { Layers } from "lucide-react";
 import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
-import { CategoryAxisTick } from "../charts/CategoryAxisTick";
+import { CategoryAxisTick, rankedChartHeight } from "../charts/CategoryAxisTick";
 import { EmptyState } from "../EmptyState";
 import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
@@ -43,7 +43,7 @@ export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyD
         ) : top.length === 0 ? (
           <EmptyState size="sm" icon={<Layers {...iconProps} size={16} />} title={emptyTitle} description={emptyDescription} />
         ) : (
-          <ChartContainer config={chartConfig} className="h-[220px] w-full aspect-auto">
+          <ChartContainer config={chartConfig} className="w-full aspect-auto" style={{ height: rankedChartHeight(top.length, 2, CHART_HEIGHT) }}>
             <BarChart accessibilityLayer data={top} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
               <CartesianGrid horizontal={false} stroke="var(--border)" />
               <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />

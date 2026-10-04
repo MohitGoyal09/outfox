@@ -242,6 +242,9 @@ function OverviewBody() {
     () => recentBoards((boardsQuery ?? []).map((board) => ({ id: String(board._id), name: board.name, createdAt: board.createdAt }))),
     [boardsQuery],
   );
+  const newestBoardId = boardsQuery?.find((board) => String(board._id) === boards[0]?.id)?._id;
+  const newestBoardItems = useQuery(api.boards.listItems, newestBoardId ? { boardId: newestBoardId } : "skip");
+  const newestBoardItemCount = newestBoardItems === undefined ? null : newestBoardItems.length;
   const activityLoading = threadsQuery === undefined || boardsQuery === undefined;
 
   if (brandsQuery !== undefined && brands.length === 0) return <Onboarding />;
@@ -353,7 +356,7 @@ function OverviewBody() {
         </div>
       </section>
 
-      <PickUpWhereYouLeftOff loading={activityLoading} threads={threads} boards={boards} nowMs={nowMs} />
+      <PickUpWhereYouLeftOff loading={activityLoading} threads={threads} boards={boards} newestBoardItemCount={newestBoardItemCount} nowMs={nowMs} />
     </div>
   );
 }

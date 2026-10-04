@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
 import type { Id } from "@/convex/_generated/dataModel";
-import { sourceName } from "@/components/drishti/labels";
+import { sourceKey, sourceName } from "@/components/drishti/labels";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { LABEL_CLASS, VALUE_CLASS } from "../tokens";
@@ -36,9 +36,10 @@ export type EngineGroup = { engine: string; rows: SourceRowView[] };
 export function groupSourcesByEngine(rows: SourceRowView[]): EngineGroup[] {
   const byEngine = new Map<string, SourceRowView[]>();
   for (const row of rows) {
-    const group = byEngine.get(row.engine) ?? [];
+    const key = sourceKey(row.engine);
+    const group = byEngine.get(key) ?? [];
     group.push(row);
-    byEngine.set(row.engine, group);
+    byEngine.set(key, group);
   }
   return [...byEngine.entries()].map(([engine, groupRows]) => ({ engine, rows: groupRows }));
 }

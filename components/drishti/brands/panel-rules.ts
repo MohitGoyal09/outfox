@@ -4,18 +4,26 @@ const ADDRESSES_READER =
   /^(?:if you(?:'d| would)? (?:want|like|need|prefer)|i can\b|i['’]ll\b|i['’]d be\b|let me\b|let['’]s\b|tell me\b|feel free\b|would you like\b|do you want\b|want me to\b|just let me know\b|let me know\b|please let me know\b|happy to help\b)/i;
 
 
-export function labelKey(label: string): string {
+const TRAILING_MARKS = /[\s.!?,;:…→›»>]+$/u;
+
+export function tidyLabel(label: string): string {
   return label
+    .normalize("NFKC")
+    .replace(/[\u200B-\u200D\u2060\uFEFF\u00AD]/g, "")
+    .replace(/[\p{Z}\s_]+/gu, " ")
     .trim()
-    .replace(/\s+/g, " ")
-    .toLowerCase()
-    .replace(/[\s.!?,;:…]+$/u, "");
+    .replace(TRAILING_MARKS, "");
+}
+
+export function labelKey(label: string): string {
+  return tidyLabel(label).toLowerCase();
 }
 
 export function groupLabelRows(rows: readonly { label: string; count: number }[]): { label: string; count: number }[] {
   for (const row of rows) {
     const key = labelKey(row.label);
     if (key === "") continue;
+    const spelling = tidyLabel(row.label);
     const group = groups.get(key) ?? { count: 0, spellings: new Map<string, number>() };
     group.spellings.set(spelling, (group.spellings.get(spelling) ?? 0) + row.count);
   }

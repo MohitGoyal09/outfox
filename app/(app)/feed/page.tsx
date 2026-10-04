@@ -33,6 +33,7 @@ import { FeedGrid } from "@/components/drishti/feed/FeedGrid";
 import {
   brandOptionsFrom,
   describeActiveFeedFilters,
+  feedCountLine,
   isDefaultFeedFilters,
 } from "@/components/drishti/feed/feed-model";
 import { useFeedFilters } from "@/components/drishti/feed/useFeedFilters";
@@ -95,7 +96,6 @@ function FeedBody() {
   );
   const allClaims: ClaimDoc[] = useMemo(() => (feedQuery ?? []).flatMap((entry) => entry.recent), [feedQuery]);
   const recentCount = useMemo(() => allClaims.filter(isSignalClaim).length, [allClaims]);
-  const isBounded = totalCount > recentCount;
 
   const contentClaims = useMemo(() => allClaims.filter(isContentClaim), [allClaims]);
   const tags = useMemo(() => tagBearingClaims(allClaims), [allClaims]);
@@ -188,20 +188,9 @@ function FeedBody() {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <div className="flex items-baseline gap-2">
-          <span className={cn(VALUE_CLASS, "text-[20px] text-fg")}>{totalCount.toLocaleString()}</span>
-          <span className="text-[13px] text-fg-secondary">
-            stored finding{totalCount === 1 ? "" : "s"} across {brands.length} tracked brand{brands.length === 1 ? "" : "s"}
-          </span>
-        </div>
-        {isBounded ? (
-          <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>newest {recentCount} shown</span>
-        ) : null}
-        {offTopicClaims.size > 0 ? (
-          <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>
-            {filtered.length.toLocaleString()} shown of {matching.length.toLocaleString()} matching
-          </span>
-        ) : null}
+        <p className={cn(VALUE_CLASS, "text-[13px] text-fg-secondary")}>
+          {feedCountLine({ shown: filtered.length, matching: matching.length, recent: recentCount, total: totalCount, brands: brands.length })}
+        </p>
       </div>
       <FeedFilterBar
         filters={filters}

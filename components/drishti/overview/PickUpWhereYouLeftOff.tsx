@@ -8,12 +8,13 @@ import { RelativeTime } from "@/components/drishti/RelativeTime";
 import { cn } from "@/lib/utils";
 
 import { Card } from "./Card";
-import { threadHref, type BoardLike, type ThreadLike } from "./overview-model";
+import { boardItemCountLabel, threadHref, type BoardLike, type ThreadLike } from "./overview-model";
 
 export type PickUpWhereYouLeftOffProps = {
   loading: boolean;
   threads: readonly ThreadLike[];
   boards: readonly BoardLike[];
+  newestBoardItemCount: number | null;
   nowMs: number;
 };
 
@@ -29,7 +30,7 @@ function ListSkeleton() {
   );
 }
 
-export function PickUpWhereYouLeftOff({ loading, threads, boards }: PickUpWhereYouLeftOffProps) {
+export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardItemCount }: PickUpWhereYouLeftOffProps) {
   return (
     <section aria-label="Pick up where you left off" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card
@@ -100,19 +101,21 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards }: PickUpWhereY
             }
           />
         ) : (
-          <ul className="flex flex-col">
-            {boards.map((board) => (
-              <li key={board.id} className="border-b border-border py-2.5 first:pt-0 last:border-b-0 last:pb-0">
-                <Link
-                  href="/boards"
-                  className="flex items-center justify-between gap-3 rounded-md px-1 py-1 type-body text-fg transition-colors duration-150 ease-out hover:bg-bg-inset"
-                >
-                  <span className="min-w-0 truncate">{board.name}</span>
-                  <ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5 shrink-0 text-fg-tertiary" />
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="flex flex-col gap-3">
+            <div className="min-w-0">
+              <p className="type-body truncate text-fg">{boards[0].name}</p>
+              {boardItemCountLabel(newestBoardItemCount) ? (
+                <p className={cn(VALUE_CLASS, "mt-0.5 text-[11px] text-fg-tertiary")}>{boardItemCountLabel(newestBoardItemCount)}</p>
+              ) : null}
+            </div>
+            <Link
+              href={`/boards/${boards[0].id}`}
+              className="inline-flex w-fit items-center gap-1.5 rounded-sm text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
+            >
+              Open board
+              <ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+            </Link>
+          </div>
         )}
       </Card>
     </section>

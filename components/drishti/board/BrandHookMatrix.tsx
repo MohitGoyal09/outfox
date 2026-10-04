@@ -71,7 +71,7 @@ export function BrandHookMatrix({
                 href={evidenceHref(callout.brandId, callout.hook)}
                 className={cn("whitespace-nowrap text-fg underline underline-offset-2", FOCUS_RING_CLASS)}
               >
-                See the {callout.count} {callout.count === 1 ? "finding" : "findings"}
+                See the {Intl.NumberFormat("en-US").format(callout.count)} {callout.count === 1 ? "finding" : "findings"}
               </Link>
             </li>
           ))}
@@ -143,10 +143,10 @@ function MatrixRow({ row, hooks, span }: { row: HookMatrixRow; hooks: string[]; 
             <HookCell key={hook} row={row} hook={hook} />
           ))}
           <td className={cn(VALUE_CLASS, "py-2 pl-2 pr-5 text-right align-middle text-fg")}>
-            {row.clearTotal}
+            {Intl.NumberFormat("en-US").format(row.clearTotal)}
             {row.enoughSample ? null : (
               <span className="block font-sans text-[11px] font-normal text-fg-tertiary">
-                Too few to share ({row.clearTotal})
+                Too few to share ({Intl.NumberFormat("en-US").format(row.clearTotal)})
               </span>
             )}
           </td>
@@ -173,11 +173,11 @@ function HookCell({ row, hook }: { row: HookMatrixRow; hook: string }) {
         className={cn("block px-2 py-2 text-right", FOCUS_RING_CLASS)}
       >
         {share === null ? (
-          <span className={cn(VALUE_CLASS, "text-fg")}>{count}</span>
+          <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(count)}</span>
         ) : (
           <>
             <span className={cn(VALUE_CLASS, "text-fg")}>{formatSharePct(Math.round(share))}</span>
-            <span className={cn(VALUE_CLASS, "ml-1 text-[11px] text-fg-tertiary")}>{count}</span>
+            <span className={cn(VALUE_CLASS, "ml-1 text-[11px] text-fg-tertiary")}>{Intl.NumberFormat("en-US").format(count)}</span>
           </>
         )}
       </Link>

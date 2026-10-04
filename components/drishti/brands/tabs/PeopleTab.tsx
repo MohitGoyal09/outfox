@@ -9,7 +9,6 @@ import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
 import { categoricalColorFor } from "../../tokens";
 import { CountListPanel } from "../CountListPanel";
-import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
 import { RankedCatalogChart } from "../RankedCatalogChart";
 import {
   audienceHintFrequency,
@@ -21,7 +20,6 @@ import {
   mergeCreatorRows,
   newsPublisherRanking,
   readYoutubeRawVideo,
-  relatedVideoCatalogRows,
   tagBearingClaims,
   tagsForClaim,
   youtubeSearchResultRows,
@@ -31,13 +29,10 @@ import {
 } from "../brand-model";
 import { EvidenceLink } from "../EvidenceLink";
 import { NotFoundInCheck } from "../NotFoundInCheck";
-import { PlatformLogo } from "../PlatformLogo";
 import { YouTubeVideoCard } from "../YouTubeVideoCard";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { compactCount } from "../format";
 import { groupLabelRows } from "../panel-rules";
-
-const RELATED_VIDEO_PREVIEW = 5;
 
 function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): ClaimDoc[] {
   const byId = new Map(claims.map((claim) => [String(claim._id), claim]));
@@ -234,10 +229,9 @@ export function PeopleTab({
   );
   const filteredTags = useMemo(() => tagBearingClaims(filtered), [filtered]);
   const audienceHintRows = useMemo(() => groupLabelRows(audienceHintFrequency(filteredTags)), [filteredTags]);
-  const relatedVideoRows = useMemo(() => relatedVideoCatalogRows(filtered), [filtered]);
   const publisherRows = useMemo(() => newsPublisherRanking(filtered), [filtered]);
 
-  const peopleVideoClaims = useMemo(() => filtered.filter((claim) => claim.sourceEngine === "youtube_video"), [filtered]);
+  const peopleVideoClaims = useMemo(() => filtered.filter((claim) => claim.sourceEngine === "youtube_video" && claim.metric !== "youtube_related_video"), [filtered]);
   const peopleAudienceHintClaims = useMemo(() => {
     const audienceHintTagRows = filteredTags.filter((tag) => tag.audienceHint !== undefined && tag.audienceHint.trim() !== "");
     return resolveTaggedContentClaims(filtered, audienceHintTagRows);
@@ -264,7 +258,6 @@ export function PeopleTab({
     creatorRows.length === 0 ? "Creator leaderboard" : null,
     splitData.length === 0 ? "Owned vs. creator views" : null,
     breakoutGroups.length === 0 ? "YouTube videos" : null,
-    relatedVideoRows.length === 0 ? "Related videos" : null,
     audienceHintRows.length === 0 ? "Audience hints" : null,
     publisherRows.length === 0 ? "Publishers talking about this brand" : null,
   ].filter((item): item is string => item !== null);
@@ -278,18 +271,6 @@ export function PeopleTab({
         </div>
       ) : null}
       {breakoutGroups.length > 0 ? <BreakoutVideos groups={breakoutGroups} youtubeSnapshot={youtubeSnapshot} /> : null}
-      {relatedVideoRows.length > 0 ? (
-        <EvidenceCatalogPanel
-          title="Related videos"
-          definition="Other channels' videos YouTube surfaces as related to this brand's own videos, a free creator-and-competitor discovery graph: who else YouTube associates with this brand, not a ranked or complete list."
-          icon={<PlatformLogo engine="youtube_video" className="size-4" />}
-          rows={relatedVideoRows}
-          emptyTitle="No related videos yet."
-          emptyDescription="Lists other channels' videos YouTube associates with this brand's own videos, once a check captures YouTube video detail evidence."
-          capNote="Up to 10 related videos per video we checked, as YouTube itself surfaced them, never the brand's full competitive graph."
-          previewCount={RELATED_VIDEO_PREVIEW}
-        />
-      ) : null}
       {audienceHintRows.length > 0 ? (
         <RankedCatalogChart
           title="Audience hints"

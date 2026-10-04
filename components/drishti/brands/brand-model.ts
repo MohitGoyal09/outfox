@@ -1,7 +1,7 @@
 
 import type { DistributionItem } from "../DistributionPanel";
 import type { Doc } from "@/convex/_generated/dataModel";
-import { sourceName } from "@/components/drishti/labels";
+import { sameSource, sourceKey, sourceName, sourcePartFailure, uniqueSources } from "@/components/drishti/labels";
 import { ABSENT, FUNNEL_STAGES, type Tone } from "../tokens";
 import {
   compactCount,
@@ -111,12 +111,6 @@ export type EngineCount = { engine: string; label: string; count: number };
 
 export function countClaimsByEngine(claims: ClaimDoc[]): EngineCount[] {
   const counts = new Map<string, number>();
-  for (const claim of signalClaims(claims)) {
-    counts.set(
-      claim.sourceEngine,
-      (counts.get(claim.sourceEngine) ?? 0) + 1,
-    );
-  }
 }
 
 const CONFIDENCE_RANK: Record<string, number> = { high: 3, medium: 2, low: 1 };
@@ -172,18 +166,6 @@ export type EngineCoverageRow = {
   reason: string | null;
   fetchedAt: string | null;
 };
-
-export function engineCoverage(
-  snapshots: SnapshotDoc[],
-  brandId: string,
-): EngineCoverageRow[] {
-  const byEngine = new Map<string, SnapshotDoc>();
-  for (const snapshot of snapshots) {
-    if (String(snapshot.brandId) !== brandId) continue;
-    if (!isFetchEngine(snapshot.engine)) continue;
-    const existing = byEngine.get(snapshot.engine);
-  }
-}
 
 
 export type TrendPoint = {
@@ -695,7 +677,7 @@ export function latestCheckBySource(
   now: number,
 ): SourceCheck[] {
   return coverage.map((row) => {
-    const found = latestClaims.some((claim) => claim.sourceEngine === row.engine);
+    const found = latestClaims.some((claim) => sameSource(claim.sourceEngine, row.engine));
     const state: SourceCheckState = row.status === "ok" && !found ? "empty" : row.status;
     return {
       engine: row.engine,

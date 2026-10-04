@@ -30,12 +30,7 @@ export default function BrandsPage() {
                 Add brand
               </Link>
             </Button>
-            <Button asChild variant="outline" className="w-fit gap-2">
-              <Link href="/onboarding">
-                <Compass className="size-4" aria-hidden />
-                Set up your brand
-              </Link>
-            </Button>
+            <OwnBrandButton />
           </div>
         </div>
       </header>
@@ -45,6 +40,19 @@ export default function BrandsPage() {
         </Suspense>
       </QueryBoundary>
     </div>
+  );
+}
+
+function OwnBrandButton() {
+  const brands = useQuery(api.brands.listBrands);
+  const hasOwn = useMemo(() => splitOwnBrand(brands ?? []).own !== null, [brands]);
+  return (
+    <Button asChild variant="outline" className="w-fit gap-2">
+      <Link href="/onboarding">
+        <Compass className="size-4" aria-hidden />
+        {hasOwn ? "Change your brand" : "Set up your brand"}
+      </Link>
+    </Button>
   );
 }
 

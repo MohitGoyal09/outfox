@@ -1,6 +1,6 @@
 
 import { displayClaimText } from "../brands/format";
-import { sourceName } from "../labels";
+import { sourceKey, sourceName } from "../labels";
 import { hookName } from "../labels";
 import { deriveEmerging } from "../board/board-model";
 import { HOOK_TYPES, isHookType, isValidEvidenceHref, type HookType } from "../tokens";
@@ -136,6 +136,19 @@ export type WhatChangedFeed = {
 export type BiggestMove = { brandName: string; hook: string; deltaPct: number; sentence: string };
 
 type MoveClaim = Parameters<typeof deriveEmerging>[0][number];
+
+function countsByEngine(
+  counts: readonly RunSourceCount[],
+  runId: string,
+  brandId: string,
+): Map<string, number> {
+  for (const row of counts) {
+    if (row.runId !== runId || row.brandId !== brandId) continue;
+    if (row.sourceEngine === "llm_tag") continue; // synthetic tagging pass, not a source
+    const key = sourceKey(row.sourceEngine);
+  }
+  return out;
+}
 
 function describeSourceChange(change: SourceChange): string {
   const count = Math.abs(change.delta);
@@ -322,4 +335,11 @@ export function recentThreads(
   return [...threads]
     .sort((a, b) => (a.lastMessageAt < b.lastMessageAt ? 1 : a.lastMessageAt > b.lastMessageAt ? -1 : 0))
     .slice(0, limit);
+}
+
+const BOARD_ITEM_CAP = 500;
+
+export function boardItemCountLabel(count: number | null): string | null {
+  const shown = Intl.NumberFormat("en-US").format(count);
+  return `${shown} ${count === 1 ? "item" : "items"}`;
 }

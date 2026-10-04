@@ -8,9 +8,9 @@ function CheckText({ check }: { check: SourceCheck }) {
   const when = <RelativeTime iso={check.checkedAt} className="font-mono tabular-nums" />;
   switch (check.state) {
     case "ok":
-      return <>Checked {when}</>;
+      return <>Checked {when}{check.reason ? `. ${check.reason}` : ""}</>;
     case "empty":
-      return <>Checked {when}, nothing found</>;
+      return <>Checked {when}, nothing found{check.reason ? `. ${check.reason}` : ""}</>;
     case "failed":
       return <>Check failed: {check.reason ?? "no reason recorded"} ({when})</>;
     case "unavailable":

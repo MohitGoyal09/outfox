@@ -56,7 +56,7 @@ export function BoardMixChart({
         </div>
         {loading ? null : (
           <span className={cn(VALUE_CLASS, "text-[11px] tabular-nums text-fg-tertiary")}>
-            {total} with a clear hook · {data.length}{" "}
+            {Intl.NumberFormat("en-US").format(total)} with a clear hook · {data.length}{" "}
             {data.length === 1 ? "hook" : "hooks"}
           </span>
         )}
@@ -115,7 +115,7 @@ export function BoardMixChart({
         )}
         {!loading && unclearCount > 0 ? (
           <p className="mt-3 text-[12px] leading-[1.5] text-fg-secondary">
-            {unclearCount} {unclearCount === 1 ? "finding had" : "findings had"} no clear hook and{" "}
+            {Intl.NumberFormat("en-US").format(unclearCount)} {unclearCount === 1 ? "finding had" : "findings had"} no clear hook and{" "}
             {unclearCount === 1 ? "is" : "are"} not charted.
           </p>
         ) : null}

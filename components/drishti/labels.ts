@@ -1,4 +1,26 @@
 
+const SOURCE_NAMES: Readonly<Record<string, string>> = {
+  google: "Google Search",
+  google_news: "Google News",
+  google_trends: "Google Trends",
+  google_ads_transparency_center: "Google Ads",
+  youtube: "YouTube",
+  youtube_video: "YouTube",
+  llm_tag: "Content tag",
+};
+
+export function sameSource(a: string, b: string): boolean {
+  return sourceKey(a) === sourceKey(b);
+}
+
+export function uniqueSources<T extends string>(engines: readonly T[]): T[] {
+  return engines.filter((engine) => {
+    const key = sourceKey(engine);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+}
 
 export function sourceName(engine: string): string {
   return SOURCE_NAMES[engine] ?? humanize(engine);

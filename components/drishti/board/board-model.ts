@@ -1,6 +1,6 @@
 import type { Doc } from "@/convex/_generated/dataModel";
 import type { DistributionItem } from "../DistributionPanel";
-import { checkedStateLabel, hookName, sourceName } from "../labels";
+import { checkedStateLabel, hookName, sameSource, sourceName, sourcePartFailure } from "../labels";
 import { REMOVED_BRAND_LABEL } from "../runs/derive";
 import {
   FUNNEL_STAGES,
@@ -40,8 +40,7 @@ export const EMERGING_BASIS_LINE =
 export const DATA_ENGINES = [
   "google",
   "google_ads_transparency_center",
-  "youtube",
-  "youtube_video",
+  "youtube", // covers `youtube_video` too (one YouTube source on screen, see `sameSource`)
   "google_trends",
   "google_news",
 ] as const;
@@ -206,7 +205,13 @@ export function deriveEngineCoverage(
         };
       }
       if (matches.some((snapshot) => snapshot.status === "ok")) {
-        return { engine, label, status: "ok" as const, reason: null };
+        const failedPart = matches.find((snapshot) => snapshot.status === "failed");
+        return {
+          engine,
+          label,
+          status: "ok" as const,
+          reason: failedPart ? sourcePartFailure(failedPart.engine) : null,
+        };
       }
       if (failed !== undefined) {
         return {

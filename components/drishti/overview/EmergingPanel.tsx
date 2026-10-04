@@ -65,8 +65,8 @@ export function EmergingPanel({ loading, coveredBrandCount, emerging }: Emerging
             {coveredBrandCount} {pluralize(coveredBrandCount, "brand")} with a finished check.
           </p>
           <p className={cn(VALUE_CLASS, "text-[12px] text-fg-secondary")}>
-            {emerging.count} {pluralize(emerging.count, "finding")} · {emerging.sharePct}% of{" "}
-            {emerging.taggedCount} tagged
+            {Intl.NumberFormat("en-US").format(emerging.count)} {pluralize(emerging.count, "finding")} · {emerging.sharePct}% of{" "}
+            {Intl.NumberFormat("en-US").format(emerging.taggedCount)} tagged
           </p>
           <div className="flex flex-wrap items-center gap-2">
             <Chip label={hookName(emerging.hook)} value={emerging.hook} scale="hook" className="normal-case tracking-normal" />

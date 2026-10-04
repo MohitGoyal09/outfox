@@ -13,14 +13,12 @@ import { categoricalColor } from "../../tokens";
 import {
   adCreativeClaims,
   adRuntimeLeaderboard,
-  descriptionLinkCatalogRows,
   newsPublisherRanking,
   organicRankBuckets,
   productListingClaims,
   shoppingResultCatalogRows,
   tagsForClaim,
   youtubeAdResultClaims,
-  youtubeDescriptionLinkClaims,
   youtubeShoppingResultClaims,
   youtubeShortResultClaims,
   type AdRuntimeRow,
@@ -34,7 +32,7 @@ import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
 import { EvidenceLink } from "../EvidenceLink";
 import { NotFoundInCheck } from "../NotFoundInCheck";
 import { adFormatName } from "@/components/drishti/labels";
-import { isYoutubeHashtagUrl, splitOwnStore } from "../panel-rules";
+import { splitOwnStore } from "../panel-rules";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { isGarbledDescriptionLinkAnchor, isVideoTimestampAnchor, parseListingVendor, shortDate } from "../format";
 import { PlatformLogo } from "../PlatformLogo";
@@ -111,10 +109,6 @@ export function shouldShowRunLengthTable(rows: readonly AdRuntimeRow[]): boolean
   return rows.some((row) => row.runDays !== null);
 }
 
-function isHiddenDescriptionLink(claim: ClaimDoc): boolean {
-  return claim.metric === "youtube_description_link" && isYoutubeHashtagUrl(typeof claim.value === "string" ? claim.value : claim.evidenceUrl);
-}
-
 export function PlacementTab({
   latestClaims,
   tags,
@@ -152,10 +146,6 @@ export function PlacementTab({
   }, [filtered, brand]);
   const publisherRows = useMemo(() => newsPublisherRanking(filtered), [filtered]);
   const shoppingResultRows = useMemo(() => shoppingResultCatalogRows(filtered), [filtered]);
-  const descriptionLinkRows = useMemo(
-    () => sanitizeDescriptionLinkRows(descriptionLinkCatalogRows(filtered.filter((claim) => !isHiddenDescriptionLink(claim)))),
-    [filtered],
-  );
 
   const placementEvidenceClaims = useMemo(() => {
     const rankedOrganicClaims = filtered.filter(
@@ -168,7 +158,6 @@ export function PlacementTab({
       ...youtubeAdResultClaims(filtered),
       ...youtubeShortResultClaims(filtered),
       ...youtubeShoppingResultClaims(filtered),
-      ...youtubeDescriptionLinkClaims(filtered),
     ];
   }, [filtered]);
 
@@ -184,7 +173,6 @@ export function PlacementTab({
     retailerRows.length > 0 ? null : "Retailers carrying this brand",
     publisherRows.length > 0 ? null : "News outlets",
     shoppingResultRows.length > 0 ? null : "In-video shopping results",
-    descriptionLinkRows.length > 0 ? null : "Description link destinations",
   ].filter((item): item is string => item !== null);
 
   const countPanels = [
@@ -235,18 +223,6 @@ export function PlacementTab({
         emptyTitle="No shopping results yet."
         emptyDescription="Lists real products the source surfaced for sale on this brand's videos, once a check captures shopping-result evidence."
         capNote="Up to 10 shopping results per video, as the source surfaced them, never the brand's full product catalog."
-      />
-    ) : null,
-    descriptionLinkRows.length > 0 ? (
-      <EvidenceCatalogPanel
-        key="links"
-        title="Description link destinations"
-        definition="Real outbound links the brand placed in its own video descriptions, where its videos push traffic. This is a sample of those links, not the brand's full link roster."
-        icon={<PlatformLogo engine="youtube_video" className="size-4" />}
-        rows={descriptionLinkRows}
-        emptyTitle="No description links yet."
-        emptyDescription="Lists real outbound links found in this brand's video descriptions, once a check captures that evidence."
-        capNote="Up to 10 description links per video, as stored by the pipeline, never the brand's full link roster."
       />
     ) : null,
   ].filter((panel) => panel !== null);

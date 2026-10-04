@@ -30,6 +30,12 @@ export function wrapLabel(value: unknown, charsPerLine: number, maxLines = 2): s
 }
 
 const LINE_HEIGHT = 12;
+const ROW_PADDING = 12;
+const CHART_CHROME = 36; // top/bottom margin + the number axis
+
+export function rankedChartHeight(rowCount: number, maxLines = 2, minHeight = 0): number {
+  return Math.max(minHeight, rowCount * (maxLines * LINE_HEIGHT + ROW_PADDING) + CHART_CHROME);
+}
 
 export function CategoryAxisTick(charsPerLine: number, maxLines = 2) {
   return function Tick({ x, y, width, payload, className }: YAxisTickContentProps): ReactNode {

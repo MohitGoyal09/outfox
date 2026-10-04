@@ -1,6 +1,6 @@
 
 import { FUNNEL_STAGES, HOOK_TYPES } from "../../tokens";
-import { hookName, sourceName, stageName } from "@/components/drishti/labels";
+import { hookName, sameSource, sourceKey, sourceName, stageName, uniqueSources } from "@/components/drishti/labels";
 import { FETCH_ENGINES, type ClaimDoc } from "../brand-model";
 
 export type FreshnessValue = "all" | "24h" | "7d" | "30d" | "90d";
@@ -59,7 +59,6 @@ export function matchesBrandFilters(
   filters: BrandFilters,
   now: number,
 ): boolean {
-  if (filters.engine !== "all" && claim.sourceEngine !== filters.engine) return false;
   if (!withinDateRange(claim.fetchedAt, filters.from, filters.to)) return false;
   return true;
 }
@@ -82,11 +81,7 @@ export function sortClaims<T extends Pick<ClaimDoc, "fetchedAt" | "confidence">>
 export type FilterOption = { value: string; label: string };
 
 export function engineOptionsFrom(claims: ClaimDoc[]): FilterOption[] {
-  const present = new Set(claims.map((claim) => claim.sourceEngine));
-  return FETCH_ENGINES.filter((engine) => present.has(engine)).map((engine) => ({
-    value: engine,
-    label: sourceName(engine),
-  }));
+  const present = new Set(claims.map((claim) => sourceKey(claim.sourceEngine)));
 }
 
 function realTagOptionsFrom(tags: ClaimDoc[], values: readonly string[], pick: (tag: ClaimDoc) => string | undefined, labelFor: (value: string) => string): FilterOption[] {

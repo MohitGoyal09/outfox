@@ -21,8 +21,8 @@ export type FetchEngine = (typeof FETCH_ENGINES)[number];
 const ENGINE_LABEL: Record<string, string> = {
   google: "Google Search",
   google_ads_transparency_center: "Ads Transparency",
-  youtube: "YouTube Search",
-  youtube_video: "YouTube Video",
+  youtube: "YouTube",
+  youtube_video: "YouTube",
   google_trends: "Google Trends",
   llm_tag: "Content tag",
 };
