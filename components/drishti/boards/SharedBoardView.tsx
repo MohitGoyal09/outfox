@@ -75,7 +75,7 @@ export function SharedBoardView({ token }: { token: string }) {
       data
         ? {
             name: data.board.name,
-            items: data.items.map((i) => ({ id: i.id, x: i.x, y: i.y, claim: i.claim })),
+            items: data.items.map((i) => ({ id: i.id, x: i.x, y: i.y, claim: i.claim ? { ...i.claim, tagHook: i.claim.hookType, tagStage: i.claim.funnelStage } : null })),
             notes: data.notes,
             frames: data.frames,
             edges: data.edges,

@@ -201,7 +201,20 @@ export function useFlowCanvas(boardId: Id<"boards">, skip = false): { canvas: Fl
                 x: i.x,
                 y: i.y,
                 claim: i.claim
-                  ? { text: i.claim.text, sourceEngine: i.claim.sourceEngine, evidenceUrl: i.claim.evidenceUrl, fetchedAt: i.claim.fetchedAt, claimId: i.claim._id }
+                  ? {
+                      text: i.claim.text,
+                      sourceEngine: i.claim.sourceEngine,
+                      evidenceUrl: i.claim.evidenceUrl,
+                      fetchedAt: i.claim.fetchedAt,
+                      claimId: i.claim._id,
+                      brandName: i.claim.brandName,
+                      brandDomain: i.claim.brandDomain,
+                      thumbnailUrl: i.claim.thumbnailUrl,
+                      adFormat: i.claim.adFormat,
+                      adRunDays: i.claim.adRunDays,
+                      tagHook: i.claim.tagHook,
+                      tagStage: i.claim.tagStage,
+                    }
                   : null,
               })),
               notes: data.notes.map((n) => ({ id: n._id, text: n.text, color: n.color, x: n.x, y: n.y, w: n.w, h: n.h })),

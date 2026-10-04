@@ -1,5 +1,5 @@
 import { MarkerType, type Edge, type Node } from "@xyflow/react";
-import { FRAME_H, FRAME_W, ITEM_W, NOTE_H, NOTE_W, type NodeKind, type NodeRef } from "@/convex/lib/canvasModel";
+import { FRAME_H, FRAME_W, ITEM_H, ITEM_W, NOTE_H, NOTE_W, type NodeKind, type NodeRef } from "@/convex/lib/canvasModel";
 
 export type FlowClaim = {
   text: string;
@@ -7,6 +7,13 @@ export type FlowClaim = {
   evidenceUrl: string;
   fetchedAt: string;
   claimId?: string;
+  brandName?: string;
+  brandDomain?: string;
+  thumbnailUrl?: string;
+  adFormat?: string;
+  adRunDays?: number;
+  tagHook?: string;
+  tagStage?: string;
 };
 export type FlowItem = { id: string; x: number; y: number; claim: FlowClaim | null };
 export type FlowNote = { id: string; text: string; color: string; x: number; y: number; w: number; h: number };
@@ -68,7 +75,7 @@ export function buildEdges(canvas: FlowCanvas): Edge[] {
 }
 
 export function nodeBox(node: Node): { key: string; x: number; y: number; w: number; h: number } {
-  const fallback = node.type === "frame" ? [FRAME_W, FRAME_H] : node.type === "note" ? [NOTE_W, NOTE_H] : [ITEM_W, 160];
+  const fallback = node.type === "frame" ? [FRAME_W, FRAME_H] : node.type === "note" ? [NOTE_W, NOTE_H] : [ITEM_W, ITEM_H];
   return {
     key: node.id,
     x: node.position.x,

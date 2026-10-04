@@ -5,6 +5,7 @@ import { v, ConvexError } from "convex/values";
 import { requireUserId } from "./lib/auth";
 import { deleteEdgesTouching } from "./lib/canvasEdges";
 import { claimSummary, claimSummaryValidator, MAX_ITEMS_PER_BOARD } from "./boards";
+import { adFormatOf, pickThumbnail } from "./lib/cardModel";
 import {
   DEFAULT_NOTE_COLOR,
   FRAME_H,
@@ -48,14 +49,6 @@ const frameV = v.object({
   w: v.number(),
   h: v.number(),
 });
-const itemV = v.object({
-  _id: v.id("boardItems"),
-  createdAt: v.string(),
-  note: v.optional(v.string()),
-  x: v.number(),
-  y: v.number(),
-  claim: v.union(claimSummaryValidator, v.null()),
-});
 
 async function ownedBoard(ctx: QueryCtx, boardId: Id<"boards">) {
   const ownerId = await requireUserId(ctx);
@@ -64,6 +57,9 @@ async function ownedBoard(ctx: QueryCtx, boardId: Id<"boards">) {
 }
 
 async function loadItems(ctx: QueryCtx, boardId: Id<"boards">, ownerId: Id<"users">) {
+  const brands = new Map<Id<"brands">, Doc<"brands"> | null>();
+  for (const row of placed) {
+  }
   return out;
 }
 
@@ -75,35 +71,19 @@ async function loadNotesFramesEdges(ctx: QueryCtx, boardId: Id<"boards">, ownerI
   ])) as [Doc<"boardNotes">[], Doc<"boardFrames">[], Doc<"boardEdges">[]];
 }
 
-export const getSharedCanvas = query({
-  args: { token: v.string() },
-  returns: v.union(sharedCanvasV, v.null()),
+export const getCanvas = query({
+  args: { boardId: v.id("boards") },
+  returns: v.object({
+    board: v.object({ name: v.string(), shared: v.boolean() }),
+    items: v.array(itemV),
+    notes: v.array(noteV),
+    frames: v.array(frameV),
+    edges: v.array(edgeV),
+  }),
   handler: async (ctx, args) => {
-    if (!looksLikeShareToken(args.token)) return null;
-    const board = await ctx.db.query("boards").withIndex("by_shareToken", (q) => q.eq("shareToken", args.token)).unique();
-    if (board === null) return null;
-    const { notes, frames, edges } = await loadNotesFramesEdges(ctx, board._id, board.ownerId);
-    return {
-      board: { name: board.name },
-      items: items.map(({ row, claim }) => ({
-        id: row._id as string,
-        x: row.x,
-        y: row.y,
-        claim: claim
-          ? {
-              text: claim.text,
-              sourceEngine: claim.sourceEngine,
-              evidenceUrl: claim.evidenceUrl,
-              fetchedAt: claim.fetchedAt,
-              hookType: claim.hookType,
-              funnelStage: claim.funnelStage,
-            }
-          : null,
-      })),
-      notes: notes.map((n) => ({ id: n._id as string, text: n.text, color: n.color, x: n.x, y: n.y, w: n.w, h: n.h })),
-      frames: frames.map((f) => ({ id: f._id as string, title: f.title, x: f.x, y: f.y, w: f.w, h: f.h })),
-      edges: edges.map((e) => ({ id: e._id as string, source: e.source, target: e.target, label: e.label })),
-    };
+    const { ownerId, board } = await ownedBoard(ctx, args.boardId);
+    const items = await loadItems(ctx, args.boardId, ownerId);
+    const { notes, frames, edges } = await loadNotesFramesEdges(ctx, args.boardId, ownerId);
   },
 });
 

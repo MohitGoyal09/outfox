@@ -22,6 +22,7 @@ import { PlatformLogo } from "../brands/PlatformLogo";
 import { sourceName } from "../labels";
 import { VALUE_CLASS, iconProps, sourceColor } from "../tokens";
 import { fromNodeId, type FlowClaim } from "./canvas-flow";
+import { adLine, CardBrand, CardTags, CardThumb } from "./claim-card-parts";
 
 export type Move = { kind: "item" | "note" | "frame"; id: string; x: number; y: number; w?: number; h?: number };
 
@@ -76,40 +77,53 @@ export function EvidenceNode({ data, selected }: NodeProps) {
     );
   }
   const accent = sourceColor(claim.sourceEngine);
+  const ad = adLine(claim);
+  const hasThumb = Boolean(claim.thumbnailUrl);
   return (
     <article
       aria-label={`Evidence card from ${sourceName(claim.sourceEngine)}`}
       className={cn(
-        "rounded-lg border border-border bg-bg-raised p-3.5 shadow-xs transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none",
+        "flex flex-col gap-1.5 rounded-lg border border-border bg-bg-raised p-3 shadow-xs transition-[border-color,box-shadow] duration-150 ease-out motion-reduce:transition-none",
         selected ? "border-accent shadow-md" : "hover:border-border-strong hover:shadow-sm",
       )}
     >
       <div className="flex items-center gap-2">
+        {claim.brandName ? (
+          <CardBrand claim={claim} />
+        ) : (
+          <span className="truncate text-[12px] font-semibold text-fg">{sourceName(claim.sourceEngine)}</span>
+        )}
         <span
-          className="grid size-7 shrink-0 place-items-center rounded-full border border-border"
-          style={{ backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)` }}
+          className="ml-auto inline-flex shrink-0 items-center gap-1 text-[11px] text-fg-tertiary"
+          title={`${sourceName(claim.sourceEngine)}, fetched ${shortDate(claim.fetchedAt)}`}
         >
-          <PlatformLogo engine={claim.sourceEngine} className="size-3.5" />
+          <span
+            className="grid size-4 place-items-center rounded-full"
+            style={{ backgroundColor: `color-mix(in srgb, ${accent} 12%, transparent)` }}
+          >
+            <PlatformLogo engine={claim.sourceEngine} className="size-3" />
+          </span>
+          <span className={VALUE_CLASS}>{shortDate(claim.fetchedAt)}</span>
         </span>
-        <div className="min-w-0 flex-1">
-          <p className="truncate text-[12px] font-semibold text-fg">{sourceName(claim.sourceEngine)}</p>
-          <p className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>Fetched {shortDate(claim.fetchedAt)}</p>
-        </div>
       </div>
-      <p className="mt-2.5 line-clamp-4 text-[13px] font-medium leading-[1.4] text-fg">{displayClaimText(claim.text)}</p>
-      {isHttpUrl(claim.evidenceUrl) ? (
-        <a
-          href={claim.evidenceUrl}
-          target="_blank"
-          rel="noreferrer noopener"
-          className="nodrag focus-ring mt-2.5 inline-flex items-center gap-1 rounded-sm text-[12px] font-medium text-fg-secondary hover:text-fg"
-        >
-          Open source
-          <ArrowUpRight {...iconProps} size={13} aria-hidden="true" className="size-3.5" />
-        </a>
-      ) : (
-        <p className="mt-2.5 break-all text-[12px] text-fg-tertiary">{claim.evidenceUrl}</p>
-      )}
+      <CardThumb claim={claim} className="h-[88px]" />
+      <p className={cn("text-[13px] font-medium leading-[1.35] text-fg", hasThumb ? "line-clamp-2" : "line-clamp-3")}>
+        {ad ?? displayClaimText(claim.text)}
+      </p>
+      <div className="flex items-center gap-2">
+        <div className="flex min-w-0 flex-1"><CardTags claim={claim} /></div>
+        {isHttpUrl(claim.evidenceUrl) ? (
+          <a
+            href={claim.evidenceUrl}
+            target="_blank"
+            rel="noreferrer noopener"
+            className="nodrag focus-ring ml-auto inline-flex shrink-0 items-center gap-0.5 rounded-sm text-[12px] font-medium text-fg-secondary hover:text-fg"
+          >
+            Open source
+            <ArrowUpRight {...iconProps} size={13} aria-hidden="true" className="size-3.5" />
+          </a>
+        ) : null}
+      </div>
       <Handles readOnly={readOnly} />
     </article>
   );
