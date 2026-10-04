@@ -4,6 +4,7 @@ import { useState } from "react";
 import Image from "next/image";
 import { motion, useReducedMotion } from "motion/react";
 import { ContainerScroll } from "@/components/aceternity/container-scroll-animation";
+import { Reveal } from "@/components/aceternity/reveal";
 import { Lens } from "@/components/aceternity/lens";
 import { EASE_OUT } from "@/components/aceternity/motion-utils";
 import { TabPill, TabPillGroup } from "@/components/aceternity/tabs";
@@ -22,9 +23,9 @@ export function ProductTabs() {
   const active = SHOTS.find((s) => s.value === value) ?? SHOTS[0];
   return (
     <section id="product" aria-labelledby="product-heading" className="l-wrap scroll-mt-20 py-20 lg:py-28">
-      <h2 id="product-heading" className="l-h2 max-w-[16ch] text-fg">
-        One workspace for the whole read.
-      </h2>
+      <Reveal>
+        
+      </Reveal>
       <Tabs value={value} onValueChange={setValue} className="mt-10 gap-5">
         <TabPillGroup>
           

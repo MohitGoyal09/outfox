@@ -1,4 +1,10 @@
-import { ChevronDown } from "lucide-react";
+"use client";
+
+import { useId, useState } from "react";
+import { ChevronDown, Mail } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
+import { RequestAccessDialog } from "./RequestAccessDialog";
 
 const FAQS = [
   { q: "Which sources does Drishti read?", a: "Google Search, Google Ads Transparency, YouTube (search and video details), Google News and Google Trends, all public." },
@@ -9,3 +15,30 @@ const FAQS = [
   { q: "Who can use it?", a: "Drishti is invite-only for now. Request access and we will set up your workspace." },
   { q: "Is my workspace private?", a: "Yes. Your brands, checks, boards and chats are visible only to your account. The evidence itself is public data." },
 ];
+
+function Item({ q, a, open, onToggle }: { q: string; a: string; open: boolean; onToggle: () => void }) {
+  return (
+    <div className="border-b border-border first:border-t">
+      
+      <div
+        id={`${id}-a`}
+        role="region"
+        aria-labelledby={`${id}-q`}
+        className={cn(
+          "grid transition-[grid-template-rows,opacity] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none",
+          open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0",
+        )}
+      >
+        
+      </div>
+    </div>
+  );
+}
+
+export function Faq() {
+  return (
+    <section id="faq" aria-labelledby="faq-heading" className="l-wrap scroll-mt-20 py-20 lg:py-28">
+      
+    </section>
+  );
+}

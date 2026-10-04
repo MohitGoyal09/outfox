@@ -550,6 +550,16 @@
   }
 }
 
+@keyframes l-marquee {
+  to {
+    transform: translateX(-50%);
+  }
+}
+
+.l-marquee-track {
+  animation: l-marquee 40s linear infinite;
+}
+
 .l-orbit {
   animation: l-orbit 5s linear infinite;
 }

@@ -13,3 +13,36 @@ import { ProductTabs } from "./ProductTabs";
 import { Problem } from "./Problem";
 import { SourcesStrip } from "./SourcesStrip";
 import { WillNotClaim } from "./WillNotClaim";
+
+export function LandingPage() {
+  return (
+    <div className="min-h-dvh overflow-x-clip bg-bg text-fg">
+      
+      <LandingNav />
+      <main>
+        
+        <Reveal>
+          
+        </Reveal>
+        <Reveal>
+          <Problem />
+        </Reveal>
+        
+        <ProductTabs />
+        
+        <Reveal>
+          <WillNotClaim />
+        </Reveal>
+        <Reveal>
+          
+        </Reveal>
+        
+        <Reveal>
+          <Faq />
+        </Reveal>
+        
+      </main>
+      
+    </div>
+  );
+}

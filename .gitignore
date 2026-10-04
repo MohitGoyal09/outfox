@@ -23,3 +23,6 @@ tsconfig.tsbuildinfo
 .vercel
 .env*
 !.env.local.example
+
+# Playwright MCP screenshots and logs (local review artefacts)
+.playwright-mcp/

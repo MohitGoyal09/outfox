@@ -1,3 +1,4 @@
+import { Reveal } from "@/components/aceternity/reveal";
 import { Timeline } from "@/components/aceternity/timeline";
 import { MARK_STROKE } from "@/lib/brandMark";
 import { AskVisual, CheckVisual, TrackVisual } from "./HowItWorksVisuals";
@@ -47,7 +48,15 @@ const ENTRIES = STEPS.map((s, i) => ({
 export function HowItWorks() {
   return (
     <section id="how-it-works" aria-labelledby="how-heading" className="scroll-mt-20 border-t border-border bg-bg-raised">
-      
+      <div className="l-wrap py-16 lg:py-24">
+        <Reveal>
+          
+          <h2 id="how-heading" className="l-h2 mt-3 max-w-[20ch] text-fg">
+            From a brand name to a cited answer.
+          </h2>
+        </Reveal>
+        <Timeline entries={ENTRIES} className="mt-14" />
+      </div>
     </section>
   );
 }

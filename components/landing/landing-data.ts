@@ -9,48 +9,61 @@ export const HOOK_MATRIX = [
   { name: "WOW Skin Science", total: 15, counts: { discount_offer: 0, social_proof: 2, founder_story: 3, problem_solution: 0, product_feature: 4, urgency_scarcity: 0, education_explainer: 4, visual_cold_open: 2 } },
 ] as const;
 
-export const HERO_CLAIM = {
-  brand: "SUGAR Cosmetics",
-  hook: "Explainer",
-  brandShare: "40%",
-  brandCount: 16,
-  brandTotal: 40,
-  othersShare: "20%",
-  othersBrands: 4,
-};
-
 export type Evidence = {
-  engine: "youtube_video" | "google_news";
+  engine: "youtube_video" | "google_news" | "google" | "google_ads_transparency_center";
   title: string;
   where: string;
   url: string;
   fetched: string;
   videoId?: string;
+  ad?: { format: "video" | "image"; days: number };
 };
 
-export const TRAIL_EVIDENCE: readonly Evidence[] = [
+export type HeroFinding = {
+  brand: string;
+  hook: string;
+  brandShare: number;
+  brandCount: number;
+  brandTotal: number;
+  othersShare: number;
+  othersCount: number;
+  othersTotal: number;
+  othersBrands: number;
+  evidence: readonly Evidence[];
+};
+
+export const HERO_FINDINGS: readonly HeroFinding[] = [
   {
-    engine: "youtube_video",
-    title: "Makeup Tutorial in 5 Minutes | Easy Indian Makeup Look | SUGAR Cosmetics",
-    where: "youtube.com",
-    url: "https://www.youtube.com/watch?v=KoGsqgErT0c",
-    fetched: CHECK_DATE,
-    videoId: "KoGsqgErT0c",
+    brand: "SUGAR Cosmetics",
+    hook: "Explainer",
+    brandShare: 40,
+    brandCount: 16,
+    brandTotal: 40,
+    othersShare: 20,
+    othersCount: 19,
+    othersTotal: 97,
+    othersBrands: 4,
+    evidence: [
+      { engine: "youtube_video", title: "Makeup Tutorial in 5 Minutes | Easy Indian Makeup Look | SUGAR Cosmetics", where: "youtube.com", url: "https://www.youtube.com/watch?v=KoGsqgErT0c", fetched: CHECK_DATE, videoId: "KoGsqgErT0c" },
+      { engine: "youtube_video", title: "Makeup Tutorial For Dry Skin VS Oily Skin | SUGAR Cosmetics", where: "youtube.com", url: "https://www.youtube.com/watch?v=xNQXM0IMLQY", fetched: CHECK_DATE, videoId: "xNQXM0IMLQY" },
+      { engine: "google_news", title: "SUGAR Cosmetics Launches ‘Sugarquoted’, India’s First Beauty Education Podcast", where: "infashionbusiness.com", url: "https://infashionbusiness.com/home/news_details/7156/14", fetched: CHECK_DATE },
+    ],
   },
   {
-    engine: "youtube_video",
-    title: "Makeup Tutorial For Dry Skin VS Oily Skin | SUGAR Cosmetics",
-    where: "youtube.com",
-    url: "https://www.youtube.com/watch?v=xNQXM0IMLQY",
-    fetched: CHECK_DATE,
-    videoId: "xNQXM0IMLQY",
-  },
-  {
-    engine: "google_news",
-    title: "SUGAR Cosmetics Launches ‘Sugarquoted’, India’s First Beauty Education Podcast",
-    where: "infashionbusiness.com",
-    url: "https://infashionbusiness.com/home/news_details/7156/14",
-    fetched: CHECK_DATE,
+    brand: "Plum",
+    hook: "Visual hook",
+    brandShare: 29,
+    brandCount: 9,
+    brandTotal: 31,
+    othersShare: 8,
+    othersCount: 9,
+    othersTotal: 106,
+    othersBrands: 4,
+    evidence: [
+      { engine: "google_ads_transparency_center", title: "Video ad creative", where: "adstransparency.google.com", url: "https://adstransparency.google.com/advertiser/AR01253600073510551553/creative/CR16452517924121346049?region=IN", fetched: CHECK_DATE, ad: { format: "video", days: 141 } },
+      { engine: "google_ads_transparency_center", title: "Image ad creative", where: "adstransparency.google.com", url: "https://adstransparency.google.com/advertiser/AR01253600073510551553/creative/CR12836030047844302849?region=IN", fetched: CHECK_DATE, ad: { format: "image", days: 109 } },
+      { engine: "google_ads_transparency_center", title: "Image ad creative", where: "adstransparency.google.com", url: "https://adstransparency.google.com/advertiser/AR01253600073510551553/creative/CR06126236974719172609?region=IN", fetched: CHECK_DATE, ad: { format: "image", days: 65 } },
+    ],
   },
 ];
 
@@ -73,11 +86,3 @@ export const NUMBERS = {
   withHook: String(HOOK_MATRIX.reduce((n, b) => n + b.total, 0)),
   searchesPerBrand: "7",
 };
-
-export const SOURCES = [
-  { engine: "google", name: "Google Search", gives: "Which pages come up for a brand's search terms, and what they promise." },
-  { engine: "google_ads_transparency_center", name: "Google Ads Transparency", gives: "Ads a brand ran, with dates. Not spend." },
-  { engine: "youtube", name: "YouTube", gives: "Videos about the brand and by it, with titles and channels." },
-  { engine: "google_news", name: "Google News", gives: "News coverage of the brand, with the publisher and date." },
-  { engine: "google_trends", name: "Google Trends", gives: "Relative search interest over time. Not sales." },
-] as const;
