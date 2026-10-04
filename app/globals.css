@@ -596,6 +596,9 @@ html[data-authed] .auth-splash {
   --plum: #111113;
   --rose: #e8a3ae;
   background-color: var(--bg);
+  /* A faint neutral dot grid across the page; sections with their own surface cover it. */
+  background-image: radial-gradient(circle at 1px 1px, rgb(17 17 19 / 0.09) 1px, transparent 1.3px);
+  background-size: 20px 20px;
 }
 
 /* Full-bleed dark section on the paper landing. Re-points the tokens so tokenised children (inputs, labels, buttons) read on near-black. */
