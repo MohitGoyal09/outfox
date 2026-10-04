@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animate, motion, useInView, useReducedMotion } from "motion/react";
-import { Image as ImageIcon, MousePointerClick, Pause, Play, Video } from "lucide-react";
+import { MousePointerClick, Pause, Play } from "lucide-react";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { cn } from "@/lib/utils";
 import { EASE_OUT } from "@/components/aceternity/motion-utils";
@@ -37,13 +37,54 @@ const cardClass = cn(
 
 const shortDate = (d: string) => d.replace(/\s\d{4}$/, "");
 
-function CardFoot({ item }: { item: Evidence }) {
+const GLYPHS = " .:-=+*#";
+const TRACE_OFF = "transition-opacity duration-500 group-data-[tracing=true]/trail:opacity-0 group-hover:opacity-0";
+
+const DOTS = "[background-image:radial-gradient(circle,rgba(255,255,255,0.9)_45%,transparent_52%)] [background-size:3px_3px]";
+
+function Glyphs({ seed }: { seed: string }) {
   return (
-    <div className="flex flex-col gap-1 border-t border-border p-3 text-[11px] leading-[1.35]">
+    <pre aria-hidden="true" className="num absolute inset-0 m-0 select-none overflow-hidden whitespace-pre text-[9px] leading-[1.15] text-[#D69696]">
+      {glyphField(seed)}
+    </pre>
+  );
+}
+
+function Media({ item }: { item: Evidence }) {
+  if (item.videoId) {
+    return (
+      <span className={MEDIA}>
+        <img src={`https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`} alt="" width={480} height={360} loading="eager" className="absolute inset-0 size-full object-cover [filter:grayscale(1)_contrast(1.25)_brightness(1.1)] transition-[filter] duration-500 group-data-[tracing=true]/trail:[filter:none] group-hover:[filter:none]" />
+        <span aria-hidden="true" className={cn("absolute inset-0 bg-[#D69696] mix-blend-multiply", TRACE_OFF)} />
+        
+      </span>
+    );
+  }
+  return (
+    <span className={MEDIA}>
+      <Glyphs seed={item.url} />
+      <span className={monoChip}>{item.where}</span>
+    </span>
+  );
+}
+
+function EvidenceCard({ item }: { item: Evidence }) {
+  const ad = item.ad;
+  return (
+    <a href={item.url} target="_blank" rel="noopener noreferrer" className={cardClass}>
       
-      
-      <span className="font-medium text-fg underline decoration-border-strong underline-offset-[3px] transition-colors group-hover:decoration-fg">Open source ↗</span>
-    </div>
+      <span className="flex flex-1 flex-col gap-2 p-3">
+        <span className="num flex min-h-[2.5em] items-start gap-1.5 text-[11px] min-[1180px]:text-xs leading-[1.25] text-fg-secondary">
+          <PlatformLogo engine={item.engine} className="mt-px size-3.5 shrink-0" />
+          
+        </span>
+        <span className="line-clamp-3 text-[15px] font-medium leading-[1.35] text-fg">{title}</span>
+      </span>
+      <span className="num flex items-center justify-between gap-2 border-t border-border px-2.5 py-2 text-xs leading-none">
+        <span className="whitespace-nowrap text-fg-tertiary"><span className="hidden min-[1180px]:inline">fetched </span>{shortDate(item.fetched)}</span>
+        <span className="whitespace-nowrap font-medium text-fg">Open ↗</span>
+      </span>
+    </a>
   );
 }
 
@@ -69,7 +110,6 @@ export function TrailVisual({ className }: { className?: string }) {
   const reduce = useReducedMotion();
   const everInView = useInView(stageRef, { once: true, amount: 0.3 });
   const f = HERO_FINDINGS[idx];
-  const maxDays = Math.max(1, ...f.evidence.map((e) => e.ad?.days ?? 0));
   const drawn = (Boolean(reduce) || everInView) && lines;
 
   const go = useCallback(

@@ -13,4 +13,4 @@ import { TrailVisual } from "./TrailVisual";
 
 export const HERO_SUB = "See what your rivals' ads, videos and search results lean on, with every number linked to its source.";
 
-const PIN_QUERY = "(min-width: 1024px) and (min-height: 700px)";
+const PIN_QUERY = "(min-width: 1024px) and (min-height: 820px)";
