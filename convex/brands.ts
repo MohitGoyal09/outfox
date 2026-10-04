@@ -204,3 +204,16 @@ export const similarBrands = query({
 });
 
 const MAX_SEARCH_TERM_CHARS = 80;
+
+const MAX_MUST_MENTION_TERMS = 10;
+const MAX_MUST_MENTION_CHARS = 60;
+
+export const setBrandMustMentionInternal = internalMutation({
+  args: { brandId: v.id("brands"), ownerId: v.id("users"), terms: v.array(v.string()) },
+  returns: v.object({ mustMention: v.array(v.string()) }),
+  handler: async (ctx, args) => {
+    if (brand === null || brand.ownerId !== args.ownerId) throw new ConvexError("brand not found for this owner");
+    const terms = args.terms.map((t) => t.trim()).filter((t) => t !== "");
+    if (terms.some((t) => t.length > MAX_MUST_MENTION_CHARS)) throw new ConvexError(`a term is over ${MAX_MUST_MENTION_CHARS} characters`);
+  },
+});
