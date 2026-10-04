@@ -11,5 +11,4 @@ import { Numbers } from "./Numbers";
 import { ProductShowcase } from "./ProductShowcase";
 import { Problem } from "./Problem";
 import { SourcesStrip } from "./SourcesStrip";
-import { StatBand } from "./StatBand";
 import { WillNotClaim } from "./WillNotClaim";
