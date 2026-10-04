@@ -524,6 +524,26 @@
   mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 100%);
 }
 
+/* Hero highlight: a solid ink block sweeps left to right behind the phrase while its text turns to paper. Text is always rendered. */
+.l-mark {
+  padding-inline: 0.16em;
+  margin-inline: -0.16em;
+  border-radius: 6px;
+  color: var(--accent-ink);
+  background: linear-gradient(var(--accent), var(--accent)) left center / 100% 86% no-repeat;
+  -webkit-box-decoration-break: clone;
+  box-decoration-break: clone;
+  animation: l-mark-sweep 800ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
+}
+@keyframes l-mark-sweep {
+  from { background-size: 0% 86%; color: var(--text-primary); }
+  40% { color: var(--text-primary); }
+  to { background-size: 100% 86%; color: var(--accent-ink); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .l-mark { animation: none; }
+}
+
 /* Full-bleed ink section on the light landing. Re-points the neutral tokens so tokenised children (inputs, labels, buttons) read on ink.
    Ratios on #15171B: text #E9EBEE ~15:1, secondary #B8BDC5 ~9:1, field border at 35% white ~3:1. */
 .l-ink {
