@@ -60,6 +60,26 @@ export const insertClaims = internalMutation({
   },
 });
 
+export const deleteIrrelevantGoogleClaims = internalMutation({
+  args: { runId: v.id("runs"), brandId: v.id("brands"), confirm: v.literal(true) },
+  returns: v.object({
+    scanned: v.number(),
+    deleted: v.number(),
+    deletedIds: v.array(v.id("claims")),
+  }),
+  handler: async (ctx, args) => {
+
+    const claims = await ctx.db
+      .query("claims")
+      .withIndex("by_run_and_brand", (q) => q.eq("runId", args.runId).eq("brandId", args.brandId))
+      .collect();
+
+    const deletedIds: Array<import("./_generated/dataModel").Id<"claims">> = [];
+
+    return { scanned: claims.length, deleted: deletedIds.length, deletedIds };
+  },
+});
+
 export const byRun = query({
   args: { runId: v.id("runs") },
   returns: v.array(claimDocValidator),

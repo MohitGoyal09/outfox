@@ -191,6 +191,7 @@ export const webSearch = action({
       name: brand.name,
       aliases: brand.aliases,
       domain: brand.domain,
+      searchTerm: brand.searchTerm,
     };
     const droppedIrrelevantCount = countGoogleRelevanceDrops(result.data, brandIdentity);
     const extracted = extractGoogleClaims(result.data, extractCtx, brandIdentity).slice(

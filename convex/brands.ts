@@ -202,3 +202,5 @@ export const similarBrands = query({
       .map((row) => ({ _id: row._id, name: row.name, domain: row.domain, vertical: row.vertical }));
   },
 });
+
+const MAX_SEARCH_TERM_CHARS = 80;

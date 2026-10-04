@@ -10,7 +10,7 @@ import {
 } from "../../lib/constants";
 import type { Doc, Id } from "../_generated/dataModel";
 
-export type FetchBrand = Pick<Doc<"brands">, "_id" | "name">;
+export type FetchBrand = Pick<Doc<"brands">, "_id" | "name"> & { searchTerm?: string };
 
 export type SnapshotEngine = "youtube" | "youtube_video" | "google_trends";
 
@@ -134,14 +134,22 @@ const ADVERTISER_ID_PATTERN = /^[A-Za-z0-9_-]{1,64}$/;
  */
 const PLACEHOLDER_VERTICALS = new Set(["", "unknown", "unspecified", "n/a", "none"]);
 
-export function searchQueryForBrand(brand: { name: string; vertical?: string }): string {
+export function searchQueryForBrand(brand: { name: string; vertical?: string; searchTerm?: string }): string {
+  // An owner-chosen search term is used verbatim: no vertical appended.
+  const term = (brand.searchTerm ?? "").trim();
+  if (term !== "") return term;
   const vertical = (brand.vertical ?? "").trim();
   return PLACEHOLDER_VERTICALS.has(vertical.toLowerCase())
     ? brand.name
     : `${brand.name} ${vertical}`;
 }
 
-export function buildGoogleSearchParams(brand: { name: string; vertical?: string }) {
+function searchQueryTermForTrends(brand: { name: string; searchTerm?: string }): string {
+  const term = (brand.searchTerm ?? "").trim();
+  return term !== "" ? term : brand.name;
+}
+
+export function buildGoogleSearchParams(brand: { name: string; vertical?: string; searchTerm?: string }) {
   const query = searchQueryForBrand(brand);
   return {
     engine: "google",
@@ -160,7 +168,7 @@ export function buildGoogleSearchParams(brand: { name: string; vertical?: string
  * brand's own news — so the query is disambiguated with the brand's vertical
  * when one is known, same real query, just a more specific one.
  */
-export function buildGoogleNewsParams(brand: { name: string; vertical?: string }) {
+export function buildGoogleNewsParams(brand: { name: string; vertical?: string; searchTerm?: string }) {
   const query = searchQueryForBrand(brand);
   return {
     engine: "google_news",
@@ -179,8 +187,8 @@ export function buildAdsTransparencyParams(advertiserId: string) {
 }
 
 /** Same disambiguation pattern as buildGoogleSearchParams/buildGoogleNewsParams. */
-export function buildYoutubeSearchParams(brand: { name: string; vertical?: string }) {
-  const query = brand.vertical ? `${brand.name} ${brand.vertical}` : brand.name;
+export function buildYoutubeSearchParams(brand: { name: string; vertical?: string; searchTerm?: string }) {
+  const query = searchQueryForBrand(brand);
   return {
     engine: "youtube",
     search_query: truncateQuery(query),
@@ -206,7 +214,9 @@ export function buildTrendsChunkParams(
   void index;
   return {
     engine: "google_trends",
-    q: chunk.map((brand) => truncateQuery(brand.name)).join(","),
+    // searchTerm ?? name: Trends measures the same thing the other engines search.
+    // Setting a searchTerm changes that brand's Trends series identity from the next check on.
+    q: chunk.map((brand) => truncateQuery(searchQueryTermForTrends(brand))).join(","),
     geo: scope?.geo ?? TRENDS_GEO,
     date: scope?.date ?? TRENDS_DATE_RANGE,
     data_type: "TIMESERIES",
@@ -264,7 +274,7 @@ export type EngineFetchResult =
  * Paid plus organic results for the India domain in English.
  */
 export async function fetchGoogleSearch(
-  brand: { name: string; vertical?: string },
+  brand: { name: string; vertical?: string; searchTerm?: string },
   runId: string,
   fetchFn: SerpapiFetchFn = serpapiFetch,
 ): Promise<EngineFetchResult> {
@@ -286,7 +296,7 @@ export async function fetchGoogleSearch(
  * Google News adapter, one brand per call. Mirrors fetchGoogleSearch exactly.
  */
 export async function fetchGoogleNews(
-  brand: { name: string; vertical?: string },
+  brand: { name: string; vertical?: string; searchTerm?: string },
   runId: string,
   fetchFn: SerpapiFetchFn = serpapiFetch,
 ): Promise<EngineFetchResult> {
@@ -574,7 +584,7 @@ export async function fetchYoutubeSearch(
         shorts_results: shortsEntries.slice(0, MAX_ENRICHMENT_ITEMS),
         ads_results: adsEntries.slice(0, MAX_ENRICHMENT_ITEMS),
         resultCount: entries.length,
-        searchQuery: brand.name,
+        searchQuery: String(queryParams.search_query ?? brand.name),
       },
       claimIds: [],
     },

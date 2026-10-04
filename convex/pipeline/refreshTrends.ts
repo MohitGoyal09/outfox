@@ -114,7 +114,7 @@ export const refreshTrendsInternal = internalAction({
       })) as Id<"runs">);
     const fetchedAt = new Date().toISOString();
 
-    const result = await fetchGoogleTrends([{ _id: brand._id, name: brand.name }], runId, undefined, {
+    const result = await fetchGoogleTrends([{ _id: brand._id, name: brand.name, searchTerm: brand.searchTerm }], runId, undefined, {
       geo: args.geo,
       date: args.date,
     });

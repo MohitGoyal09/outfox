@@ -74,6 +74,7 @@ export default defineSchema({
     domain: v.string(),
     vertical: v.string(),
     aliases: v.array(v.string()),
+    searchTerm: v.optional(v.string()),
     profileStatus: v.union(
       v.literal("pending"),
       v.literal("ready"),
