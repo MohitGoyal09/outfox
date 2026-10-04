@@ -18,6 +18,7 @@ type Unit = {
   sr: string;
   ui: ReactNode;
   wide?: boolean;
+  padX?: string;
 };
 
 const UNITS: Record<string, Unit> = {
@@ -51,6 +52,7 @@ const UNITS: Record<string, Unit> = {
     plateClass: "h-[27.5rem]",
     sr: "A board with three columns of saved evidence cards: hooks, offers and things to test.",
     ui: <BoardReplica />,
+    padX: "sm:px-6",
   },
   ads: {
     id: "ads",
@@ -84,6 +86,19 @@ const UNITS: Record<string, Unit> = {
 
 function Showcase({ u, className }: { u: Unit; className?: string }) {
   const reduce = useReducedMotion();
+  const inner = (
+    <>
+      <div className="flex items-center gap-2.5">
+        <u.Icon strokeWidth={1.5} className="size-5 text-fg" />
+        
+      </div>
+      <p className="l-copy mt-2 max-w-[56ch]">{u.line}</p>
+      <Plate seed={u.seed} className={`mt-5 ${u.plateClass}`}>
+        
+        <div className={`h-full px-4 pt-8 ${u.padX ?? "sm:px-12"} sm:pt-12 ${u.wide ? "overflow-x-auto overflow-y-hidden" : ""}`}>{u.ui}</div>
+      </Plate>
+    </>
+  );
   if (reduce) return <div className={className}>{inner}</div>;
   return (
     <motion.div
@@ -107,10 +122,7 @@ export function ProductShowcase() {
       </h2>
       <div className="mt-12 flex flex-col gap-14 lg:gap-20">
         <Showcase u={UNITS.signals} />
-        <div className="grid gap-14 md:grid-cols-2 md:gap-8">
-          <Showcase u={UNITS.ask} />
-          <Showcase u={UNITS.board} />
-        </div>
+        
         
       </div>
     </section>

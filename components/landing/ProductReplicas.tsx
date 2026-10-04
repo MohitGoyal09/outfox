@@ -39,24 +39,3 @@ const COLUMNS = [
   { title: "Offers", cards: [{ t: "FLAT ₹700 OFF on Orders", s: "SUGAR Cosmetics, search" }, { t: "Buy 2 Get 1 Free", s: "SUGAR Cosmetics, search" }] },
   { title: "To test", cards: [{ t: `${HERO_FINDINGS[1].brand}: ${HERO_FINDINGS[1].hook} at ${HERO_FINDINGS[1].brandShare}%, others ${HERO_FINDINGS[1].othersShare}%`, s: "From Signals" }, { t: `${HERO_FINDINGS[0].brand}: ${HERO_FINDINGS[0].hook} at ${HERO_FINDINGS[0].brandShare}%, others ${HERO_FINDINGS[0].othersShare}%`, s: "From Signals" }] },
 ] as const;
-
-export function BoardReplica() {
-  return (
-    <div aria-hidden="true" className={`${card} grid min-h-[30rem] grid-cols-3 gap-2 p-3 sm:gap-3 sm:p-4`}>
-      {COLUMNS.map((c) => (
-        <div key={c.title} className="flex flex-col gap-3 rounded-[10px] bg-bg-inset p-2 sm:p-3">
-          <p className="flex items-center justify-between text-[14px] font-semibold text-fg">
-            {c.title}
-            <span className="num text-[12px] font-normal text-fg-tertiary">{c.cards.length}</span>
-          </p>
-          {c.cards.map((k) => (
-            <div key={k.t} className="rounded-[10px] border border-border bg-bg-raised p-3 shadow-xs">
-              <p className="line-clamp-2 text-[13px] leading-[1.4] text-fg">{k.t}</p>
-              
-            </div>
-          ))}
-        </div>
-      ))}
-    </div>
-  );
-}
