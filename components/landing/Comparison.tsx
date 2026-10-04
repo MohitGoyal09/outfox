@@ -1,9 +1,12 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Check, Minus, X } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion, useInView, useReducedMotion } from "motion/react";
+import { Dithering } from "@paper-design/shaders-react";
 import { EASE_OUT } from "@/components/aceternity/motion-utils";
 import { cn } from "@/lib/utils";
+import { hasWebGL2 } from "./dither";
 
 type Kind = "yes" | "partial" | "no";
 type Cell = { kind: Kind; label: string };
@@ -20,18 +23,24 @@ const ROWS: readonly { label: string; cells: readonly [Cell, Cell, Cell] }[] = [
   { label: "Untraceable numbers removed", cells: [no("No"), no("No"), yes("Yes")] },
   { label: "Saves evidence to a board", cells: [partial("By hand"), no("No"), yes("Yes")] },
 ];
+const CLOUD_DOTS = "#E8B4B4";
+const CLOUD_SPEED = 0.08;
 const ICON = { yes: Check, partial: Minus, no: X } as const;
 
 export function Comparison() {
   const reduce = useReducedMotion();
+  const near = useInView(cardRef, { once: true, margin: "300px 0px" });
+  const inView = useInView(cardRef, { margin: "80px 0px" });
   return (
     <section aria-labelledby="compare-heading" className="border-t border-border">
       <div className="l-wrap pb-24 pt-20 lg:pb-32 lg:pt-28">
+        <div ref={cardRef} className="relative isolate overflow-hidden rounded-[28px] border border-border bg-[#FDF6F6] px-5 pb-8 pt-10 sm:px-8 sm:pt-12 lg:px-12 lg:pb-12 lg:pt-14">
+          {near ? <NoiseClouds reduce={reduce} inView={inView} /> : null}
         <p className="l-eyebrow">05&nbsp;&nbsp;Compared</p>
         <h2 id="compare-heading" className="l-h2 mt-4 max-w-[16ch] text-fg">
           Compared with how it is done today.
         </h2>
-        <div className="mt-12 overflow-x-auto pb-3 pt-3">
+        <div className="mt-12 overflow-x-auto rounded-[20px] bg-white/90 px-3 pb-6 pt-6 sm:px-5">
           <div className="relative min-w-[44rem]">
             
             <table className="relative w-full table-fixed border-separate border-spacing-0 text-left">
@@ -64,6 +73,7 @@ export function Comparison() {
               </tbody>
             </table>
           </div>
+        </div>
         </div>
       </div>
     </section>
