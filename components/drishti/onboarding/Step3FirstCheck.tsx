@@ -12,6 +12,7 @@ import {
   deriveComparisonSummary,
   hasComparisonToShow,
   hasFailedSource,
+  highlightSentence,
   noSearchesLeftMessage,
 } from "./onboarding-model";
 import type { SelectedCompetitor } from "./Step2Competitors";
@@ -164,10 +165,7 @@ export function Step3FirstCheck({
           <ul className="flex flex-col gap-2.5">
             {summary.highlights.map((highlight) => (
               <li key={highlight.hookType} className="text-[14px] leading-[1.5] text-[var(--text-primary)]">
-                {highlight.competitorCount} of {highlight.checkedCompetitorCount} checked competitor
-                {highlight.checkedCompetitorCount === 1 ? "" : "s"} {highlight.competitorCount === 1 ? "runs" : "run"}{" "}
-                <strong className="font-semibold">{hookName(highlight.hookType).toLowerCase()}</strong> content.{" "}
-                {ownBrandName} {highlight.ownHasHook ? "does too." : "doesn't yet."}
+                {highlightSentence(highlight, ownBrandName, hookName(highlight.hookType).toLowerCase())}
               </li>
             ))}
           </ul>

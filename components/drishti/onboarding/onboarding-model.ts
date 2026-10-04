@@ -118,15 +118,18 @@ export function deriveCheckTrailRows(
   events: OnboardingRunEvent[],
   sourceNameFor: (id: string) => string,
 ): CheckTrailRow[] {
-  return events
-    .filter((event) => event.kind === "tool_call")
-    .map((event) => ({
-      id: event.id,
-      label: sourceNameFor(event.name),
-      status: event.status,
-      statusText: RUN_EVENT_STATUS_TEXT[event.status],
-      ...(event.detail !== undefined ? { detail: event.detail } : {}),
-    }));
+}
+
+export function highlightSentence(highlight: ComparisonHighlight, ownBrandName: string, hook: string): string {
+  const c = highlight.competitorCount;
+  const competitors = n === 1 ? "your checked competitor" : `your ${n} checked competitors`;
+  if (c === 0) {
+    return highlight.ownHasHook
+      ? `${ownBrandName} runs ${hook} content, and ${n === 1 ? "your checked competitor does not" : `none of ${competitors} do`}.`
+      : `Neither ${ownBrandName} nor ${competitors} run ${hook} content.`;
+  }
+  const lead = `${c} of ${n} checked competitor${n === 1 ? "" : "s"} ${c === 1 ? "runs" : "run"} ${hook} content.`;
+  return `${lead} ${ownBrandName} ${highlight.ownHasHook ? "does too." : "doesn't yet."}`;
 }
 
 export function hasFailedSource(rows: readonly CheckTrailRow[]): boolean {
