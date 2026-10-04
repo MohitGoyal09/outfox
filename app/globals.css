@@ -710,3 +710,13 @@ html[data-authed] .auth-splash {
 @media (prefers-reduced-motion: reduce) {
   .l-ribbon-tile { animation: none; offset-distance: var(--l-at); }
 }
+
+/* Hero: a soft blue, violet, pink and amber wash behind the ribbon (matches the "every move" sweep). Static paint, no motion. */
+.l-hero-glow {
+  background:
+    radial-gradient(38% 55% at 22% 60%, rgb(96 165 250 / 0.28), transparent 70%),
+    radial-gradient(34% 50% at 44% 70%, rgb(167 139 250 / 0.24), transparent 70%),
+    radial-gradient(34% 50% at 62% 62%, rgb(244 114 182 / 0.22), transparent 70%),
+    radial-gradient(36% 52% at 80% 68%, rgb(242 166 59 / 0.24), transparent 70%);
+  filter: blur(24px);
+}
