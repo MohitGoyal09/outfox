@@ -687,18 +687,6 @@ html[data-authed] .auth-splash {
 @media (prefers-reduced-motion: reduce) { .l-backdrop-in { animation: none; } }
 
 /* Multi-hue phrase: a smooth sweep through the app's hook colours, slowly shifting. Text stays real text; static under reduced motion. */
-.l-hue {
-  background-image: linear-gradient(100deg, #60a5fa 0%, #a78bfa 28%, #f472b6 52%, #f2a63b 76%, #60a5fa 100%);
-  background-size: 220% 100%;
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  color: transparent;
-  padding-inline: 0.04em;
-  animation: l-hue-shift 14s ease-in-out infinite alternate;
-}
-@keyframes l-hue-shift { to { background-position: 100% 0; } }
-@media (prefers-reduced-motion: reduce) { .l-hue { animation: none; background-size: 100% 100%; } }
 
 /* Hero ribbon: each tile rides the shared offset-path (set inline). Still under reduced motion, spread along the path by --l-at. */
 .l-ribbon-tile {
@@ -714,12 +702,19 @@ html[data-authed] .auth-splash {
   .l-ribbon-tile { animation: none; offset-distance: var(--l-at); }
 }
 
-/* Hero: a soft blue, violet, pink and amber wash behind the ribbon (matches the "every move" sweep). Static paint, no motion. */
-.l-hero-glow {
-  background:
-    radial-gradient(38% 55% at 22% 60%, rgb(96 165 250 / 0.28), transparent 70%),
-    radial-gradient(34% 50% at 44% 70%, rgb(167 139 250 / 0.24), transparent 70%),
-    radial-gradient(34% 50% at 62% 62%, rgb(244 114 182 / 0.22), transparent 70%),
-    radial-gradient(36% 52% at 80% 68%, rgb(242 166 59 / 0.24), transparent 70%);
-  filter: blur(24px);
+
+/* Hero Ask box: the border beam's segments travel the rim (dash period is the whole path, pathLength=100). */
+.l-beam-seg { animation: l-beam linear infinite; }
+@keyframes l-beam { to { stroke-dashoffset: -100; } }
+
+/* Hero cycling line: a thin caret that blinks beside the word. */
+.l-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  align-self: center;
+  background: currentColor;
+  animation: l-caret-blink 1s steps(1) infinite;
 }
+@keyframes l-caret-blink { 50% { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .l-caret { animation: none; } }
