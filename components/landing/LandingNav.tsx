@@ -13,3 +13,11 @@ const LINKS = [
   { link: "#limits", name: "What we will not claim" },
   { link: "#faq", name: "FAQ" },
 ] as const;
+
+export function LandingNav() {
+  return (
+    <Navbar>
+      
+    </Navbar>
+  );
+}

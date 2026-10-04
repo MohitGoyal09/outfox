@@ -1,8 +1,8 @@
 "use client";
 
 import { Check, ExternalLink, X } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "@/components/aceternity/motion-utils";
+import { motion } from "motion/react";
+import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { EngineTag } from "@/components/drishti/brands/PlatformLogo";
 import { CHECK_DATE, HERO_FINDINGS } from "./landing-data";
 

@@ -1,8 +1,8 @@
 "use client";
 
 import type { ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "./motion-utils";
+import { motion } from "motion/react";
+import { EASE_OUT, useReducedMotion } from "./motion-utils";
 
 export function Reveal({ children, className, delay = 0 }: { children: ReactNode; className?: string; delay?: number }) {
   const reduce = useReducedMotion();

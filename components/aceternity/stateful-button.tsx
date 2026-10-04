@@ -1,11 +1,11 @@
 "use client";
 
 import type { ComponentProps } from "react";
-import { AnimatePresence, motion, useReducedMotion } from "motion/react";
+import { AnimatePresence, motion } from "motion/react";
 import { Check, LoaderCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { EASE_OUT } from "./motion-utils";
+import { EASE_OUT, useReducedMotion } from "./motion-utils";
 
 export type ButtonStatus = "idle" | "pending" | "success";
 

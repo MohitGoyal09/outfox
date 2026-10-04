@@ -10,10 +10,10 @@ import {
   type ReactElement,
   type ReactNode,
 } from "react";
-import { AnimatePresence, motion, useMotionValueEvent, useReducedMotion, useScroll } from "motion/react";
+import { AnimatePresence, motion, useMotionValueEvent, useScroll } from "motion/react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { EASE_OUT } from "./motion-utils";
+import { EASE_OUT, useReducedMotion } from "./motion-utils";
 
 const SCROLL_THRESHOLD = 48;
 
@@ -70,7 +70,7 @@ export function NavItems({ items, className }: { items: readonly { name: string;
           onMouseEnter={() => setActive(i)}
           onFocus={() => setActive(i)}
           onBlur={() => setActive(null)}
-          className="relative rounded-full px-3 py-1.5 text-sm text-fg-secondary transition-colors duration-150 hover:text-fg focus-visible:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+          className="relative inline-flex min-h-11 items-center rounded-full px-3 text-sm text-fg-secondary transition-colors duration-150 hover:text-fg focus-visible:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
         >
           {active === i ? (
             <motion.span
@@ -131,7 +131,7 @@ export function MobileMenu({ children, label = "Sections" }: { children: ReactNo
         aria-controls="landing-mobile-menu"
         aria-label={open ? "Close menu" : "Open menu"}
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex size-10 items-center justify-center rounded-sm border border-border-strong text-fg transition-colors hover:bg-bg-inset focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="inline-flex size-11 items-center justify-center rounded-sm border border-border-strong text-fg transition-colors hover:bg-bg-inset focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         {open ? <X aria-hidden="true" className="size-4" /> : <Menu aria-hidden="true" className="size-4" />}
       </button>

@@ -1,5 +1,6 @@
 "use client";
-import { motion, useReducedMotion, useScroll, useTransform, type MotionValue } from "motion/react";
+import { useReducedMotion } from "@/components/aceternity/motion-utils";
+import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { Fragment, useRef } from "react";
 
 const MIN = 0.15;

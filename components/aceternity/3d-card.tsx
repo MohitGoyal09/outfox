@@ -1,9 +1,9 @@
 "use client";
 
 import { createContext, useContext, useRef, useState, type ReactNode } from "react";
-import { useReducedMotion } from "motion/react";
+
 import { cn } from "@/lib/utils";
-import { usePointerFine } from "./motion-utils";
+import { usePointerFine, useReducedMotion } from "./motion-utils";
 
 const MAX_TILT_DEG = 5;
 const HoverContext = createContext(false);

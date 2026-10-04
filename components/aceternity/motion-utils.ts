@@ -24,3 +24,7 @@ export function usePointerFine(): boolean {
 export function useIsMd(): boolean {
   return useMediaQuery("(min-width: 768px)");
 }
+
+export function useReducedMotion(): boolean {
+  return useMediaQuery("(prefers-reduced-motion: reduce)");
+}

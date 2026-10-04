@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { motion, useScroll, useTransform, type MotionValue } from "motion/react";
 import { Plate } from "./Plate";
 
@@ -14,7 +14,7 @@ export type Feature = {
   seed: number;
   sr: string;
   ui: ReactNode;
-  wide?: boolean;
+  fitWidth?: number;
 };
 
 const CARD_H = 620;
@@ -36,15 +36,18 @@ export function StackedFeatures({ features }: { features: readonly Feature[] }) 
   );
 }
 
-function FeatureCard({ f, i, n, listH, progress }: { f: Feature; i: number; n: number; listH: number; progress: MotionValue<number> }) {
-  const pinned = (j: number) => j * STEP - (TOP + j * STAGGER);
-  const from = last ? 0 : (pinned(i + 1) - (CARD_H - STAGGER)) / listH;
-  const dim = useTransform(progress, [from, to], [0, depth * DIM]);
-  const vars = { "--t": `${TOP + i * STAGGER}px`, "--s": scale, "--d": dim } as unknown as CSSProperties;
-
+function FitWidth({ width, children }: { width: number; children: ReactNode }) {
+  const outer = useRef<HTMLDivElement>(null);
+  const [scale, setScale] = useState(1);
+  useEffect(() => {
+    if (!el) return;
+    fit();
+    const ro = new ResizeObserver(fit);
+    ro.observe(el);
+  }, [width]);
   return (
-    <motion.li style={vars} className="lg:sticky lg:top-(--t) lg:h-155 lg:origin-top lg:motion-safe:scale-(--s) lg:not-last:mb-10">
+    <div ref={outer} className="w-full">
       
-    </motion.li>
+    </div>
   );
 }

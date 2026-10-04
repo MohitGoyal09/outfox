@@ -1,7 +1,8 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useReducedMotion, useScroll, useTransform } from "motion/react";
+import { motion, useScroll, useTransform } from "motion/react";
+import { useReducedMotion } from "@/components/aceternity/motion-utils";
 import { Button } from "@/components/ui/button";
 import { Highlight } from "@/components/aceternity/hero-highlight";
 import { MagneticButton } from "@/components/aceternity/magnetic-button";
@@ -14,3 +15,10 @@ export const HERO_SUB = "See what your rivals' ads, videos and search results le
 
 const DRIFT = 0.35;
 const DRIFT_PHONE = 0.2;
+
+export function Hero() {
+  const ref = useRef<HTMLElement>(null);
+  const reduce = useReducedMotion();
+  const wide = useMedia("(min-width: 768px)");
+  const textY = useTransform(p, [0, 1], [0, -24]);
+}

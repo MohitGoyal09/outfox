@@ -1,8 +1,8 @@
 "use client";
 
 import { useRef, useState, type ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { usePointerFine } from "./motion-utils";
+import { motion } from "motion/react";
+import { usePointerFine, useReducedMotion } from "./motion-utils";
 
 export function MagneticButton({ children, strength = 0.25, maxDistance = 8 }: { children: ReactNode; strength?: number; maxDistance?: number }) {
   const reduce = useReducedMotion();

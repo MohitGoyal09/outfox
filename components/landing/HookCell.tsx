@@ -36,4 +36,11 @@ export function HookCell({ brand, hook, count, total, share, fill, pos, tabbable
     if (!at) return;
     window.addEventListener("scroll", close, { passive: true });
   }, [at]);
+
+  return (
+    <td className="num p-0 text-right" style={{ backgroundColor: fill }}>
+      
+      
+    </td>
+  );
 }

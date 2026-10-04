@@ -1,10 +1,10 @@
 "use client";
 
-import { useSyncExternalStore, type ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
+import { useState, useSyncExternalStore, type ReactNode } from "react";
+import { motion } from "motion/react";
 import { X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { EASE_OUT } from "./motion-utils";
+import { EASE_OUT, useReducedMotion } from "./motion-utils";
 
 const STORAGE_KEY = "drishti.landing.banner.dismissed";
 
@@ -36,9 +36,11 @@ const getDismissed = () => dismissedInMemory || readDismissed();
 
 export function StickyBanner({ children, className }: { children: ReactNode; className?: string }) {
   const reduce = useReducedMotion();
+  const [tween, setTween] = useState(false);
   const open = !useSyncExternalStore(subscribe, getDismissed, () => false);
 
   function dismiss() {
+    setTween(true);
     dismissedInMemory = true;
     writeDismissed();
     listeners.forEach((l) => l());
@@ -48,7 +50,7 @@ export function StickyBanner({ children, className }: { children: ReactNode; cla
     <motion.div
       initial={false}
       animate={{ height: open ? 36 : 0 }}
-      transition={reduce ? { duration: 0 } : { duration: 0.24, ease: EASE_OUT }}
+      transition={reduce || !tween ? { duration: 0 } : { duration: 0.24, ease: EASE_OUT }}
       className={cn("relative z-50 overflow-hidden border-b border-border bg-bg text-fg-secondary", className)}
       aria-hidden={open ? undefined : true}
       inert={open ? undefined : true}
@@ -58,7 +60,7 @@ export function StickyBanner({ children, className }: { children: ReactNode; cla
         type="button"
         onClick={dismiss}
         aria-label="Dismiss announcement"
-        className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-sm text-fg-secondary transition-colors duration-150 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
+        className="absolute right-0 top-0 flex h-9 w-11 items-center justify-center rounded-sm text-fg-secondary transition-colors duration-150 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <X aria-hidden="true" className="size-4" />
       </button>

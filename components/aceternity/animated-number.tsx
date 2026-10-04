@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "./motion-utils";
+import { animate } from "motion/react";
+import { EASE_OUT, useReducedMotion } from "./motion-utils";
 
 export function AnimatedNumber({ value, suffix = "", className, id }: { value: number; suffix?: string; className?: string; id?: string }) {
   const reduce = useReducedMotion();

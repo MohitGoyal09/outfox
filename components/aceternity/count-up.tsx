@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useRef } from "react";
-import { animate, useInView, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "./motion-utils";
+import { animate, useInView } from "motion/react";
+import { EASE_OUT, useReducedMotion } from "./motion-utils";
 
 const format = (n: number) => Math.round(n).toLocaleString("en-US");
 

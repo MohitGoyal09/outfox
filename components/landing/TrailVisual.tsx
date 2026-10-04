@@ -1,11 +1,11 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
-import { animate, motion, useInView, useReducedMotion } from "motion/react";
+import { animate, motion, useInView } from "motion/react";
 import { MousePointerClick, Pause, Play } from "lucide-react";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { cn } from "@/lib/utils";
-import { EASE_OUT } from "@/components/aceternity/motion-utils";
+import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { AnimatedNumber } from "@/components/aceternity/animated-number";
 import { useMedia } from "./HeroBackdrop";
 import { CHECK_DATE, HERO_FINDINGS, type Evidence, type HeroFinding } from "./landing-data";
@@ -50,11 +50,11 @@ function Glyphs({ seed }: { seed: string }) {
   );
 }
 
-function Media({ item }: { item: Evidence }) {
+function Media({ item, priority }: { item: Evidence; priority: boolean }) {
   if (item.videoId) {
     return (
       <span className={MEDIA}>
-        <img src={`https://i.ytimg.com/vi/${item.videoId}/hqdefault.jpg`} alt="" width={480} height={360} loading="eager" className="absolute inset-0 size-full object-cover [filter:grayscale(1)_contrast(1.25)_brightness(1.1)] transition-[filter] duration-500 group-data-[tracing=true]/trail:[filter:none] group-hover:[filter:none]" />
+        
         <span aria-hidden="true" className={cn("absolute inset-0 bg-[#D69696] mix-blend-multiply", TRACE_OFF)} />
         
       </span>
@@ -68,11 +68,11 @@ function Media({ item }: { item: Evidence }) {
   );
 }
 
-function EvidenceCard({ item }: { item: Evidence }) {
+function EvidenceCard({ item, priority }: { item: Evidence; priority: boolean }) {
   const ad = item.ad;
   return (
     <a href={item.url} target="_blank" rel="noopener noreferrer" className={cardClass}>
-      
+      <Media item={item} priority={priority} />
       <span className="flex flex-1 flex-col gap-2 p-3">
         <span className="num flex min-h-[2.5em] items-start gap-1.5 text-[11px] min-[1180px]:text-xs leading-[1.25] text-fg-secondary">
           <PlatformLogo engine={item.engine} className="mt-px size-3.5 shrink-0" />

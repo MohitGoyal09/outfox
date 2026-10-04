@@ -1,8 +1,8 @@
 "use client";
 
 import { useId, createContext, useContext, type ReactNode } from "react";
-import { motion, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "./motion-utils";
+import { motion } from "motion/react";
+import { EASE_OUT, useReducedMotion } from "./motion-utils";
 
 const GroupId = createContext<string>("tabs");
 

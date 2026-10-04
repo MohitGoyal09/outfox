@@ -2,7 +2,8 @@
 
 import { useState } from "react";
 import { ChartLine } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
+import { motion } from "motion/react";
+import { useReducedMotion } from "@/components/aceternity/motion-utils";
 import { hookName } from "@/components/drishti/labels";
 import { HOOK_COLOR } from "@/components/drishti/tokens";
 import { cn } from "@/lib/utils";
