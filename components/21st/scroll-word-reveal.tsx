@@ -17,13 +17,13 @@ function Word({ children, progress, index, count }: { children: string; progress
 export function ScrollWordReveal({ text, className = "" }: { text: string; className?: string }) {
   const ref = useRef<HTMLDivElement>(null);
   const reduced = useReducedMotion();
-  const { scrollYProgress } = useScroll({ target: ref, offset: ["start start", "end end"] });
+  const { scrollYProgress } = useScroll({ target: ref, offset: ["start 0.7", "end end"] });
   const words = text.split(" ");
 
   return (
-    <div ref={ref} className={reduced ? "py-16" : "h-[220vh]"}>
+    <div ref={ref} className={reduced ? "py-12" : "h-[115vh]"}>
       <p className="sr-only">{text}</p>
-      <p aria-hidden="true" className={`${reduced ? "" : "sticky top-0 flex h-screen items-center"} ${className}`}>
+      <p aria-hidden="true" className={`${reduced ? "" : "sticky top-[22vh] py-10"} ${className}`}>
         <span>
           {words.map((w, i) => (
             <Fragment key={i}>
