@@ -29,15 +29,7 @@ export function Problem() {
         Someone searches each rival, saves a few ads, skims YouTube, and pastes it into a deck. Drishti keeps the trail: what was found, where, and when.
       </p>
 
-      <div className="mt-12 grid gap-px overflow-hidden rounded-[18px] border border-border bg-border md:grid-cols-2">
-        
-        <div className="bg-bg-raised p-6 sm:p-8">
-          
-          <ul className="mt-6 flex list-none flex-col gap-0 p-0">
-            
-          </ul>
-        </div>
-      </div>
+      
 
     </section>
   );

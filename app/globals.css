@@ -504,13 +504,13 @@
 
 @utility l-lead {
   font-size: 1.125rem;
-  line-height: 1.55;
+  line-height: 1.6;
   color: var(--text-secondary);
 }
 
 @utility l-copy {
-  font-size: 1rem;
-  line-height: 1.5;
+  font-size: 1.0625rem;
+  line-height: 1.6;
   color: var(--text-secondary);
 }
 
@@ -540,8 +540,8 @@
   padding-inline: 0.16em;
   margin-inline: -0.16em;
   border-radius: 6px;
-  color: var(--accent-ink);
-  background: linear-gradient(var(--accent), var(--accent)) left center / 100% 86% no-repeat;
+  color: var(--mark-ink, var(--accent-ink));
+  background: linear-gradient(var(--mark, var(--accent)), var(--mark, var(--accent))) left center / 100% 86% no-repeat;
   -webkit-box-decoration-break: clone;
   box-decoration-break: clone;
   animation: l-mark-sweep 800ms cubic-bezier(0.22, 1, 0.36, 1) 300ms both;
@@ -549,27 +549,54 @@
 @keyframes l-mark-sweep {
   from { background-size: 0% 86%; color: var(--text-primary); }
   40% { color: var(--text-primary); }
-  to { background-size: 100% 86%; color: var(--accent-ink); }
+  to { background-size: 100% 86%; color: var(--mark-ink, var(--accent-ink)); }
 }
 @media (prefers-reduced-motion: reduce) {
   .l-mark { animation: none; }
 }
 
-/* Full-bleed ink section on the light landing. Re-points the neutral tokens so tokenised children (inputs, labels, buttons) read on ink.
-   Ratios on #15171B: text #E9EBEE ~15:1, secondary #B8BDC5 ~9:1, field border at 35% white ~3:1. */
-.l-ink {
-  --ink-base: #15171b;
-  --bg-raised: #1e2126;
-  --bg-inset: #272b31;
-  --text-primary: #e9ebee;
-  --text-secondary: #b8bdc5;
-  --text-tertiary: #b8bdc5;
-  --text-placeholder: #9aa0a9;
-  --border: rgba(255, 255, 255, 0.12);
-  --border-strong: rgba(255, 255, 255, 0.35);
-  --accent: #ffffff;
-  --accent-strong: #e3e5e8;
-  --accent-ink: #15171b;
+/* Kumkum: the landing's own palette. Scoped to `.l-theme` (LandingPage root) so the signed-in app keeps the Evidence Atlas tokens.
+   Contrast (WCAG): text #2A1724 on paper 15.4:1; secondary #5E4957 7.5:1 (6.9 on inset); tertiary #7A6472 4.9:1 (4.5 on inset);
+   white on accent #C8431F 4.9:1. Hook data colours are not overridden: they encode meaning. */
+.l-theme {
+  --bg: #faf4ee;
+  --bg-inset: #f3eae2;
+  --bg-raised: #ffffff;
+  --bg-raised-2: #fdf9f5;
+  --text-primary: #2a1724;
+  --text-secondary: #5e4957;
+  --text-tertiary: #7a6472;
+  --text-placeholder: #7a6472;
+  --border: #eadcd3;
+  --border-strong: #d8c2b6;
+  /* Vermilion #E4572E is 3.7:1 against white, too weak for small button text, so the working accent is the deeper #C8431F (4.9:1). */
+  --accent: #c8431f;
+  --accent-strong: #a8361a;
+  --accent-ink: #ffffff;
+  --accent-dim: rgba(228, 87, 46, 0.14);
+  --accent-selection: rgba(228, 87, 46, 0.18);
+  /* Hero highlight block: bright vermilion behind 40-64px display text (3.4:1, passes the 3:1 large-text bar). */
+  --mark: #e4572e;
+  --mark-ink: #faf4ee;
+  --plum: #2a1424;
+  --rose: #e8a3ae;
+}
+
+/* Full-bleed plum section on the paper landing. Re-points the tokens so tokenised children (inputs, labels, buttons) read on plum.
+   Ratios on #2A1424: text #F7EDE6 14.9:1, secondary #D9C6CF 10.6:1 (8.4 on #40243A), accent #F07A55 6.2:1. */
+.l-theme .l-ink {
+  --ink-base: #2a1424;
+  --bg-raised: #351c2e;
+  --bg-inset: #40243a;
+  --text-primary: #f7ede6;
+  --text-secondary: #d9c6cf;
+  --text-tertiary: #d9c6cf;
+  --text-placeholder: #c2aab6;
+  --border: rgba(255, 240, 235, 0.14);
+  --border-strong: rgba(255, 240, 235, 0.32);
+  --accent: #f07a55;
+  --accent-strong: #f59273;
+  --accent-ink: #2a1424;
   --danger: #f4a3a3;
   color: var(--text-primary);
 }

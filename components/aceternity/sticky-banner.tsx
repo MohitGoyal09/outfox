@@ -49,7 +49,7 @@ export function StickyBanner({ children, className }: { children: ReactNode; cla
       initial={false}
       animate={{ height: open ? 36 : 0 }}
       transition={reduce ? { duration: 0 } : { duration: 0.24, ease: EASE_OUT }}
-      className={cn("relative z-50 overflow-hidden bg-accent text-accent-ink", className)}
+      className={cn("l-ink relative z-50 overflow-hidden bg-[var(--ink-base)] text-fg", className)}
       aria-hidden={open ? undefined : true}
       inert={open ? undefined : true}
     >
@@ -58,7 +58,7 @@ export function StickyBanner({ children, className }: { children: ReactNode; cla
         type="button"
         onClick={dismiss}
         aria-label="Dismiss announcement"
-        className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-sm text-accent-ink/80 transition-colors duration-150 hover:text-accent-ink focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-ink"
+        className="absolute right-2 top-1/2 flex size-7 -translate-y-1/2 items-center justify-center rounded-sm text-fg-secondary transition-colors duration-150 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent"
       >
         <X aria-hidden="true" className="size-4" />
       </button>
