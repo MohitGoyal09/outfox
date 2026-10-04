@@ -26,6 +26,8 @@ import { buildHistoryMessages, textOfParts } from "./history";
 import { buildTools } from "./tools";
 import type { TurnState } from "./tools";
 import { selectPromptRefs } from "./evidenceBudget";
+const OFF_TOPIC_REQUEST_RE = /\boff[- ]?topic\b|\b(hidden|filtered[- ]out|left[- ]out|unrelated|irrelevant)\b/i;
+
 const ID_RE = /^[a-z0-9_]+$/i;
 const MAX_MESSAGE_CHARS = 4000;
 

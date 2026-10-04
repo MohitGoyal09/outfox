@@ -2,6 +2,7 @@
 
 import { useMemo } from "react";
 import Link from "next/link";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
 import { BarChart3, ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -22,6 +23,8 @@ import { BrandLeaderboard } from "./BrandLeaderboard";
 import { EngineCoverage } from "./EngineCoverage";
 import { BoardMixChart } from "./BoardMixChart";
 import { REMOVED_BRAND_LABEL } from "../runs/derive";
+import { OffTopicNotice } from "../brands/filters/OffTopicNotice";
+import { dropOffTopic } from "../brands/topicality";
 import {
   BOARD_HONESTY_LINE,
   countFindings,
@@ -75,6 +78,18 @@ function BoardSkeleton() {
   );
 }
 
+type ClaimSet = NonNullable<ReturnType<typeof useQuery<typeof api.claims.byRun>>>;
+
+function offTopicFiltered(
+  list: ClaimSet | undefined,
+  brandsById: ReadonlyMap<string, { name: string; domain: string; aliases?: string[]; vertical: string }> | null,
+  show: boolean,
+): { kept: ClaimSet; hidden: number } | undefined {
+  if (list === undefined || brandsById === null) return undefined;
+  const { kept, hiddenFindings } = dropOffTopic(list, brandsById);
+  return { kept: show ? list : kept, hidden: hiddenFindings };
+}
+
 export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const { runs, isLoading: runsLoading } = useAllRuns();
   const brands = useQuery(api.brands.listBrands);
@@ -107,7 +122,33 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     pinnedRun ? { runId: pinnedRun._id } : "skip",
   );
 
-  const claims = cohortKey === null ? scope?.currentClaims : pinnedClaims;
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const pathname = usePathname();
+  const showOffTopic = searchParams.get("offtopic") === "show";
+  const toggleOffTopic = () => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (showOffTopic) params.delete("offtopic");
+    else params.set("offtopic", "show");
+    const query = params.toString();
+    router.replace(query ? `${pathname}?${query}` : pathname, { scroll: false });
+  };
+  const brandsById = useMemo(
+    () => (brands === undefined ? null : new Map(brands.map((brand) => [String(brand._id), brand]))),
+    [brands],
+  );
+  const rawScopeCurrent = scope?.currentClaims;
+  const rawScopePrevious = scope?.previousClaims;
+  const currentSet = useMemo(
+    () => offTopicFiltered(cohortKey === null ? rawScopeCurrent : pinnedClaims, brandsById, showOffTopic),
+    [cohortKey, rawScopeCurrent, pinnedClaims, brandsById, showOffTopic],
+  );
+  const previousSet = useMemo(
+    () => offTopicFiltered(cohortKey === null ? rawScopePrevious : pinnedPrevious, brandsById, showOffTopic),
+    [cohortKey, rawScopePrevious, pinnedPrevious, brandsById, showOffTopic],
+  );
+  const claims = currentSet?.kept;
+  const hiddenOffTopic = currentSet?.hidden ?? 0;
   const snapshots = cohortKey === null ? scope?.snapshots : pinnedSnapshots;
 
   const brandNames = useMemo(() => {
@@ -127,8 +168,8 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   );
 
   const scopeBrands = scope?.brands;
-  const scopeCurrent = scope?.currentClaims;
-  const scopePrevious = scope?.previousClaims;
+  const scopeCurrent = cohortKey === null ? claims : undefined;
+  const scopePrevious = cohortKey === null ? previousSet?.kept : undefined;
   const emergingScope = useMemo(
     () =>
       scopeEmergingToComparable(
@@ -140,8 +181,8 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   );
   const comparedBrands = emergingScope.comparedBrands;
   const emergingCurrent = useMemo(
-    () => (cohortKey === null ? emergingScope.currentClaims : (pinnedClaims ?? [])),
-    [cohortKey, emergingScope, pinnedClaims],
+    () => (cohortKey === null ? emergingScope.currentClaims : (claims ?? [])),
+    [cohortKey, emergingScope, claims],
   );
   const emergingPrevious = useMemo(
     () =>
@@ -149,12 +190,12 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         ? comparedBrands > 0
           ? emergingScope.previousClaims
           : null
-        : (pinnedPrevious ?? null),
-    [cohortKey, comparedBrands, emergingScope, pinnedPrevious],
+        : (previousSet?.kept ?? null),
+    [cohortKey, comparedBrands, emergingScope, previousSet],
   );
   const hasPrevious = cohortKey === null ? comparedBrands > 0 : pinned.previous !== null;
 
-  const priorClaims = cohortKey === null ? (scope?.previousClaims ?? null) : (pinned.previous === null ? null : (pinnedPrevious ?? null));
+  const priorClaims = cohortKey === null ? (previousSet?.kept ?? null) : (pinned.previous === null ? null : (previousSet?.kept ?? null));
 
   const hookItems = useMemo(
     () => (claims !== undefined ? deriveHookDistribution(claims, priorClaims) : []),
@@ -327,6 +368,12 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
           )}
         </div>
         <p className="max-w-[68ch] type-body text-fg-secondary">{BOARD_HONESTY_LINE}</p>
+        <OffTopicNotice
+          hiddenCount={hiddenOffTopic}
+          subject="the brand they were found for"
+          showing={showOffTopic}
+          onToggle={toggleOffTopic}
+        />
         {ownBrandNotInView ? (
           <p className="max-w-[68ch] type-caption text-fg-secondary">
             {ownBrand?.name} is your brand but has no finished check yet, so there is nothing to compare.
