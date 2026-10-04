@@ -1,3 +1,4 @@
+import { ScrollWordReveal } from "@/components/21st/scroll-word-reveal";
 import { MARK_STROKE } from "@/lib/brandMark";
 
 function Unlinked() {
