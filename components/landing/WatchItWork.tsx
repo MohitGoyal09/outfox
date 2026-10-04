@@ -6,7 +6,7 @@ import { animate, motion, useInView } from "motion/react";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { cn } from "@/lib/utils";
-import { AD_CREATIVE, CHECK_DATE, RIBBON, SOURCES, SUGAR_LONGEST_AD, SUGAR_READ_ADS } from "./landing-data";
+import { AD_CREATIVE, CHECK_DATE, RIBBON, SOURCES, SUGAR_READ_ADS } from "./landing-data";
 
 const PROMPT = "Which ad is SUGAR betting on?";
 
@@ -17,8 +17,8 @@ const ROWS: readonly AdRow[] = [
   { headline: byDays(159)?.headline ?? "Ad creative", domain: byDays(159)?.domain ?? "sugarcosmetics.com", days: 159 },
   { ...SUGAR_READ_ADS.d51, days: AD_CREATIVE.totalDaysShown },
   { headline: byDays(192)?.headline ?? "Ad creative", domain: byDays(192)?.domain ?? "sugarcosmetics.com", days: 192 },
-  { ...SUGAR_READ_ADS.d194, days: SUGAR_LONGEST_AD.days },
 ];
+const SUGAR_ADS_PAGE = "https://adstransparency.google.com/advertiser/AR01253600073510551553?region=IN";
 
 const SKIPPED_ENGINE = "youtube";
 
@@ -62,62 +62,5 @@ function SourceStep({ engine, name, t, i }: { engine: string; name: string; t: n
       
       {state === "skipped" && <span className="sr-only">skipped</span>}
     </li>
-  );
-}
-
-function AdRowView({ row, i, t, reduce }: { row: AdRow; i: number; t: number; reduce: boolean }) {
-  const shown = t >= ROWS_START + i * ROW_STAGGER;
-  const picked = t >= PICK_AT;
-  const win = picked && i === WINNER;
-  const dim = picked && i !== WINNER;
-  return (
-    <motion.li
-      initial={false}
-      animate={{ opacity: shown ? (dim ? 0.45 : 1) : 0, y: shown ? 0 : 10, scale: win ? 1.015 : 1 }}
-      transition={{ duration: reduce ? 0 : 0.4, ease: EASE_OUT }}
-      className={cn(
-        "relative flex flex-col gap-2 rounded-[12px] border bg-white px-3.5 py-3 sm:flex-row sm:items-center sm:gap-4",
-        win ? "border-transparent shadow-[0_14px_30px_-16px_rgba(17,17,19,0.45)] ring-2 ring-fg" : scanning ? "border-border-strong bg-bg-inset" : "border-border",
-      )}
-    >
-      <span className="min-w-0 flex-1">
-        
-        <span className="num mt-0.5 block truncate text-[11px] leading-tight text-fg-tertiary">{row.domain}</span>
-      </span>
-      
-    </motion.li>
-  );
-}
-
-export function WatchItWork() {
-  const reduce = useReducedMotion() ?? false;
-  const inView = useInView(ref, { amount: 0.45 });
-  const [tRaw, setT] = useState(0);
-
-  useEffect(() => {
-    if (reduce || !inView) return;
-    const c = animate(0, END, { duration: END / 1000, ease: "linear", onUpdate: (v) => setT(v) });
-    return () => {
-      c.stop();
-      setT(0);
-    };
-  }, [inView, reduce]);
-  const t = reduce ? END : tRaw;
-
-  const typed = PROMPT.slice(0, Math.max(0, Math.min(PROMPT.length, Math.floor((t - TYPE_START) / TYPE_MS) + 1)));
-  const typing = t >= TYPE_START && typed.length < PROMPT.length;
-  const sourcesOn = t >= SRC_START - 200;
-
-  return (
-    <section id="watch" aria-labelledby="watch-heading" className="relative py-24">
-      <div className="l-wrap">
-        
-        
-        <p className="l-lead mt-5 max-w-[56ch]">Drishti reads the public evidence, ranks it, and answers with the source attached.</p>
-
-        
-
-      </div>
-    </section>
   );
 }
