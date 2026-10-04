@@ -3,12 +3,12 @@
 import { useRef, useState, type KeyboardEvent, type ReactNode } from "react";
 import { hookName } from "@/components/drishti/labels";
 import { HOOK_COLOR, isHookType } from "@/components/drishti/tokens";
-import { EngineTag, PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
+import { EngineTag } from "@/components/drishti/brands/PlatformLogo";
 import { CardContainer, CardItem } from "@/components/aceternity/3d-card";
 import { CountUp } from "@/components/aceternity/count-up";
 import { cn } from "@/lib/utils";
 import { HookCell } from "./HookCell";
-import { AD_CREATIVE, HERO_FINDINGS, HOOK_MATRIX, HOOK_ORDER, NUMBERS, OFF_TOPIC, SOURCES } from "./landing-data";
+import { AD_CREATIVE, HERO_FINDINGS, HOOK_MATRIX, HOOK_ORDER, NUMBERS, OFF_TOPIC } from "./landing-data";
 
 export function HookTable() {
   const body = useRef<HTMLTableSectionElement>(null);

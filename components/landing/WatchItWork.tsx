@@ -1,23 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useState } from "react";
-import { AlertCircle, Check, RotateCcw } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { AlertCircle, Check } from "lucide-react";
 import { animate, motion, useInView } from "motion/react";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { cn } from "@/lib/utils";
-import { AD_CREATIVE, CHECK_DATE, RIBBON, SOURCES, SUGAR_LONGEST_AD } from "./landing-data";
+import { AD_CREATIVE, CHECK_DATE, RIBBON, SOURCES, SUGAR_LONGEST_AD, SUGAR_READ_ADS } from "./landing-data";
 
 const PROMPT = "Which ad is SUGAR betting on?";
 
-type AdRow = { headline: string; domain: string; days: number };
+type AdRow = { headline: string; domain: string; days: number; desc?: string };
 
 const SUGAR_ADS = RIBBON.flatMap((r) => (r.kind === "ad" && r.brand === "SUGAR Cosmetics" ? [r] : []));
 const ROWS: readonly AdRow[] = [
   { headline: byDays(159)?.headline ?? "Ad creative", domain: byDays(159)?.domain ?? "sugarcosmetics.com", days: 159 },
-  { headline: "Image ad, headline not captured", domain: "adstransparency.google.com", days: AD_CREATIVE.totalDaysShown },
+  { ...SUGAR_READ_ADS.d51, days: AD_CREATIVE.totalDaysShown },
   { headline: byDays(192)?.headline ?? "Ad creative", domain: byDays(192)?.domain ?? "sugarcosmetics.com", days: 192 },
-  { headline: "Ad creative, headline not captured", domain: "adstransparency.google.com", days: SUGAR_LONGEST_AD.days },
+  { ...SUGAR_READ_ADS.d194, days: SUGAR_LONGEST_AD.days },
 ];
 
 const SKIPPED_ENGINE = "youtube";
@@ -86,5 +86,38 @@ function AdRowView({ row, i, t, reduce }: { row: AdRow; i: number; t: number; re
       </span>
       
     </motion.li>
+  );
+}
+
+export function WatchItWork() {
+  const reduce = useReducedMotion() ?? false;
+  const inView = useInView(ref, { amount: 0.45 });
+  const [tRaw, setT] = useState(0);
+
+  useEffect(() => {
+    if (reduce || !inView) return;
+    const c = animate(0, END, { duration: END / 1000, ease: "linear", onUpdate: (v) => setT(v) });
+    return () => {
+      c.stop();
+      setT(0);
+    };
+  }, [inView, reduce]);
+  const t = reduce ? END : tRaw;
+
+  const typed = PROMPT.slice(0, Math.max(0, Math.min(PROMPT.length, Math.floor((t - TYPE_START) / TYPE_MS) + 1)));
+  const typing = t >= TYPE_START && typed.length < PROMPT.length;
+  const sourcesOn = t >= SRC_START - 200;
+
+  return (
+    <section id="watch" aria-labelledby="watch-heading" className="relative py-24">
+      <div className="l-wrap">
+        
+        
+        <p className="l-lead mt-5 max-w-[56ch]">Drishti reads the public evidence, ranks it, and answers with the source attached.</p>
+
+        
+
+      </div>
+    </section>
   );
 }

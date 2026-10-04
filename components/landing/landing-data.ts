@@ -116,3 +116,8 @@ export const RIBBON: readonly RibbonItem[] = [
 ];
 
 export const SUGAR_LONGEST_AD = { days: 194, url: "https://adstransparency.google.com/advertiser/AR09004105641337290753/creative/CR01728682426349125633?region=IN" };
+
+export const SUGAR_READ_ADS = {
+  d51: { headline: "Beauty Favourites at ₹249", domain: "adstransparency.google.com", desc: "Upgrade your makeup collection without stretching your budget" },
+  d194: { headline: "Image ad", domain: "adstransparency.google.com" },
+} as const;

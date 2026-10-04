@@ -5,6 +5,26 @@ import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { SectionCaption } from "./SectionCaption";
 
+function Struck({ text, reduce }: { text: string; reduce: boolean }) {
+  return (
+    <motion.p
+      className="mt-auto pt-5 font-mono text-[12px] leading-[1.4] text-fg-tertiary"
+      initial="off"
+      whileInView="on"
+      viewport={{ once: true, margin: "0px 0px -10% 0px" }}
+    >
+      <span className="sr-only">Done by hand today: </span>
+      <motion.span
+        className="underline-offset-0 [text-decoration-line:line-through] [text-decoration-thickness:1px]"
+        variants={{ off: { textDecorationColor: reduce ? "currentColor" : "rgba(0,0,0,0)" }, on: { textDecorationColor: "currentColor" } }}
+        transition={{ duration: reduce ? 0 : 0.35, ease: EASE_OUT, delay: reduce ? 0 : 0.25 }}
+      >
+        {text}
+      </motion.span>
+    </motion.p>
+  );
+}
+
 export function WatchesGrid() {
   const reduce = useReducedMotion();
   return (
