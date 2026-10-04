@@ -35,6 +35,7 @@ import { PlatformLogo } from "../PlatformLogo";
 import { YouTubeVideoCard } from "../YouTubeVideoCard";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { compactCount } from "../format";
+import { groupLabelRows } from "../panel-rules";
 
 const RELATED_VIDEO_PREVIEW = 5;
 
@@ -232,7 +233,7 @@ export function PeopleTab({
     [latestClaims, tags, filters, now],
   );
   const filteredTags = useMemo(() => tagBearingClaims(filtered), [filtered]);
-  const audienceHintRows = useMemo(() => audienceHintFrequency(filteredTags), [filteredTags]);
+  const audienceHintRows = useMemo(() => groupLabelRows(audienceHintFrequency(filteredTags)), [filteredTags]);
   const relatedVideoRows = useMemo(() => relatedVideoCatalogRows(filtered), [filtered]);
   const publisherRows = useMemo(() => newsPublisherRanking(filtered), [filtered]);
 

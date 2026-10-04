@@ -1,6 +1,7 @@
 "use client";
 
-import { ChevronDown, Tag, Filter, type LucideIcon } from "lucide-react";
+import { Tag, Filter, type LucideIcon } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import type { ReactNode } from "react";
 import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart } from "recharts";
@@ -12,26 +13,54 @@ import { ChartContainer, type ChartConfig } from "@/components/ui/chart";
 import { DONUT_MIN_DISTINCT, FUNNEL_COLOR, FUNNEL_STAGE_INDEX, HOOK_COLOR, CONTROL_SHELL_CLASS, FOCUS_RING_CLASS, VALUE_CLASS, iconProps, type FunnelStage, type HookType } from "../tokens";
 export { DONUT_MIN_DISTINCT };
 import type { DistributionItem } from "../DistributionPanel";
+import { DeltaMark } from "../DeltaMark";
+import { countChange } from "./panel-rules";
 
 
-export function FilterSelect({ icon: Icon, label, value, onChange, options }: { icon: LucideIcon; label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[] }) {
+export function ScaleDot({ color }: { color: string }) {
+  return <span aria-hidden className="size-2 shrink-0 rounded-full" style={{ backgroundColor: color }} />;
+}
+
+const MENU_CLASS =
+  "min-w-(--radix-select-trigger-width) rounded-sm border border-border bg-bg-raised text-fg shadow-[var(--shadow-lg)] ring-0 [&_[data-radix-select-viewport]]:h-auto! [&_[data-radix-select-viewport]]:p-1";
+const ITEM_CLASS =
+  "rounded-sm py-1.5 text-xs focus:bg-bg-inset focus:text-fg not-data-[variant=destructive]:focus:**:text-fg data-[state=checked]:font-medium";
+
+export function FilterSelect({ icon: Icon, label, value, onChange, options, optionIcon, includeAll = true }: { icon: LucideIcon; label: string; value: string; onChange: (value: string) => void; options: { value: string; label: string }[]; optionIcon?: (value: string) => ReactNode; /** false for a control with no "all" state (Sort): `options` is the full list and `label` the accessible name only. */ includeAll?: boolean }) {
+  const iconFor = (optionValue: string): ReactNode => (optionIcon ? (optionIcon(optionValue) ?? (optionValue === "all" ? <Icon aria-hidden className="size-3.5 text-muted-foreground" /> : null)) : null);
+  const all = includeAll ? [{ value: "all", label }, ...options] : options;
+  const selectedLabel = all.find((option) => option.value === value)?.label ?? label;
   return (
-    <label className={cn(CONTROL_SHELL_CLASS, "group gap-2 active:scale-[0.98] motion-reduce:active:scale-100")}>
-      <Icon className="size-3.5" />
-      <select value={value} onChange={(event) => onChange(event.target.value)} aria-label={label} className="appearance-none bg-transparent text-xs font-normal text-foreground outline-none focus:outline-none focus-visible:outline-none">
-        <option value="all">{label}</option>
-        {options.map((option) => <option key={option.value} value={option.value}>{option.label}</option>)}
-      </select>
-      <ChevronDown className="size-3 transition-transform duration-150 ease-[cubic-bezier(0.16,1,0.3,1)] group-focus-within:rotate-180 motion-reduce:transition-none motion-reduce:group-focus-within:rotate-0" />
-    </label>
+    <Select value={value} onValueChange={onChange}>
+      <SelectTrigger
+        aria-label={label}
+        className={cn(CONTROL_SHELL_CLASS, "group w-fit data-[size=default]:h-9 font-normal text-foreground hover:bg-bg-raised dark:bg-bg-raised dark:hover:bg-bg-raised active:scale-[0.98] motion-reduce:active:scale-100", FOCUS_RING_CLASS)}
+      >
+        <Icon aria-hidden className="size-3.5 text-fg-secondary" />
+        <SelectValue>{selectedLabel}</SelectValue>
+      </SelectTrigger>
+      <SelectContent position="popper" sideOffset={6} align="start" className={MENU_CLASS}>
+        {all.map((option) => (
+          <SelectItem key={option.value} value={option.value} className={ITEM_CLASS}>
+            {iconFor(option.value)}
+            {option.label}
+          </SelectItem>
+        ))}
+      </SelectContent>
+    </Select>
   );
 }
 
 export function DeltaTag({ delta }: { delta: number | null }) {
   if (delta === null) return null;
-  if (delta === 0) return <span className="font-mono text-[10px] text-muted-foreground">±0</span>;
-  const positive = delta > 0;
-  return <span className={cn("font-mono text-[10px]", positive ? "text-ok" : "text-danger")}>{positive ? "+" : ""}{delta}</span>;
+  const change = countChange(delta);
+  if (change === null) return <span className="font-mono text-[10px] text-muted-foreground">±0</span>;
+  return (
+    <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+      <DeltaMark direction={change.direction} />
+      {Intl.NumberFormat("en-US").format(change.amount)}
+    </span>
+  );
 }
 
 export function SummaryPanel({ title, subtitle, children, className }: { title: ReactNode; subtitle?: ReactNode; children: ReactNode; className?: string }) {
@@ -143,7 +172,7 @@ function HookFallback({
         <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
         <div>
           <p className="font-mono text-2xl font-semibold leading-none tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</p>
-          <p className="mt-1 text-[11px] capitalize text-muted-foreground">{hookName(row.label)}</p>
+          <p className="mt-1 text-[11px] text-muted-foreground">{hookName(row.label)}</p>
         </div>
       </div>
     );

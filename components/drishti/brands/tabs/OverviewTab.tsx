@@ -1,20 +1,20 @@
 "use client";
 
+import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
-import { assessTopicality } from "../topicality";
+import { offTopicIds } from "../topicality";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { checkedStateLabel } from "@/components/drishti/labels";
-import { adCreativeWindow, adFormatWord, isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow } from "../brand-model";
+import { isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
 import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
 import { SourceFreshness } from "../SourceFreshness";
-import { sourceName } from "@/components/drishti/labels";
+import { EvidenceGrid, evidenceCardCount } from "../EvidenceGrid";
 import { describeActiveBrandFilters, isDefaultBrandFilters, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
-import { displayClaimText, shortDate } from "../format";
 import type { DistributionItem } from "../../DistributionPanel";
 
 function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: EngineCoverageRow[]; latestClaims: ClaimDoc[]; previousClaims: ClaimDoc[] | null }) {
@@ -59,14 +59,7 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
   );
 }
 
-const NEWEST_COUNT = 4;
-
-function findingLabel(claim: ClaimDoc): string {
-  if (claim.metric !== "ads_transparency_creative") return displayClaimText(claim.text);
-  const win = adCreativeWindow(claim);
-  const seen = win.lastShown ?? win.firstShown ?? claim.fetchedAt;
-  return `${adFormatWord(win.format)} on ${sourceName(claim.sourceEngine)} · seen ${shortDate(seen)}`;
-}
+const NEWEST_COUNT = 6;
 
 function NewestFindings({
   latestClaims,
@@ -75,6 +68,9 @@ function NewestFindings({
   now,
   evidenceHref,
   resetFilters,
+  youtubeSnapshot,
+  newsSnapshot,
+  googleSnapshot,
 }: {
   latestClaims: ClaimDoc[];
   tags: ClaimDoc[];
@@ -82,22 +78,25 @@ function NewestFindings({
   now: number;
   evidenceHref: string;
   resetFilters: () => void;
+  youtubeSnapshot?: SnapshotDoc;
+  newsSnapshot?: SnapshotDoc;
+  googleSnapshot?: SnapshotDoc;
 }) {
   const brandId = latestClaims[0]?.brandId;
   const brand = useQuery(api.brands.getBrand, brandId ? { brandId } : "skip");
   const showOffTopic = filters.offtopic === "show";
-  const matching = latestClaims.filter(
-    (claim) =>
-      isContentClaim(claim) &&
-      matchesBrandFilters(claim, tagsForClaim(tags, claim), filters, now) &&
-      (showOffTopic || !brand || assessTopicality(claim, brand) === "on_topic"),
-  );
-  const newest = [...matching].sort((a, b) => b.fetchedAt.localeCompare(a.fetchedAt)).slice(0, NEWEST_COUNT);
+  const matching = useMemo(() => {
+    const content = latestClaims.filter((claim) => isContentClaim(claim));
+    const off = showOffTopic || !brand ? new Set<string>() : offTopicIds(content, new Map([[String(brand._id), brand]]));
+    return content.filter(
+      (claim) => !off.has(String(claim._id)) && matchesBrandFilters(claim, tagsForClaim(tags, claim), filters, now),
+    );
+  }, [latestClaims, tags, filters, now, showOffTopic, brand]);
   const activeFilters = isDefaultBrandFilters(filters) ? null : describeActiveBrandFilters(filters);
   return (
-    <section aria-label="Newest findings" className="space-y-3">
+    <section aria-label="Newest evidence" className="space-y-3">
       <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="type-headline text-fg">Newest findings</h2>
+        <h2 className="type-headline text-fg">Newest evidence</h2>
         {activeFilters ? (
           <p className="text-xs text-muted-foreground">
             Filtered to {activeFilters}.{" "}
@@ -107,23 +106,19 @@ function NewestFindings({
           </p>
         ) : null}
       </div>
-      {newest.length === 0 ? (
-        <p className="rounded-lg border border-dashed border-border px-4 py-3 text-sm text-fg-secondary">No findings to show for this check.</p>
-      ) : (
-        <ul className="divide-y divide-border rounded-lg border border-border">
-          {newest.map((claim) => (
-            <li key={String(claim._id)} className="grid grid-cols-[auto_1fr_auto] items-center gap-3 px-4 py-2.5 text-sm">
-              <PlatformLogo engine={claim.sourceEngine} className="size-4" />
-              <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="min-w-0 truncate text-fg hover:underline">
-                {findingLabel(claim)}
-              </a>
-              <span className="font-mono text-[11px] text-muted-foreground">{shortDate(claim.fetchedAt)}</span>
-            </li>
-          ))}
-        </ul>
-      )}
-      <Link href={evidenceHref} className="inline-flex text-sm text-accent hover:underline">
-        See all {Intl.NumberFormat("en-US").format(matching.length)} in Evidence
+      <EvidenceGrid
+        claims={matching}
+        youtubeSnapshot={youtubeSnapshot}
+        newsSnapshot={newsSnapshot}
+        googleSnapshot={googleSnapshot}
+        sort="newest"
+        maxCards={NEWEST_COUNT}
+        columnsClass="columns-1 gap-4 sm:columns-2 lg:columns-3"
+        emptyMessage="No findings to show for this check."
+        pageLabel="Overview"
+      />
+      <Link href={evidenceHref} className="inline-flex h-8 items-center rounded-md border border-border px-3 text-sm font-medium text-accent hover:bg-muted">
+        See all {Intl.NumberFormat("en-US").format(evidenceCardCount(matching))} in Evidence
       </Link>
     </section>
   );
@@ -143,6 +138,9 @@ export function OverviewTab({
   resetFilters,
   now,
   evidenceHref = "?tab=evidence",
+  youtubeSnapshot,
+  newsSnapshot,
+  googleSnapshot,
 }: {
   latestClaims: ClaimDoc[];
   previousClaims: ClaimDoc[] | null;
@@ -157,6 +155,9 @@ export function OverviewTab({
   resetFilters: () => void;
   now: number;
   evidenceHref?: string;
+  youtubeSnapshot?: SnapshotDoc;
+  newsSnapshot?: SnapshotDoc;
+  googleSnapshot?: SnapshotDoc;
 }) {
   const handleSelectHook = (hookType: string) => setFilter("hook", filters.hook === hookType ? "all" : hookType);
   const handleSelectFunnel = (stage: FunnelStage) => setFilter("funnel", filters.funnel === stage ? "all" : stage);
@@ -201,7 +202,7 @@ export function OverviewTab({
           <FunnelPanel items={funnelItems} taggedCount={tags.length} totalFindings={totalFindings} selectedStage={filters.funnel} onSelectStage={handleSelectFunnel} />
         </SummaryPanel>
       </div>
-      <NewestFindings latestClaims={latestClaims} tags={tags} filters={filters} now={now} evidenceHref={evidenceHref} resetFilters={resetFilters} />
+      <NewestFindings latestClaims={latestClaims} tags={tags} filters={filters} now={now} evidenceHref={evidenceHref} resetFilters={resetFilters} youtubeSnapshot={youtubeSnapshot} newsSnapshot={newsSnapshot} googleSnapshot={googleSnapshot} />
     </div>
   );
 }

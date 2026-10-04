@@ -78,3 +78,10 @@ export function checkedStateLabel(state: "ok" | "stale" | "missing" | "not_run" 
       return humanize(state);
   }
 }
+
+const AD_FORMAT_NAMES: Readonly<Record<string, string>> = {
+  text: "Text ads",
+  image: "Image ads",
+  video: "Video ads",
+  unknown: "Format not stated",
+};

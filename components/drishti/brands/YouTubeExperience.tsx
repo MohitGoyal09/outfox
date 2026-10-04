@@ -2,7 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { Filter, Tag, Video } from "lucide-react";
-import { HOOK_TYPES, FUNNEL_STAGES, iconProps } from "../tokens";
+import { HOOK_TYPES, FUNNEL_STAGES, HOOK_COLOR, FUNNEL_COLOR, isHookType, isFunnelStage, iconProps } from "../tokens";
 import { hookName, stageName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import {
@@ -20,7 +20,7 @@ import {
   type SnapshotDoc,
   type YoutubeVideoGroup,
 } from "./brand-model";
-import { FilterSelect, FunnelPanel, HookChart, SummaryPanel } from "./EvidencePanels";
+import { FilterSelect, FunnelPanel, ScaleDot, HookChart, SummaryPanel } from "./EvidencePanels";
 import { MetricInfo } from "../MetricInfo";
 import { shortDate } from "./format";
 import { YouTubeVideoCard } from "./YouTubeVideoCard";
@@ -118,8 +118,8 @@ export function YouTubeExperience({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hookName(hook) }))} />
-        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stageName(stage) }))} />
+        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hookName(hook) }))} optionIcon={(value) => (isHookType(value) ? <ScaleDot color={HOOK_COLOR[value]} /> : undefined)} />
+        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stageName(stage) }))} optionIcon={(value) => (isFunnelStage(value) ? <ScaleDot color={FUNNEL_COLOR[value]} /> : undefined)} />
       </div>
 
       <div>

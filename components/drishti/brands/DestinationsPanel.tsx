@@ -11,6 +11,7 @@ import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
 import { iconProps } from "../tokens";
 import { signalClaims, type ClaimDoc } from "./brand-model";
+import { isYoutubeVideoUrl } from "./panel-rules";
 
 type Destination = { key: string; url: string; count: number; firstSeen: string; lastSeen: string; engines: string[] };
 
@@ -19,6 +20,7 @@ function normalizeUrl(value: string): string | null {
 }
 
 function collectionArtifactLabel(url: URL): string | null {
+  if (isYoutubeVideoUrl(url.toString())) return "a YouTube video";
   const host = url.hostname.replace(/^www\./, "");
   if (host === "adstransparency.google.com") return "Google's Ads Transparency viewer";
   if (host.endsWith("googleusercontent.com")) return "Google's ad-serving/preview infrastructure";
@@ -74,7 +76,7 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
           title="No destination URLs yet."
           description={
             artifactCount > 0
-              ? `A Search or YouTube check with evidence links will populate this view. (${artifactCount} finding${artifactCount === 1 ? "" : "s"} pointed only at Google's own search/ad-viewer/ad-serving infrastructure, never a brand destination, so none are ranked here.)`
+              ? `A Search or YouTube check with evidence links will populate this view. (${artifactCount} finding${artifactCount === 1 ? "" : "s"} pointed only at Google's own search/ad-viewer/ad-serving infrastructure or at single YouTube videos, never a brand destination, so none are ranked here.)`
               : "A Search or YouTube check with evidence links will populate this view."
           }
         />
@@ -152,8 +154,8 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
             {artifactCount > 0 ? (
               <p className="border-t border-border px-4 py-2 text-[11px] leading-4 text-muted-foreground">
                 {artifactCount} further finding{artifactCount === 1 ? "" : "s"} pointed only at the search page we
-                queried, Google&apos;s Ads Transparency viewer, or Google&apos;s ad-serving infrastructure, never a
-                brand
+                queried, Google&apos;s Ads Transparency viewer, Google&apos;s ad-serving infrastructure, or a
+                single YouTube video, never a brand
                 destination, so they are excluded from this ranking.
               </p>
             ) : null}

@@ -138,6 +138,8 @@ export function EvidenceGrid({
   pageLabel,
   view = "cards",
   tags = [],
+  maxCards,
+  columnsClass = "columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4",
 }: {
   claims: ClaimDoc[];
   youtubeSnapshot?: SnapshotDoc;
@@ -148,6 +150,8 @@ export function EvidenceGrid({
   pageLabel?: string;
   view?: "cards" | "table";
   tags?: ClaimDoc[];
+  maxCards?: number;
+  columnsClass?: string;
 }) {
   const [limit, setLimit] = useState(PAGE_SIZE);
   const cards = useMemo(() => sortCards(buildCards(claims), sort), [claims, sort]);
@@ -163,7 +167,7 @@ export function EvidenceGrid({
     );
   }
 
-  const visible = cards.slice(0, limit);
+  const visible = cards.slice(0, maxCards ?? limit);
 
   return (
     <>
@@ -174,7 +178,7 @@ export function EvidenceGrid({
           )}
         />
       ) : (
-      <div className="columns-1 gap-4 sm:columns-2 lg:columns-3 xl:columns-4 [&>*]:mb-4 [&>*]:break-inside-avoid">
+      <div className={`${columnsClass} [&>*]:mb-4 [&>*]:break-inside-avoid`}>
         {visible.map((card) =>
           card.kind === "video" ? (
             <YouTubeVideoCard
@@ -202,7 +206,7 @@ export function EvidenceGrid({
         )}
       </div>
       )}
-      {cards.length > limit ? (
+      {maxCards === undefined && cards.length > limit ? (
         <div className="mt-4 flex justify-center">
           <Button variant="outline" size="sm" onClick={() => setLimit((current) => current + PAGE_SIZE)}>
             Load more

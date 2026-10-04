@@ -18,8 +18,14 @@ import { HOOK_COLOR, iconProps, type HookType } from "../../tokens";
 import { hookName } from "@/components/drishti/labels";
 import type { ClaimDoc } from "../brand-model";
 import { displayClaimText, shortDate } from "../format";
+import { DeltaMark } from "../../DeltaMark";
+import { stripEmDashes } from "@/lib/noEmDash";
 import { RelativeTime } from "@/components/drishti/RelativeTime";
 
+
+function modelText(text: string): string {
+  return stripEmDashes(displayClaimText(text));
+}
 
 type BrandInsightSection = "positioning" | "audience" | "problem";
 
@@ -54,7 +60,7 @@ export function earlierVerdictRows(entries: FeedEntry[]): EarlierVerdictRow[] {
     if (entry.mode === "llm") {
       const lead = bucketSentences(entry.sentences).positioning[0];
       if (lead && lead.text.trim().length > 0) {
-        rows.push({ id: String(entry._id), generatedAt: entry.generatedAt, kind: "llm", text: displayClaimText(lead.text) });
+        rows.push({ id: String(entry._id), generatedAt: entry.generatedAt, kind: "llm", text: modelText(lead.text) });
       }
       continue;
     }
@@ -128,7 +134,7 @@ function DnaSectionCard({
           <ul className="space-y-2.5">
             {sentences.map((sentence, index) => (
               <li key={index}>
-                <p className="text-[13px] leading-5 text-fg">{displayClaimText(sentence.text)}</p>
+                <p className="text-[13px] leading-5 text-fg">{modelText(sentence.text)}</p>
                 <CitationLinks citedClaimIds={sentence.citedClaimIds} claimsById={claimsById} />
               </li>
             ))}
@@ -196,16 +202,16 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
             </li>
             {movers.map((row) => (
               <li key={row.hook} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[12px]">
-                <span className="flex min-w-0 items-center gap-2 capitalize">
+                <span className="flex min-w-0 items-center gap-2">
                   <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.hook as HookType] }} />
                   <span className="truncate">{hookName(row.hook)}</span>
                 </span>
                 <span className="font-mono tabular-nums text-muted-foreground">
                   {row.before} → {row.after}
                 </span>
-                <span className={cn("font-mono text-[11px] tabular-nums", row.delta > 0 ? "text-ok" : "text-danger")}>
-                  {row.delta > 0 ? "+" : ""}
-                  {row.delta}
+                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                  <DeltaMark direction={row.delta > 0 ? "up" : "down"} />
+                  {Math.abs(row.delta)}
                 </span>
               </li>
             ))}
@@ -312,7 +318,7 @@ export function InsightsTab({
               ) : (
                 <>
                   <div>
-                    <p className="text-lg font-semibold leading-6 tracking-[-0.01em] text-fg">{displayClaimText(buckets.positioning[0].text)}</p>
+                    <p className="text-lg font-semibold leading-6 tracking-[-0.01em] text-fg">{modelText(buckets.positioning[0].text)}</p>
                     <CitationLinks citedClaimIds={buckets.positioning[0].citedClaimIds} claimsById={claimsById} />
                   </div>
                   {buckets.positioning.length > 1 ? (
@@ -321,7 +327,7 @@ export function InsightsTab({
                         <li key={index} className="flex gap-2.5">
                           <span className="mt-0.5 font-mono text-[11px] text-muted-foreground">{index + 1}</span>
                           <div className="min-w-0">
-                            <p className="text-[13px] leading-5 text-fg">{displayClaimText(sentence.text)}</p>
+                            <p className="text-[13px] leading-5 text-fg">{modelText(sentence.text)}</p>
                             <CitationLinks citedClaimIds={sentence.citedClaimIds} claimsById={claimsById} />
                           </div>
                         </li>

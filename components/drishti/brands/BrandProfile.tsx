@@ -327,6 +327,9 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 resetFilters={resetFilters}
                 now={now}
                 evidenceHref={evidenceHref}
+                youtubeSnapshot={latestYoutubeVideoSnapshot}
+                newsSnapshot={latestGoogleNewsSnapshot}
+                googleSnapshot={latestGoogleSnapshot}
               />
             </TabsContent>
             <TabsContent value="insights" className="mt-0 py-5">

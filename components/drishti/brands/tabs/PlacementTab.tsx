@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo } from "react";
+import { useQuery } from "convex/react";
+import { api } from "@/convex/_generated/api";
 import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
 import { BadgeDollarSign, Newspaper, Store } from "lucide-react";
@@ -31,6 +33,8 @@ import { DestinationsPanel, destinationRows } from "../DestinationsPanel";
 import { EvidenceCatalogPanel } from "../EvidenceCatalogPanel";
 import { EvidenceLink } from "../EvidenceLink";
 import { NotFoundInCheck } from "../NotFoundInCheck";
+import { adFormatName } from "@/components/drishti/labels";
+import { isYoutubeHashtagUrl, splitOwnStore } from "../panel-rules";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { isGarbledDescriptionLinkAnchor, isVideoTimestampAnchor, parseListingVendor, shortDate } from "../format";
 import { PlatformLogo } from "../PlatformLogo";
@@ -107,6 +111,10 @@ export function shouldShowRunLengthTable(rows: readonly AdRuntimeRow[]): boolean
   return rows.some((row) => row.runDays !== null);
 }
 
+function isHiddenDescriptionLink(claim: ClaimDoc): boolean {
+  return claim.metric === "youtube_description_link" && isYoutubeHashtagUrl(typeof claim.value === "string" ? claim.value : claim.evidenceUrl);
+}
+
 export function PlacementTab({
   latestClaims,
   tags,
@@ -126,21 +134,26 @@ export function PlacementTab({
   const adFormatRows = useMemo(() => {
     const counts = new Map<string, number>();
     for (const claim of adCreativeClaims(filtered)) {
-      const format = typeof claim.value === "string" ? claim.value : "unknown";
+      const format = typeof claim.value === "string" ? claim.value.trim().toLowerCase() : "unknown";
       counts.set(format, (counts.get(format) ?? 0) + 1);
     }
     return [...counts.entries()]
-      .map(([label, count]) => ({ label: label.replaceAll("_", " "), count }))
-      .sort((a, b) => b.count - a.count);
+      .map(([format, count]) => ({ label: adFormatName(format), count }))
+      .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
   }, [filtered]);
 
   const shortsCount = useMemo(() => youtubeShortResultClaims(filtered).length, [filtered]);
   const youtubeAdCount = useMemo(() => youtubeAdResultClaims(filtered).length, [filtered]);
-  const retailerRows = useMemo(() => retailerVendorRanking(filtered), [filtered]);
+  const brandId = latestClaims[0]?.brandId;
+  const brand = useQuery(api.brands.getBrand, brandId ? { brandId } : "skip");
+  const { retailers: retailerRows, ownStoreCount } = useMemo(() => {
+    const ranked = retailerVendorRanking(filtered);
+    return brand ? splitOwnStore(ranked, brand) : { retailers: ranked, ownStoreCount: 0 };
+  }, [filtered, brand]);
   const publisherRows = useMemo(() => newsPublisherRanking(filtered), [filtered]);
   const shoppingResultRows = useMemo(() => shoppingResultCatalogRows(filtered), [filtered]);
   const descriptionLinkRows = useMemo(
-    () => sanitizeDescriptionLinkRows(descriptionLinkCatalogRows(filtered)),
+    () => sanitizeDescriptionLinkRows(descriptionLinkCatalogRows(filtered.filter((claim) => !isHiddenDescriptionLink(claim)))),
     [filtered],
   );
 
@@ -193,6 +206,7 @@ export function PlacementTab({
         definition="How many product listings each named retailer contributed. It counts listings we captured, not sales or stock."
         icon={<Store className="size-4 text-accent" />}
         rows={retailerRows}
+        note={ownStoreCount > 0 ? `Own store: ${ownStoreCount} listing${ownStoreCount === 1 ? "" : "s"}` : undefined}
         emptyTitle="No named retailers yet."
         emptyDescription="Ranks the real retailer named in each SERP product listing, fills in once a listing names one."
       />

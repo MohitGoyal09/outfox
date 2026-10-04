@@ -6,7 +6,8 @@ import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { BarChart3, Filter, Layers, Search as SearchIcon, Tag } from "lucide-react";
 import { ChartContainer, ChartLegend, ChartLegendContent, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { cn } from "@/lib/utils";
-import { HOOK_TYPES, FUNNEL_STAGES, LABEL_CLASS, iconProps, sourceColor } from "../tokens";
+import { HOOK_TYPES, FUNNEL_STAGES, HOOK_COLOR, FUNNEL_COLOR, isHookType, isFunnelStage, LABEL_CLASS, iconProps, sourceColor } from "../tokens";
+import { PlatformLogo } from "./PlatformLogo";
 import { hookName, stageName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import {
@@ -23,7 +24,7 @@ import {
   type SnapshotDoc,
 } from "./brand-model";
 import { EvidenceCard } from "./EvidenceCard";
-import { FilterSelect, FunnelPanel, HookChart, SummaryPanel } from "./EvidencePanels";
+import { FilterSelect, FunnelPanel, ScaleDot, HookChart, SummaryPanel } from "./EvidencePanels";
 import { MetricInfo } from "../MetricInfo";
 import { NewsEvidenceCard } from "./NewsEvidenceCard";
 import { runTickLabel, shortDate } from "./format";
@@ -206,9 +207,9 @@ export function SearchExperience({
       </div>
 
       <div className="flex flex-wrap items-center gap-2">
-        <FilterSelect icon={BarChart3} label="All engines" value={engineFilter} onChange={setEngineFilter} options={ENGINE_FILTER_OPTIONS.map((engine) => ({ value: engine, label: ENGINE_TAB_LABEL[engine] }))} />
-        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hookName(hook) }))} />
-        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stageName(stage) }))} />
+        <FilterSelect icon={BarChart3} label="All engines" value={engineFilter} onChange={setEngineFilter} options={ENGINE_FILTER_OPTIONS.map((engine) => ({ value: engine, label: ENGINE_TAB_LABEL[engine] }))} optionIcon={(value) => (value === "all" ? undefined : <PlatformLogo engine={value} />)} />
+        <FilterSelect icon={Tag} label="All hooks" value={hookFilter} onChange={setHookFilter} options={HOOK_TYPES.map((hook) => ({ value: hook, label: hookName(hook) }))} optionIcon={(value) => (isHookType(value) ? <ScaleDot color={HOOK_COLOR[value]} /> : undefined)} />
+        <FilterSelect icon={Filter} label="All funnel stages" value={funnelFilter} onChange={setFunnelFilter} options={FUNNEL_STAGES.map((stage) => ({ value: stage, label: stageName(stage) }))} optionIcon={(value) => (isFunnelStage(value) ? <ScaleDot color={FUNNEL_COLOR[value]} /> : undefined)} />
       </div>
 
       <div className="space-y-3">

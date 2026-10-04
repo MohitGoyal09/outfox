@@ -11,6 +11,7 @@ export function CountListPanel({
   rows,
   emptyTitle,
   emptyDescription,
+  note,
 }: {
   title: string;
   definition: string;
@@ -18,6 +19,7 @@ export function CountListPanel({
   rows: { label: string; count: number }[];
   emptyTitle: string;
   emptyDescription: string;
+  note?: string;
 }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
@@ -40,6 +42,7 @@ export function CountListPanel({
             ))}
           </ul>
         )}
+        {note && rows.length > 0 ? <p className="mt-3 text-[11px] leading-4 text-muted-foreground">{note}</p> : null}
       </div>
     </Panel>
   );

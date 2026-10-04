@@ -15,8 +15,8 @@ import type { LabeledCount } from "./brand-model";
 
 const CHART_HEIGHT = 220;
 
-const YAXIS_WIDTH = 172;
-const LABEL_BUDGET = 24;
+const YAXIS_WIDTH = 208;
+const LABEL_CHARS_PER_LINE = 34;
 
 export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyDescription, colorFor, formatLabel, loading = false }: { title: string; /** Plain-language explanation of what this count measures, rendered as a `?` beside the title. */ definition?: ReactNode; rows: LabeledCount[]; emptyTitle: string; emptyDescription: string; colorFor?: (label: string) => string; /** Display-only transform for a raw stored label (e.g. a fixed hookType id), `colorFor`/the chart's own grouping still key off the raw `label`, only the rendered text changes. */ formatLabel?: (label: string) => string; /** True while the caller's own query for `rows` is still in flight. Renders a skeleton instead of the empty state, an unresolved query is not the same as a resolved-and-empty one (docs/HANDOFF.md §2). */ loading?: boolean }) {
   const reduceMotion = useReducedMotion();
@@ -47,7 +47,7 @@ export function RankedCatalogChart({ title, definition, rows, emptyTitle, emptyD
             <BarChart accessibilityLayer data={top} layout="vertical" margin={{ left: 8, right: 24, top: 4, bottom: 4 }}>
               <CartesianGrid horizontal={false} stroke="var(--border)" />
               <XAxis type="number" allowDecimals={false} tickLine={false} axisLine={false} tick={{ fontSize: 10 }} />
-              <YAxis dataKey="displayLabel" type="category" width={YAXIS_WIDTH} tickLine={false} axisLine={false} tick={CategoryAxisTick(LABEL_BUDGET)} interval={0} />
+              <YAxis dataKey="displayLabel" type="category" width={YAXIS_WIDTH} tickLine={false} axisLine={false} tick={CategoryAxisTick(LABEL_CHARS_PER_LINE)} interval={0} />
               <ChartTooltip cursor={{ fill: "var(--accent)", opacity: 0.08 }} content={<ChartTooltipContent hideLabel />} />
               <Bar dataKey="count" fill="var(--color-count)" radius={3} barSize={16} isAnimationActive={!reduceMotion}>
                 {top.map((row) => <Cell key={row.label} fill={row.fill} />)}

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState } from "react";
-import { BarChart3, CalendarRange, Filter, RotateCcw, Tag } from "lucide-react";
+import { ArrowUpDown, BarChart3, CalendarRange, Filter, RotateCcw, Tag } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
-import { CONTROL_SHELL_CLASS } from "@/components/drishti/tokens";
-import { FilterSelect } from "../EvidencePanels";
+import { CONTROL_SHELL_CLASS, FUNNEL_COLOR, HOOK_COLOR, isFunnelStage, isHookType } from "@/components/drishti/tokens";
+import { PlatformLogo } from "../PlatformLogo";
+import { FilterSelect, ScaleDot } from "../EvidencePanels";
 import { SORT_OPTIONS, type BrandFilters, type FilterOption, type FreshnessValue } from "./filters-model";
 
 export function FilterBar({
@@ -38,6 +39,7 @@ export function FilterBar({
         value={filters.engine}
         onChange={(value) => setFilter("engine", value)}
         options={engineOptions}
+        optionIcon={(value) => (value === "all" ? undefined : <PlatformLogo engine={value} />)}
       />
       <FilterSelect
         icon={Tag}
@@ -45,6 +47,7 @@ export function FilterBar({
         value={filters.hook}
         onChange={(value) => setFilter("hook", value)}
         options={hookOptions}
+        optionIcon={(value) => (isHookType(value) ? <ScaleDot color={HOOK_COLOR[value]} /> : undefined)}
       />
       <FilterSelect
         icon={Filter}
@@ -52,6 +55,7 @@ export function FilterBar({
         value={filters.funnel}
         onChange={(value) => setFilter("funnel", value)}
         options={funnelOptions}
+        optionIcon={(value) => (isFunnelStage(value) ? <ScaleDot color={FUNNEL_COLOR[value]} /> : undefined)}
       />
       <FilterSelect
         icon={CalendarRange}
@@ -60,21 +64,14 @@ export function FilterBar({
         onChange={(value) => setFilter("freshness", value as FreshnessValue)}
         options={freshnessOptions}
       />
-      <label className={cn(CONTROL_SHELL_CLASS, "gap-2")}>
-        <span className="sr-only">Sort</span>
-        <select
-          aria-label="Sort"
-          value={filters.sort}
-          onChange={(event) => setFilter("sort", event.target.value as BrandFilters["sort"])}
-          className="appearance-none bg-transparent text-xs font-normal text-foreground outline-none"
-        >
-          {sortOptions.map((option) => (
-            <option key={option.value} value={option.value}>
-              {option.label}
-            </option>
-          ))}
-        </select>
-      </label>
+      <FilterSelect
+        icon={ArrowUpDown}
+        label="Sort"
+        value={filters.sort}
+        onChange={(value) => setFilter("sort", value as BrandFilters["sort"])}
+        options={sortOptions}
+        includeAll={false}
+      />
       {isDefault ? null : (
         <Button variant="ghost" size="sm" className="h-9 gap-1.5 px-2 text-xs text-muted-foreground" onClick={resetFilters}>
           <RotateCcw className="size-3.5" />

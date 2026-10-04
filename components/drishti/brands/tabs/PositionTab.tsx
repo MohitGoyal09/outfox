@@ -28,6 +28,7 @@ import {
 } from "../brand-model";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
 import { displayClaimText, shortDate } from "../format";
+import { groupLabelRows, hiddenConversationalNote, splitConversational } from "../panel-rules";
 
 const PLACEHOLDER_TAG_VALUES = new Set(["unspecified", "none", "n/a", "unknown", ""]);
 export function isPlaceholderTagValue(value: string): boolean {
@@ -40,7 +41,8 @@ export function isPlaceholderTagValue(value: string): boolean {
   );
 }
 
-function AiOverviewPanel({ blocks }: { blocks: ClaimDoc[] }) {
+function AiOverviewPanel({ blocks, hiddenCount }: { blocks: ClaimDoc[]; hiddenCount: number }) {
+  const hiddenNote = hiddenConversationalNote(hiddenCount);
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
@@ -67,6 +69,7 @@ function AiOverviewPanel({ blocks }: { blocks: ClaimDoc[] }) {
               </li>
             ))}
           </ul>
+          {hiddenNote !== null ? <p className="mt-3 text-[11px] leading-4 text-muted-foreground">{hiddenNote}.</p> : null}
       </div>
     </Panel>
   );
@@ -179,15 +182,8 @@ function HookMixDriftChart({ rows }: { rows: ReturnType<typeof hookMixDrift> }) 
 }
 
 export function normalizeCtaRows(facet: readonly { value: string; count: number }[] | undefined): { label: string; count: number }[] {
-  const counts = new Map<string, number>();
-  for (const row of facet ?? []) {
-    const normalized = row.value.trim().toLowerCase();
-    if (isPlaceholderTagValue(normalized)) continue;
-    counts.set(normalized, (counts.get(normalized) ?? 0) + row.count);
-  }
-  return [...counts.entries()]
-    .map(([label, count]) => ({ label, count }))
-    .sort((a, b) => b.count - a.count || a.label.localeCompare(b.label));
+  const real = (facet ?? []).filter((row) => !isPlaceholderTagValue(row.value)).map((row) => ({ label: row.value, count: row.count }));
+  return groupLabelRows(real);
 }
 
 export function PositionTab({
@@ -216,15 +212,16 @@ export function PositionTab({
   );
   const filteredTags = useMemo(() => tagBearingClaims(filteredLatest), [filteredLatest]);
   const hookTypeRows = useMemo(() => hookTypeFrequency(filteredTags), [filteredTags]);
-  const themeRows = useMemo(() => themeFrequency(filteredTags).filter((row) => !isPlaceholderTagValue(row.label)), [filteredTags]);
+  const themeRows = useMemo(() => groupLabelRows(themeFrequency(filteredTags).filter((row) => !isPlaceholderTagValue(row.label))), [filteredTags]);
   const valuePropRows = useMemo(
-    () => valuePropFrequency(filteredTags).filter((row) => !isPlaceholderTagValue(row.label)),
+    () => groupLabelRows(valuePropFrequency(filteredTags).filter((row) => !isPlaceholderTagValue(row.label))),
     [filteredTags],
   );
 
   const ctaFacet = useQuery(api.claims.ctaFacetByBrand, { brandId: brand._id });
   const ctaRows = useMemo(() => normalizeCtaRows(ctaFacet), [ctaFacet]);
-  const aiBlocks = useMemo(() => aiOverviewClaims(filteredLatest), [filteredLatest]);
+  const aiSplit = useMemo(() => splitConversational(aiOverviewClaims(filteredLatest)), [filteredLatest]);
+  const aiBlocks = aiSplit.kept;
   const pricePointRows = useMemo(() => pricePoints(filteredLatest), [filteredLatest]);
   const driftData = useMemo(() => driftRows(filteredLatest, filteredPrevious), [filteredLatest, filteredPrevious]);
 
@@ -233,7 +230,7 @@ export function PositionTab({
     themeRows.length === 0 ? "Themes" : null,
     valuePropRows.length === 0 ? "Value propositions" : null,
     ctaFacet !== undefined && ctaRows.length === 0 ? "CTA mix" : null,
-    aiBlocks.length === 0 ? "Google AI Overview" : null,
+    aiBlocks.length === 0 && aiSplit.hidden === 0 ? "Google AI Overview" : null,
     pricePointRows.length === 0 ? "Price ladder" : null,
     driftData.length === 0 ? "Hook-mix drift" : null,
   ].filter((item): item is string => item !== null);
@@ -247,7 +244,7 @@ export function PositionTab({
           (measured 0 of 56 ok Google snapshots). The extractor stays in
           convex/pipeline/extractClaims.ts; the fix, if ever wanted, is a
           second entity-query call, not a change here. */}
-      {aiBlocks.length > 0 ? <AiOverviewPanel blocks={aiBlocks} /> : null}
+      {aiBlocks.length > 0 || aiSplit.hidden > 0 ? <AiOverviewPanel blocks={aiBlocks} hiddenCount={aiSplit.hidden} /> : null}
       {hookTypeRows.length > 0 ? (
         <RankedCatalogChart
           title="Hook type"
