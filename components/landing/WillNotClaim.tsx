@@ -7,11 +7,3 @@ function Unlinked() {
     </svg>
   );
 }
-
-export function WillNotClaim() {
-  return (
-    <section id="limits" aria-labelledby="limits-heading" className="scroll-mt-16 bg-accent text-accent-ink">
-      
-    </section>
-  );
-}

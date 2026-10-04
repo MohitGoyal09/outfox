@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, type ReactNode } from "react";
+import { useState } from "react";
 import Image from "next/image";
 import { hookName } from "@/components/drishti/labels";
 import { EngineTag } from "@/components/drishti/brands/PlatformLogo";
 import { HOOK_COLOR, isHookType } from "@/components/drishti/tokens";
-import { cn } from "@/lib/utils";
+import { CardContainer, CardItem } from "@/components/aceternity/3d-card";
+import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
 import { AD_CREATIVE, ASK, CHECK_DATE, HOOK_MATRIX, HOOK_ORDER, OFF_TOPIC, TRENDS } from "./landing-data";
 
 function HookTable() {
@@ -43,20 +44,11 @@ function AskAnswer() {
 }
 
 function AdCard() {
-  return (
-    <div className="overflow-hidden rounded-[14px] border border-border bg-bg-raised shadow-xs">
-      <img
-        src={a.image}
-        alt="SUGAR Cosmetics ad creative: Beauty Favourites at 249 rupees"
-        width={a.width}
-        height={a.height}
-        loading="lazy"
-        referrerPolicy="no-referrer"
-        className="aspect-[5/4] w-full border-b border-border object-cover object-[50%_43%]"
-      />
-      
-    </div>
-  );
+}
+
+function OffTopic() {
+  const [showing, setShowing] = useState(true);
+  const o = OFF_TOPIC;
 }
 
 const PLOT = { w: 360, h: 150, left: 6, right: 96, top: 10, bottom: 8 };
@@ -92,63 +84,5 @@ function TrendsLines() {
         
       </figcaption>
     </figure>
-  );
-}
-
-export function Bento() {
-  return (
-    <section aria-labelledby="bento-heading" className="border-t border-border bg-bg-raised">
-      <div className="l-wrap py-20 lg:py-28">
-        <h2 id="bento-heading" className="l-h2 max-w-[22ch] text-fg">
-          What you can see that a search tab does not show you.
-        </h2>
-        <p className="num mt-4 text-xs text-fg-tertiary">Every visual below is real data from the check of .</p>
-        <div className="mt-10 grid gap-4 md:grid-cols-2 lg:grid-cols-12">
-          <Tile
-            id="tile-hooks"
-            title="Hook mix by brand"
-            caption="Each brand's share of tagged findings per hook. The colour names the hook; the depth is the share."
-            className="md:col-span-2 lg:col-span-8"
-          >
-            <HookTable />
-          </Tile>
-          <Tile
-            id="tile-ask"
-            title="Answers you can check"
-            caption="Every sentence cites a stored finding. Anything untraceable is cut."
-            className="md:col-span-2 lg:col-span-4"
-          >
-            <AskAnswer />
-          </Tile>
-          <Tile
-            id="tile-ads"
-            title="Ads, with how long they ran"
-            caption="From Google Ads Transparency: the creative, its format and how many days it has run."
-            className="lg:col-span-4"
-          >
-            <AdCard />
-          </Tile>
-          <Tile
-            id="tile-trends"
-            title="Demand over time"
-            caption="Google Trends interest for each brand, compared only within the group it was fetched with."
-            className="lg:col-span-4"
-          >
-            <TrendsLines />
-          </Tile>
-          
-          <Tile
-            id="tile-boards"
-            title="Boards"
-            caption="Save evidence while you browse. Every card keeps its source."
-            className="md:col-span-2 lg:col-span-12"
-          >
-            <div className="h-56 overflow-hidden rounded-[10px] border border-border bg-bg-raised sm:h-64 lg:h-72">
-              <Image src="/landing/board.webp" alt="A board of saved evidence cards in four columns." width={1440} height={770} sizes="(min-width: 1280px) 1120px, 100vw" className="h-full w-full object-cover object-left-top" />
-            </div>
-          </Tile>
-        </div>
-      </div>
-    </section>
   );
 }

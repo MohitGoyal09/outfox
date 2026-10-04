@@ -75,9 +75,9 @@ export const NUMBERS = {
 };
 
 export const SOURCES = [
-  { engine: "google", name: "Google Search" },
-  { engine: "google_ads_transparency_center", name: "Google Ads Transparency" },
-  { engine: "youtube", name: "YouTube" },
-  { engine: "google_news", name: "Google News" },
-  { engine: "google_trends", name: "Google Trends" },
+  { engine: "google", name: "Google Search", gives: "Which pages come up for a brand's search terms, and what they promise." },
+  { engine: "google_ads_transparency_center", name: "Google Ads Transparency", gives: "Ads a brand ran, with dates. Not spend." },
+  { engine: "youtube", name: "YouTube", gives: "Videos about the brand and by it, with titles and channels." },
+  { engine: "google_news", name: "Google News", gives: "News coverage of the brand, with the publisher and date." },
+  { engine: "google_trends", name: "Google Trends", gives: "Relative search interest over time. Not sales." },
 ] as const;

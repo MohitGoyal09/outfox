@@ -1,8 +1,10 @@
 "use client";
 
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react";
+import { motion, useInView, useReducedMotion } from "motion/react";
 import { EngineTag } from "@/components/drishti/brands/PlatformLogo";
 import { cn } from "@/lib/utils";
+import { EASE_OUT } from "@/components/aceternity/motion-utils";
 import { CHECK_DATE, HERO_CLAIM, TRAIL_EVIDENCE, type Evidence } from "./landing-data";
 import { DotGrid } from "./DotGrid";
 
@@ -61,6 +63,9 @@ export function TrailVisual({ className }: { className?: string }) {
   const stageRef = useRef<HTMLDivElement>(null);
   const cardRefs = useRef<(HTMLLIElement | null)[]>([]);
   const [geo, setGeo] = useState<Geometry>(FALLBACK);
+  const reduce = useReducedMotion();
+  const inView = useInView(stageRef, { once: true, amount: 0.3 });
+  const drawn = Boolean(reduce) || inView;
 
   const measure = useCallback(() => {
     const stage = stageRef.current;

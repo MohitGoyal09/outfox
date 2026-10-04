@@ -524,6 +524,50 @@
   mask-image: radial-gradient(ellipse 70% 70% at 50% 50%, #000 30%, transparent 100%);
 }
 
+/* Full-bleed ink section on the light landing. Re-points the neutral tokens so tokenised children (inputs, labels, buttons) read on ink.
+   Ratios on #15171B: text #E9EBEE ~15:1, secondary #B8BDC5 ~9:1, field border at 35% white ~3:1. */
+.l-ink {
+  --ink-base: #15171b;
+  --bg-raised: #1e2126;
+  --bg-inset: #272b31;
+  --text-primary: #e9ebee;
+  --text-secondary: #b8bdc5;
+  --text-tertiary: #b8bdc5;
+  --text-placeholder: #9aa0a9;
+  --border: rgba(255, 255, 255, 0.12);
+  --border-strong: rgba(255, 255, 255, 0.35);
+  --accent: #ffffff;
+  --accent-strong: #e3e5e8;
+  --accent-ink: #15171b;
+  --danger: #f4a3a3;
+  color: var(--text-primary);
+}
+
+/* ---- Landing motion helpers (components/aceternity) ---- */
+@keyframes l-orbit {
+  to {
+    offset-distance: 100%;
+  }
+}
+
+.l-orbit {
+  animation: l-orbit 5s linear infinite;
+}
+
+/* Dialog enter: scale and blur in, 200ms. Uses the individual `scale` property so the dialog's own centring translate is untouched. */
+@keyframes l-modal-in {
+  from {
+    opacity: 0;
+    scale: 0.96;
+    filter: blur(4px);
+  }
+  to {
+    opacity: 1;
+    scale: 1;
+    filter: blur(0);
+  }
+}
+
 /* Measured value: mono + tabular. Never prose. */
 @utility num {
   font-family: var(--font-mono);

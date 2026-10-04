@@ -5,6 +5,7 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "@/convex/_generated/api";
 import { parseAccessRequest, type FieldErrors } from "@/convex/lib/accessRequestRules";
+import { StatefulButton, type ButtonStatus } from "@/components/aceternity/stateful-button";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -20,10 +21,10 @@ function FieldError({ id, message }: { id: string; message?: string }) {
   );
 }
 
-export function RequestAccessForm({ onDone }: { onDone?: () => void }) {
+export function RequestAccessForm({ onDone, tone = "light" }: { onDone?: () => void; tone?: "light" | "ink" }) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState<ButtonStatus>("idle");
   const [sent, setSent] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -43,6 +44,13 @@ export function RequestAccessForm({ onDone }: { onDone?: () => void }) {
     }
     setErrors({});
     setFormError(null);
+    try {
+      await submit({ ...input, note: input.note || undefined, website: input.website || undefined });
+      setStatus("success");
+      setTimeout(() => setSent(true), SUCCESS_HOLD_MS);
+    } catch (err) {
+      setStatus("idle");
+    }
   }
 
   if (sent) {
@@ -62,25 +70,23 @@ export function RequestAccessForm({ onDone }: { onDone?: () => void }) {
     <form onSubmit={onSubmit} noValidate className="flex flex-col gap-4">
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="ra-name">Name</Label>
-        
+        <Input
+          className={field}
+          id="ra-name"
+          name="name"
+          autoComplete="name"
+          required
+          maxLength={80}
+          aria-invalid={errors.name ? true : undefined}
+          aria-describedby={errors.name ? "ra-name-error" : undefined}
+        />
         <FieldError id="ra-name-error" message={errors.name} />
       </div>
-      <div className="flex flex-col gap-1.5">
-        
-        <Input
-          id="ra-email"
-          name="email"
-          type="email"
-          autoComplete="email"
-          required
-          aria-invalid={errors.email ? true : undefined}
-          aria-describedby={errors.email ? "ra-email-error" : undefined}
-        />
-        <FieldError id="ra-email-error" message={errors.email} />
-      </div>
+      
       <div className="flex flex-col gap-1.5">
         <Label htmlFor="ra-company">Company</Label>
         <Input
+          className={field}
           id="ra-company"
           name="company"
           autoComplete="organization"
@@ -91,18 +97,7 @@ export function RequestAccessForm({ onDone }: { onDone?: () => void }) {
         />
         
       </div>
-      <div className="flex flex-col gap-1.5">
-        <Label htmlFor="ra-note">Anything we should know? (optional)</Label>
-        <Textarea
-          id="ra-note"
-          name="note"
-          rows={3}
-          maxLength={500}
-          aria-invalid={errors.note ? true : undefined}
-          aria-describedby={errors.note ? "ra-note-error" : undefined}
-        />
-        <FieldError id="ra-note-error" message={errors.note} />
-      </div>
+      
       <div aria-hidden="true" className="absolute -left-[9999px] size-px overflow-hidden">
         <label>
           Website
@@ -114,7 +109,7 @@ export function RequestAccessForm({ onDone }: { onDone?: () => void }) {
           {formError}
         </p>
       ) : null}
-      
+      <StatefulButton type="submit" className={tone === "ink" ? "focus-visible:ring-white/70" : undefined} status={status} idleLabel="Request access" pendingLabel="Sending" successLabel="Sent" />
     </form>
   );
 }
