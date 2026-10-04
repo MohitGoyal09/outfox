@@ -1,34 +1,10 @@
-import { Activity, Building2, Home, LayoutGrid } from "lucide-react";
-import { hookName } from "@/components/drishti/labels";
-import { HOOK_COLOR, isHookType } from "@/components/drishti/tokens";
 import { HookTable } from "./Bento";
 import { HERO_FINDINGS, HOOK_MATRIX } from "./landing-data";
 
 const card = "rounded-[12px] border border-border-strong bg-bg-raised shadow-lg";
 
-const NAV = [
-  { label: "Home", Icon: Home },
-  { label: "Brands", Icon: Building2 },
-  { label: "Signals", Icon: Activity },
-  { label: "Boards", Icon: LayoutGrid },
-] as const;
-
-function hookKey(label: string) {
-  return Object.keys(HOOK_COLOR).find((k) => isHookType(k) && hookName(k) === label);
-}
-
 export function SignalsReplica() {
   const top = HERO_FINDINGS[0];
-  return (
-    <div aria-hidden="true" className={`${card} flex min-w-[46rem] min-h-[34rem] overflow-hidden`}>
-      
-      
-      <aside className="hidden w-60 shrink-0 border-l border-border p-4 lg:block">
-        <p className="text-[14px] font-semibold text-fg">Gaps</p>
-        
-      </aside>
-    </div>
-  );
 }
 
 export function AskReplica() {

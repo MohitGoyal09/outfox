@@ -1,56 +1,40 @@
-"use client";
-
-import type { ComponentType, ReactNode } from "react";
-import { Activity, Clock, EyeOff, MessageSquareText, Pin } from "lucide-react";
-import { motion, useReducedMotion } from "motion/react";
-import { EASE_OUT } from "@/components/aceternity/motion-utils";
-import { AdCard, OffTopic } from "./Bento";
-import { Plate } from "./Plate";
+import { DetailsBento } from "./Bento";
 import { AskReplica, BoardReplica, SignalsReplica } from "./ProductReplicas";
+import { StackedFeatures, type Feature } from "./StackedFeatures";
 
-type Unit = {
-  id: string;
-  Icon: ComponentType<{ className?: string; strokeWidth?: number }>;
-  title: string;
-  line: string;
-  seed: number;
-  image: string;
-  tint: string;
-  plateClass: string;
-  sr: string;
-  ui: ReactNode;
-  wide?: boolean;
-  padX?: string;
-};
-
-function Showcase({ u, className }: { u: Unit; className?: string }) {
-  const reduce = useReducedMotion();
-  if (reduce) return <div className={className}>{inner}</div>;
-  return (
-    <motion.div
-      className={className}
-      initial={{ opacity: 0, y: 8 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, margin: "0px 0px -8% 0px" }}
-      transition={{ duration: 0.4, ease: EASE_OUT }}
-    >
-      {inner}
-    </motion.div>
-  );
-}
-
-export function ProductShowcase() {
-  return (
-    <section id="product" aria-labelledby="product-heading" className="l-wrap scroll-mt-20 py-20 lg:py-28">
-      <p className="l-eyebrow">03&nbsp;&nbsp;Product</p>
-      <h2 id="product-heading" className="l-h2 mt-3 max-w-[16ch] text-fg">
-        One workspace for the whole read.
-      </h2>
-      <div className="mt-12 flex flex-col gap-14 lg:gap-20">
-        <Showcase u={UNITS.signals} />
-        
-        
-      </div>
-    </section>
-  );
-}
+const FEATURES: readonly Feature[] = [
+  {
+    id: "signals",
+    title: "Signals",
+    line: "Which hooks each rival leans on, with the biggest gaps called out.",
+    facts: ["Hook mix for every brand in one table", "Colour names the hook, depth is the share", "Hover a cell to see the findings behind it"],
+    tint: "#60a5fa",
+    image: "/landing/plate-ridge.webp",
+    seed: 1,
+    sr: "The Signals page: a table of hook mix by brand, each cell shaded in its hook's colour. Each number opens the findings behind it.",
+    ui: <SignalsReplica />,
+    wide: true,
+  },
+  {
+    id: "ask",
+    title: "Ask",
+    line: "Answers with sources. Click any number to see the finding behind it.",
+    facts: ["Ask in plain words", "Every sentence cites a stored finding", "A number Drishti cannot trace is removed"],
+    tint: "#2dd4bf",
+    image: "/landing/plate-fog.webp",
+    seed: 2,
+    sr: "An Ask answer about discount offers, with numbered source chips and the sources listed under it.",
+    ui: <AskReplica />,
+  },
+  {
+    id: "board",
+    title: "Board",
+    line: "Your swipe file. Pin real evidence into columns.",
+    facts: ["Hooks, offers, creatives, things to test", "Every card keeps its source", "Save evidence while you browse"],
+    tint: "#f472b6",
+    image: "/landing/plate-heather.webp",
+    seed: 3,
+    sr: "A board with three columns of saved evidence cards: hooks, offers and things to test.",
+    ui: <BoardReplica />,
+  },
+];
