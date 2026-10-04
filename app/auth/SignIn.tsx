@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { AlertCircle, ArrowRight, Check, ShieldCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -9,6 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { DrishtiMark } from "@/components/drishti/chrome/DrishtiMark";
 import { EvidenceTrail } from "./EvidenceTrail";
+import {
+  type ResetStep,
+  canResend,
+  mapResetError,
+  nextStep,
+  validateEmail,
+  validateResetForm,
+  RESEND_COOLDOWN_SECONDS,
+} from "./reset-model";
+
+const linkClass =
+  "rounded-sm text-sm text-fg-secondary underline decoration-border-strong underline-offset-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-50";
 
 export function SignIn() {
   const { signIn } = useAuthActions();
@@ -18,6 +30,65 @@ export function SignIn() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
+  const [resetStep, setResetStep] = useState<ResetStep>("email");
+  const [code, setCode] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [sentAt, setSentAt] = useState<number | null>(null);
+  const [now, setNow] = useState(() => Date.now());
+
+  useEffect(() => {
+    if (!isResetting || sentAt === null) return;
+    const timer = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(timer);
+  }, [isResetting, sentAt]);
+
+  const secondsSinceSend = sentAt === null ? 0 : Math.floor((now - sentAt) / 1000);
+
+  function leaveReset() {
+    setError(null);
+    setIsResetting(false);
+    setResetStep("email");
+    setCode("");
+    setNewPassword("");
+    setSentAt(null);
+  }
+
+  async function sendCode(event?: FormEvent<HTMLFormElement>) {
+    event?.preventDefault();
+    const invalid = validateEmail(email);
+    if (invalid) return setError(invalid);
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await signIn("password", { email: email.trim(), flow: "reset" });
+      setResetStep((step) => nextStep(step, "codeSent"));
+      setSentAt(Date.now());
+      setNow(Date.now());
+    } catch (cause) {
+      setError(mapResetError(cause, "send"));
+    }
+    setIsSubmitting(false);
+  }
+
+  async function verifyReset(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const invalid = validateResetForm(code, newPassword);
+    if (invalid) return setError(invalid);
+    setError(null);
+    setIsSubmitting(true);
+    try {
+      await signIn("password", {
+        email: email.trim(),
+        code: code.trim(),
+        newPassword,
+        flow: "reset-verification",
+      });
+    } catch (cause) {
+      setError(mapResetError(cause, "verify"));
+      setIsSubmitting(false);
+    }
+  }
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -105,13 +176,138 @@ export function SignIn() {
             Private research desk
           </p>
           <h2 className="mt-4 text-4xl font-semibold leading-[1.05] tracking-[-0.04em] sm:text-[2.75rem]">
-            {mode === "signIn" ? "Welcome back" : "Create your account"}
+            {isResetting ? "Reset your password" : mode === "signIn" ? "Welcome back" : "Create your account"}
           </h2>
           <p className="mt-4 text-base leading-7 text-fg-secondary">
-            {mode === "signIn"
+            {isResetting
+              ? resetStep === "email"
+                ? "Enter your email and we will send an 8-digit code."
+                : "Enter the code we emailed and choose a new password."
+              : mode === "signIn"
               ? "Continue your brand research with the evidence still attached."
               : "Start a private evidence desk for the brands you follow."}
           </p>
+          {isResetting ? (
+            <>
+              {resetStep === "email" ? (
+                <form className="mt-10 space-y-6" onSubmit={sendCode}>
+            <div className="space-y-2">
+              <Label htmlFor="reset-email" className="text-sm font-medium">
+                Email
+              </Label>
+              <Input
+                id="reset-email"
+                required
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                placeholder="you@company.com"
+                className="h-12 rounded-lg px-4 text-base"
+              />
+            </div>
+            {error ? (
+              <Alert variant="destructive" role="alert">
+                <AlertCircle className="size-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="group h-12 w-full justify-between rounded-lg bg-accent px-5 text-base text-accent-ink hover:bg-accent-strong"
+            >
+              <span>{isSubmitting ? "Working…" : "Send code"}</span>
+              <ArrowRight className="size-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
+            </Button>
+                </form>
+              ) : (
+                <form className="mt-10 space-y-6" onSubmit={verifyReset}>
+            <div className="space-y-2">
+              <Label htmlFor="reset-email" className="text-sm font-medium">
+                Email
+              </Label>
+              <Input
+                id="reset-email"
+                required
+                type="email"
+                autoComplete="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                readOnly
+                placeholder="you@company.com"
+                className="h-12 rounded-lg px-4 text-base"
+              />
+            </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-code" className="text-sm font-medium">
+                      Code
+                    </Label>
+                    <Input
+                      id="reset-code"
+                      required
+                      inputMode="numeric"
+                      autoComplete="one-time-code"
+                      pattern="[0-9]{8}"
+                      maxLength={8}
+                      value={code}
+                      onChange={(event) => setCode(event.target.value.replace(/\D/g, ""))}
+                      placeholder="8-digit code"
+                      className="h-12 rounded-lg px-4 text-base"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="reset-new-password" className="text-sm font-medium">
+                      New password
+                    </Label>
+                    <Input
+                      id="reset-new-password"
+                      required
+                      minLength={8}
+                      type="password"
+                      autoComplete="new-password"
+                      value={newPassword}
+                      onChange={(event) => setNewPassword(event.target.value)}
+                      placeholder="At least 8 characters"
+                      className="h-12 rounded-lg px-4 text-base"
+                    />
+                  </div>
+            {error ? (
+              <Alert variant="destructive" role="alert">
+                <AlertCircle className="size-4" />
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
+            ) : null}
+            <Button
+              type="submit"
+              disabled={isSubmitting}
+              className="group h-12 w-full justify-between rounded-lg bg-accent px-5 text-base text-accent-ink hover:bg-accent-strong"
+            >
+              <span>{isSubmitting ? "Working…" : "Reset password"}</span>
+              <ArrowRight className="size-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
+            </Button>
+                </form>
+              )}
+              <div className="mt-8 flex flex-wrap items-center gap-x-6 gap-y-3">
+                {resetStep === "code" ? (
+                  <button
+                    type="button"
+                    className={linkClass}
+                    disabled={isSubmitting || !canResend(secondsSinceSend)}
+                    onClick={() => void sendCode()}
+                  >
+                    {canResend(secondsSinceSend)
+                      ? "Resend code"
+                      : `Resend code in ${RESEND_COOLDOWN_SECONDS - secondsSinceSend}s`}
+                  </button>
+                ) : null}
+                <button type="button" className={linkClass} disabled={isSubmitting} onClick={leaveReset}>
+                  Back to sign in
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
           <form className="mt-10 space-y-6" onSubmit={submit}>
             {mode === "signUp" ? (
               <div className="space-y-2">
@@ -159,9 +355,21 @@ export function SignIn() {
                 placeholder="At least 8 characters"
                 className="h-12 rounded-lg px-4 text-base"
               />
+              {mode === "signIn" ? (
+                <button
+                  type="button"
+                  className={linkClass}
+                  onClick={() => {
+                    setError(null);
+                    setIsResetting(true);
+                  }}
+                >
+                  Forgot password?
+                </button>
+              ) : null}
             </div>
             {error ? (
-              <Alert variant="destructive">
+              <Alert variant="destructive" role="alert">
                 <AlertCircle className="size-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
@@ -177,7 +385,7 @@ export function SignIn() {
           </form>
           <button
             type="button"
-            className="mt-8 rounded-sm text-sm text-fg-secondary underline decoration-border-strong underline-offset-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
+            className={`mt-8 ${linkClass}`}
             onClick={() => {
               setError(null);
               setMode(mode === "signIn" ? "signUp" : "signIn");
@@ -185,6 +393,8 @@ export function SignIn() {
           >
             {mode === "signIn" ? "Need an account? Create one" : "Already have an account? Sign in"}
           </button>
+            </>
+          )}
           <p className="mt-12 flex items-center gap-2 border-t border-border pt-6 text-xs text-fg-tertiary">
             <ShieldCheck className="size-3.5" /> Your workspace is private by default.
           </p>
