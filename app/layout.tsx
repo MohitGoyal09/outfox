@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Geist_Mono, Instrument_Sans } from "next/font/google";
 import "./globals.css";
+import { SITE_URL } from "@/lib/site";
 import { Providers } from "./providers";
 
 const instrumentSans = Instrument_Sans({
@@ -15,17 +16,29 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
+const TITLE = "Drishti: competitor research for Indian D2C beauty brands";
+const DESCRIPTION =
+  "Competitor research for Indian D2C skincare and beauty brands. Reads public Google, YouTube and news data and links every number to its source.";
+
 export const metadata: Metadata = {
-  title: {
-    default: "Drishti: the trail behind every claim",
-    template: "%s · Drishti",
+  metadataBase: new URL(SITE_URL),
+  title: { default: TITLE, template: "%s · Drishti" },
+  description: DESCRIPTION,
+  applicationName: "Drishti",
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    siteName: "Drishti",
+    url: "/",
+    title: TITLE,
+    description: DESCRIPTION,
+    locale: "en_IN",
   },
-  description:
-    "Drishti reads Google Search, Google Ads Transparency, YouTube, Google News and Google Trends for the brands you compete with, tags what their creative leans on, and links every number to the exact evidence behind it.",
+  twitter: { card: "summary_large_image", title: TITLE, description: DESCRIPTION },
 };
 
 export const viewport: Viewport = {
-  themeColor: "#f6f7f4",
+  themeColor: "#ffffff",
   colorScheme: "light",
 };
 
