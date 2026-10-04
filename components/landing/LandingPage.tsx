@@ -12,3 +12,35 @@ import { ProductShowcase } from "./ProductShowcase";
 import { Problem } from "./Problem";
 import { SourcesStrip } from "./SourcesStrip";
 import { WillNotClaim } from "./WillNotClaim";
+
+export function LandingPage() {
+  return (
+    <div className="l-theme min-h-dvh overflow-x-clip text-fg">
+      
+      <LandingNav />
+      <main>
+        
+        <Reveal>
+          
+        </Reveal>
+        <Reveal>
+          <Problem />
+        </Reveal>
+        
+        <ProductShowcase />
+        <Reveal>
+          <WillNotClaim />
+        </Reveal>
+        <Reveal>
+          
+        </Reveal>
+        
+        <Reveal>
+          <Faq />
+        </Reveal>
+        
+      </main>
+      
+    </div>
+  );
+}

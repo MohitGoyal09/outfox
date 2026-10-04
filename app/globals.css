@@ -559,31 +559,35 @@
    Contrast (WCAG): text #2A1724 on paper 15.4:1; secondary #5E4957 7.5:1 (6.9 on inset); tertiary #7A6472 4.9:1 (4.5 on inset);
    white on accent #C8431F 4.9:1. Hook data colours are not overridden: they encode meaning. */
 .l-theme {
-  --bg: #faf4ee;
-  --bg-inset: #f3eae2;
+  /* White page with a faint plum dot grid all over (macroscope-style texture). Cards stay solid white. */
+  --bg: #ffffff;
+  --bg-inset: #f8f3f0;
   --bg-raised: #ffffff;
-  --bg-raised-2: #fdf9f5;
+  --bg-raised-2: #fcf9f7;
   --text-primary: #2a1724;
   --text-secondary: #5e4957;
   --text-tertiary: #7a6472;
   --text-placeholder: #7a6472;
-  --border: #eadcd3;
-  --border-strong: #d8c2b6;
-  /* Vermilion #E4572E is 3.7:1 against white, too weak for small button text, so the working accent is the deeper #C8431F (4.9:1). */
-  --accent: #c8431f;
-  --accent-strong: #a8361a;
+  --border: #eee4de;
+  --border-strong: #dccbc2;
+  /* Buttons and small marks are plum ink (16:1 with white text). Vermilion is kept for one moment: the hero highlight and the shimmer segment. */
+  --accent: #2a1724;
+  --accent-strong: #140a11;
   --accent-ink: #ffffff;
-  --accent-dim: rgba(228, 87, 46, 0.14);
+  --accent-dim: rgba(42, 23, 36, 0.08);
   --accent-selection: rgba(228, 87, 46, 0.18);
-  /* Hero highlight block: bright vermilion behind 40-64px display text (3.4:1, passes the 3:1 large-text bar). */
+  /* Hero highlight block: bright vermilion behind 40-64px display text (3.7:1 with white, passes the 3:1 large-text bar). */
   --mark: #e4572e;
-  --mark-ink: #faf4ee;
+  --mark-ink: #ffffff;
   --plum: #2a1424;
   --rose: #e8a3ae;
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at 1px 1px, rgba(42, 23, 36, 0.13) 1px, transparent 1.4px);
+  background-size: 18px 18px;
 }
 
 /* Full-bleed plum section on the paper landing. Re-points the tokens so tokenised children (inputs, labels, buttons) read on plum.
-   Ratios on #2A1424: text #F7EDE6 14.9:1, secondary #D9C6CF 10.6:1 (8.4 on #40243A), accent #F07A55 6.2:1. */
+   Ratios on #2A1424: text #F7EDE6 14.9:1, secondary #D9C6CF 10.6:1 (8.4 on #40243A), accent (buttons) #F7EDE6 with plum text 14.9:1. */
 .l-theme .l-ink {
   --ink-base: #2a1424;
   --bg-raised: #351c2e;
@@ -594,8 +598,8 @@
   --text-placeholder: #c2aab6;
   --border: rgba(255, 240, 235, 0.14);
   --border-strong: rgba(255, 240, 235, 0.32);
-  --accent: #f07a55;
-  --accent-strong: #f59273;
+  --accent: #f7ede6;
+  --accent-strong: #ffffff;
   --accent-ink: #2a1424;
   --danger: #f4a3a3;
   color: var(--text-primary);

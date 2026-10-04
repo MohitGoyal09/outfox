@@ -25,7 +25,7 @@ const ICON = { yes: Check, partial: Minus, no: X } as const;
 export function Comparison() {
   const reduce = useReducedMotion();
   return (
-    <section aria-labelledby="compare-heading" className="border-t border-border bg-bg">
+    <section aria-labelledby="compare-heading" className="border-t border-border">
       <div className="l-wrap pb-24 pt-20 lg:pb-32 lg:pt-28">
         <p className="l-eyebrow">05&nbsp;&nbsp;Compared</p>
         <h2 id="compare-heading" className="l-h2 mt-4 max-w-[16ch] text-fg">
