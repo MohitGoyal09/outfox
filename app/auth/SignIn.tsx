@@ -21,6 +21,9 @@ import {
 const linkClass =
   "rounded-sm text-sm text-fg-secondary underline decoration-border-strong underline-offset-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-50";
 
+
+const SIGNUP_ENABLED = process.env.NEXT_PUBLIC_SIGNUP_ENABLED === "true";
+
 export function SignIn() {
   const { signIn } = useAuthActions();
   const [mode, setMode] = useState<"signIn" | "signUp">("signIn");
@@ -107,7 +110,8 @@ export function SignIn() {
         ...(mode === "signUp" ? { name } : {}),
       });
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : "Unable to sign in.");
+      const message = cause instanceof Error ? cause.message : "";
+      setError(/Sign-up is closed/.test(message) ? "Sign-up is closed. Ask the workspace owner for an account." : message || "Unable to sign in.");
       setIsSubmitting(false);
     }
   }
@@ -387,16 +391,18 @@ export function SignIn() {
               <ArrowRight className="size-4 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
             </Button>
           </form>
-          <button
-            type="button"
-            className={`mt-8 ${linkClass}`}
-            onClick={() => {
-              setError(null);
-              setMode(mode === "signIn" ? "signUp" : "signIn");
-            }}
-          >
-            {mode === "signIn" ? "Need an account? Create one" : "Already have an account? Sign in"}
-          </button>
+          {SIGNUP_ENABLED ? (
+            <button
+              type="button"
+              className={`mt-8 ${linkClass}`}
+              onClick={() => {
+                setError(null);
+                setMode(mode === "signIn" ? "signUp" : "signIn");
+              }}
+            >
+              {mode === "signIn" ? "Need an account? Create one" : "Already have an account? Sign in"}
+            </button>
+          ) : null}
             </>
           )}
           <p className="mt-12 flex items-center gap-2 border-t border-border pt-6 text-xs text-fg-tertiary">
