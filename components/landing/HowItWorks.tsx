@@ -22,7 +22,7 @@ const STEPS = [
 
 export function HowItWorks() {
   return (
-    <section id="how-it-works" aria-labelledby="how-heading" className="scroll-mt-20 border-t border-border">
+    <section id="how-it-works" aria-labelledby="how-heading" className="scroll-mt-20">
       <div className="l-wrap pb-14 pt-16 lg:pb-14 lg:pt-20">
         <Reveal>
           <p className="l-eyebrow">02&nbsp;&nbsp;How it works</p>

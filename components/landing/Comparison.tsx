@@ -32,4 +32,9 @@ export function Comparison() {
   const reduce = useReducedMotion();
   const near = useInView(cardRef, { once: true, margin: "300px 0px" });
   const inView = useInView(cardRef, { margin: "80px 0px" });
+  return (
+    <section aria-labelledby="compare-heading">
+      
+    </section>
+  );
 }
