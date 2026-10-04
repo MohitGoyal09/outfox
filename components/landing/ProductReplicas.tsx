@@ -1,3 +1,5 @@
+import { hookName } from "@/components/drishti/labels";
+import { HOOK_COLOR } from "@/components/drishti/tokens";
 import { HookTable } from "./Bento";
 import { HERO_FINDINGS, HOOK_MATRIX } from "./landing-data";
 
@@ -5,6 +7,14 @@ const card = "rounded-[12px] border border-border-strong bg-bg-raised shadow-lg"
 
 export function SignalsReplica() {
   const top = HERO_FINDINGS[0];
+}
+
+export function SignalsMobileReplica() {
+  const top = HERO_FINDINGS[0];
+  const rows = HOOK_MATRIX.map((b) => {
+    const [hook, n] = (Object.entries(b.counts) as [keyof typeof HOOK_COLOR, number][]).reduce((best, e) => (e[1] > best[1] ? e : best));
+    return { name: b.name, hook, share: Math.round((n / b.total) * 100) };
+  });
 }
 
 export function AskReplica() {

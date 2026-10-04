@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
   display: "swap",
 });
 
-const AUTHED_HINT = `try{for(var k in localStorage)if(k.indexOf("__convexAuthJWT_")===0||k.indexOf("__convexAuthRefreshToken_")===0){document.documentElement.dataset.authed="1";break}}catch(e){}`;
+const AUTHED_HINT = `try{if(localStorage.getItem("drishti.landing.banner.dismissed")==="1")document.documentElement.dataset.bannerDismissed="1"}catch(e){}try{for(var k in localStorage)if(k.indexOf("__convexAuthJWT_")===0||k.indexOf("__convexAuthRefreshToken_")===0){document.documentElement.dataset.authed="1";break}}catch(e){}`;
 
 const TITLE = "Drishti: competitor research for Indian D2C beauty brands";
 const DESCRIPTION =

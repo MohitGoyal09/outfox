@@ -51,7 +51,7 @@ export function StickyBanner({ children, className }: { children: ReactNode; cla
       initial={false}
       animate={{ height: open ? 36 : 0 }}
       transition={reduce || !tween ? { duration: 0 } : { duration: 0.24, ease: EASE_OUT }}
-      className={cn("relative z-50 overflow-hidden border-b border-border bg-bg text-fg-secondary", className)}
+      className={cn("l-banner relative z-50 overflow-hidden border-b border-border bg-bg text-fg-secondary", className)}
       aria-hidden={open ? undefined : true}
       inert={open ? undefined : true}
     >

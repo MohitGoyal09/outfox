@@ -562,6 +562,10 @@
 html[data-authed] .l-theme {
   display: none;
 }
+/* A banner dismissed on an earlier visit stays closed from the first paint (hint set in app/layout.tsx). */
+html[data-banner-dismissed] .l-banner {
+  display: none;
+}
 /* The matching splash: hidden for everyone else, so crawlers and signed-out visitors only get the landing. */
 .auth-splash {
   display: none !important;
