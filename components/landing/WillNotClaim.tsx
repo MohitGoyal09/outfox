@@ -7,64 +7,108 @@ import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils
 import { CHECK_DATE, HOOK_MATRIX, SUGAR_LONGEST_AD } from "./landing-data";
 
 const SUGAR = HOOK_MATRIX[0];
-const END = 25;
+const END = 50;
 const STEP = 5;
 
-function Spark({ d }: { d: string }) {
-  return (
-    <svg viewBox="0 0 120 32" aria-hidden="true" className="hidden h-14 w-full text-white/25 md:block">
-      <path d={d} fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
-    </svg>
-  );
-}
+type Slot = { label: string; value: string; text: React.ReactNode; chip: string; href?: string; accent?: string };
 
-const ESTIMATES = [
-  { label: "Estimated spend", value: "₹12–18L / mo", d: "M2 24 L20 18 L38 22 L56 12 L74 16 L92 8 L118 10" },
-  { label: "Engagement rate", value: "4.8%", d: "M2 14 L20 20 L38 10 L56 18 L74 12 L92 20 L118 14" },
-  { label: "ROAS", value: "3.4x", d: "M2 26 L20 22 L38 24 L56 16 L74 18 L92 10 L118 6" },
-] as const;
+const PROOF: readonly Slot[] = [
+  {
+    label: "Spend",
+    value: `${SUGAR_LONGEST_AD.days} days`,
+    text: "SUGAR's longest-running Google ad. Google's own days-shown count.",
+    chip: `Google Ads Transparency · fetched ${CHECK_DATE}`,
+    href: SUGAR_LONGEST_AD.url,
+    accent: "var(--hook-education-explainer)",
+  },
+  {
+    label: "Engagement",
+    value: "Not checked",
+    text: "Engagement was not measured in this check, so it is never shown as zero.",
+    chip: "Source status: not checked",
+    accent: "var(--hook-product-feature)",
+  },
+  {
+    label: "ROAS",
+    value: `${SUGAR.counts.education_explainer} of ${SUGAR.total}`,
+    text: (
+      <>
+        tagged SUGAR findings open with an explainer hook <span className="font-mono text-[0.75rem]">[1]</span>. No source, no number.
+      </>
+    ),
+    chip: "[1] Latest check",
+    accent: "var(--hook-founder-story)",
+  },
+];
 
-function EstimateLayer({ mobile = false }: { mobile?: boolean }) {
+function Layer({ proof, mobile = false }: { proof: boolean; mobile?: boolean }) {
   return (
-    <div className={`flex h-full flex-col gap-4 bg-[#25262b] p-5 text-[#c9cad1] md:p-8 ${mobile ? "" : "saturate-50"}`}>
-      <div className="flex items-center justify-between gap-3">
-        <p className="max-w-[14rem] font-mono text-[0.6875rem] uppercase leading-[1.5] tracking-[0.06em] text-[#c9cad1]">Illustrative: what estimate-based tools show</p>
-      </div>
-      <p className="font-display text-[1.125rem] font-medium text-white/70">SUGAR Cosmetics · competitor overview</p>
+    <div className={`flex h-full flex-col gap-3 p-5 md:p-7 ${proof ? "bg-[#f4f5f9] text-[#111113]" : `bg-[#25262b] text-[#c9cad1] ${mobile ? "" : "saturate-50"}`}`}>
+      <p className={`h-8 max-w-[14rem] font-mono text-[0.6875rem] uppercase leading-[1.5] tracking-[0.06em] ${proof ? "text-[#52525b] md:max-w-none md:self-end md:text-right" : ""}`}>
+        {proof ? "What Drishti shows" : "Illustrative: what estimate-based tools show"}
+      </p>
       
     </div>
   );
 }
 
-function DrishtiLayer() {
+function CompareSlider() {
+  const wrap = useRef<HTMLDivElement>(null);
+  const inView = useInView(wrap, { once: true, amount: 0.4 });
+  const reduced = useReducedMotion();
+  const pos = useMotionValue(START);
+  useMotionValueEvent(pos, "change", (p) => setNow(Math.round(p)));
+
+  useEffect(() => {
+    if (reduced) pos.set(50);
+  }, [reduced, pos]);
+
+  useEffect(() => {
+    if (!inView || reduced) return;
+    sweep.current = animate(pos, END, { duration: 1.2, ease: EASE_OUT });
+    return () => sweep.current?.stop();
+  }, [inView, reduced, pos]);
+
+  const onKey = (e: React.KeyboardEvent) => {
+    const keys: Record<string, number> = {
+      ArrowLeft: pos.get() - STEP, ArrowDown: pos.get() - STEP, ArrowRight: pos.get() + STEP, ArrowUp: pos.get() + STEP, Home: 0, End: 100,
+    };
+    if (!(e.key in keys)) return;
+    take();
+    pos.set(clamp(keys[e.key]));
+  };
+
   return (
-    <div className="flex h-full flex-col gap-4 bg-[#f4f5f9] p-5 text-[#111113] md:p-8">
+    <div
+      ref={wrap}
+      onPointerDown={(e) => {
+        take();
+        e.currentTarget.setPointerCapture(e.pointerId);
+        setFromX(e.clientX);
+      }}
+      onPointerMove={(e) => e.currentTarget.hasPointerCapture(e.pointerId) && setFromX(e.clientX)}
+      className="relative hidden h-[330px] cursor-ew-resize touch-pan-y select-none overflow-hidden rounded-3xl border border-white/15 shadow-[0_40px_80px_-40px_rgba(0,0,0,0.8)] md:block"
+    >
+      <div className="absolute inset-0"><Layer proof={false} /></div>
+      <motion.div className="absolute inset-0 will-change-[clip-path]" style={{ clipPath: clip }}><Layer proof /></motion.div>
       
-      
-      <ul className="m-0 grid flex-1 list-none grid-cols-1 gap-3 p-0 md:grid-cols-3 md:gap-4">
-        <li style={{ borderTopColor: "var(--hook-education-explainer)" }} className="flex flex-col gap-3 rounded-2xl border-t-[3px] bg-white p-4 shadow-[0_14px_30px_-18px_rgba(17,17,19,0.35)] md:p-5">
-          
-          <p aria-hidden="true" className="mt-auto hidden font-mono text-[3.25rem] leading-none tracking-[-0.03em] text-[#111113] md:block">194<span className="ml-1 text-[1rem] tracking-normal text-[#52525b]">days</span></p>
-          <p className="hidden text-[0.8125rem] leading-[1.45] text-[#3f3f46] md:block">The longest-running SUGAR ad, by Google&rsquo;s own days-shown count.</p>
-          <a href={SUGAR_LONGEST_AD.url} target="_blank" rel="noreferrer" className={`${chip} w-fit transition-colors hover:bg-black/[0.09]`}>
-            <span className="truncate">Google Ads Transparency · fetched {CHECK_DATE}</span>
-          </a>
-        </li>
-        <li style={{ borderTopColor: "var(--hook-product-feature)" }} className="flex flex-col gap-3 rounded-2xl border-t-[3px] bg-white p-4 shadow-[0_14px_30px_-18px_rgba(17,17,19,0.35)] md:p-5">
-          <h3 className="font-display text-[1.1875rem] font-medium leading-[1.2] tracking-[-0.02em]">Engagement: not checked in this run</h3>
-          <p aria-hidden="true" className="mt-auto hidden font-mono text-[3.25rem] leading-none tracking-[-0.03em] text-[#111113] md:block">&mdash;<span className="ml-2 text-[1rem] tracking-normal text-[#52525b]">no value</span></p>
-          <p className="hidden text-[0.8125rem] leading-[1.45] text-[#3f3f46] md:block">Drishti names the gap instead of filling it with a number.</p>
-          <span className={`${chip} w-fit`}><span className="truncate">Source status: not checked, never shown as zero</span></span>
-        </li>
-        <li style={{ borderTopColor: "var(--hook-founder-story)" }} className="flex flex-col gap-3 rounded-2xl border-t-[3px] bg-white p-4 shadow-[0_14px_30px_-18px_rgba(17,17,19,0.35)] md:p-5">
-          <p className="border-l-2 pl-3 font-display text-[1.1875rem] font-medium leading-[1.25] tracking-[-0.02em]" style={{ borderColor: "var(--hook-founder-story)" }}>
-            {SUGAR.counts.education_explainer} of {SUGAR.total} tagged SUGAR findings open with an explainer hook 
-          </p>
-          <p aria-hidden="true" className="mt-auto hidden font-mono text-[3.25rem] leading-none tracking-[-0.03em] text-[#111113] md:block">16<span className="text-[#a1a1aa]">/40</span></p>
-          <p className="hidden text-[0.8125rem] leading-[1.45] text-[#3f3f46] md:block">If a sentence cites nothing, it does not ship.</p>
-          <span className={`${chip} w-fit`}><span className="truncate">[1] Latest check</span></span>
-        </li>
-      </ul>
+      <motion.div className="absolute top-1/2 z-10 -translate-x-1/2 -translate-y-1/2" style={{ left }}>
+        <div
+          role="slider"
+          tabIndex={0}
+          aria-label="Compare estimate tools with Drishti"
+          aria-orientation="horizontal"
+          aria-valuemin={0}
+          aria-valuemax={100}
+          aria-valuenow={now}
+          aria-valuetext={`Drishti shown from ${now}% across`}
+          onKeyDown={onKey}
+          onFocus={take}
+          className="grid h-12 w-12 place-items-center rounded-full border border-black/10 bg-white text-[#111113] shadow-[0_8px_24px_rgba(0,0,0,0.35)] outline-none transition-transform hover:scale-105 focus-visible:ring-4 focus-visible:ring-[#60a5fa]"
+        >
+          <ChevronsLeftRight size={22} aria-hidden="true" />
+        </div>
+      </motion.div>
     </div>
   );
 }
@@ -72,10 +116,8 @@ function DrishtiLayer() {
 function StackedCompare() {
   return (
     <div className="grid gap-3 md:hidden">
-      <div className="relative overflow-hidden rounded-2xl border border-white/15 opacity-60">
-        
-      </div>
-      <div className="overflow-hidden rounded-2xl border border-white/15"><DrishtiLayer /></div>
+      
+      
     </div>
   );
 }
