@@ -7,5 +7,5 @@ export function readPalette() {
   return { paper: HEX6.test(paper) ? paper : PALETTE_FALLBACK.paper, ink: HEX6.test(ink) ? ink : PALETTE_FALLBACK.ink };
 }
 
-export const PHOTO_PAPER = "#FAF4EE";
+export const PHOTO_PAPER = "#FFFFFF";
 export const HERO_INK = "#D69696";
