@@ -5,11 +5,14 @@ import { Clapperboard } from "lucide-react";
 import { MetricInfo } from "../MetricInfo";
 import { Panel } from "../Panel";
 import { adGalleryRows, type AdGalleryRow, type ClaimDoc } from "./brand-model";
+import { isBrokenAdPreview } from "./ad-preview";
 import { shortDate } from "./format";
 
 const INITIAL_COUNT = 12;
 
 function AdCard({ row }: { row: AdGalleryRow }) {
+  const [imageFailed, setImageFailed] = useState(false);
+  const showImage = row.imageUrl !== null && !imageFailed;
   const dates =
     row.firstShown && row.lastShown
       ? `${shortDate(row.firstShown)} to ${shortDate(row.lastShown)}`
@@ -20,8 +23,16 @@ function AdCard({ row }: { row: AdGalleryRow }) {
           : null;
   return (
     <li className="flex flex-col gap-2 rounded-lg border border-border p-3 text-xs">
-      {row.imageUrl ? (
-        <img src={row.imageUrl} alt={`${row.formatWord} creative`} loading="lazy" className="aspect-[4/3] w-full rounded-md border border-border bg-muted object-contain" />
+      {showImage ? (
+        <img
+          src={row.imageUrl ?? undefined}
+          onError={() => setImageFailed(true)}
+          onLoad={(event) => {
+            const { naturalWidth, naturalHeight } = event.currentTarget;
+            if (isBrokenAdPreview(naturalWidth, naturalHeight)) setImageFailed(true);
+          }}
+          alt={`${row.formatWord} creative`} loading="lazy"
+          className="aspect-[4/3] w-full rounded-md border border-border bg-muted object-contain" />
       ) : null}
       <p className="font-semibold text-fg">{row.formatWord}</p>
       {dates ? <p className="font-mono tabular-nums text-muted-foreground">{dates}</p> : null}
@@ -55,7 +66,7 @@ export function AdsGallery({ claims }: { claims: ClaimDoc[] }) {
       </div>
       <div className="space-y-3 p-4">
         {!hasAnyImage ? <p className="text-xs text-muted-foreground">Images were not stored for these ads.</p> : null}
-        <ul className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+        <ul className="grid items-start gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
           {visible.map((row) => (
             <AdCard key={row.claimId} row={row} />
           ))}
