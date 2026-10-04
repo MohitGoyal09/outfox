@@ -1,26 +1,16 @@
 "use client";
 
-import { useRef } from "react";
-import { useScroll } from "motion/react";
 import { Button } from "@/components/ui/button";
 import { MagneticButton } from "@/components/aceternity/magnetic-button";
 import { RequestAccessDialog } from "./RequestAccessDialog";
-import { HeroBackdrop, useMedia } from "./HeroBackdrop";
 import { AskBox } from "./AskBox";
 import { Ribbon } from "./Ribbon";
 import { HOOK_MATRIX } from "./landing-data";
 
-const DRIFT = 0.35;
-const DRIFT_PHONE = 0.2;
-
 export function Hero() {
-  const ref = useRef<HTMLElement>(null);
-  const wide = useMedia("(min-width: 768px)");
-
   return (
-    <section ref={ref} aria-labelledby="hero-heading" className="relative border-b border-border">
+    <section aria-labelledby="hero-heading" className="relative border-b border-border">
       <div className="relative isolate">
-        <HeroBackdrop progress={p} drift={wide ? DRIFT : DRIFT_PHONE} />
         <div className="l-wrap flex flex-col items-center pt-6 text-center sm:pt-8 lg:pt-7">
           <p className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-white/85 px-3.5 py-1.5 text-[0.8125rem] font-medium text-fg-secondary backdrop-blur">
             <span aria-hidden="true" className="size-1.5 rounded-full bg-[#34d399]" />
