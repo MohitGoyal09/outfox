@@ -4,42 +4,13 @@ import { useEffect, useRef, useState } from "react";
 import { animate, motion, useInView, useMotionValue, useMotionValueEvent, useTransform } from "motion/react";
 import { ChevronsLeftRight, Link2Off, ScanSearch, ShieldOff } from "lucide-react";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
-import { CHECK_DATE, HOOK_MATRIX, SUGAR_LONGEST_AD } from "./landing-data";
+import { HOOK_MATRIX, SUGAR_LONGEST_AD } from "./landing-data";
 
 const SUGAR = HOOK_MATRIX[0];
 const END = 50;
 const STEP = 5;
 
 type Slot = { label: string; value: string; text: React.ReactNode; chip: string; href?: string; accent?: string };
-
-const PROOF: readonly Slot[] = [
-  {
-    label: "Spend",
-    value: `${SUGAR_LONGEST_AD.days} days`,
-    text: "SUGAR's longest-running Google ad. Google's own days-shown count.",
-    chip: `Google Ads Transparency · fetched ${CHECK_DATE}`,
-    href: SUGAR_LONGEST_AD.url,
-    accent: "var(--hook-education-explainer)",
-  },
-  {
-    label: "Engagement",
-    value: "Not checked",
-    text: "Engagement was not measured in this check, so it is never shown as zero.",
-    chip: "Source status: not checked",
-    accent: "var(--hook-product-feature)",
-  },
-  {
-    label: "ROAS",
-    value: `${SUGAR.counts.education_explainer} of ${SUGAR.total}`,
-    text: (
-      <>
-        tagged SUGAR findings open with an explainer hook <span className="font-mono text-[0.75rem]">[1]</span>. No source, no number.
-      </>
-    ),
-    chip: "[1] Latest check",
-    accent: "var(--hook-founder-story)",
-  },
-];
 
 function Layer({ proof, mobile = false }: { proof: boolean; mobile?: boolean }) {
   return (

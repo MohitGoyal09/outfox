@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { AnimatedNumber } from "@/components/aceternity/animated-number";
 import { useMedia } from "./HeroBackdrop";
-import { CHECK_DATE, HERO_FINDINGS, type Evidence, type HeroFinding } from "./landing-data";
+import { HERO_FINDINGS, type Evidence, type HeroFinding } from "./landing-data";
 
 const useIsoLayoutEffect = typeof window === "undefined" ? useEffect : useLayoutEffect;
 
@@ -35,7 +35,6 @@ const cardClass = cn(
   LIFT,
 );
 
-const shortDate = (d: string) => d.replace(/\s\d{4}$/, "");
 
 const GLYPHS = " .:-=+*#";
 const TRACE_OFF = "transition-opacity duration-500 group-data-[tracing=true]/trail:opacity-0 group-hover:opacity-0";
@@ -81,7 +80,7 @@ function EvidenceCard({ item, priority }: { item: Evidence; priority: boolean })
         <span className="line-clamp-3 text-[15px] font-medium leading-[1.35] text-fg">{title}</span>
       </span>
       <span className="num flex items-center justify-between gap-2 border-t border-border px-2.5 py-2 text-xs leading-none">
-        <span className="whitespace-nowrap text-fg-tertiary"><span className="hidden min-[1180px]:inline">fetched </span>{shortDate(item.fetched)}</span>
+        <span className="whitespace-nowrap text-fg-tertiary">{item.where}</span>
         <span className="whitespace-nowrap font-medium text-fg">Open ↗</span>
       </span>
     </a>
@@ -161,24 +160,4 @@ export function TrailVisual({ className }: { className?: string }) {
   const dim = "transition-opacity duration-500 group-data-[tracing=true]/trail:opacity-50";
   const figureText = `${f.brand} leans on ${f.hook.toLowerCase()}s.`;
   const firstDraw = reduce || switched ? 0 : FIRST_DRAW_DELAY_S;
-
-  return (
-    <figure
-      data-tracing={tracing}
-      className={cn("group/trail contents md:relative md:block", className)}
-      onMouseEnter={() => setHold(true)}
-      onMouseLeave={() => setHold(false)}
-      onFocus={() => setHold(true)}
-      onBlur={() => setHold(false)}
-    >
-      
-
-      <figcaption className="order-5 flex items-center justify-end md:mt-2">
-        <span role="group" aria-label="Choose a finding" className="flex items-center">
-          
-          
-        </span>
-      </figcaption>
-    </figure>
-  );
 }

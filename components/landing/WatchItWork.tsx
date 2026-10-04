@@ -6,7 +6,7 @@ import { animate, motion, useInView } from "motion/react";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { cn } from "@/lib/utils";
-import { AD_CREATIVE, CHECK_DATE, RIBBON, SOURCES, SUGAR_READ_ADS } from "./landing-data";
+import { AD_CREATIVE, RIBBON, SOURCES, SUGAR_READ_ADS } from "./landing-data";
 
 const PROMPT = "Which ad is SUGAR betting on?";
 

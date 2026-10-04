@@ -23,6 +23,10 @@ export function TrackVisual() {
   );
 }
 
+export function CheckVisual() {
+  const b = MINIMALIST;
+}
+
 const chip = "num mx-0.5 inline-flex h-4 min-w-4 items-center justify-center rounded-[5px] border border-border bg-bg-inset px-1 align-[0.1em] text-[10px] text-fg-secondary";
 
 export function AskVisual() {

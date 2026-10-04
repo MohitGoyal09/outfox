@@ -6,7 +6,7 @@ import { ArrowUp, RotateCcw } from "lucide-react";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { hookName } from "@/components/drishti/labels";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
-import { CHECK_DATE, HOOK_MATRIX, SOURCES, SUGAR_LONGEST_AD } from "./landing-data";
+import { HOOK_MATRIX, SOURCES, SUGAR_LONGEST_AD } from "./landing-data";
 
 type Part = string | number;
 type Source = { engine: string; label: string; meta: string; href?: string };

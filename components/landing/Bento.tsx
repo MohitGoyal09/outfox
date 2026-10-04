@@ -14,8 +14,67 @@ export function HookTable() {
   const body = useRef<HTMLTableSectionElement>(null);
   return (
     <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-raised">
-      
+      <table className="w-full min-w-[34rem] border-collapse text-[12px]" aria-label="Hook mix by brand">
+        <thead>
+          <tr className="border-b border-border">
+            <th scope="col" className="py-2 pl-3 pr-2 text-left align-bottom text-[11px] font-medium text-fg-tertiary">
+              Brand
+            </th>
+            {HOOK_ORDER.map((h) => (
+              <th key={h} scope="col" className="px-1.5 py-2 text-right align-bottom text-[11px] font-medium leading-[1.2] text-fg-tertiary">
+                
+              </th>
+            ))}
+          </tr>
+        </thead>
+        <tbody ref={body}>
+          {HOOK_MATRIX.map((row, r) => (
+            <tr key={row.name} className="border-b border-border last:border-b-0">
+              
+              {HOOK_ORDER.map((h, c) => {
+                const count = row.counts[h];
+                const share = Math.round((count / row.total) * 100);
+                const pos = `${r}-${c}`;
+                return (
+                  <HookCell
+                    key={h}
+                    brand={row.name}
+                    hook={h}
+                    count={count}
+                    total={row.total}
+                    share={share}
+                    fill={shade(share, h)}
+                    pos={pos}
+                    tabbable={cur === pos}
+                    onFocusCell={() => setCur(pos)}
+                    onKeyDown={(e) => move(r, c, e)}
+                  />
+                );
+              })}
+            </tr>
+          ))}
+        </tbody>
+      </table>
     </div>
+  );
+}
+
+export function AdCard() {
+  return (
+    <CardContainer className="flex flex-col rounded-[14px] border border-border bg-bg-raised shadow-xs" containerClassName="flex-1">
+      <div className="relative aspect-[600/885] w-full overflow-hidden rounded-t-[13px] border-b border-border bg-white">
+        
+      </div>
+      <CardItem translateZ={18} className="flex flex-col gap-2 p-3.5">
+        <div className="flex items-center justify-between gap-2">
+          <EngineTag engine="google_ads_transparency_center" />
+          
+        </div>
+        <p className="text-[13px] text-fg-secondary">
+          {a.brand}. Ran for <span className="num font-medium text-fg">{a.totalDaysShown}</span> days
+        </p>
+      </CardItem>
+    </CardContainer>
   );
 }
 

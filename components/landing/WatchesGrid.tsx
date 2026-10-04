@@ -31,9 +31,9 @@ export function WatchesGrid() {
     <section aria-labelledby="watches-heading" className="l-wrap py-20 lg:py-28">
       
       <h2 id="watches-heading" className="l-h2 mt-4 max-w-[20ch] text-balance text-fg">
-        Five public sources. Every finding dated.
+        Five public sources. Every finding cited.
       </h2>
-      <SectionCaption items={["public sources only", "dated", "no logins"]} />
+      <SectionCaption items={["public sources only", "cited", "no logins"]} />
       <ul className="m-0 mt-10 grid list-none gap-3 p-0 sm:grid-cols-2 lg:grid-cols-5">
         {WATCHES.map((w) => (
           <li key={w.engine} className="flex flex-col rounded-[16px] border border-border bg-white p-5">

@@ -48,7 +48,7 @@ export function ProductShowcase() {
       <h2 id="product-heading" className="l-h2 mt-3 max-w-[26ch] text-[clamp(1.875rem,1.2rem+2.6vw,3rem)] text-fg">
         Search, ads, YouTube, news and demand for each brand, in one place.
       </h2>
-<SectionCaption items={["five public sources", "dated", "linked to the source"]} />
+<SectionCaption items={["five public sources", "cited", "linked to the source"]} />
       <div className="mt-12 lg:mt-16">
         <StackedFeatures features={FEATURES} />
       </div>
