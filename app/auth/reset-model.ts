@@ -22,3 +22,7 @@ export function nextStep(step: ResetStep, event: "codeSent" | "back"): ResetStep
 export function canResend(secondsSinceSend: number): boolean {
   return secondsSinceSend >= RESEND_COOLDOWN_SECONDS;
 }
+
+export function revealSendError(mapped: string, isProduction: boolean): boolean {
+  return !isProduction && (mapped === MSG_NOT_SET_UP || mapped === MSG_SEND_FAILED);
+}

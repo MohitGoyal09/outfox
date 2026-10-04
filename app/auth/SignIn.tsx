@@ -16,8 +16,7 @@ import {
   nextStep,
   validateEmail,
   validateResetForm,
-  RESEND_COOLDOWN_SECONDS,
-} from "./reset-model";
+  RESEND_COOLDOWN_SECONDS, revealSendError } from "./reset-model";
 
 const linkClass =
   "rounded-sm text-sm text-fg-secondary underline decoration-border-strong underline-offset-4 hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2 disabled:opacity-50";
@@ -62,12 +61,17 @@ export function SignIn() {
     setIsSubmitting(true);
     try {
       await signIn("password", { email: email.trim(), flow: "reset" });
-      setResetStep((step) => nextStep(step, "codeSent"));
-      setSentAt(Date.now());
-      setNow(Date.now());
     } catch (cause) {
-      setError(mapResetError(cause, "send"));
+      const mapped = mapResetError(cause, "send");
+      if (revealSendError(mapped, process.env.NODE_ENV === "production")) {
+        setError(mapped);
+        setIsSubmitting(false);
+        return;
+      }
     }
+    setResetStep((step) => nextStep(step, "codeSent"));
+    setSentAt(Date.now());
+    setNow(Date.now());
     setIsSubmitting(false);
   }
 
@@ -182,7 +186,7 @@ export function SignIn() {
             {isResetting
               ? resetStep === "email"
                 ? "Enter your email and we will send an 8-digit code."
-                : "Enter the code we emailed and choose a new password."
+                : "If an account exists for that email, we sent it a code. Enter it and choose a new password."
               : mode === "signIn"
               ? "Continue your brand research with the evidence still attached."
               : "Start a private evidence desk for the brands you follow."}
