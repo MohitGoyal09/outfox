@@ -635,3 +635,8 @@
     scroll-behavior: auto !important;
   }
 }
+
+/* Hero backdrop: the dithered photo fades in once it is ready. Static under reduced motion. */
+.l-backdrop-in { animation: l-backdrop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
+@keyframes l-backdrop-in { from { opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .l-backdrop-in { animation: none; } }

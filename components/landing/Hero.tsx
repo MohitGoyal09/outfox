@@ -3,13 +3,5 @@ import { Highlight } from "@/components/aceternity/hero-highlight";
 import { MagneticButton } from "@/components/aceternity/magnetic-button";
 import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect";
 import { RequestAccessDialog } from "./RequestAccessDialog";
-import { HeroSpotlight } from "./HeroSpotlight";
+import { HeroBackdrop } from "./HeroBackdrop";
 import { TrailVisual } from "./TrailVisual";
-
-export function Hero() {
-  return (
-    <HeroSpotlight>
-    
-    </HeroSpotlight>
-  );
-}
