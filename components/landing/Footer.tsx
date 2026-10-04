@@ -5,7 +5,7 @@ const headClass = "text-[13px] font-medium text-fg";
 
 export function Footer() {
   return (
-    <footer className="overflow-hidden border-t border-border">
+    <footer className="l-ink relative overflow-hidden bg-[var(--ink-base)]">
       <div className="l-wrap grid gap-10 pb-10 pt-14 lg:grid-cols-12">
         <div className="lg:col-span-5">
           <div className="flex items-center gap-2">
@@ -30,13 +30,13 @@ export function Footer() {
         </nav>
         <div className="flex flex-col gap-2 border-t border-border pt-6 text-[13px] text-fg-tertiary lg:col-span-12 lg:flex-row lg:items-center lg:justify-between">
           
-          
+          <p>&copy; 2026 Drishti.</p>
         </div>
       </div>
       <p
         aria-hidden="true"
-        className="pointer-events-none -mb-[0.2em] select-none whitespace-nowrap text-center font-semibold leading-[0.8] tracking-[-0.05em] text-border"
-        style={{ fontFamily: "var(--font-display)", fontSize: "clamp(5.5rem, 26vw, 24rem)" }}
+        className="pointer-events-none -mb-[0.2em] select-none whitespace-nowrap text-center font-semibold leading-[0.8] tracking-[-0.05em] text-white/5"
+        style={{ fontFamily: "var(--font-display)", fontSize: "clamp(120px, 22vw, 300px)" }}
       >
         Drishti
       </p>

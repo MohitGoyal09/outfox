@@ -7,6 +7,7 @@ import { Dithering } from "@paper-design/shaders-react";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
 import { cn } from "@/lib/utils";
 import { hasWebGL2 } from "./dither";
+import { SectionCaption } from "./SectionCaption";
 
 type Kind = "yes" | "partial" | "no";
 type Cell = { kind: Kind; label: string };
@@ -31,9 +32,4 @@ export function Comparison() {
   const reduce = useReducedMotion();
   const near = useInView(cardRef, { once: true, margin: "300px 0px" });
   const inView = useInView(cardRef, { margin: "80px 0px" });
-  return (
-    <section aria-labelledby="compare-heading" className="border-t border-border">
-      
-    </section>
-  );
 }
