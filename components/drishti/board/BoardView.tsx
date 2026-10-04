@@ -17,6 +17,7 @@ import { StatReadout } from "../StatReadout";
 import { VALUE_CLASS, iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
 import { useAllRuns } from "../cohorts/useAllRuns";
+import { BrandHookMatrix } from "./BrandHookMatrix";
 import { BrandLeaderboard } from "./BrandLeaderboard";
 import { EngineCoverage } from "./EngineCoverage";
 import { BoardMixChart } from "./BoardMixChart";
@@ -37,6 +38,8 @@ import {
   runCoverageLine,
   scopeCohortRuns,
   scopeEmergingToComparable,
+  deriveBrandHookMatrix,
+  deriveHookOverIndex,
   taggedShareLabel,
 } from "./board-model";
 
@@ -161,6 +164,11 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     () => (claims !== undefined ? deriveFunnelDistribution(claims, priorClaims) : []),
     [claims, priorClaims],
   );
+  const hookMatrix = useMemo(
+    () => (claims !== undefined ? deriveBrandHookMatrix(claims, brandIds, brandNames, ownBrandId) : null),
+    [claims, brandIds, brandNames, ownBrandId],
+  );
+  const hookCallouts = useMemo(() => (hookMatrix !== null ? deriveHookOverIndex(hookMatrix) : []), [hookMatrix]);
   const funnelUnclear = claims !== undefined ? countUnclear(claims, "funnelStage") : 0;
   const funnelClear = funnelItems.reduce((sum, item) => sum + (item.count ?? 0), 0);
   const leaders = useMemo(
@@ -411,6 +419,13 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
               emptyDescription="Every tagged finding carries a funnel stage. The mix appears here once at least one finding has been tagged."
             />
           </div>
+          {brandIds.length >= 2 ? (
+            <BrandHookMatrix
+              matrix={hookMatrix ?? { hooks: [], rows: [] }}
+              callouts={hookCallouts}
+              loading={claims === undefined}
+            />
+          ) : null}
           <BrandLeaderboard
             rows={leaders}
             totalClaims={claims !== undefined ? countFindings(claims) : 0}

@@ -317,3 +317,41 @@ export function scopeEmergingToComparable(
     brands.filter((brand) => brand.hasPrevious).map((brand) => String(brand.brandId)),
   );
 }
+const MAX_OVER_INDEX_CALLOUTS = 3;
+
+export type HookMatrixCell = { count: number; sharePct: number | null };
+
+export type HookMatrixRow = {
+  brandId: string;
+  name: string;
+  isOwn: boolean;
+  clearTotal: number;
+  unclear: number;
+  cells: Record<string, HookMatrixCell>;
+  enoughSample: boolean;
+};
+
+export type BrandHookMatrix = { hooks: string[]; rows: HookMatrixRow[] };
+
+export type HookOverIndex = {
+  brandId: string;
+  name: string;
+  hook: string;
+  count: number;
+  brandSharePct: number;
+  othersSharePct: number;
+  othersBrandCount: number;
+  gapPp: number;
+  text: string;
+};
+
+export function deriveHookOverIndex(matrix: BrandHookMatrix): HookOverIndex[] {
+  const sampled = matrix.rows.filter((row) => row.enoughSample);
+  const best: HookOverIndex[] = [];
+  for (const row of sampled) {
+    if (others.length === 0) continue;
+    const othersTotal = others.reduce((sum, other) => sum + other.clearTotal, 0);
+    let top: HookOverIndex | null = null;
+  }
+  return best.sort((a, b) => b.gapPp - a.gapPp).slice(0, MAX_OVER_INDEX_CALLOUTS);
+}
