@@ -2,8 +2,10 @@
 
 import { ConvexAuthProvider, useConvexAuth } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
-import { usePathname } from "next/navigation";
+import { useEffect } from "react";
+import { usePathname, useRouter } from "next/navigation";
 import { SignIn } from "@/app/auth/SignIn";
+import { LandingPage } from "@/components/landing/LandingPage";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 
@@ -27,10 +29,17 @@ export function Providers({ children }: { children: React.ReactNode }) {
 }
 
 const PUBLIC_PATH_PREFIXES = ["/share/board/"];
+const SIGN_IN_PATH = "/signin";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const pathname = usePathname();
+  const router = useRouter();
+  const signedInAtSignIn = isAuthenticated && pathname === SIGN_IN_PATH;
+
+  useEffect(() => {
+    if (signedInAtSignIn) router.replace("/");
+  }, [signedInAtSignIn, router]);
 
   if (PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return children;
 
@@ -42,5 +51,7 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     );
   }
 
-  return isAuthenticated ? children : <SignIn />;
+  if (signedInAtSignIn) return null;
+  if (isAuthenticated) return children;
+  return pathname === "/" ? <LandingPage /> : <SignIn />;
 }

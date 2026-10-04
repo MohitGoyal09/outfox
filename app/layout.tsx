@@ -21,7 +21,7 @@ export const metadata: Metadata = {
     template: "%s · Drishti",
   },
   description:
-    "Compare Indian D2C rivals on public search, ad, creator, and demand signals. Every claim links to the SerpApi response it came from.",
+    "Drishti reads Google Search, Google Ads Transparency, YouTube, Google News and Google Trends for the brands you compete with, tags what their creative leans on, and links every number to the exact evidence behind it.",
 };
 
 export const viewport: Viewport = {
