@@ -27,7 +27,7 @@ import {
 } from "@/components/drishti/brands/filters/filters-model";
 import type { FeedBrandInfo } from "@/components/drishti/feed/FeedCard";
 import { OffTopicNotice } from "@/components/drishti/brands/filters/OffTopicNotice";
-import { assessTopicality } from "@/components/drishti/brands/topicality";
+import { offTopicIds } from "@/components/drishti/brands/topicality";
 import { FeedFilterBar } from "@/components/drishti/feed/FeedFilterBar";
 import { FeedGrid } from "@/components/drishti/feed/FeedGrid";
 import {
@@ -128,13 +128,9 @@ function FeedBody() {
   );
   const offTopicClaims = useMemo(() => {
     const brandDocById = new Map(brands.map((brand) => [String(brand._id), brand]));
-    return new Set(
-        matching.filter((claim) => {
-          const brand = brandDocById.get(String(claim.brandId));
-          return brand !== undefined && assessTopicality(claim, brand) === "possibly_off_topic";
-        }),
-    );
-  }, [matching, brands]);
+    const ids = offTopicIds(contentClaims, brandDocById);
+    return new Set(matching.filter((claim) => ids.has(String(claim._id))));
+  }, [matching, contentClaims, brands]);
   const showOffTopic = filters.offtopic === "show";
   const filtered = useMemo(
     () => (showOffTopic ? matching : matching.filter((claim) => !offTopicClaims.has(claim))),

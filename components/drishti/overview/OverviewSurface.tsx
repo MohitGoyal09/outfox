@@ -4,6 +4,9 @@ import { useQuery } from "convex/react";
 import { ArrowRight, BarChart3, Building2, Quote, Radar, Search, TriangleAlert } from "lucide-react";
 import { useMemo, useState } from "react";
 
+import { offTopicIds } from "@/components/drishti/brands/topicality";
+import { useBrandFilters } from "@/components/drishti/brands/filters/useBrandFilters";
+
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
 import { EmptyState, Panel, iconProps } from "@/components/drishti";
@@ -154,9 +157,23 @@ function OverviewBody() {
         : composeNeedsAttention({ brands: brandLikes, runs: runLikes, claims, brandNameById, nowMs, ownBrandId }),
     [panelsLoading, brandLikes, runLikes, claims, brandNameById, nowMs, ownBrandId],
   );
+  const { filters: homeFilters, setFilter: setHomeFilter } = useBrandFilters();
+  const showOffTopic = homeFilters.offtopic === "show";
+  const offTopic = useMemo(
+    () =>
+      offTopicIds(
+        (feedQuery ?? []).flatMap((entry) => entry.recent),
+        new Map(brands.map((brand) => [String(brand._id), brand])),
+      ),
+    [feedQuery, brands],
+  );
+  const evidenceClaims = useMemo(
+    () => (showOffTopic ? claims : claims.filter((claim) => !offTopic.has(claim.id))),
+    [claims, offTopic, showOffTopic],
+  );
   const evidenceFeed = useMemo(
-    () => composeNewestEvidence(claims, brandNameById, undefined, ownBrandId),
-    [claims, brandNameById, ownBrandId],
+    () => composeNewestEvidence(evidenceClaims, brandNameById, undefined, ownBrandId),
+    [evidenceClaims, brandNameById, ownBrandId],
   );
   const newestEvidenceThumbnailIds = useMemo(
     () =>
@@ -326,6 +343,9 @@ function OverviewBody() {
             claimsById={claimsById}
             brandById={brandById}
             thumbnailByClaimId={newestEvidenceThumbnailById}
+            hiddenCount={offTopic.size}
+            showOffTopic={showOffTopic}
+            onToggleOffTopic={() => setHomeFilter("offtopic", showOffTopic ? "hide" : "show")}
           />
         </div>
         <div className="lg:col-span-4">

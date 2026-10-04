@@ -9,7 +9,7 @@ import { isContentClaim, tagsForClaim, type ClaimDoc, type SnapshotDoc } from ".
 import { EvidenceGrid, evidenceCardCount, gridSortOptionsFrom } from "./EvidenceGrid";
 import { FilterBar } from "./filters/FilterBar";
 import { OffTopicNotice } from "./filters/OffTopicNotice";
-import { assessTopicality } from "./topicality";
+import { offTopicIds } from "./topicality";
 import {
   describeActiveBrandFilters,
   engineOptionsFrom,
@@ -55,11 +55,12 @@ export function EvidenceSection({
   const brandId = latestClaims[0]?.brandId;
   const brand = useQuery(api.brands.getBrand, brandId ? { brandId } : "skip");
   const offTopic = useMemo(
-    () =>
-      brand
-        ? new Set(matching.filter((claim) => assessTopicality(claim, brand) === "possibly_off_topic"))
-        : new Set<ClaimDoc>(),
-    [matching, brand],
+    () => {
+      if (!brand) return new Set<ClaimDoc>();
+      const ids = offTopicIds(contentClaims, new Map([[String(brand._id), brand]]));
+      return new Set(matching.filter((claim) => ids.has(String(claim._id))));
+    },
+    [matching, contentClaims, brand],
   );
   const showOffTopic = filters.offtopic === "show";
   const filtered = useMemo(

@@ -5,6 +5,7 @@ import { ArrowRight, Quote } from "lucide-react";
 
 import { EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
 import type { ClaimDoc } from "@/components/drishti/brands/brand-model";
+import { OffTopicNotice } from "@/components/drishti/brands/filters/OffTopicNotice";
 import { FeedCard, type FeedBrandInfo, type FeedThumbnail } from "@/components/drishti/feed/FeedCard";
 import { cn } from "@/lib/utils";
 
@@ -18,6 +19,9 @@ export type NewestEvidenceProps = {
   claimsById: ReadonlyMap<string, ClaimDoc>;
   brandById: ReadonlyMap<string, FeedBrandInfo>;
   thumbnailByClaimId: ReadonlyMap<string, FeedThumbnail>;
+  hiddenCount: number;
+  showOffTopic: boolean;
+  onToggleOffTopic: () => void;
 };
 
 function NewestEvidenceSkeleton() {
@@ -32,7 +36,17 @@ function NewestEvidenceSkeleton() {
   );
 }
 
-export function NewestEvidence({ loading, hasBrands, feed, claimsById, brandById, thumbnailByClaimId }: NewestEvidenceProps) {
+export function NewestEvidence({
+  loading,
+  hasBrands,
+  feed,
+  claimsById,
+  brandById,
+  thumbnailByClaimId,
+  hiddenCount,
+  showOffTopic,
+  onToggleOffTopic,
+}: NewestEvidenceProps) {
   const trailing = (
     <div className="flex items-center gap-3">
       {feed && feed.bounded ? (
@@ -58,6 +72,16 @@ export function NewestEvidence({ loading, hasBrands, feed, claimsById, brandById
       className="h-full"
       unframed
     >
+      {!loading && hasBrands ? (
+        <div className="mb-3">
+          <OffTopicNotice
+            hiddenCount={hiddenCount}
+            subject="the brand they were found for"
+            showing={showOffTopic}
+            onToggle={onToggleOffTopic}
+          />
+        </div>
+      ) : null}
       {loading ? (
         <NewestEvidenceSkeleton />
       ) : !hasBrands ? (
