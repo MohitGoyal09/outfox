@@ -34,7 +34,7 @@ function ItemCard({ item }: { item: FlowItem }) {
       </div>
       <CardThumb claim={claim} className="mt-2 h-32" />
       <p className="mt-2 line-clamp-4 text-[13px] font-medium leading-[1.4] text-fg">{adLine(claim) ?? displayClaimText(claim.text)}</p>
-      {claim.tagHook || claim.tagStage ? <div className="mt-2 flex"><CardTags claim={claim} /></div> : null}
+      {claim.tagHook || claim.tagStage ? <div className="mt-2 flex flex-wrap gap-1.5"><CardTags claim={claim} /></div> : null}
       {isHttpUrl(claim.evidenceUrl) ? (
         <a
           href={claim.evidenceUrl}

@@ -37,20 +37,26 @@ export function CardThumb({ claim, className }: { claim: FlowClaim; className?: 
   );
 }
 
+const TAGS_WRAP_CHARS = 30;
+
+export function tagsMayWrap(claim: FlowClaim): boolean {
+  if (!claim.tagHook || !claim.tagStage) return false;
+  return hookName(claim.tagHook).length + stageName(claim.tagStage).length > TAGS_WRAP_CHARS;
+}
+
+const CHIP = "inline-flex max-w-full items-center gap-1 whitespace-nowrap rounded-full border border-border px-1.5 py-px text-[11px] leading-4 text-fg-secondary";
+
 export function CardTags({ claim }: { claim: FlowClaim }) {
-  if (!claim.tagHook && !claim.tagStage) return null;
   return (
-    <span className="flex min-w-0 items-center gap-1.5 overflow-hidden">
+    <>
       {claim.tagHook ? (
-        <span className="inline-flex min-w-0 items-center gap-1 rounded-full border border-border px-1.5 py-0.5 text-[11px] text-fg-secondary">
+        <span className={CHIP}>
           <span aria-hidden="true" className="size-1.5 shrink-0 rounded-full" style={{ backgroundColor: hookDotColor(claim.tagHook) }} />
-          <span className="truncate">{hookName(claim.tagHook)}</span>
+          {hookName(claim.tagHook)}
         </span>
       ) : null}
-      {claim.tagStage ? (
-        <span className="min-w-0 truncate rounded-full border border-border px-1.5 py-0.5 text-[11px] text-fg-secondary">{stageName(claim.tagStage)}</span>
-      ) : null}
-    </span>
+      {claim.tagStage ? <span className={CHIP}>{stageName(claim.tagStage)}</span> : null}
+    </>
   );
 }
 

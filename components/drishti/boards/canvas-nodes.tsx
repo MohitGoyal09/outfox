@@ -22,7 +22,7 @@ import { PlatformLogo } from "../brands/PlatformLogo";
 import { sourceName } from "../labels";
 import { VALUE_CLASS, iconProps, sourceColor } from "../tokens";
 import { fromNodeId, type FlowClaim } from "./canvas-flow";
-import { adLine, CardBrand, CardTags, CardThumb } from "./claim-card-parts";
+import { adLine, CardBrand, CardTags, CardThumb, tagsMayWrap } from "./claim-card-parts";
 
 export type Move = { kind: "item" | "note" | "frame"; id: string; x: number; y: number; w?: number; h?: number };
 
@@ -107,11 +107,11 @@ export function EvidenceNode({ data, selected }: NodeProps) {
         </span>
       </div>
       <CardThumb claim={claim} className="h-[88px]" />
-      <p className={cn("text-[13px] font-medium leading-[1.35] text-fg", hasThumb ? "line-clamp-2" : "line-clamp-3")}>
+      <p className={cn("text-[13px] font-medium leading-[1.35] text-fg", hasThumb ? (tagsMayWrap(claim) ? "line-clamp-1" : "line-clamp-2") : "line-clamp-3")}>
         {ad ?? displayClaimText(claim.text)}
       </p>
-      <div className="flex items-center gap-2">
-        <div className="flex min-w-0 flex-1"><CardTags claim={claim} /></div>
+      <div className="flex flex-wrap items-center gap-x-1.5 gap-y-1">
+        <CardTags claim={claim} />
         {isHttpUrl(claim.evidenceUrl) ? (
           <a
             href={claim.evidenceUrl}
