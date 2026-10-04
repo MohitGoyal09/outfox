@@ -49,11 +49,11 @@ export function StickyBanner({ children, className }: { children: ReactNode; cla
       initial={false}
       animate={{ height: open ? 36 : 0 }}
       transition={reduce ? { duration: 0 } : { duration: 0.24, ease: EASE_OUT }}
-      className={cn("l-ink relative z-50 overflow-hidden bg-[var(--ink-base)] text-fg", className)}
+      className={cn("relative z-50 overflow-hidden border-b border-border bg-bg text-fg-secondary", className)}
       aria-hidden={open ? undefined : true}
       inert={open ? undefined : true}
     >
-      <div className="flex h-9 items-center justify-center px-12 text-center text-[13px] leading-none">{children}</div>
+      <div className="flex h-9 items-center justify-center gap-2 px-12 text-center text-[13px] leading-none"><span aria-hidden="true" className="size-1.5 rounded-full bg-[var(--mark)]" />{children}</div>
       <button
         type="button"
         onClick={dismiss}
