@@ -1,5 +1,7 @@
 
 import type { DistributionItem } from "../DistributionPanel";
+import { STALE_CHECK_DAYS } from "@/lib/constants";
+export { STALE_CHECK_DAYS };
 import type { Doc } from "@/convex/_generated/dataModel";
 import { sameSource, sourceKey, sourceName, sourcePartFailure, uniqueSources } from "@/components/drishti/labels";
 import { ABSENT, FUNNEL_STAGES, type Tone } from "../tokens";
@@ -669,6 +671,7 @@ export type SourceCheck = {
   reason: string | null;
   isStale: boolean;
 };
+
 const FAILURE_REASON_MAX = 120;
 
 export function latestCheckBySource(

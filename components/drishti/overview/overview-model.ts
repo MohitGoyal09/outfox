@@ -1,4 +1,5 @@
 
+import { STALE_CHECK_DAYS } from "@/lib/constants";
 import { displayClaimText } from "../brands/format";
 import { sourceKey, sourceName } from "../labels";
 import { hookName } from "../labels";
@@ -84,7 +85,7 @@ export function brandCoverage(
 }
 
 
-export const STALE_RUN_DAYS = 14;
+export const STALE_RUN_DAYS = STALE_CHECK_DAYS;
 
 export type AttentionReason = "never_run" | "failed" | "stale";
 
