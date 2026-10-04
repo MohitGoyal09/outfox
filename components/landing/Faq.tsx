@@ -34,11 +34,3 @@ function Item({ q, a, open, onToggle }: { q: string; a: string; open: boolean; o
     </div>
   );
 }
-
-export function Faq() {
-  return (
-    <section id="faq" aria-labelledby="faq-heading" className="l-wrap scroll-mt-20 py-20 lg:py-28">
-      
-    </section>
-  );
-}

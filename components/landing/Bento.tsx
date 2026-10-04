@@ -9,7 +9,7 @@ import { CardContainer, CardItem } from "@/components/aceternity/3d-card";
 import { BentoGrid, BentoGridItem } from "@/components/aceternity/bento-grid";
 import { AD_CREATIVE, ASK, CHECK_DATE, HOOK_MATRIX, HOOK_ORDER, OFF_TOPIC, TRENDS } from "./landing-data";
 
-function HookTable() {
+export function HookTable() {
   return (
     <div className="overflow-x-auto rounded-[10px] border border-border bg-bg-raised">
       
@@ -43,10 +43,7 @@ function AskAnswer() {
   );
 }
 
-function AdCard() {
-}
-
-function OffTopic() {
+export function OffTopic() {
   const [showing, setShowing] = useState(true);
   const o = OFF_TOPIC;
 }

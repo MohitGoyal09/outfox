@@ -39,12 +39,3 @@ function Verdict({ cell, onInk }: { cell: Cell; onInk?: boolean }) {
     </span>
   );
 }
-
-export function Comparison() {
-  const reduce = useReducedMotion();
-  return (
-    <section aria-labelledby="compare-heading" className="border-t border-border bg-bg-raised">
-      
-    </section>
-  );
-}

@@ -1,6 +1,5 @@
 import { Reveal } from "@/components/aceternity/reveal";
 import { StickyBanner } from "@/components/aceternity/sticky-banner";
-import { Bento } from "./Bento";
 import { Comparison } from "./Comparison";
 import { CtaBand } from "./CtaBand";
 import { Faq } from "./Faq";
@@ -9,40 +8,8 @@ import { Hero } from "./Hero";
 import { HowItWorks } from "./HowItWorks";
 import { LandingNav } from "./LandingNav";
 import { Numbers } from "./Numbers";
-import { ProductTabs } from "./ProductTabs";
+import { ProductShowcase } from "./ProductShowcase";
 import { Problem } from "./Problem";
 import { SourcesStrip } from "./SourcesStrip";
+import { StatBand } from "./StatBand";
 import { WillNotClaim } from "./WillNotClaim";
-
-export function LandingPage() {
-  return (
-    <div className="min-h-dvh overflow-x-clip bg-bg text-fg">
-      
-      <LandingNav />
-      <main>
-        
-        <Reveal>
-          
-        </Reveal>
-        <Reveal>
-          <Problem />
-        </Reveal>
-        
-        <ProductTabs />
-        
-        <Reveal>
-          <WillNotClaim />
-        </Reveal>
-        <Reveal>
-          
-        </Reveal>
-        
-        <Reveal>
-          <Faq />
-        </Reveal>
-        
-      </main>
-      
-    </div>
-  );
-}

@@ -14,6 +14,7 @@
     "@ai-sdk/react": "^4.0.110",
     "@convex-dev/auth": "^0.0.95",
     "@openrouter/ai-sdk-provider": "^3.1.0",
+    "@paper-design/shaders-react": "0.0.81",
     "@streamdown/cjk": "^1.0.3",
     "@streamdown/code": "^1.1.1",
     "@streamdown/math": "^1.0.2",

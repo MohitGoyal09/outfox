@@ -1,41 +1,51 @@
-import { CountUp } from "@/components/aceternity/count-up";
+"use client";
+
+import { useState } from "react";
+import { ChartLine } from "lucide-react";
+import { motion, useReducedMotion } from "motion/react";
 import { hookName } from "@/components/drishti/labels";
 import { HOOK_COLOR } from "@/components/drishti/tokens";
-import { CHECK_DATE, HOOK_MATRIX, HOOK_ORDER, NUMBERS } from "./landing-data";
+import { cn } from "@/lib/utils";
+import { CHECK_DATE, HOOK_MATRIX, HOOK_ORDER } from "./landing-data";
 
-const toNumber = (s: string) => Number(s.replace(/,/g, ""));
-const TOP3 = MIX.slice(0, 3);
-const pct = (n: number) => Math.round((n / MIX_TOTAL) * 100);
+type Hook = (typeof HOOK_ORDER)[number];
+
+const Y_MAX = 50;
+const TICKS = [0, 10, 20, 30, 40, 50];
+const EASE = [0.22, 1, 0.36, 1] as const;
+
+const shares = (h: Hook) => HOOK_MATRIX.map((b) => (b.counts[h] / b.total) * 100);
+const spread = (h: Hook) => {
+  const s = shares(h);
+  return Math.max(...s) - Math.min(...s);
+};
+const CHOICES = [...HOOK_ORDER].sort((a, b) => spread(b) - spread(a)).slice(0, 4);
+const yPct = (v: number) => 100 - (v / Y_MAX) * 100;
+const shortName = (n: string) => n.split(" ")[0];
 
 export function Numbers() {
+  const reduce = useReducedMotion();
+  const values = shares(hook);
+  const pts = values.map((v, i) => [xPct(i), yPct(v)] as const);
+  const area = `${line} L${pts[pts.length - 1][0]} 100 L${pts[0][0]} 100 Z`;
+
+  const onKey = (e: React.KeyboardEvent, i: number) => {
+    (e.currentTarget.parentElement?.querySelector(`[data-hook="${next}"]`) as HTMLElement | null)?.focus();
+  };
+
   return (
-    <section aria-labelledby="numbers-heading" className="l-wrap py-20 lg:py-28">
-      <h2 id="numbers-heading" className="l-label">
+    <section aria-labelledby="numbers-heading" className="l-wrap pb-20 pt-16 lg:pb-28 lg:pt-24">
+      <p className="l-eyebrow">
         From the demo workspace, check of 
-      </h2>
-
-      <div className="mt-10 grid items-center gap-10 lg:grid-cols-2 lg:gap-16">
+      </p>
+      <div className="mt-5 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
         
-
-        <figure aria-labelledby="mix-caption">
-          
-          
-          <figcaption id="mix-caption" className="mt-4 text-[0.8125rem] leading-[1.45] text-fg-secondary">
-            Hook mix of the {MIX_TOTAL} findings with a clear hook, all brands.
-          </figcaption>
-        </figure>
+        
       </div>
 
-      
-
-      <dl className="grid grid-cols-1 gap-8 sm:grid-cols-3 sm:gap-6">
-        {SMALL.map((f) => (
-          <div key={f.label} className="flex flex-col">
-            
-            <dt className="order-2 mt-3 text-[0.6875rem] font-medium uppercase leading-[1.4] tracking-[0.08em] text-fg-secondary">{f.label}</dt>
-          </div>
-        ))}
-      </dl>
+      <div className="mt-8 h-[22rem] rounded-[20px] border border-border bg-bg-raised sm:h-[32.5rem]">
+        
+      </div>
     </section>
   );
 }
