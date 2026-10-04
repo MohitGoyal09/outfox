@@ -10,8 +10,13 @@ import {
   countFindings,
   funnelDistributionItems,
   hookDistributionItems,
+  clearHooks,
+  clearStages,
   mixForBrand,
   taggedClaims,
+  unclearFootnote,
+  unclearHooks,
+  unclearStages,
 } from "./derive";
 import type { BrandRef } from "./types";
 
@@ -53,6 +58,13 @@ export function BrandMixPanel({
       title={brand.name}
       summaryLabel={`${taggedClaims(current ?? []).length} tagged of ${countFindings(current ?? [])} findings`}
       previousLabel={previousLabel}
+      previousInfo="Change in share, in percentage points (pp), since the previous run."
+      totalLabel={kind === "hook" ? "with a clear hook" : "with a clear stage"}
+      footnote={
+        kind === "hook"
+          ? unclearFootnote(unclearHooks(currentMix), clearHooks(currentMix), "hook")
+          : unclearFootnote(unclearStages(currentMix), clearStages(currentMix), "stage")
+      }
       formatLabel={(label) => (kind === "hook" ? hookName(label) : stageName(label))}
       loading={loading}
       items={

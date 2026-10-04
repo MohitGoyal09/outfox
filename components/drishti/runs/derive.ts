@@ -19,13 +19,13 @@ import {
 import {
   ENGINE_STATUS_WORD,
   FETCH_ENGINES,
-  HOOK_WORD,
   engineLabel,
   plainReason,
   formatRunDateTime,
   formatRunDayMonth,
   isTerminalRunStatus,
 } from "./labels";
+import { hookName, nameEnumsInText } from "@/components/drishti/labels";
 import type {
   BrandRef,
   BriefComposition,
@@ -248,58 +248,107 @@ export function funnelDeltas(prev: CreativeMix, curr: CreativeMix): FunnelDelta[
 export type HookLeader = { hook: HookType; count: number; sharePct: number };
 export type FunnelLeader = { stage: FunnelStage; count: number; sharePct: number };
 
-export function leadingHook(mix: CreativeMix, excludeUntagged = false): HookLeader | null {
+const UNCLEAR = "not_applicable";
+
+function clearTotal(counts: Readonly<Record<string, number>>): number {
+  return Object.entries(counts).reduce(
+    (sum, [key, count]) => (key === UNCLEAR ? sum : sum + count),
+    0,
+  );
+}
+
+export function leadingHook(mix: CreativeMix): HookLeader | null {
+  const clear = clearTotal(mix.hooks);
   let best: HookLeader | null = null;
   for (const hook of Object.keys(mix.hooks) as HookType[]) {
-    if (excludeUntagged && hook === "not_applicable") continue;
+    if (hook === UNCLEAR) continue;
     const count = mix.hooks[hook];
     if (count <= 0) continue;
     if (best === null || count > best.count) {
-      best = { hook, count, sharePct: shareOf(count, mix.total) ?? 0 };
+      best = { hook, count, sharePct: shareOf(count, clear) ?? 0 };
     }
   }
   return best;
 }
 
-export function leadingFunnel(mix: CreativeMix, excludeUntagged = false): FunnelLeader | null {
+export function leadingFunnel(mix: CreativeMix): FunnelLeader | null {
+  const clear = clearTotal(mix.funnels);
   let best: FunnelLeader | null = null;
   for (const stage of FUNNEL_STAGES) {
-    if (excludeUntagged && stage === "not_applicable") continue;
+    if (stage === UNCLEAR) continue;
     const count = mix.funnels[stage];
     if (count <= 0) continue;
     if (best === null || count > best.count) {
-      best = { stage, count, sharePct: shareOf(count, mix.total) ?? 0 };
+      best = { stage, count, sharePct: shareOf(count, clear) ?? 0 };
     }
   }
   return best;
+}
+
+function shareItems(
+  keys: readonly string[],
+  curr: Readonly<Record<string, number>>,
+  prev: Readonly<Record<string, number>> | null,
+): DistributionItem[] {
+  const total = clearTotal(curr);
+  const priorTotal = prev === null ? null : clearTotal(prev);
+  return keys
+    .filter((key) => key !== UNCLEAR)
+    .map((key) => {
+      const count = curr[key] ?? 0;
+      const sharePct = shareOf(count, total);
+      const priorShare = prev === null ? null : shareOf(prev[key] ?? 0, priorTotal);
+      return {
+        label: key,
+        count,
+        sharePct,
+        delta: sharePct === null || priorShare === null ? null : sharePct - priorShare,
+        deltaUnit: "pp" as const,
+      };
+    });
 }
 
 export function hookDistributionItems(
   curr: CreativeMix,
   prev: CreativeMix | null,
 ): DistributionItem[] {
-  const deltas = prev === null ? null : hookDeltas(prev, curr);
-  return HOOK_TYPES.map((hook, index) => ({
-    label: hook,
-    count: curr.hooks[hook],
-    sharePct: shareOf(curr.hooks[hook], curr.total),
-    delta: deltas === null ? null : (deltas[index]?.delta ?? null),
-    deltaUnit: "count",
-  }));
+  return shareItems(HOOK_TYPES, curr.hooks, prev === null ? null : prev.hooks);
 }
 
 export function funnelDistributionItems(
   curr: CreativeMix,
   prev: CreativeMix | null,
 ): DistributionItem[] {
-  const deltas = prev === null ? null : funnelDeltas(prev, curr);
-  return FUNNEL_STAGES.map((stage, index) => ({
-    label: stage,
-    count: curr.funnels[stage],
-    sharePct: shareOf(curr.funnels[stage], curr.total),
-    delta: deltas === null ? null : (deltas[index]?.delta ?? null),
-    deltaUnit: "count",
-  }));
+  return shareItems(FUNNEL_STAGES, curr.funnels, prev === null ? null : prev.funnels);
+}
+
+export function unclearHooks(mix: CreativeMix): number {
+  return mix.hooks.not_applicable;
+}
+
+export function unclearStages(mix: CreativeMix): number {
+  return mix.funnels.not_applicable;
+}
+
+export function clearHooks(mix: CreativeMix): number {
+  return clearTotal(mix.hooks);
+}
+
+export function clearStages(mix: CreativeMix): number {
+  return clearTotal(mix.funnels);
+}
+
+export function unclearFootnote(
+  unclear: number,
+  clear: number,
+  noun: "hook" | "stage",
+): string | undefined {
+  if (unclear <= 0) return undefined;
+  return (
+    `${unclear} ${unclear === 1 ? "finding had" : "findings had"} no clear ${noun} ` +
+    `and ${unclear === 1 ? "is" : "are"} left out of this table and its shares. ` +
+    `Shares are of the ${clear} ${clear === 1 ? "finding" : "findings"} with a clear ${noun}.`
+  );
 }
 
 export type BrandMixSummary = {
@@ -309,6 +358,8 @@ export type BrandMixSummary = {
   tagCount: number;
   hook: HookLeader | null;
   funnel: FunnelLeader | null;
+  hookUnclear: number;
+  funnelUnclear: number;
   hookChange: MixDelta | null;
   funnelChange: FunnelDelta | null;
   claimDelta: number | null;
@@ -364,8 +415,10 @@ export function brandMixSummaries(input: {
       brandName: brand.name,
       claimCount: countFindings(current),
       tagCount: currentTagged,
-      hook: leadingHook(currentMix, true) ?? leadingHook(currentMix),
-      funnel: leadingFunnel(currentMix, true) ?? leadingFunnel(currentMix),
+      hook: leadingHook(currentMix),
+      funnel: leadingFunnel(currentMix),
+      hookUnclear: unclearHooks(currentMix),
+      funnelUnclear: unclearStages(currentMix),
       hookChange,
       funnelChange,
       claimDelta:
@@ -491,19 +544,19 @@ export function changeCopy(change: ChangeSummary): ChangeCopy {
     };
   }
 
-  const word = HOOK_WORD[change.hook];
-  const direction = change.delta > 0 ? "toward" : "away from";
+  const name = hookName(change.hook);
+  const direction = change.delta > 0 ? "more" : "fewer";
   return {
-    headline: `${change.brandName} moved ${direction} ${word} hooks.`,
+    headline: `${change.brandName} has ${direction} ${name} findings.`,
     body:
-      `This run has ${change.after} ${word} ${change.after === 1 ? "finding" : "findings"} ` +
+      `This run has ${change.after} ${name} ${change.after === 1 ? "finding" : "findings"} ` +
       `for ${change.brandName}; the run of ${formatRunDayMonth(change.previousAt)} ` +
       `had ${change.before}. Across the cohort, ${change.tagCount} of ` +
       `${change.cohortClaimCount} findings carry a content tag.`,
     facts: [
       change.brandName,
       `${change.brandClaimCount} findings`,
-      `${formatDelta(change.delta)} ${word}`,
+      `${formatDelta(change.delta)} ${name}`,
     ],
   };
 }
@@ -524,6 +577,11 @@ export function claimValue(claim: ClaimDoc): string | number | null {
   return value;
 }
 
+function trailValue(claim: ClaimDoc): string | number | null {
+  const value = claimValue(claim);
+  return typeof value === "string" ? nameEnumsInText(value) : value;
+}
+
 export function claimToTrailStep(
   claim: ClaimDoc,
   brandName: string,
@@ -531,8 +589,8 @@ export function claimToTrailStep(
   return {
     id: String(claim._id),
     label: `${brandName} · ${engineLabel(claim.sourceEngine)}`,
-    value: claimValue(claim),
-    reasoning: `Query "${claim.sourceQuery}" returned: ${claim.text}`,
+    value: trailValue(claim),
+    reasoning: `Query "${claim.sourceQuery}" returned: ${nameEnumsInText(claim.text)}`,
     tone: isValidEvidenceHref(claim.evidenceUrl) ? "ok" : "neutral",
     href: claim.evidenceUrl,
     meta: { at: formatRunDateTime(claim.fetchedAt) },

@@ -8,6 +8,7 @@ import {
   COST_PROVENANCE_LABEL,
   COST_PROVENANCE_NOTE,
   READOUT_SEPARATOR,
+  billedSearchesLabel,
   costProvenance,
   formatCount,
   formatUsd,
@@ -104,12 +105,8 @@ export function UsageMeter({
   }
 
   if (creditsReported !== null && creditsReported !== undefined) {
-    segments.push({
-      key: "credits",
-      text: creditsReported
-        ? `${formatCount(creditsUsed ?? 0)} credits`
-        : "credits not reported by provider",
-    });
+    const billed = billedSearchesLabel(creditsUsed, creditsReported);
+    segments.push({ key: "credits", ...billed });
   }
 
   const nodes: ReactNode[] = segments.map((segment) => (

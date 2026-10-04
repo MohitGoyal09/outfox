@@ -13,6 +13,7 @@ import {
   iconProps,
   type Tone,
 } from "@/components/drishti";
+import { measureName, nameEnumsInText } from "@/components/drishti/labels";
 import { cn } from "@/lib/utils";
 import type { BriefComposition, BriefSegment, RawClaimLine } from "./types";
 
@@ -86,17 +87,17 @@ function RawClaimRow({ line }: { line: RawClaimLine }) {
         )}
         {line.metric === "" ? null : (
           <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>
-            {line.metric}
+            {measureName(line.metric)}
           </span>
         )}
         {line.value === null ? null : (
           <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-primary)]")}>
-            {line.value}
+            {nameEnumsInText(line.value)}
           </span>
         )}
       </div>
       <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
-        {line.text}
+        {nameEnumsInText(line.text)}
       </p>
       {line.href === null ? null : (
         <a
@@ -181,7 +182,7 @@ export function BriefView({
             >
               {segments.map((segment, segmentIndex) =>
                 segment.kind === "text" ? (
-                  <span key={segmentIndex}>{segment.text} </span>
+                  <span key={segmentIndex}>{nameEnumsInText(segment.text)} </span>
                 ) : (
                   <CitationChips
                     key={segmentIndex}

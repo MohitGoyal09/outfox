@@ -9,9 +9,7 @@ import {
   Panel,
   Skeleton,
   SkeletonRegion,
-  TONE_COLOR,
   VALUE_CLASS,
-  deltaTone,
   formatDelta,
   formatSharePct,
   funnelDotColor,
@@ -20,7 +18,9 @@ import {
 } from "@/components/drishti";
 import { categoricalColorFor } from "@/components/drishti/tokens";
 import { cn } from "@/lib/utils";
-import { FUNNEL_WORD, HOOK_WORD, formatCount } from "./labels";
+import { DeltaMark } from "@/components/drishti/DeltaMark";
+import { hookName, stageName } from "@/components/drishti/labels";
+import { formatCount } from "./labels";
 import type { BrandMixSummary } from "./derive";
 import type { BrandRef } from "./types";
 
@@ -43,27 +43,42 @@ const ROW_LABEL: Record<RowKey, string> = {
   funnel: "Top funnel stage",
 };
 
-type DeltaCell = { text: string; tone: ReturnType<typeof deltaTone> };
+type DeltaCell = { text: string; direction: "up" | "down" | null };
+
+function directionOf(delta: number): DeltaCell["direction"] {
+  return delta === 0 ? null : delta > 0 ? "up" : "down";
+}
+
+function DeltaText({ cell, className }: { cell: DeltaCell; className?: string }) {
+  return (
+    <span
+      className={cn(VALUE_CLASS, "text-[var(--text-secondary)]", className)}
+    >
+      {cell.direction === null ? null : <DeltaMark direction={cell.direction} />}
+      {cell.text}
+    </span>
+  );
+}
 
 function deltaCell(summary: BrandMixSummary, row: RowKey): DeltaCell {
   if (row === "claims" || row === "tags") {
     const delta = row === "claims" ? summary.claimDelta : summary.tagDelta;
-    if (delta === null) return { text: "not reported", tone: "neutral" };
-    return { text: formatDelta(delta), tone: deltaTone(delta) };
+    if (delta === null) return { text: "not reported", direction: null };
+    return { text: formatDelta(delta), direction: directionOf(delta) };
   }
   if (row === "hook") {
     const change = summary.hookChange;
-    if (change === null) return { text: "no hook change", tone: "neutral" };
+    if (change === null) return { text: "no hook change", direction: null };
     return {
-      text: `${formatDelta(change.delta)} ${HOOK_WORD[change.hook] ?? change.hook}`,
-      tone: deltaTone(change.delta),
+      text: `${formatDelta(change.delta)} ${hookName(change.hook)}`,
+      direction: directionOf(change.delta),
     };
   }
   const change = summary.funnelChange;
-  if (change === null) return { text: "no funnel change", tone: "neutral" };
+  if (change === null) return { text: "no funnel change", direction: null };
   return {
-    text: `${formatDelta(change.delta)} ${FUNNEL_WORD[change.stage] ?? change.stage}`,
-    tone: deltaTone(change.delta),
+    text: `${formatDelta(change.delta)} ${stageName(change.stage)}`,
+    direction: directionOf(change.delta),
   };
 }
 
@@ -88,7 +103,7 @@ function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) 
         ? null
         : {
             dot: hookDotColor(summary.hook.hook),
-            word: HOOK_WORD[summary.hook.hook],
+            word: hookName(summary.hook.hook),
             count: summary.hook.count,
             share: formatSharePct(summary.hook.sharePct),
           }
@@ -96,14 +111,18 @@ function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) 
         ? null
         : {
             dot: funnelDotColor(summary.funnel.stage),
-            word: FUNNEL_WORD[summary.funnel.stage],
+            word: stageName(summary.funnel.stage),
             count: summary.funnel.count,
             share: formatSharePct(summary.funnel.sharePct),
           };
+  const unclear = row === "hook" ? summary.hookUnclear : summary.funnelUnclear;
+  const noun = row === "hook" ? "hook" : "stage";
+  const unclearNote =
+    unclear > 0 ? `${unclear} ${unclear === 1 ? "finding" : "findings"} with no clear ${noun}` : null;
   if (leader === null) {
     return (
       <span className="text-[12.5px] leading-[1.45] text-[var(--text-tertiary)]">
-        No tagged claims this run.
+        {unclearNote ?? "No tagged findings this run."}
       </span>
     );
   }
@@ -118,8 +137,13 @@ function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) 
         {leader.word}
       </span>
       <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
-        {formatCount(leader.count)} · {leader.share}
+        {formatCount(leader.count)} · {leader.share} of clear
       </span>
+      {unclearNote === null ? null : (
+        <span className="basis-full text-[11px] leading-[1.4] text-[var(--text-tertiary)]">
+          {unclearNote}
+        </span>
+      )}
     </span>
   );
 }
@@ -279,12 +303,7 @@ export function ComparisonMatrix({
                                 <span className="text-[12px] leading-[1.3] text-[var(--text-tertiary)]">
                                   {summary.brandName}
                                 </span>
-                                <span
-                                  className={cn(VALUE_CLASS, "text-[12px] leading-[1.3]")}
-                                  style={{ color: TONE_COLOR[cell.tone] }}
-                                >
-                                  {cell.text}
-                                </span>
+                                <DeltaText cell={cell} className="text-[12px] leading-[1.3]" />
                               </li>
                             );
                           })}
@@ -334,12 +353,7 @@ export function ComparisonMatrix({
                         <dd className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                           <ValueCell summary={summary} row={row} />
                           {previousLabel === null ? null : (
-                            <span
-                              className={cn(VALUE_CLASS, "text-[12px]")}
-                              style={{ color: TONE_COLOR[cell.tone] }}
-                            >
-                              {cell.text}
-                            </span>
+                            <DeltaText cell={cell} className="text-[12px]" />
                           )}
                         </dd>
                       </div>

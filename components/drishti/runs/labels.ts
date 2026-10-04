@@ -1,4 +1,4 @@
-import { ABSENT, type FunnelStage, type HookType, type Tone } from "@/components/drishti";
+import { ABSENT, type Tone } from "@/components/drishti";
 import { sourceName } from "@/components/drishti/labels";
 import type {
   CostProvenance,
@@ -38,27 +38,6 @@ export const ENGINE_STATUS_WORD: Record<EngineCellStatus, string> = {
   missing: "not recorded",
 };
 
-
-export const HOOK_WORD: Record<HookType, string> = {
-  discount_offer: "promotional",
-  social_proof: "social proof",
-  founder_story: "founder story",
-  problem_solution: "problem–solution",
-  product_feature: "product feature",
-  urgency_scarcity: "urgency",
-  education_explainer: "explainer",
-  visual_cold_open: "visual cold open",
-  not_applicable: "untagged",
-};
-
-export const FUNNEL_WORD: Record<FunnelStage, string> = {
-  unaware: "unaware",
-  problem_aware: "problem aware",
-  solution_aware: "solution aware",
-  product_aware: "product aware",
-  most_aware: "most aware",
-  not_applicable: "untagged",
-};
 
 
 export const RUN_STATUS_TONE: Record<RunStatus, Tone> = {
@@ -101,6 +80,22 @@ export const COST_PROVENANCE_LABEL: Record<CostProvenance, string> = {
   mixed: "exact + est.",
   unknown: ABSENT,
 };
+
+export function billedSearchesLabel(
+  used: number | null | undefined,
+  reported: boolean,
+): { text: string; title: string } {
+  return reported
+    ? {
+        text: `${formatCount(used ?? 0)} billed by SerpApi`,
+        title:
+          "How far this run lowered the SerpApi search balance. Repeat queries served from cache are not billed.",
+      }
+    : {
+        text: "billing not reported",
+        title: "SerpApi did not report the search balance for this run.",
+      };
+}
 
 const DATE_FORMAT = new Intl.DateTimeFormat("en-GB", {
   day: "numeric",

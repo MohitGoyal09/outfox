@@ -89,14 +89,14 @@ function RunViewSkeleton() {
   );
 }
 
-function BackToRuns() {
+function BackLink({ href = "/", label = "Overview" }: { href?: string; label?: string }) {
   return (
     <Link
-      href="/"
+      href={href}
       className="inline-flex w-fit items-center gap-1.5 text-[12.5px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
     >
       <ArrowLeft {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
-      Evidence desk
+      {label}
     </Link>
   );
 }
@@ -112,14 +112,14 @@ function RunUnavailable({
 }) {
   return (
     <div className="flex flex-col gap-5">
-      <BackToRuns />
+      <BackLink />
       <Panel interactive={false} className="p-5">
         <EmptyState
           title={title}
           description={description}
           action={
             <Link href="/" className={buttonClasses({ variant: "ghost", size: "sm" })}>
-              Back to the evidence desk
+              Back to the Overview
             </Link>
           }
         />
@@ -301,6 +301,9 @@ function RunView({ runId }: { runId: string }) {
     );
   }
 
+  const soleBrand = refs.length === 1 && names.has(refs[0].id) ? refs[0] : null;
+  const backHref = soleBrand === null ? "/" : `/brands/${soleBrand.id}`;
+  const backLabel = soleBrand === null ? "Overview" : soleBrand.name;
   const provenance = costProvenance(usage?.exactCostUsd, usage?.estimatedCostUsd);
   const previousDayMonth =
     previousRun === null ? null : formatRunDayMonth(previousRun.requestedAt);
@@ -325,7 +328,7 @@ function RunView({ runId }: { runId: string }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <BackToRuns />
+      <BackLink href={backHref} label={backLabel} />
 
       <RunHeader
         cohortName={cohortLabel(run.brandIds, names)}
