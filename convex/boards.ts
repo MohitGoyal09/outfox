@@ -1,9 +1,10 @@
 import { mutation, query } from "./_generated/server";
-import type { QueryCtx } from "./_generated/server";
+import type { MutationCtx, QueryCtx } from "./_generated/server";
 import type { Doc, Id } from "./_generated/dataModel";
 import { v, ConvexError } from "convex/values";
 import { requireUserId } from "./lib/auth";
 import { deleteEdgesTouching } from "./lib/canvasEdges";
+import { starterFrames } from "../components/drishti/boards/starter-frames";
 
 export const MAX_BOARD_NAME_LENGTH = 120;
 
@@ -70,6 +71,31 @@ export const listBoards = query({
   returns: v.array(boardDocValidator),
   handler: async (ctx) => {
     const ownerId = await requireUserId(ctx);
+  },
+});
+
+async function insertSeededBoard(ctx: MutationCtx, ownerId: Id<"users">, name: string): Promise<Id<"boards">> {
+  const now = new Date().toISOString();
+  for (const frame of starterFrames()) {
+    await ctx.db.insert("boardFrames", { ownerId, boardId, ...frame, createdAt: now, updatedAt: now });
+  }
+  return boardId;
+}
+
+export const createBoard = mutation({
+  args: { name: v.string() },
+  returns: v.id("boards"),
+  handler: async (ctx, args) => {
+    const ownerId = await requireUserId(ctx);
+    if (!name) {
+      throw new ConvexError("name is required");
+    }
+    const existingCount = (
+      await ctx.db.query("boards").withIndex("by_owner", (q) => q.eq("ownerId", ownerId)).collect()
+    ).length;
+    if (existingCount >= MAX_BOARDS_PER_OWNER) {
+      throw new ConvexError(`Too many boards: limit is ${MAX_BOARDS_PER_OWNER}`);
+    }
   },
 });
 

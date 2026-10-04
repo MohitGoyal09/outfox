@@ -2,7 +2,6 @@
 
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useQuery } from "convex/react";
 import {
   applyEdgeChanges,
@@ -16,13 +15,14 @@ import {
   type OnEdgesChange,
   type OnNodesChange,
 } from "@xyflow/react";
-import { ArrowLeft, Maximize, Share2, StickyNote, SquareDashed } from "lucide-react";
+import { Maximize, Share2, StickyNote, SquareDashed } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { nodesInsideFrame } from "@/convex/lib/canvasModel";
 import { Button } from "../Button";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { iconProps } from "../tokens";
+import { BoardSwitcher } from "./BoardSwitcher";
 import { CanvasChrome, usePrefersReducedMotion } from "./CanvasChrome";
 import { ShareDialog } from "./ShareDialog";
 import { buildEdges, buildNodes, fromNodeId, mergeEdges, mergeNodes, nodeBox, type FlowCanvas } from "./canvas-flow";
@@ -157,14 +157,7 @@ function CanvasInner({ boardId, canvas, shared }: { boardId: Id<"boards">; canva
           <CanvasChrome />
           <Panel position="top-left">
             <div role="toolbar" aria-label="Canvas tools" className="flex items-center gap-1 rounded-md border border-border bg-bg-raised p-1 shadow-sm">
-              <Link
-                href="/boards"
-                aria-label="Back to boards"
-                className="focus-ring grid size-8 place-items-center rounded-sm text-fg-secondary hover:bg-bg-inset hover:text-fg"
-              >
-                <ArrowLeft {...iconProps} size={16} aria-hidden="true" className="size-4" />
-              </Link>
-              <span className="mx-1 max-w-[14rem] truncate text-[13px] font-semibold text-fg">{canvas.name}</span>
+              <BoardSwitcher boardId={boardId} name={canvas.name} />
               <span aria-hidden="true" className="mx-1 h-5 w-px bg-border" />
               <Button variant="ghost" size="sm" aria-keyshortcuts="N" onClick={() => void addNote()} icon={<StickyNote {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}>
                 Add note
@@ -180,10 +173,10 @@ function CanvasInner({ boardId, canvas, shared }: { boardId: Id<"boards">; canva
               </Button>
             </div>
           </Panel>
-          {nodes.length === 0 ? (
-            <Panel position="top-center" className="pointer-events-none !mt-24">
+          {nodes.every((n) => n.type === "frame") ? (
+            <Panel position="bottom-center" className="pointer-events-none !mb-6">
               <p className="rounded-md border border-border bg-bg-raised px-3 py-2 text-[13px] text-fg-secondary shadow-xs">
-                Nothing here yet. Press N for a note, or save evidence from a brand page.
+                Nothing on this board yet. Use the save button on any evidence card or chat source, then drop it into a column. Press N for a note or F for a frame.
               </p>
             </Panel>
           ) : null}
@@ -194,8 +187,8 @@ function CanvasInner({ boardId, canvas, shared }: { boardId: Id<"boards">; canva
   );
 }
 
-export function useFlowCanvas(boardId: Id<"boards">): { canvas: FlowCanvas; shared: boolean } | undefined {
-  const data = useQuery(api.boardCanvas.getCanvas, { boardId });
+export function useFlowCanvas(boardId: Id<"boards">, skip = false): { canvas: FlowCanvas; shared: boolean } | undefined {
+  const data = useQuery(api.boardCanvas.getCanvas, skip ? "skip" : { boardId });
   return useMemo(
     () =>
       data

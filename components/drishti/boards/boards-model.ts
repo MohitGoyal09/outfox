@@ -46,3 +46,11 @@ export function saveOutcomeMessage(outcome: SaveOutcome): string {
       return outcome.message;
   }
 }
+
+export function needsDefaultBoard(boards: readonly BoardSummary[]): boolean {
+  return boards.length === 0;
+}
+
+export function boardAfterDelete<T extends BoardSummary>(boards: readonly T[], deletedId: string): T | null {
+  return newestBoard(boards.filter((b) => b._id !== deletedId));
+}
