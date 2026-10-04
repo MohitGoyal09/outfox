@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { ArrowLeft, FileQuestion } from "lucide-react";
-import { AppShell } from "@/components/drishti/chrome/AppShell";
+import { LazyAppShell as AppShell } from "@/components/drishti/chrome/LazyAppShell";
 
 export default function NotFound() {
   return (

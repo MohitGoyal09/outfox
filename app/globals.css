@@ -558,6 +558,18 @@
 /* Kumkum: the landing's own palette. Scoped to `.l-theme` (LandingPage root) so the signed-in app keeps the Evidence Atlas tokens.
    Contrast (WCAG): text #2A1724 on paper 15.4:1; secondary #5E4957 7.5:1 (6.9 on inset); tertiary #7A6472 4.9:1 (4.5 on inset);
    white on accent #C8431F 4.9:1. Hook data colours are not overridden: they encode meaning. */
+/* Set by the inline script in app/layout.tsx for returning signed-in users: no landing flash while auth resolves. */
+html[data-authed] .l-theme {
+  display: none;
+}
+/* The matching splash: hidden for everyone else, so crawlers and signed-out visitors only get the landing. */
+.auth-splash {
+  display: none !important;
+}
+html[data-authed] .auth-splash {
+  display: flex !important;
+}
+
 .l-theme {
   /* White page with a faint plum dot grid all over (macroscope-style texture). Cards stay solid white. */
   --bg: #ffffff;

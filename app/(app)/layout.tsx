@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 
-import { AppShell } from "@/components/drishti/chrome/AppShell";
+import { LazyAppShell } from "@/components/drishti/chrome/LazyAppShell";
 
 export default function AppLayout({ children }: { children: ReactNode }) {
-  return <AppShell>{children}</AppShell>;
+  return <LazyAppShell>{children}</LazyAppShell>;
 }

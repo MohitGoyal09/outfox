@@ -3,11 +3,13 @@
 import { ConvexAuthProvider, useConvexAuth } from "@convex-dev/auth/react";
 import { ConvexReactClient } from "convex/react";
 import { useEffect } from "react";
+import dynamic from "next/dynamic";
 import { usePathname, useRouter } from "next/navigation";
-import { SignIn } from "@/app/auth/SignIn";
 import { LandingPage } from "@/components/landing/LandingPage";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
+
+const SignIn = dynamic(() => import("@/app/auth/SignIn").then((m) => m.SignIn), { ssr: false });
 
 const convexUrl = process.env.NEXT_PUBLIC_CONVEX_URL;
 
@@ -41,17 +43,31 @@ function AuthGate({ children }: { children: React.ReactNode }) {
     if (signedInAtSignIn) router.replace("/");
   }, [signedInAtSignIn, router]);
 
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) delete document.documentElement.dataset.authed;
+  }, [isLoading, isAuthenticated]);
+
   if (PUBLIC_PATH_PREFIXES.some((prefix) => pathname.startsWith(prefix))) return children;
 
-  if (isLoading) {
+  if (isLoading && pathname === "/") {
     return (
-      <main className="flex min-h-dvh items-center justify-center bg-bg px-6 text-fg">
-        <div className="flex items-center gap-3 text-sm text-fg-secondary"><span className="size-2 animate-pulse rounded-full bg-accent" /> Preparing your research desk…</div>
-      </main>
+      <>
+        <LoadingSplash className="auth-splash" />
+        <LandingPage />
+      </>
     );
   }
+  if (isLoading) return <LoadingSplash />;
 
   if (signedInAtSignIn) return null;
   if (isAuthenticated) return children;
   return pathname === "/" ? <LandingPage /> : <SignIn />;
+}
+
+function LoadingSplash({ className }: { className?: string }) {
+  return (
+    <main className={`flex min-h-dvh items-center justify-center bg-bg px-6 text-fg ${className ?? ""}`}>
+      <div className="flex items-center gap-3 text-sm text-fg-secondary"><span className="size-2 animate-pulse rounded-full bg-accent" /> Preparing your research desk…</div>
+    </main>
+  );
 }

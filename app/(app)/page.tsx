@@ -1,5 +1,5 @@
-import { OverviewSurface } from "@/components/drishti/overview/OverviewSurface";
+import { LazyOverviewSurface } from "@/components/drishti/overview/LazyOverviewSurface";
 
 export default function OverviewPage() {
-  return <OverviewSurface />;
+  return <LazyOverviewSurface />;
 }
