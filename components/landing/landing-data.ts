@@ -86,3 +86,33 @@ export const NUMBERS = {
   withHook: String(HOOK_MATRIX.reduce((n, b) => n + b.total, 0)),
   searchesPerBrand: "7",
 };
+
+export type RibbonBrand = "SUGAR Cosmetics" | "Plum" | "Minimalist" | "Mamaearth" | "WOW Skin Science";
+export type RibbonItem =
+  | { kind: "ad"; brand: RibbonBrand; days: number; domain: string; headline: string; desc: string; /** The stored creative preview these strings were read from (OCR of the PNG, checked by eye). */ image: string }
+  | { kind: "video"; brand: RibbonBrand; id: string; title: string };
+
+const ad = (brand: RibbonBrand, simgad: string, days: number, domain: string, headline: string, desc: string): RibbonItem => ({ kind: "ad", brand, image: `https://tpc.googlesyndication.com/archive/simgad/${simgad}`, days, domain, headline, desc });
+
+export const RIBBON: readonly RibbonItem[] = [
+  video("SUGAR Cosmetics", "KoGsqgErT0c", "Makeup Tutorial in 5 Minutes | Easy Indian Makeup Look"),
+  ad("Minimalist", "2295683258999728340", 139, "beminimalist.co", "Everyday Gentle Shampoo", "Gently cleanses hair and scalp…"),
+  video("Mamaearth", "3kLlicNZNK0", "Mamaearth Rice Dewy Bright Face Wash | 20X Hydration For Glass Skin Glow"),
+  ad("SUGAR Cosmetics", "13941303547698925296", 192, "sugarcosmetics.com", "Everyday Glam Starts Here - Flat 249 Store", "Limited-time Birthday offers on SUGAR bestsellers."),
+  video("Plum", "s61JBFVF_7c", "Plum Goodness anniversary haul"),
+  ad("WOW Skin Science", "6207180957465669630", 137, "buywow.in", "WOW Skin Science Official - Buy Wow: Skincare Products", "Nourish, rejuvenate, protect your skin for a radiant and youthful appearance."),
+  video("Minimalist", "bNxGtKSrH8M", "Dermatologist Reviews Minimalist Sunscreen"),
+  ad("Plum", "11277779557168141355", 242, "plumgoodness.com", "Plum: Shop for best deals - 100% satisfaction guarantee", "Stock up essentials: Sunscreen, body mists, perfumes & more."),
+  video("Mamaearth", "W8njEo6xJLM", "Night Skincare Routine with Vitamin C products | Saj Ghar #mamaearth"),
+  ad("Minimalist", "8666978668334980076", 137, "beminimalist.co", "Minimalist Face Toner - Toner For Acne Marks", "Explore Glycolic Acid and PHA toners for smoother skin texture."),
+  video("WOW Skin Science", "crAZVuDc67o", "WOW Skin Science Best Products | Part 1 | Non-sponsored review"),
+  ad("SUGAR Cosmetics", "4551806620512552954", 159, "sugarcosmetics.com", "Shop SUGAR Beauty Offers - Limited-Time Beauty Sale", "Shop bestselling makeup with exclusive offers for a limited time."),
+  video("SUGAR Cosmetics", "xNQXM0IMLQY", "Makeup Tutorial For Dry Skin VS Oily Skin | SUGAR Cosmetics"),
+  ad("WOW Skin Science", "12769226846364749690", 132, "buywow.in", "WOW Skin Science Official - Love Your Skin - Vitamin C Face Wash", "Buy Wow Skin Care & Face Care Products Online. Get Best Prices & Free Delivery."),
+  video("Plum", "GcIqqP3zRnM", "What Matters Is Being Clean. Real. Good. | Plum Goodness"),
+  ad("Minimalist", "502701174236557457", 125, "beminimalist.co", "BHA + LHA Deep Pore Cleanser - Salicylic Acid Acne Face Wash", "87% saw fewer breakouts in 6 weeks. Dermat-tested."),
+  video("Mamaearth", "KSslXTJile4", "Doctor's Honest Review of Mama Earth"),
+  ad("WOW Skin Science", "1991322005787781876", 131, "buywow.in", "Aloe Vera Benefits, How to Use & Side Effects | Buy Wow", "Aloe Vera: Natural Remedy for Skin, Hair, and Digestive Health."),
+];
+
+export const SUGAR_LONGEST_AD = { days: 194, url: "https://adstransparency.google.com/advertiser/AR09004105641337290753/creative/CR01728682426349125633?region=IN" };

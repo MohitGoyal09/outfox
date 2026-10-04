@@ -1,24 +1,58 @@
 "use client";
 
 import { useRef } from "react";
-import { motion, useScroll, useTransform } from "motion/react";
-import { useReducedMotion } from "@/components/aceternity/motion-utils";
+import { useScroll } from "motion/react";
 import { Button } from "@/components/ui/button";
-import { Highlight } from "@/components/aceternity/hero-highlight";
 import { MagneticButton } from "@/components/aceternity/magnetic-button";
-import { TextGenerateEffect } from "@/components/aceternity/text-generate-effect";
 import { RequestAccessDialog } from "./RequestAccessDialog";
 import { HeroBackdrop, useMedia } from "./HeroBackdrop";
-import { TrailVisual } from "./TrailVisual";
-
-export const HERO_SUB = "See what your rivals' ads, videos and search results lean on, with every number linked to its source.";
+import { AskBox } from "./AskBox";
+import { Ribbon } from "./Ribbon";
+import { HOOK_MATRIX } from "./landing-data";
 
 const DRIFT = 0.35;
 const DRIFT_PHONE = 0.2;
 
 export function Hero() {
   const ref = useRef<HTMLElement>(null);
-  const reduce = useReducedMotion();
   const wide = useMedia("(min-width: 768px)");
-  const textY = useTransform(p, [0, 1], [0, -24]);
+
+  return (
+    <section ref={ref} aria-labelledby="hero-heading" className="relative border-b border-border">
+      <div className="relative isolate">
+        <HeroBackdrop progress={p} drift={wide ? DRIFT : DRIFT_PHONE} />
+        <div className="l-wrap flex flex-col items-center pt-6 text-center sm:pt-8 lg:pt-7">
+          <p className="inline-flex items-center gap-2 rounded-full border border-border-strong bg-white/85 px-3.5 py-1.5 text-[0.8125rem] font-medium text-fg-secondary backdrop-blur">
+            <span aria-hidden="true" className="size-1.5 rounded-full bg-[#34d399]" />
+            Competitor intelligence for marketing teams
+          </p>
+          <h1 id="hero-heading" className="l-display mt-5 max-w-[16ch] text-fg sm:mt-6 sm:max-w-[18ch] lg:max-w-none lg:text-[clamp(3rem,4.9vw,4.375rem)] lg:font-[500] lg:leading-none lg:tracking-[-0.03em]">
+            See <span className="l-hue whitespace-nowrap">every move</span> your competitors make.
+          </h1>
+          <p className="l-lead mt-3 max-w-[34ch] text-balance sm:max-w-[52ch] lg:max-w-none">
+            Drishti watches their ads, videos, search and news, tags every hook, and backs every insight with its source.
+          </p>
+          <div className="mt-5 w-full">
+            <AskBox />
+          </div>
+          <div className="mt-4 flex flex-wrap items-center justify-center gap-3">
+            <MagneticButton>
+              <RequestAccessDialog>
+                
+              </RequestAccessDialog>
+            </MagneticButton>
+            <Button asChild variant="outline" size="lg" className="h-11 rounded-full bg-white px-6 text-[0.9375rem]">
+              <a href="#product">See it in action</a>
+            </Button>
+          </div>
+        </div>
+        <div className="mt-3 sm:mt-1">
+          <Ribbon />
+        </div>
+        <p className="l-wrap pb-8 pt-2 text-center text-[0.8125rem] leading-[1.6] text-fg-secondary sm:pb-8">
+          Tracking public brands in the demo workspace: {HOOK_MATRIX.map((b) => b.name).join(" · ")}
+        </p>
+      </div>
+    </section>
+  );
 }

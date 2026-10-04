@@ -555,9 +555,9 @@
   .l-mark { animation: none; }
 }
 
-/* Kumkum: the landing's own palette. Scoped to `.l-theme` (LandingPage root) so the signed-in app keeps the Evidence Atlas tokens.
-   Contrast (WCAG): text #2A1724 on paper 15.4:1; secondary #5E4957 7.5:1 (6.9 on inset); tertiary #7A6472 4.9:1 (4.5 on inset);
-   white on accent #C8431F 4.9:1. Hook data colours are not overridden: they encode meaning. */
+/* Landing palette: white page, neutral near-black ink, hue only as accent (the app's hook colours).
+   Contrast (WCAG) on white: text #111113 18.4:1; secondary #52545C 7.6:1; tertiary #6B6E76 5.0:1 (4.6 on inset); white on accent #111113 18.4:1.
+   Hook data colours are not overridden: they encode meaning. */
 /* Set by the inline script in app/layout.tsx for returning signed-in users: no landing flash while auth resolves. */
 html[data-authed] .l-theme {
   display: none;
@@ -575,48 +575,43 @@ html[data-authed] .auth-splash {
 }
 
 .l-theme {
-  /* White page with a faint plum dot grid all over (macroscope-style texture). Cards stay solid white. */
   --bg: #ffffff;
-  --bg-inset: #f8f3f0;
+  --bg-inset: #f6f6f7;
   --bg-raised: #ffffff;
-  --bg-raised-2: #fcf9f7;
-  --text-primary: #2a1724;
-  --text-secondary: #5e4957;
-  --text-tertiary: #7a6472;
-  --text-placeholder: #7a6472;
-  --border: #eee4de;
-  --border-strong: #dccbc2;
-  /* Buttons and small marks are plum ink (16:1 with white text). Vermilion is kept for one moment: the hero highlight and the shimmer segment. */
-  --accent: #2a1724;
-  --accent-strong: #140a11;
+  --bg-raised-2: #fafafa;
+  --text-primary: #111113;
+  --text-secondary: #52545c;
+  --text-tertiary: #6b6e76;
+  --text-placeholder: #6b6e76;
+  --border: #e8e8ea;
+  --border-strong: #d4d4d8;
+  --accent: #111113;
+  --accent-strong: #000000;
   --accent-ink: #ffffff;
-  --accent-dim: rgba(42, 23, 36, 0.08);
-  --accent-selection: rgba(228, 87, 46, 0.18);
-  /* Hero highlight block: bright vermilion behind 40-64px display text (3.7:1 with white, passes the 3:1 large-text bar). */
-  --mark: #e4572e;
+  --accent-dim: rgba(17, 17, 19, 0.08);
+  --accent-selection: rgba(96, 165, 250, 0.28);
+  /* Highlight block (hero-highlight.tsx): near-black, like the buttons. */
+  --mark: #111113;
   --mark-ink: #ffffff;
-  --plum: #2a1424;
+  --plum: #111113;
   --rose: #e8a3ae;
   background-color: var(--bg);
-  background-image: radial-gradient(circle at 1px 1px, rgba(42, 23, 36, 0.13) 1px, transparent 1.4px);
-  background-size: 18px 18px;
 }
 
-/* Full-bleed plum section on the paper landing. Re-points the tokens so tokenised children (inputs, labels, buttons) read on plum.
-   Ratios on #2A1424: text #F7EDE6 14.9:1, secondary #D9C6CF 10.6:1 (8.4 on #40243A), accent (buttons) #F7EDE6 with plum text 14.9:1. */
+/* Full-bleed dark section on the paper landing. Re-points the tokens so tokenised children (inputs, labels, buttons) read on near-black. */
 .l-theme .l-ink {
-  --ink-base: #2a1424;
-  --bg-raised: #351c2e;
-  --bg-inset: #40243a;
-  --text-primary: #f7ede6;
-  --text-secondary: #d9c6cf;
-  --text-tertiary: #d9c6cf;
-  --text-placeholder: #c2aab6;
+  --ink-base: #111113;
+  --bg-raised: #1c1c1f;
+  --bg-inset: #26262a;
+  --text-primary: #f4f4f5;
+  --text-secondary: #d0d0d4;
+  --text-tertiary: #d0d0d4;
+  --text-placeholder: #b4b4ba;
   --border: rgba(255, 240, 235, 0.14);
   --border-strong: rgba(255, 240, 235, 0.32);
-  --accent: #f7ede6;
+  --accent: #f4f4f5;
   --accent-strong: #ffffff;
-  --accent-ink: #2a1424;
+  --accent-ink: #111113;
   --danger: #f4a3a3;
   color: var(--text-primary);
 }
@@ -687,3 +682,31 @@ html[data-authed] .auth-splash {
 .l-backdrop-in { animation: l-backdrop-in 600ms cubic-bezier(0.22, 1, 0.36, 1) both; }
 @keyframes l-backdrop-in { from { opacity: 0; } }
 @media (prefers-reduced-motion: reduce) { .l-backdrop-in { animation: none; } }
+
+/* Multi-hue phrase: a smooth sweep through the app's hook colours, slowly shifting. Text stays real text; static under reduced motion. */
+.l-hue {
+  background-image: linear-gradient(100deg, #60a5fa 0%, #a78bfa 28%, #f472b6 52%, #f2a63b 76%, #60a5fa 100%);
+  background-size: 220% 100%;
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  color: transparent;
+  padding-inline: 0.04em;
+  animation: l-hue-shift 14s ease-in-out infinite alternate;
+}
+@keyframes l-hue-shift { to { background-position: 100% 0; } }
+@media (prefers-reduced-motion: reduce) { .l-hue { animation: none; background-size: 100% 100%; } }
+
+/* Hero ribbon: each tile rides the shared offset-path (set inline). Still under reduced motion, spread along the path by --l-at. */
+.l-ribbon-tile {
+  offset-rotate: 0deg;
+  offset-anchor: 50% 50%;
+  animation: l-ribbon linear infinite both;
+}
+@keyframes l-ribbon {
+  from { offset-distance: 0%; }
+  to { offset-distance: 100%; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .l-ribbon-tile { animation: none; offset-distance: var(--l-at); }
+}
