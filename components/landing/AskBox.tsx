@@ -6,7 +6,6 @@ import { ArrowUp, RotateCcw } from "lucide-react";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { hookName } from "@/components/drishti/labels";
 import { EASE_OUT, useReducedMotion } from "@/components/aceternity/motion-utils";
-import { BorderBeam } from "./BorderBeam";
 import { CHECK_DATE, HOOK_MATRIX, SOURCES, SUGAR_LONGEST_AD } from "./landing-data";
 
 type Part = string | number;
@@ -70,5 +69,42 @@ function SourceRow({ s, i }: { s: Source; i: number }) {
     </a>
   ) : (
     <div className={cls}>{inner}</div>
+  );
+}
+
+export function AskBox() {
+  const answers = ANSWERS;
+  const reduce = useReducedMotion();
+  const [idx, setIdx] = useState(0);
+  const [value, setValue] = useState("");
+  const [typed, setTyped] = useState(false);
+
+  useEffect(() => {
+    if (reduce || value || active) return;
+    const t = window.setInterval(() => setIdx((i) => (i + 1) % answers.length), ROTATE_MS);
+    return () => window.clearInterval(t);
+  }, [reduce, value, active, answers.length]);
+
+  const play = (answer: Answer, custom = false) => {
+    setTyped(false);
+    setActive({ answer, custom });
+  };
+
+  const submit = (e: FormEvent) => {
+    const hit = answers.find((a) => (q.includes("longest") || q.includes("sugar")) && a.question.includes("SUGAR")) ?? answers.find((a) => (q.includes("hook") || q.includes("mamaearth")) && a.question.includes("Mamaearth")) ?? answers.find((a) => (q.includes("discount") || q.includes("offer")) && a.question.includes("discount"));
+    play(hit ?? answers[idx], !hit);
+  };
+
+  const chips = answers.map((a) => (
+    <button key={a.question} type="button" title={a.question} onClick={() => { setValue(""); play(a); }} className="cursor-pointer whitespace-nowrap rounded-full border border-border-strong bg-white px-2.5 py-1 text-[12px] text-fg-secondary transition-colors duration-150 hover:border-fg-tertiary hover:text-fg focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent">
+      {a.short}
+    </button>
+  ));
+
+  return (
+    <div className="mx-auto w-full max-w-[56rem]">
+      
+      {active ? null : <div className="mt-3 flex flex-wrap items-center justify-center gap-2 md:hidden">{chips}</div>}
+    </div>
   );
 }

@@ -703,10 +703,6 @@ html[data-authed] .auth-splash {
 }
 
 
-/* Hero Ask box: the border beam's segments travel the rim (dash period is the whole path, pathLength=100). */
-.l-beam-seg { animation: l-beam linear infinite; }
-@keyframes l-beam { to { stroke-dashoffset: -100; } }
-
 /* Hero cycling line: a thin caret that blinks beside the word. */
 .l-caret {
   display: inline-block;
