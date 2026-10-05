@@ -11,10 +11,7 @@ import { isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow, ty
 import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
 import { SectionHeader } from "../../SectionHeader";
-import { StatTile } from "../../StatReadout";
 import { pillClasses } from "../../PillButton";
-import { SimilarBrandsPanel } from "../SimilarBrandsPanel";
-import type { Id } from "@/convex/_generated/dataModel";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
 import { SourceFreshness } from "../SourceFreshness";
@@ -149,11 +146,7 @@ export function OverviewTab({
   youtubeSnapshot,
   newsSnapshot,
   googleSnapshot,
-  findingsCount,
-  brandId,
 }: {
-  findingsCount: number;
-  brandId: Id<"brands">;
   latestClaims: ClaimDoc[];
   previousClaims: ClaimDoc[] | null;
   coverage: EngineCoverageRow[];
@@ -175,13 +168,6 @@ export function OverviewTab({
   const handleSelectFunnel = (stage: FunnelStage) => setFilter("funnel", filters.funnel === stage ? "all" : stage);
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
-        <div className="grid grid-cols-2 gap-x-10 gap-y-3">
-          <StatTile label="Findings" value={findingsCount} hint="in the latest check" />
-          <StatTile label="Tagged" value={tags.length > 0 ? tags.length : "Not tagged"} hint={tags.length > 0 ? "findings with a hook and stage" : "tagging has not run"} />
-        </div>
-        <SimilarBrandsPanel brandId={brandId} />
-      </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <SummaryPanel
           title={

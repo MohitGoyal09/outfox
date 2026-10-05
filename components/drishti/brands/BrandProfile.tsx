@@ -10,12 +10,9 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "../EmptyState";
-import { PageHeader } from "../PageHeader";
-import { PillButton, pillClasses } from "../PillButton";
+import { pillClasses } from "../PillButton";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { useAllRuns } from "../cohorts/useAllRuns";
-import { categoryLabel } from "./add-brand-model";
-import { statusLabel } from "./status-labels";
 import { formatStamp } from "../cohorts/cohorts-model";
 import {
   engineCoverage,
@@ -30,8 +27,7 @@ import {
   type ClaimDoc,
   type RunHistoryRow,
 } from "./brand-model";
-import { OwnBrandToggle } from "./OwnBrandToggle";
-import { shortDate } from "./format";
+import { BrandHeader } from "./BrandHeader";
 import { useBrandFilters } from "./filters/useBrandFilters";
 import { OverviewTab } from "./tabs/OverviewTab";
 import { PositionTab } from "./tabs/PositionTab";
@@ -58,23 +54,6 @@ const DEFAULT_TAB: TabValue = "overview";
 
 function isTabValue(value: string | null): value is TabValue {
   return value !== null && tabs.some(([tabId]) => tabId === value);
-}
-
-function ShareButton() {
-  const [copied, setCopied] = useState(false);
-  async function copyLink() {
-    try {
-      await navigator.clipboard.writeText(window.location.href);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    } catch {
-    }
-  }
-  return (
-    <PillButton variant="outline" size="sm" title="Copy link to this page" onClick={() => void copyLink()}>
-      {copied ? "Copied" : "Share"}
-    </PillButton>
-  );
 }
 
 export function BrandProfile({ brandId, className }: BrandProfileProps) {
@@ -204,40 +183,17 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-0", className)}>
-      <PageHeader
-        variant="entity"
-        eyebrow={
-          <>
-            <Link href="/brands" className="hover:text-fg">
-              Brands
-            </Link>{" "}
-            / {brand.name}
-          </>
-        }
-        title={brand.name}
-        meta={[
-          brand.domain,
-          categoryLabel(brand.vertical),
-          `Last check ${shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}`,
-          ...(brand.profileStatus === "ready"
-            ? []
-            : [`Profile ${statusLabel(brand.profileStatus).toLowerCase()}`]),
-        ].join(" · ")}
-        actions={
-          <>
-            {latestRun ? (
-              <Link href={`/runs/${latestRun._id}`} className={pillClasses("ink", "sm")}>
-                Latest check
-              </Link>
-            ) : null}
-            <ShareButton />
-            <OwnBrandToggle brandId={brandId} isOwn={brand.isOwnBrand === true} size="sm" className={pillClasses("outline", "sm")} />
-          </>
-        }
+      <BrandHeader
+        brand={brand}
+        brandId={brandId}
+        latestRunId={latestRun ? String(latestRun._id) : null}
+        latestAt={latestRun?.requestedAt ?? null}
+        findingsCount={signals.length}
+        taggedCount={tags.length}
       />
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
         <div className="overflow-x-auto">
-          <TabsList variant="ink" className="min-w-max">
+          <TabsList variant="ink" className="min-w-max gap-7">
             {tabs.map(([value, label]) => (
               <TabsTrigger key={value} value={value}>
                 {label}
@@ -278,8 +234,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 youtubeSnapshot={latestYoutubeVideoSnapshot}
                 newsSnapshot={latestGoogleNewsSnapshot}
                 googleSnapshot={latestGoogleSnapshot}
-                findingsCount={signals.length}
-                brandId={brandId}
               />
             </TabsContent>
             <TabsContent value="insights" className="mt-0 py-5">
