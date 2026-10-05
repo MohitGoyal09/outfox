@@ -1,5 +1,4 @@
 import { Reveal } from "@/components/aceternity/reveal";
-import { StickyBanner } from "@/components/aceternity/sticky-banner";
 import { Comparison } from "./Comparison";
 import { CtaBand } from "./CtaBand";
 import { Faq } from "./Faq";
@@ -15,3 +14,37 @@ import { StructuredData } from "./StructuredData";
 import { WatchesGrid } from "./WatchesGrid";
 import { WatchItWork } from "./WatchItWork";
 import { WillNotClaim } from "./WillNotClaim";
+
+export function LandingPage() {
+  return (
+    <div className="l-theme min-h-dvh overflow-x-clip text-fg">
+      <StructuredData />
+      <LandingNav />
+      <main>
+        
+        <Reveal>
+          <Problem />
+        </Reveal>
+        <WatchItWork />
+        
+        
+        <ProductShowcase />
+        <Reveal>
+          <WillNotClaim />
+        </Reveal>
+        <Reveal>
+          
+        </Reveal>
+        
+        <Reveal>
+          
+        </Reveal>
+        <Reveal>
+          <Faq />
+        </Reveal>
+        
+      </main>
+      
+    </div>
+  );
+}

@@ -103,7 +103,8 @@
 }
 /* Live label only: a text-clipped gradient sweeping tertiary -> fg -> tertiary. */
 .thought-line[data-working] .thought-line__breath[data-shimmer] {
-  background: linear-gradient(90deg, var(--fg-tertiary), var(--fg), var(--fg-tertiary)) 0 0 / 200% 100%;
+  /* --text-* are the real tokens; the old --fg/--fg-tertiary did not exist, so the label painted transparent. */
+  background: linear-gradient(90deg, var(--text-tertiary), var(--text-primary), var(--text-tertiary)) 0 0 / 200% 100%;
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -300,4 +301,10 @@
   .thought-line__step[data-running] .thought-line__dot {
     animation-duration: 2.4s;
   }
+}
+
+.thought-line__count {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+  opacity: 0.7;
 }

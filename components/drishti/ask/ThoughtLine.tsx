@@ -4,7 +4,7 @@
 import type { CSSProperties } from "react";
 import { useEffect, useLayoutEffect, useRef, useState } from "react";
 import { animate, useReducedMotion } from "motion/react";
-import { ChevronDown, Sparkles } from "lucide-react";
+import { ChevronDown, ListChecks } from "lucide-react";
 import { iconProps } from "../tokens";
 import { stripEmDashes } from "@/lib/noEmDash";
 import { ThinkingOrb } from "./ThinkingOrb";
@@ -24,6 +24,19 @@ export type ThoughtStep = {
   status: ThoughtStepStatus;
   engine?: string | null;
 };
+
+function foldSteps(steps: ThoughtStep[]): { step: ThoughtStep; index: number; count: number }[] {
+  const rows: { step: ThoughtStep; index: number; count: number }[] = [];
+  steps.forEach((step, index) => {
+    const prev = rows[rows.length - 1];
+    if (prev && prev.step.text === step.text && prev.step.status === step.status && prev.step.engine === step.engine) {
+      rows[rows.length - 1] = { step, index, count: prev.count + 1 };
+    } else {
+      rows.push({ step, index, count: 1 });
+    }
+  });
+  return rows;
+}
 
 function formatElapsed(deciseconds: number): string {
   if (deciseconds < 600) return `${(deciseconds / 10).toFixed(1)}s`;
@@ -60,13 +73,13 @@ export function ThoughtLine({
   const reduce = useReducedMotion();
   const stepCount = steps.length;
   const failedCount = steps.filter((step) => step.status === "failed").length;
-  const actionWord = stepCount === 1 ? "action" : "actions";
+  const stepWord = stepCount === 1 ? "step" : "steps";
   const settledSummary =
     failedCount > 0
-      ? `${stepCount} ${actionWord} · ${failedCount} failed`
-      : `${stepCount} ${actionWord} completed`;
-  const workingSummary =
-    stepCount === 0 ? "Working…" : `Running ${stepCount} ${actionWord}…`;
+      ? `Thought through ${stepCount} ${stepWord} · ${failedCount} failed`
+      : `Thought through ${stepCount} ${stepWord}`;
+  const currentStep = steps[stepCount - 1];
+  const workingSummary = currentStep ? `${stripEmDashes(currentStep.text)}…` : "Thinking…";
 
   const [autoSettled, setAutoSettled] = useState(false);
   const [open, setOpen] = useState(working);
@@ -204,7 +217,7 @@ export function ThoughtLine({
         </span>
       ) : null}
       <span ref={glyphRef} className="thought-line__glyph" aria-hidden="true">
-        <Sparkles {...iconProps} />
+        <ListChecks {...iconProps} />
       </span>
       <span ref={stackRef} className="thought-line__label" aria-hidden="true">
         <span ref={workRef} className="thought-line__text" data-active={isWorking ? "" : undefined}>
@@ -248,7 +261,7 @@ export function ThoughtLine({
     </>
   );
 
-  if (steps.length === 0) return null;
+  if (steps.length === 0 && !working) return null;
 
   return (
     <div
@@ -280,7 +293,7 @@ export function ThoughtLine({
       <div className="thought-line__trace" data-open={open ? "" : undefined} aria-hidden={!open}>
         <div className="thought-line__fold">
           <div className="thought-line__steps">
-            {steps.map((step, index) => {
+            {foldSteps(steps).map(({ step, index, count }) => {
               const done = step.status === "complete" || (step.status === "running" && index < steps.length - 1);
               const failed = step.status === "failed";
               const running = !done && !failed;
@@ -296,7 +309,10 @@ export function ThoughtLine({
                     <i className="thought-line__dot" />
                   </span>
                   {step.engine ? <PlatformLogo engine={step.engine} className="size-3.5" /> : null}
-                  <span className="thought-line__step-text">{stripEmDashes(step.text)}</span>
+                  <span className="thought-line__step-text">
+                    {stripEmDashes(step.text)}
+                    {count > 1 ? <span className="thought-line__count"> ×{count}</span> : null}
+                  </span>
                   {/* The dot's shape and hue are the visual status cue; this
                       is the same state for a screen reader, since the mark
                       itself is aria-hidden. */}
