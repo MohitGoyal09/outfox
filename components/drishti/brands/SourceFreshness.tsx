@@ -22,11 +22,15 @@ function CheckText({ check }: { check: SourceCheck }) {
 
 export function SourceFreshness({ coverage, latestClaims, now }: { coverage: EngineCoverageRow[]; latestClaims: ClaimDoc[]; now: number }) {
   const checks = latestCheckBySource(coverage, latestClaims, now);
+  const notable = checks.filter((check) => check.state !== "ok" || check.isStale || check.reason);
+  if (notable.length === 0) {
+    return <p className="mt-4 border-t border-border pt-3 text-xs text-muted-foreground">All {checks.length} sources checked in the latest check.</p>;
+  }
   return (
     <div className="mt-4 border-t border-border pt-3">
-      <h3 className="mb-2 text-xs font-medium text-fg-secondary">Last checked</h3>
+      <h3 className="mb-2 text-xs font-medium text-fg-secondary">Needs a look</h3>
       <ul className="space-y-1.5">
-        {checks.map((check) => (
+        {notable.map((check) => (
           <li key={check.engine} className="flex items-start gap-2 text-xs text-muted-foreground">
             <PlatformLogo engine={check.engine} className="mt-0.5 size-3.5 shrink-0" />
             <span className="min-w-0">

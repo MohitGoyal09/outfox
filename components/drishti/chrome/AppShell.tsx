@@ -8,7 +8,7 @@ import { SidebarProvider } from "@/components/ui/sidebar";
 
 export function AppShell({ children }: { children: ReactNode }) {
   return (
-    <SidebarProvider className="min-h-dvh w-full bg-bg">
+    <SidebarProvider className="min-h-dvh w-full bg-bg-raised-2">
       <a
         href="#main"
         className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-3 focus:z-50 focus:rounded-md focus:bg-bg-raised focus:px-3 focus:py-2 focus:text-sm focus:text-fg focus:shadow-[var(--shadow-toast)]"
@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <Sidebar />
-      <div className="app-canvas flex min-h-svh w-full min-w-0 flex-1 flex-col">
+      <div className="flex min-h-svh w-full min-w-0 flex-1 flex-col">
         {/* The header is a fixed 64px bar, level with the sidebar's own header,
             so the rail and the top bar share one horizontal rule. */}
         <header className="sticky top-0 z-30 border-b border-border/80 bg-bg/90 backdrop-blur supports-[backdrop-filter]:bg-bg/80">

@@ -1,22 +1,16 @@
 "use client";
 
-import { useMemo } from "react";
-import { useQuery } from "convex/react";
-import { api } from "@/convex/_generated/api";
-import { offTopicIds } from "../topicality";
-import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { checkedStateLabel, sameSource } from "@/components/drishti/labels";
-import { isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
+import { type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
 import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
 import { SectionHeader } from "../../SectionHeader";
-import { pillClasses } from "../../PillButton";
+import { EvidenceSection } from "../EvidenceSection";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
 import { SourceFreshness } from "../SourceFreshness";
-import { EvidenceGrid, evidenceCardCount } from "../EvidenceGrid";
-import { describeActiveBrandFilters, isDefaultBrandFilters, matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
+import type { BrandFilters } from "../filters/filters-model";
 import type { DistributionItem } from "../../DistributionPanel";
 
 function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: EngineCoverageRow[]; latestClaims: ClaimDoc[]; previousClaims: ClaimDoc[] | null }) {
@@ -62,72 +56,6 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
   );
 }
 
-const NEWEST_COUNT = 6;
-
-function NewestFindings({
-  latestClaims,
-  tags,
-  filters,
-  now,
-  evidenceHref,
-  resetFilters,
-  youtubeSnapshot,
-  newsSnapshot,
-  googleSnapshot,
-}: {
-  latestClaims: ClaimDoc[];
-  tags: ClaimDoc[];
-  filters: BrandFilters;
-  now: number;
-  evidenceHref: string;
-  resetFilters: () => void;
-  youtubeSnapshot?: SnapshotDoc;
-  newsSnapshot?: SnapshotDoc;
-  googleSnapshot?: SnapshotDoc;
-}) {
-  const brandId = latestClaims[0]?.brandId;
-  const brand = useQuery(api.brands.getBrand, brandId ? { brandId } : "skip");
-  const showOffTopic = filters.offtopic === "show";
-  const matching = useMemo(() => {
-    const content = latestClaims.filter((claim) => isContentClaim(claim));
-    const off = showOffTopic || !brand ? new Set<string>() : offTopicIds(content, new Map([[String(brand._id), brand]]));
-    return content.filter(
-      (claim) => !off.has(String(claim._id)) && matchesBrandFilters(claim, tagsForClaim(tags, claim), filters, now),
-    );
-  }, [latestClaims, tags, filters, now, showOffTopic, brand]);
-  const activeFilters = isDefaultBrandFilters(filters) ? null : describeActiveBrandFilters(filters);
-  return (
-    <section aria-label="Newest evidence" className="space-y-3">
-      <SectionHeader
-        title="Newest evidence"
-        sub={
-          activeFilters ? (
-            <>
-              Filtered to {activeFilters}.{" "}
-              <button type="button" onClick={resetFilters} className="text-accent hover:underline">
-                Clear
-              </button>
-            </>
-          ) : undefined
-        }
-      />
-      <EvidenceGrid
-        claims={matching}
-        youtubeSnapshot={youtubeSnapshot}
-        newsSnapshot={newsSnapshot}
-        googleSnapshot={googleSnapshot}
-        sort="newest"
-        maxCards={NEWEST_COUNT}
-        columnsClass="columns-1 gap-4 sm:columns-2 lg:columns-3"
-        emptyMessage="No findings to show for this check."
-        pageLabel="Overview"
-      />
-      <Link href={evidenceHref} className={pillClasses("outline", "sm")}>
-        See all {Intl.NumberFormat("en-US").format(evidenceCardCount(matching))} in Evidence
-      </Link>
-    </section>
-  );
-}
 
 export function OverviewTab({
   latestClaims,
@@ -142,7 +70,6 @@ export function OverviewTab({
   setFilter,
   resetFilters,
   now,
-  evidenceHref = "?tab=evidence",
   youtubeSnapshot,
   newsSnapshot,
   googleSnapshot,
@@ -159,7 +86,6 @@ export function OverviewTab({
   setFilter: <K extends keyof BrandFilters>(key: K, value: BrandFilters[K]) => void;
   resetFilters: () => void;
   now: number;
-  evidenceHref?: string;
   youtubeSnapshot?: SnapshotDoc;
   newsSnapshot?: SnapshotDoc;
   googleSnapshot?: SnapshotDoc;
@@ -207,7 +133,19 @@ export function OverviewTab({
           <FunnelPanel items={funnelItems} taggedCount={tags.length} totalFindings={totalFindings} selectedStage={filters.funnel} onSelectStage={handleSelectFunnel} />
         </SummaryPanel>
       </div>
-      <NewestFindings latestClaims={latestClaims} tags={tags} filters={filters} now={now} evidenceHref={evidenceHref} resetFilters={resetFilters} youtubeSnapshot={youtubeSnapshot} newsSnapshot={newsSnapshot} googleSnapshot={googleSnapshot} />
+      <EvidenceSection
+        latestClaims={latestClaims}
+        tags={tags}
+        filters={filters}
+        setFilter={setFilter}
+        resetFilters={resetFilters}
+        now={now}
+        youtubeSnapshot={youtubeSnapshot}
+        newsSnapshot={newsSnapshot}
+        googleSnapshot={googleSnapshot}
+        heading={(count) => <SectionHeader title={`${Intl.NumberFormat("en-US").format(count)} evidence cards`} />}
+        tabLabel="Overview"
+      />
     </div>
   );
 }

@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
+import { Compass, Layers, LayoutGrid, Lightbulb, MapPin, Users } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
@@ -41,12 +42,12 @@ import { InsightsTab } from "./tabs/InsightsTab";
 export type BrandProfileProps = { brandId: Id<"brands">; className?: string };
 
 const tabs = [
-  ["overview", "Overview"],
-  ["insights", "Insights"],
-  ["position", "Position"],
-  ["placement", "Placement"],
-  ["people", "People"],
-  ["evidence", "Evidence"],
+  ["overview", "Overview", LayoutGrid],
+  ["insights", "Insights", Lightbulb],
+  ["position", "Position", Compass],
+  ["placement", "Placement", MapPin],
+  ["people", "People", Users],
+  ["evidence", "Evidence", Layers],
 ] as const;
 
 type TabValue = (typeof tabs)[number][0];
@@ -171,9 +172,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
     );
   }
 
-  const evidenceParams = new URLSearchParams(searchParams);
-  evidenceParams.set("tab", "evidence");
-  const evidenceHref = `${pathname}?${evidenceParams.toString()}`;
 
   const latestTrendSnapshot = snapshots?.find((snapshot) => snapshot.engine === "google_trends" && String(snapshot.brandId) === String(brandId));
   const latestYoutubeVideoSnapshot = snapshots?.find((snapshot) => snapshot.engine === "youtube_video" && String(snapshot.brandId) === String(brandId));
@@ -194,8 +192,9 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
         <div className="overflow-x-auto">
           <TabsList variant="ink" className="min-w-max gap-7">
-            {tabs.map(([value, label]) => (
+            {tabs.map(([value, label, Icon]) => (
               <TabsTrigger key={value} value={value}>
+                <Icon className="size-4" aria-hidden />
                 {label}
               </TabsTrigger>
             ))}
@@ -230,7 +229,6 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 setFilter={setFilter}
                 resetFilters={resetFilters}
                 now={now}
-                evidenceHref={evidenceHref}
                 youtubeSnapshot={latestYoutubeVideoSnapshot}
                 newsSnapshot={latestGoogleNewsSnapshot}
                 googleSnapshot={latestGoogleSnapshot}

@@ -105,7 +105,7 @@ function HookRow({
     </>
   );
   if (!onSelectHook) {
-    return <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-xs">{content}</div>;
+    return <div className="grid w-full grid-cols-[1fr_auto_auto_auto] items-center gap-3 px-1 py-0.5 text-[13px]">{content}</div>;
   }
   return (
     <button
@@ -114,7 +114,7 @@ function HookRow({
       aria-label={selected ? `Clear ${hookName(row.label)} hook type filter` : `Filter evidence to ${hookName(row.label)} hook type`}
       onClick={() => onSelectHook(row.label)}
       className={cn(
-        "grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 rounded-sm text-left text-xs hover:bg-muted/40",
+        "grid w-full grid-cols-[1fr_auto_auto_auto] items-center gap-3 rounded-sm px-1 py-0.5 text-left text-[13px] hover:bg-muted/40",
         selected && "bg-accent/10",
         FOCUS_RING_CLASS,
       )}
@@ -225,15 +225,16 @@ export function HookChart({
     rows.map((row) => [row.label, { label: hookName(row.label), color: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }]),
   ) satisfies ChartConfig;
   return (
-    <div className="grid items-center gap-4">
+    <div className="@container">
+    <div className="grid items-center gap-5 @md:grid-cols-[auto_minmax(0,1fr)]">
       {/* No hover tooltip on purpose. The legend to the right already carries
           every slice's label, count, share and delta, so a tooltip repeats it
           -- and at 92px a cursor-following card lands squarely on the centre
           label, hiding the tagged total it exists to show. */}
-      <div className="relative mx-auto size-[92px]">
-        <ChartContainer config={chartConfig} className="aspect-square size-[92px]">
+      <div className="relative mx-auto size-[136px]">
+        <ChartContainer config={chartConfig} className="aspect-square size-[136px]">
           <PieChart>
-            <Pie data={rows} dataKey="count" nameKey="label" innerRadius={26} outerRadius={44} strokeWidth={1} isAnimationActive={!reduceMotion}>
+            <Pie data={rows} dataKey="count" nameKey="label" innerRadius={46} outerRadius={66} strokeWidth={1} isAnimationActive={!reduceMotion}>
               {rows.map((row) => {
                 const selected = isRowSelected(row.label, selectedHook);
                 return (
@@ -251,7 +252,7 @@ export function HookChart({
           </PieChart>
         </ChartContainer>
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="font-mono text-sm font-semibold tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(total)}</span>
+          <span className="font-mono text-xl font-semibold tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(total)}</span>
           {/* Was "EVIDENCE", then "TAGGED", both read as the brand's tagged-
               findings count (the header badge's own word, `taggedCount`
               below), which this total is not: `not_applicable` findings are
@@ -262,13 +263,14 @@ export function HookChart({
           <span className="text-xs font-medium text-fg-secondary">with hook</span>
         </div>
       </div>
-      <div className="space-y-2">
+      <div className="space-y-0.5">
         {rows.map((row) => (
           <HookRow key={row.label} row={row} total={total} selectedHook={selectedHook} onSelectHook={onSelectHook} />
         ))}
       </div>
+    </div>
       {total > 0 ? (
-        <div>
+        <div className="mt-4">
           <TaggedShareNote realCount={total} taggedCount={taggedCount} totalFindings={totalFindings} dimensionNoun="hook" />
         </div>
       ) : null}
@@ -313,7 +315,7 @@ export function FunnelPanel({
   );
   return (
     <div
-      className="space-y-1.5"
+      className="space-y-1"
       role={onSelectStage ? "group" : "img"}
       aria-label={
         onSelectStage
@@ -328,23 +330,23 @@ export function FunnelPanel({
         const bar = (
           <>
             <span className="col-span-3 min-w-0 break-words">{FUNNEL_STAGE_INDEX[row.stage] + 1}. {row.label}</span>
-            <span className="h-4 w-full overflow-hidden rounded-[3px] bg-muted/40">
+            <span className="h-2.5 w-full overflow-hidden rounded-full bg-muted/60">
               {row.count > 0 ? (
                 <span
-                  className={cn("block h-full rounded-[3px]", selected && "ring-2 ring-inset ring-[var(--accent)]")}
+                  className={cn("block h-full rounded-full", selected && "ring-2 ring-inset ring-[var(--accent)]")}
                   style={{ width: `${widthPct}%`, backgroundColor: FUNNEL_COLOR[row.stage] }}
                 />
               ) : (
-                <span className="block h-full rounded-[3px] border border-dashed border-border-strong/70" style={{ width: `${widthPct}%` }} />
+                <span className="block h-full rounded-full border border-dashed border-border-strong/70" style={{ width: `${widthPct}%` }} />
               )}
             </span>
-            <span className="font-mono tabular-nums text-muted-foreground">{total ? `${sharePct}%` : "-"}</span>
+            <span className="text-right font-mono tabular-nums text-muted-foreground">{total ? `${sharePct}%` : "-"}</span>
             <DeltaTag delta={row.delta} />
           </>
         );
         if (row.count === 0 || !onSelectStage) {
           return (
-            <div key={row.stage} className="grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 text-xs">
+            <div key={row.stage} className="grid w-full grid-cols-[minmax(0,1fr)_2.75rem_3rem] items-center gap-x-3 gap-y-1.5 px-1 py-1 text-[13px]">
               {bar}
             </div>
           );
@@ -357,7 +359,7 @@ export function FunnelPanel({
             aria-label={selected ? `Clear ${row.label} funnel stage filter` : `Filter evidence to ${row.label} funnel stage`}
             onClick={() => onSelectStage(row.stage)}
             className={cn(
-              "grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 rounded-sm text-left text-xs hover:bg-muted/40",
+              "grid w-full grid-cols-[minmax(0,1fr)_2.75rem_3rem] items-center gap-x-3 gap-y-1.5 rounded-sm px-1 py-1 text-left text-[13px] hover:bg-muted/40",
               selected && "bg-accent/10",
               FOCUS_RING_CLASS,
             )}

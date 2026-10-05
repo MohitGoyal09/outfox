@@ -22,7 +22,7 @@ export function StepShell({
   children: ReactNode;
 }) {
   return (
-    <main className="app-canvas flex min-h-dvh flex-col items-center px-4 py-10 sm:py-14">
+    <main className="flex bg-bg-raised-2 min-h-dvh flex-col items-center px-4 py-10 sm:py-14">
       <div className="flex w-full max-w-[640px] flex-col gap-8">
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
