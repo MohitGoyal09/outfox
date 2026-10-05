@@ -67,17 +67,6 @@ export const HERO_FINDINGS: readonly HeroFinding[] = [
   },
 ];
 
-export const AD_CREATIVE = {
-  brand: "SUGAR Cosmetics",
-  image: "https://tpc.googlesyndication.com/archive/simgad/1624764746756811158",
-  width: 600,
-  height: 1200,
-  format: "Image ad",
-  totalDaysShown: 51,
-  url: "https://adstransparency.google.com/advertiser/AR09004105641337290753/creative/CR05157791118703722497?region=IN",
-  fetched: CHECK_DATE,
-};
-
 export const NUMBERS = {
   sources: 5,
   brands: 5,

@@ -63,7 +63,14 @@ export function AdCard() {
   return (
     <CardContainer className="flex flex-col rounded-[14px] border border-border bg-bg-raised shadow-xs" containerClassName="flex-1">
       <div className="relative aspect-[600/885] w-full overflow-hidden rounded-t-[13px] border-b border-border bg-white">
-        
+        <img
+          src={a.image}
+          alt="SUGAR Cosmetics ad creative: Beauty Favourites at 249 rupees"
+          width={a.width}
+          height={a.height}
+          loading="lazy"
+          className="absolute inset-0 size-full object-cover"
+        />
       </div>
       <CardItem translateZ={18} className="flex flex-col gap-2 p-3.5">
         <div className="flex items-center justify-between gap-2">
