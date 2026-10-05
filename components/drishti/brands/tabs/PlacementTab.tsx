@@ -73,14 +73,10 @@ function OrganicRankChart({ buckets }: { buckets: ReturnType<typeof organicRankB
   const chartConfig = { count: { label: "Organic results", color: "var(--cat-1)" } } satisfies ChartConfig;
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo
+      <Panel.Header title={<MetricInfo
             label="Organic rank distribution"
             definition="How many Google organic results landed in each rank bucket on the page. It counts results found at each position, not search volume or clicks."
-          />
-        </h3>
-      </div>
+          />} />
       <div className="p-4">
           <ChartContainer config={chartConfig} className="h-[200px] w-full aspect-auto">
             <BarChart accessibilityLayer data={buckets} margin={{ left: -12, right: 12, top: 8 }}>
@@ -96,7 +92,7 @@ function OrganicRankChart({ buckets }: { buckets: ReturnType<typeof organicRankB
             </BarChart>
           </ChartContainer>
         {emptyNotes.length > 0 ? (
-          <p className="mt-2 font-mono text-[11px] text-muted-foreground">
+          <p className="mt-2 font-mono text-xs text-muted-foreground">
             {emptyNotes.map((item) => `${item.label}: ${item.note}`).join(" · ")}
           </p>
         ) : null}
@@ -235,7 +231,7 @@ export function PlacementTab({
       {countPanels.length > 0 ? <div className={`grid gap-4 ${countPanels.length >= 3 ? "lg:grid-cols-3" : countPanels.length === 2 ? "lg:grid-cols-2" : ""}`}>{countPanels}</div> : null}
       {catalogPanels.length > 0 ? <div className={`grid gap-4 ${catalogPanels.length === 2 ? "lg:grid-cols-2" : ""}`}>{catalogPanels}</div> : null}
       {shortsCount > 0 || youtubeAdCount > 0 ? (
-        <p className="font-mono text-[11px] text-muted-foreground">
+        <p className="font-mono text-xs text-muted-foreground">
           {shortsCount} YouTube Shorts result{shortsCount === 1 ? "" : "s"} · {youtubeAdCount} YouTube ad result{youtubeAdCount === 1 ? "" : "s"}
         </p>
       ) : null}

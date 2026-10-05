@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
+import { SectionHeader } from "../../SectionHeader";
 import { useAction, useQuery } from "convex/react";
 import { ArrowUpRight, ChevronDown, RefreshCw, Sparkles, Target, TrendingUp, Users } from "lucide-react";
 
@@ -92,7 +93,7 @@ function CitationLinks({ citedClaimIds, claimsById }: { citedClaimIds: Id<"claim
           href={claim.evidenceUrl}
           target="_blank"
           rel="noreferrer noopener"
-          className="inline-flex items-center gap-1 text-[11px] text-accent hover:underline"
+          className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
         >
           Source <ArrowUpRight className="size-3" />
         </a>
@@ -118,10 +119,7 @@ function DnaSectionCard({
 }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <Icon className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">{title}</h3>
-      </div>
+      <Panel.Header title={title} />
       <div className="p-4">
         {sentences.length === 0 ? (
           <EmptyState
@@ -179,10 +177,7 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
 
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <TrendingUp className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">What changed</h3>
-      </div>
+      <Panel.Header title="What changed" />
       <div className="p-4">
         {!hasPreviousRun ? (
           <EmptyState
@@ -195,13 +190,13 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
           <p className="text-sm text-muted-foreground">No measurable change in hook mix since the previous check.</p>
         ) : (
           <ul className="space-y-2">
-            <li aria-hidden className="grid grid-cols-[1fr_auto_auto] gap-2 text-[12px] font-medium text-fg-tertiary">
+            <li aria-hidden className="grid grid-cols-[1fr_auto_auto] gap-2 text-xs font-medium text-fg-tertiary">
               <span>Hook</span>
               <span>Previous check → this check</span>
               <span>Change</span>
             </li>
             {movers.map((row) => (
-              <li key={row.hook} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-[12px]">
+              <li key={row.hook} className="grid grid-cols-[1fr_auto_auto] items-center gap-2 text-xs">
                 <span className="flex min-w-0 items-center gap-2">
                   <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.hook as HookType] }} />
                   <span className="truncate">{hookName(row.hook)}</span>
@@ -209,7 +204,7 @@ function WhatChangedCard({ claims }: { claims: ClaimDoc[] }) {
                 <span className="font-mono tabular-nums text-muted-foreground">
                   {row.before} → {row.after}
                 </span>
-                <span className="font-mono text-[11px] tabular-nums text-muted-foreground">
+                <span className="font-mono text-xs tabular-nums text-muted-foreground">
                   <DeltaMark direction={row.delta > 0 ? "up" : "down"} />
                   {Math.abs(row.delta)}
                 </span>
@@ -265,12 +260,7 @@ export function InsightsTab({
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h2 className="type-headline text-fg">Brand DNA</h2>
-          <p className="mt-0.5 text-[12px] text-muted-foreground">
-            How this brand positions itself, who it talks to, what it sells against, and what changed since the previous check. Every claim cites its source.
-          </p>
-        </div>
+        <SectionHeader title="Brand DNA" sub="How this brand positions itself, who it talks to, what it sells against, and what changed since the previous check. Every claim cites its source." />
         <Button variant="outline" size="sm" className="h-8 gap-1.5" onClick={() => void refreshNow()} disabled={generating}>
           <RefreshCw className={cn("size-3.5", generating && "animate-spin")} />
           {generating ? "Refreshing…" : "Refresh now"}
@@ -298,15 +288,11 @@ export function InsightsTab({
       ) : (
         <>
           <Panel interactive={false} className="overflow-hidden border-accent/25 bg-accent/[0.03]">
-            <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-              <Sparkles className="size-4 text-fg" aria-hidden />
-              <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Positioning: <RelativeTime iso={latest.generatedAt} /></h3>
-              {templateMode ? (
-                <Badge variant="outline" className="ml-auto h-5 rounded-full border-warn/30 bg-warn/10 px-2 text-[10px] font-normal text-warn">
+            <Panel.Header title={<>Positioning: <RelativeTime iso={latest.generatedAt} /></>} trailing={templateMode ? (
+                <Badge variant="outline" className="ml-auto h-5 rounded-full border-warn/30 bg-warn/10 px-2 text-xs font-normal text-warn">
                   Template fallback
                 </Badge>
-              ) : null}
-            </div>
+              ) : null} />
             <div className="space-y-4 p-4">
               {buckets.positioning.length === 0 ? (
                 <EmptyState
@@ -325,7 +311,7 @@ export function InsightsTab({
                     <ol className="space-y-2.5 border-t border-border pt-4">
                       {buckets.positioning.slice(1).map((sentence, index) => (
                         <li key={index} className="flex gap-2.5">
-                          <span className="mt-0.5 font-mono text-[11px] text-muted-foreground">{index + 1}</span>
+                          <span className="mt-0.5 font-mono text-xs text-muted-foreground">{index + 1}</span>
                           <div className="min-w-0">
                             <p className="text-[13px] leading-5 text-fg">{modelText(sentence.text)}</p>
                             <CitationLinks citedClaimIds={sentence.citedClaimIds} claimsById={claimsById} />
@@ -364,14 +350,14 @@ export function InsightsTab({
 
       {earlierVerdicts.length > 0 ? (
         <Collapsible>
-          <CollapsibleTrigger className="group inline-flex items-center gap-1.5 text-[12px] font-medium text-fg-secondary hover:text-fg">
+          <CollapsibleTrigger className="group inline-flex items-center gap-1.5 text-xs font-medium text-fg-secondary hover:text-fg">
             Earlier reads ({earlierVerdicts.length})
             <ChevronDown aria-hidden className="size-3.5 transition-transform duration-150 group-data-[state=open]:rotate-180" />
           </CollapsibleTrigger>
           <CollapsibleContent>
             <ul className="mt-2 space-y-1.5">
               {earlierVerdicts.map((row) => (
-                <li key={row.id} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
+                <li key={row.id} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-xs">
                   {row.kind === "failed" ? (
                     <span className="min-w-0 truncate text-danger">Check failed{row.reason ? `: ${row.reason}` : ""}</span>
                   ) : (

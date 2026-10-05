@@ -1,6 +1,7 @@
 "use client";
 
 import type { ClaimDoc, SnapshotDoc } from "../brand-model";
+import { SectionHeader } from "../../SectionHeader";
 import { EvidenceSection } from "../EvidenceSection";
 import type { BrandFilters } from "../filters/filters-model";
 
@@ -36,7 +37,7 @@ export function EvidenceTab({
       youtubeSnapshot={youtubeSnapshot}
       newsSnapshot={newsSnapshot}
       googleSnapshot={googleSnapshot}
-      heading={(count) => <h2 className="type-headline text-fg">{Intl.NumberFormat("en-US").format(count)} pieces of evidence</h2>}
+      heading={(count) => <SectionHeader title={`${Intl.NumberFormat("en-US").format(count)} pieces of evidence`} />}
       tabLabel="Evidence tab"
     />
   );

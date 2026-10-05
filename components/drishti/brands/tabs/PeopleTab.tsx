@@ -3,9 +3,10 @@
 import { useMemo } from "react";
 import { useReducedMotion } from "motion/react";
 import { Cell, Pie, PieChart } from "recharts";
-import { Newspaper, Trophy, Users, Video } from "lucide-react";
+import { Newspaper } from "lucide-react";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { MetricInfo } from "../../MetricInfo";
+import { SectionHeader } from "../../SectionHeader";
 import { Panel } from "../../Panel";
 import { categoricalColorFor } from "../../tokens";
 import { CountListPanel } from "../CountListPanel";
@@ -47,27 +48,22 @@ function resolveTaggedContentClaims(claims: ClaimDoc[], tagRows: ClaimDoc[]): Cl
 function CreatorLeaderboard({ rows }: { rows: ReturnType<typeof mergeCreatorRows> }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <Trophy className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo
+      <Panel.Header title={<MetricInfo
             label="Creator leaderboard"
             definition="Real YouTube channels ranked by total views across the videos we captured. Subscriber counts come from the source and may be missing; “owned” is a name match against the brand, not a source category."
-          />
-        </h3>
-      </div>
+          />} />
       <div className="p-4">
           <ul className="space-y-2">
             {rows.map((row, index) => (
               <li key={row.channelName} className="grid grid-cols-[20px_1fr_auto_auto] items-center gap-2 text-xs">
-                <span className="font-mono text-[10px] text-muted-foreground">{index + 1}</span>
+                <span className="font-mono text-xs text-muted-foreground">{index + 1}</span>
                 <span className="truncate">
                   {row.channelName}
                   {row.subscribers !== null ? (
-                    <span className="ml-1.5 font-mono text-[10px] text-muted-foreground">({compactCount(row.subscribers)} subs)</span>
+                    <span className="ml-1.5 font-mono text-xs text-muted-foreground">({compactCount(row.subscribers)} subs)</span>
                   ) : null}
                 </span>
-                <span className="rounded-full border border-border px-1.5 py-0.5 text-[11px] font-medium text-fg-secondary">{row.owned ? "owned" : "creator"}</span>
+                <span className="rounded-full border border-border px-1.5 py-0.5 text-xs font-medium text-fg-secondary">{row.owned ? "owned" : "creator"}</span>
                 <span className="font-mono tabular-nums text-fg">{compactCount(row.totalViews)}</span>
               </li>
             ))}
@@ -105,7 +101,7 @@ export function SingleSideStat({ row }: { row: { label: string; value: number; c
       <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} />
       <div>
         <p className="font-mono text-2xl font-semibold leading-none tabular-nums text-foreground">{compactCount(row.value)}</p>
-        <p className="mt-1 text-[11px] text-muted-foreground">
+        <p className="mt-1 text-xs text-muted-foreground">
           All real views so far are {row.label.toLowerCase()}. {context}
         </p>
       </div>
@@ -120,15 +116,10 @@ function OwnedVsCreatorSplit({ data }: { data: ReturnType<typeof ownedVsCreatorD
 
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <Users className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo
+      <Panel.Header title={<MetricInfo
             label="Owned vs. creator views"
             definition="Real view totals split between the brand's own channel, matched by name, and third-party creators. It is a derived split of the videos we captured, not a category from the source data."
-          />
-        </h3>
-      </div>
+          />} />
       <div className="p-4">
         {data.length < TWO_WAY_DONUT_MIN_DISTINCT ? (
           <SingleSideStat row={data[0]} />
@@ -152,12 +143,12 @@ function OwnedVsCreatorSplit({ data }: { data: ReturnType<typeof ownedVsCreatorD
                 </Pie>
               </PieChart>
             </ChartContainer>
-            <div className="space-y-2 text-[11px]">
+            <div className="space-y-2 text-xs">
               {data.map((row) => (
                 <div key={row.label} className="flex items-center gap-2">
                   <span className="size-2 shrink-0 rounded-sm" style={{ backgroundColor: row.color }} />
                   <span className="flex-1 truncate">{row.label}</span>
-                  <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{totalViews ? `${Math.round((row.value / totalViews) * 100)}%` : "-"}</span>
+                  <span className="font-mono text-xs tabular-nums text-muted-foreground">{totalViews ? `${Math.round((row.value / totalViews) * 100)}%` : "-"}</span>
                   <span className="font-mono tabular-nums text-muted-foreground">{compactCount(row.value)}</span>
                 </div>
               ))}
@@ -173,27 +164,21 @@ function OwnedVsCreatorSplit({ data }: { data: ReturnType<typeof ownedVsCreatorD
 function BreakoutVideos({ groups, youtubeSnapshot }: { groups: ReturnType<typeof breakoutVideoRanking>; youtubeSnapshot?: SnapshotDoc }) {
   return (
     <section className="space-y-3">
-      <div className="flex flex-row items-center gap-2">
-        <Video className="size-4 text-fg" aria-hidden />
-        <h3 className="type-headline text-fg">
-          <MetricInfo
+      <SectionHeader as="h3" title={<MetricInfo
             label="Breakout videos"
             definition="The brand's stored YouTube videos ranked by real view count, highest first. Likes are shown beside views so a gap is visible; we never compute an outlier score."
-          />
-        </h3>
-        <MetricInfo
+          />} trailing={<MetricInfo
           label="ranked by views"
           definition="Order is the real stored view count, highest first. A video with no stored view count sorts last and is never treated as zero."
-          className="ml-auto font-mono text-[11px] text-muted-foreground"
-        />
-      </div>
+          className="text-xs text-muted-foreground"
+        />} />
       {(
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
           {groups.map((group, index) => {
             const raw = readYoutubeRawVideo(findYoutubeRawVideo(youtubeSnapshot?.rawResponse, group.videoId));
             return (
               <div key={group.evidenceUrl} className="relative">
-                <span className="absolute -left-1.5 -top-1.5 z-10 grid size-5 place-items-center rounded-full border border-border-strong bg-bg-raised font-mono text-[10px] font-semibold tabular-nums text-fg">
+                <span className="absolute -left-1.5 -top-1.5 z-10 grid size-6 place-items-center rounded-full border border-border-strong bg-bg-raised font-mono text-xs font-semibold tabular-nums text-fg">
                   {index + 1}
                 </span>
                 <YouTubeVideoCard group={group} raw={raw} />

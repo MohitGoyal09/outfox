@@ -35,15 +35,10 @@ const STATUS_TEXT: Record<ReturnType<typeof runStatusTone>, string> = {
 export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-        <History className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo
+      <Panel.Header title={<MetricInfo
             label="Check history"
             definition="One row per stored check, newest first. “Findings” is how many pieces of evidence that check stored, top hook and top funnel are its most common real tags, and tokens and cost are what its tagging actually used."
-          />
-        </h3>
-      </div>
+          />} />
       <div className="p-4">
         {rows.length ? (
           <ol className="relative border-l border-border">
@@ -57,7 +52,7 @@ export function HistoryTab({ rows }: { rows: RunHistoryRow[] }) {
                       <span className="font-mono text-xs text-muted-foreground">{formatStamp(row.requestedAt)}</span>
                       <span className={cn("text-xs font-medium", STATUS_TEXT[tone])}>{statusLabel(row.status)}</span>
                     </div>
-                    <Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 text-[12px] text-fg hover:underline">
+                    <Link href={`/runs/${row.runId}`} className="inline-flex shrink-0 items-center gap-1 text-xs text-fg hover:underline">
                       View check <ArrowRight className="size-3" />
                     </Link>
                   </div>

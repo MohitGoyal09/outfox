@@ -134,7 +134,7 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
   const hookItems = hookDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
   const funnelItems = funnelDistribution(hookFunnelClaims, hookFunnelPreviousClaims);
   const hookFunnelTotalFindings = signalClaims(hookFunnelClaims).length;
-  const fallbackLabel = fallbackRun ? <p className="mt-1 font-mono text-[10px] text-muted-foreground">from the check on {formatStamp(fallbackRun.requestedAt)}</p> : undefined;
+  const fallbackLabel = fallbackRun ? <p className="mt-1 font-mono text-xs text-muted-foreground">from the check on {formatStamp(fallbackRun.requestedAt)}</p> : undefined;
 
   const historyRows = useMemo(() => {
     const rows = runHistoryRows(runs, claims ?? []);

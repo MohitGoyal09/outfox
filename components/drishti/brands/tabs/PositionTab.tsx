@@ -1,12 +1,12 @@
 "use client";
 
+import { Notice } from "../../Notice";
 import { useMemo } from "react";
 import { useQuery } from "convex/react";
 import { useReducedMotion } from "motion/react";
 import { Bar, BarChart, CartesianGrid, Cell, XAxis, YAxis } from "recharts";
-import { ArrowUpRight, Sparkles, TrendingUp } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import { Badge } from "@/components/ui/badge";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { MetricInfo } from "../../MetricInfo";
 import { Panel } from "../../Panel";
@@ -45,15 +45,11 @@ function AiOverviewPanel({ blocks, hiddenCount }: { blocks: ClaimDoc[]; hiddenCo
   const hiddenNote = hiddenConversationalNote(hiddenCount);
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <Sparkles className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Google AI Overview</h3>
-        <Badge variant="outline" className="ml-auto h-5 rounded-full px-2 text-[10px] font-normal text-muted-foreground">Google&apos;s synthesis, not ours</Badge>
-      </div>
+      <Panel.Header title="Google AI Overview" />
       <div className="p-4">
-        <p className="mb-3 text-[11px] leading-5 text-muted-foreground">
+        <Notice title="Google's synthesis, not ours" className="mb-3">
           Google&apos;s own generated summary of this brand, not a primary source and not Drishti&apos;s analysis. Every line below links to the page Google actually cited.
-        </p>
+        </Notice>
           <ul className="space-y-2.5">
             {blocks.map((claim) => (
               <li key={String(claim._id)} className="rounded-sm border border-border bg-bg-inset/40 p-3">
@@ -62,14 +58,14 @@ function AiOverviewPanel({ blocks, hiddenCount }: { blocks: ClaimDoc[]; hiddenCo
                   href={claim.evidenceUrl}
                   target="_blank"
                   rel="noreferrer noopener"
-                  className="mt-1.5 inline-flex items-center gap-1 text-[11px] text-fg hover:underline"
+                  className="mt-1.5 inline-flex items-center gap-1 text-xs text-fg hover:underline"
                 >
                   Google&apos;s cited source <ArrowUpRight className="size-3" />
                 </a>
               </li>
             ))}
           </ul>
-          {hiddenNote !== null ? <p className="mt-3 text-[11px] leading-4 text-muted-foreground">{hiddenNote}.</p> : null}
+          {hiddenNote !== null ? <p className="mt-3 text-xs leading-4 text-muted-foreground">{hiddenNote}.</p> : null}
       </div>
     </Panel>
   );
@@ -97,9 +93,7 @@ function PriceLadderCard({ claims, points }: { claims: ClaimDoc[]; points: Retur
   const asOf = points.reduce((latest, point) => (point.fetchedAt > latest ? point.fetchedAt : latest), points[0].fetchedAt);
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">Price ladder</h3>
-      </div>
+      <Panel.Header title="Price ladder" />
       <div className="p-4">
           <div className="space-y-3">
             <p className="flex flex-wrap items-center gap-1 font-mono text-xs text-muted-foreground">
@@ -113,7 +107,7 @@ function PriceLadderCard({ claims, points }: { claims: ClaimDoc[]; points: Retur
             </p>
             <ul className="space-y-1.5">
               {points.map((point) => (
-                <li key={point.claimId} className="grid grid-cols-[1fr_auto] items-center gap-3 text-[11px]">
+                <li key={point.claimId} className="grid grid-cols-[1fr_auto] items-center gap-3 text-xs">
                   <span className="truncate text-muted-foreground">{sellerLabel(point, claimTextById)}</span>
                   <span className="font-mono tabular-nums text-fg">{point.price}{point.unit ? ` ${point.unit}` : ""}</span>
                 </li>
@@ -136,18 +130,13 @@ function HookMixDriftChart({ rows }: { rows: ReturnType<typeof hookMixDrift> }) 
   const chartConfig = { current: { label: "This check" }, previous: { label: "Previous check" } } satisfies ChartConfig;
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="flex flex-row items-center gap-2 border-b border-border px-4 py-3">
-        <TrendingUp className="size-4 text-fg" aria-hidden />
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">
-          <MetricInfo
+      <Panel.Header title={<MetricInfo
             label="Hook-mix drift"
             definition="The change in hook-tag counts between this check and the previous tagged check. Bars show counts, not rates, so a larger check can lift every bar, a taller bar is more tags, not automatically a bigger share."
-          />
-        </h3>
-      </div>
+          />} />
       <div className="p-4">
           <>
-            <div className="mb-2 flex items-center gap-4 text-[11px] text-muted-foreground">
+            <div className="mb-2 flex items-center gap-4 text-xs text-muted-foreground">
               <span className="inline-flex items-center gap-1.5">
                 <span aria-hidden className="h-2.5 w-2.5 rounded-[2px]" style={{ backgroundColor: "var(--text-primary)" }} />
                 This check

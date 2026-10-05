@@ -18,9 +18,7 @@ import { TrendsExperience } from "../TrendsExperience";
 function RelatedListPanel({ title, claims }: { title: string; claims: ClaimDoc[] }) {
   return (
     <Panel interactive={false} className="overflow-hidden">
-      <div className="border-b border-border px-4 py-3">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-fg">{title}</h3>
-      </div>
+      <Panel.Header title={title} />
       <ul className="space-y-2 p-4 text-sm">
         {claims.map((claim) => (
           <li key={String(claim._id)}>

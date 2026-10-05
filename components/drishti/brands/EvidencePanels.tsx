@@ -54,9 +54,9 @@ export function FilterSelect({ icon: Icon, label, value, onChange, options, opti
 export function DeltaTag({ delta }: { delta: number | null }) {
   if (delta === null) return null;
   const change = countChange(delta);
-  if (change === null) return <span className="font-mono text-[10px] text-muted-foreground">±0</span>;
+  if (change === null) return <span className="font-mono text-xs text-muted-foreground">±0</span>;
   return (
-    <span className="font-mono text-[10px] tabular-nums text-muted-foreground">
+    <span className="font-mono text-xs tabular-nums text-muted-foreground">
       <DeltaMark direction={change.direction} />
       {Intl.NumberFormat("en-US").format(change.amount)}
     </span>
@@ -66,11 +66,8 @@ export function DeltaTag({ delta }: { delta: number | null }) {
 export function SummaryPanel({ title, subtitle, children, className }: { title: ReactNode; subtitle?: ReactNode; children: ReactNode; className?: string }) {
   return (
     <Panel interactive={false} className={cn("flex min-h-[206px] flex-col overflow-hidden", className)}>
-      <div className="border-b border-border px-4 py-3">
-        <h3 className="text-[13px] font-semibold tracking-[-0.01em] text-fg">{title}</h3>
-        {subtitle}
-      </div>
-      <div className="px-4 py-4">{children}</div>
+      <Panel.Header title={title} description={subtitle} />
+      <div className="px-5 py-4">{children}</div>
     </Panel>
   );
 }
@@ -103,12 +100,12 @@ function HookRow({
         <span className="min-w-0 break-words">{hookName(row.label)}</span>
       </span>
       <span className="font-mono tabular-nums text-muted-foreground">{Intl.NumberFormat("en-US").format(row.count)}</span>
-      <span className="font-mono text-[10px] tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "-"}</span>
+      <span className="font-mono text-xs tabular-nums text-muted-foreground">{total ? `${Math.round((row.count / total) * 100)}%` : "-"}</span>
       <DeltaTag delta={row.delta} />
     </>
   );
   if (!onSelectHook) {
-    return <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-[11px]">{content}</div>;
+    return <div className="grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 text-xs">{content}</div>;
   }
   return (
     <button
@@ -117,7 +114,7 @@ function HookRow({
       aria-label={selected ? `Clear ${hookName(row.label)} hook type filter` : `Filter evidence to ${hookName(row.label)} hook type`}
       onClick={() => onSelectHook(row.label)}
       className={cn(
-        "grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 rounded-sm text-left text-[11px] hover:bg-muted/40",
+        "grid grid-cols-[1fr_auto_auto_auto] items-center gap-2 rounded-sm text-left text-xs hover:bg-muted/40",
         selected && "bg-accent/10",
         FOCUS_RING_CLASS,
       )}
@@ -141,7 +138,7 @@ function TaggedShareNote({
   const num = (n: number) => <span className={cn(VALUE_CLASS, "text-fg")}>{Intl.NumberFormat("en-US").format(n)}</span>;
   const hasFindings = totalFindings != null && totalFindings > 0;
   return (
-    <p className="mt-2 text-[10px] leading-4 text-muted-foreground">
+    <p className="mt-2 text-xs leading-4 text-muted-foreground">
       {num(realCount)} of {num(taggedCount)} tagged finding{taggedCount === 1 ? "" : "s"} carry a real {dimensionNoun}
       {hasFindings ? <>, {num(taggedCount)} of {num(totalFindings as number)} finding{totalFindings === 1 ? "" : "s"} were tagged at all</> : null}
       . Shares above are of those {num(realCount)}, not of every tagged finding{hasFindings ? " or every finding" : ""}.
@@ -172,7 +169,7 @@ function HookFallback({
         <span className="size-2.5 shrink-0 rounded-sm" style={{ backgroundColor: HOOK_COLOR[row.label as HookType] ?? HOOK_COLOR.not_applicable }} />
         <div>
           <p className="font-mono text-2xl font-semibold leading-none tabular-nums text-foreground">{Intl.NumberFormat("en-US").format(row.count ?? 0)}</p>
-          <p className="mt-1 text-[11px] text-muted-foreground">{hookName(row.label)}</p>
+          <p className="mt-1 text-xs text-muted-foreground">{hookName(row.label)}</p>
         </div>
       </div>
     );
@@ -262,7 +259,7 @@ export function HookChart({
               REAL-hook subset of the tagged sample (docs/HANDOFF.md §2 /
               §10's honest-percentages rule, "tagged" only ever means
               `taggedCount` on this page now). */}
-          <span className="text-[11px] font-medium text-fg-secondary">with hook</span>
+          <span className="text-xs font-medium text-fg-secondary">with hook</span>
         </div>
       </div>
       <div className="space-y-2">
@@ -347,7 +344,7 @@ export function FunnelPanel({
         );
         if (row.count === 0 || !onSelectStage) {
           return (
-            <div key={row.stage} className="grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 text-[11px]">
+            <div key={row.stage} className="grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 text-xs">
               {bar}
             </div>
           );
@@ -360,7 +357,7 @@ export function FunnelPanel({
             aria-label={selected ? `Clear ${row.label} funnel stage filter` : `Filter evidence to ${row.label} funnel stage`}
             onClick={() => onSelectStage(row.stage)}
             className={cn(
-              "grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 rounded-sm text-left text-[11px] hover:bg-muted/40",
+              "grid grid-cols-[1fr_auto_auto] gap-y-1 items-center gap-2 rounded-sm text-left text-xs hover:bg-muted/40",
               selected && "bg-accent/10",
               FOCUS_RING_CLASS,
             )}
