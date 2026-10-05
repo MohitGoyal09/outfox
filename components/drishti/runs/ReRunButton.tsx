@@ -7,7 +7,7 @@ import { RefreshCw, TriangleAlert } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button, LABEL_CLASS, VALUE_CLASS, iconProps } from "@/components/drishti";
+import { LABEL_CLASS, PillButton, VALUE_CLASS, iconProps } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 import { formatCount, formatUsd } from "./labels";
 
@@ -64,26 +64,26 @@ export function ReRunButton({
   if (!confirming) {
     return (
       <div className={cn("flex flex-col items-end gap-1.5", className)}>
-        <Button
+        <PillButton
           size="sm"
+          variant="outline"
           disabled={blocked || running}
-          error={error !== null}
           onClick={() => {
             setError(null);
             setConfirming(true);
           }}
-          icon={<RefreshCw {...iconProps} size={14} />}
           title={blocked ? (disabledReason ?? undefined) : "Re-run this cohort"}
         >
+          <RefreshCw {...iconProps} size={14} aria-hidden="true" />
           Re-run
-        </Button>
+        </PillButton>
         {blocked ? (
-          <p className="max-w-[34ch] text-right text-[12px] leading-[1.45] text-[var(--text-tertiary)]">
+          <p className="max-w-[34ch] text-right text-[12px] leading-[1.45] text-fg-tertiary">
             {disabledReason}
           </p>
         ) : null}
         {error !== null ? (
-          <p role="alert" className="max-w-[42ch] text-right text-[12px] leading-[1.45] text-[var(--danger)]">
+          <p role="alert" className="max-w-[42ch] text-right text-[12px] leading-[1.45] text-danger">
             {error}
           </p>
         ) : null}
@@ -100,18 +100,18 @@ export function ReRunButton({
         className,
       )}
     >
-      <p className={cn(LABEL_CLASS, "text-[var(--text-secondary)]")}>
+      <p className={cn(LABEL_CLASS, "text-fg-secondary")}>
         confirm live re-run
       </p>
-      <p className="mt-2 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+      <p className="mt-2 text-[13px] leading-[1.5] text-fg-secondary">
         The last run used{" "}
-        <span className={cn(VALUE_CLASS, "text-[var(--text-primary)]")}>
+        <span className={cn(VALUE_CLASS, "text-fg")}>
           {estimate.searches === null
             ? "an unreported number of searches"
             : `${formatCount(estimate.searches)} searches`}
         </span>{" "}
         and{" "}
-        <span className={cn(VALUE_CLASS, "text-[var(--text-primary)]")}>
+        <span className={cn(VALUE_CLASS, "text-fg")}>
           {estimate.costUsd === null
             ? "an unreported model cost"
             : `${formatUsd(estimate.costUsd)} ${estimate.costLabel}`}
@@ -122,7 +122,7 @@ export function ReRunButton({
       {error !== null ? (
         <p
           role="alert"
-          className="mt-3 flex items-start gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger)]"
+          className="mt-3 flex items-start gap-1.5 text-[12.5px] leading-[1.5] text-danger"
         >
           <TriangleAlert
             {...iconProps}
@@ -135,22 +135,13 @@ export function ReRunButton({
       ) : null}
 
       <div className="mt-4 flex flex-wrap items-center gap-2">
-        <Button
-          size="sm"
-          loading={running}
-          onClick={() => void start()}
-          icon={<RefreshCw {...iconProps} size={14} />}
-        >
+        <PillButton size="sm" disabled={running} onClick={() => void start()}>
+          <RefreshCw {...iconProps} size={14} aria-hidden="true" className={running ? "animate-spin" : undefined} />
           {running ? "Running" : "Confirm re-run"}
-        </Button>
-        <Button
-          size="sm"
-          variant="ghost"
-          disabled={running}
-          onClick={() => setConfirming(false)}
-        >
+        </PillButton>
+        <PillButton size="sm" variant="outline" disabled={running} onClick={() => setConfirming(false)}>
           Cancel
-        </Button>
+        </PillButton>
       </div>
     </div>
   );

@@ -6,11 +6,11 @@ import type { ReactNode } from "react";
 import {
   Chip,
   LABEL_CLASS,
+  PageHeader,
   Panel,
   Skeleton,
   SkeletonRegion,
   TONE_COLOR,
-  VALUE_CLASS,
   iconProps,
 } from "@/components/drishti";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
@@ -83,7 +83,7 @@ export function RunHeader({
             <span
               className={cn(
                 LABEL_CLASS,
-                "text-[var(--text-secondary)]",
+                "text-fg-secondary",
               )}
             >
               {gap.label} {gap.status === "failed" ? "failed" : gap.status === "missing" ? "not recorded" : "unavailable"}
@@ -94,56 +94,37 @@ export function RunHeader({
     );
 
   return (
-    <Panel interactive={false} className="p-6" ariaLabel="Run summary">
-      <div className="flex flex-wrap items-start justify-between gap-x-6 gap-y-4">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <h1 className="type-display text-fg">
-              {cohortName}
-            </h1>
-            <span
-              className={cn(
-                VALUE_CLASS,
-                "text-[12px] text-[var(--text-secondary)]",
-              )}
-            >
-              run of {formatRunDateTime(requestedAt)}
-            </span>
-          </div>
-
-          <UsageMeter
-            className="mt-3"
-            requestCount={requestCount}
-            llmRequestCount={llmRequestCount}
-            llmTokenCount={llmTokenCount}
-            creditsUsed={creditsUsed}
-            creditsReported={creditsReported}
-            exactCostUsd={exactCostUsd}
-            estimatedCostUsd={estimatedCostUsd}
-            {...(trailing !== undefined ? { trailing } : {})}
-          />
-
-          {errorMessage !== null && errorMessage.trim() !== "" ? (
-            <p
-              role="alert"
-              className="mt-3 flex items-start gap-1.5 text-[12.5px] leading-[1.5] text-[var(--danger)]"
-            >
-              <CircleAlert
-                {...iconProps}
-                size={14}
-                aria-hidden="true"
-                className="mt-0.5 size-3.5 shrink-0"
-              />
-              <span>{errorMessage}</span>
-            </p>
-          ) : null}
-        </div>
-
-        <div className="flex shrink-0 flex-col items-end gap-3">
-          <Chip tone={RUN_STATUS_TONE[status]} label={status} size="md" />
-          {action}
-        </div>
-      </div>
-    </Panel>
+    <div aria-label="Run summary" role="group">
+      <PageHeader
+        eyebrow={`Run of ${formatRunDateTime(requestedAt)}`}
+        title={cohortName}
+        meta={
+          <>
+            <Chip tone={RUN_STATUS_TONE[status]} label={status} size="md" />
+            <UsageMeter
+              requestCount={requestCount}
+              llmRequestCount={llmRequestCount}
+              llmTokenCount={llmTokenCount}
+              creditsUsed={creditsUsed}
+              creditsReported={creditsReported}
+              exactCostUsd={exactCostUsd}
+              estimatedCostUsd={estimatedCostUsd}
+              {...(trailing !== undefined ? { trailing } : {})}
+            />
+          </>
+        }
+        actions={action}
+        className="pb-2"
+      />
+      {errorMessage !== null && errorMessage.trim() !== "" ? (
+        <p
+          role="alert"
+          className="mt-1 flex items-start gap-1.5 text-[13px] leading-[1.5] text-danger"
+        >
+          <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
+          <span>{errorMessage}</span>
+        </p>
+      ) : null}
+    </div>
   );
 }

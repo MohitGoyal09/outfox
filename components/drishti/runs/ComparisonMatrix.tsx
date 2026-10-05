@@ -14,8 +14,7 @@ import {
   formatSharePct,
   funnelDotColor,
   hookDotColor,
-  iconProps,
-} from "@/components/drishti";
+  iconProps, SectionHeader } from "@/components/drishti";
 import { categoricalColorFor } from "@/components/drishti/tokens";
 import { cn } from "@/lib/utils";
 import { DeltaMark } from "@/components/drishti/DeltaMark";
@@ -52,7 +51,7 @@ function directionOf(delta: number): DeltaCell["direction"] {
 function DeltaText({ cell, className }: { cell: DeltaCell; className?: string }) {
   return (
     <span
-      className={cn(VALUE_CLASS, "text-[var(--text-secondary)]", className)}
+      className={cn(VALUE_CLASS, "text-fg-secondary", className)}
     >
       {cell.direction === null ? null : <DeltaMark direction={cell.direction} />}
       {cell.text}
@@ -85,14 +84,14 @@ function deltaCell(summary: BrandMixSummary, row: RowKey): DeltaCell {
 function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) {
   if (row === "claims") {
     return (
-      <span className={cn(VALUE_CLASS, "text-[13px] text-[var(--text-primary)]")}>
+      <span className={cn(VALUE_CLASS, "text-[13px] text-fg")}>
         {formatCount(summary.claimCount)}
       </span>
     );
   }
   if (row === "tags") {
     return (
-      <span className={cn(VALUE_CLASS, "text-[13px] text-[var(--text-primary)]")}>
+      <span className={cn(VALUE_CLASS, "text-[13px] text-fg")}>
         {formatCount(summary.tagCount)}
       </span>
     );
@@ -121,7 +120,7 @@ function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) 
     unclear > 0 ? `${unclear} ${unclear === 1 ? "finding" : "findings"} with no clear ${noun}` : null;
   if (leader === null) {
     return (
-      <span className="text-[12.5px] leading-[1.45] text-[var(--text-tertiary)]">
+      <span className="text-[12.5px] leading-[1.45] text-fg-tertiary">
         {unclearNote ?? "No tagged findings this run."}
       </span>
     );
@@ -133,14 +132,14 @@ function ValueCell({ summary, row }: { summary: BrandMixSummary; row: RowKey }) 
         className="size-1.5 shrink-0 rounded-full"
         style={{ backgroundColor: leader.dot }}
       />
-      <span className={cn(VALUE_CLASS, "text-[12.5px] text-[var(--text-primary)]")}>
+      <span className={cn(VALUE_CLASS, "text-[12.5px] text-fg")}>
         {leader.word}
       </span>
-      <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
+      <span className={cn(VALUE_CLASS, "text-xs text-fg-tertiary")}>
         {formatCount(leader.count)} · {leader.share} of clear
       </span>
       {unclearNote === null ? null : (
-        <span className="basis-full text-[11px] leading-[1.4] text-[var(--text-tertiary)]">
+        <span className="basis-full text-xs leading-[1.4] text-fg-tertiary">
           {unclearNote}
         </span>
       )}
@@ -185,7 +184,7 @@ export function ComparisonMatrix({
       <Panel interactive={false} className={cn("p-4", className)} ariaLabel="Side by side">
         <div
           role="alert"
-          className="flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-[var(--danger)]"
+          className="flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-danger"
         >
           <span>{error}</span>
           {onRetry ? (
@@ -208,9 +207,7 @@ export function ComparisonMatrix({
   return (
     <Panel interactive={false} className={cn("overflow-hidden", className)} ariaLabel="Side by side">
       <div className="border-b border-border px-5 py-4">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-          Coverage and counts
-        </h3>
+        <SectionHeader as="h3" title="Coverage and counts" />
       </div>
       <div className="p-5">
 
@@ -235,7 +232,7 @@ export function ComparisonMatrix({
       ) : (
         <>
           {brands.length === 1 ? (
-            <p className="mt-2 text-[12.5px] leading-[1.45] text-[var(--text-secondary)]">
+            <p className="mt-2 text-[12.5px] leading-[1.45] text-fg-secondary">
               One rival in this run, a comparison needs at least two.
             </p>
           ) : null}
@@ -246,15 +243,15 @@ export function ComparisonMatrix({
                 Rival mix and counts{previousLabel === null ? "" : `, with the change against the run of ${previousLabel}`}
               </caption>
               <thead>
-                <tr className="border-b border-[var(--border)]">
-                  <th scope="col" className="whitespace-nowrap pb-2 text-[12px] font-medium text-[var(--text-tertiary)]">
+                <tr className="border-b border-border">
+                  <th scope="col" className="whitespace-nowrap pb-2 text-[12px] font-medium text-fg-tertiary">
                     Dimension
                   </th>
                   {brands.map((brand) => (
                     <th
                       key={brand.id}
                       scope="col"
-                      className="pb-2 pl-4 text-[12.5px] font-medium text-[var(--text-primary)]"
+                      className="pb-2 pl-4 text-[12.5px] font-medium text-fg"
                     >
                       <span className="inline-flex items-center gap-1.5">
                         <span
@@ -269,7 +266,7 @@ export function ComparisonMatrix({
                   {previousLabel === null ? null : (
                     <th
                       scope="col"
-                      className="whitespace-nowrap pb-2 pl-4 text-[12px] font-medium text-[var(--text-secondary)]"
+                      className="whitespace-nowrap pb-2 pl-4 text-[12px] font-medium text-fg-secondary"
                     >
                       Δ vs run of {previousLabel}
                     </th>
@@ -278,10 +275,10 @@ export function ComparisonMatrix({
               </thead>
               <tbody>
                 {ROWS.map((row) => (
-                  <tr key={row} className="border-b border-[var(--border)] last:border-b-0">
+                  <tr key={row} className="border-b border-border last:border-b-0">
                     <th
                       scope="row"
-                      className="whitespace-nowrap py-3 pr-4 align-top text-[12.5px] font-medium text-[var(--text-secondary)]"
+                      className="whitespace-nowrap py-3 pr-4 align-top text-[12.5px] font-medium text-fg-secondary"
                     >
                       {ROW_LABEL[row]}
                     </th>
@@ -300,7 +297,7 @@ export function ComparisonMatrix({
                                 key={summary.brandId}
                                 className="flex flex-wrap items-baseline gap-x-2"
                               >
-                                <span className="text-[12px] leading-[1.3] text-[var(--text-tertiary)]">
+                                <span className="text-[12px] leading-[1.3] text-fg-tertiary">
                                   {summary.brandName}
                                 </span>
                                 <DeltaText cell={cell} className="text-[12px] leading-[1.3]" />
@@ -320,9 +317,9 @@ export function ComparisonMatrix({
             {summaries.map((summary) => (
               <li
                 key={summary.brandId}
-                className="border-t border-[var(--border)] pt-3 first:border-t-0 first:pt-0"
+                className="border-t border-border pt-3 first:border-t-0 first:pt-0"
               >
-                <p className="inline-flex items-center gap-1.5 text-[13px] font-medium text-[var(--text-primary)]">
+                <p className="inline-flex items-center gap-1.5 text-[13px] font-medium text-fg">
                   <span
                     aria-hidden="true"
                     className="size-1.5 shrink-0 rounded-full"
@@ -331,7 +328,7 @@ export function ComparisonMatrix({
                   {summary.brandName}
                 </p>
                 {previousLabel === null ? null : (
-                  <p className={cn(LABEL_CLASS, "mt-1 text-[var(--text-tertiary)]")}>
+                  <p className={cn(LABEL_CLASS, "mt-1 text-fg-tertiary")}>
                     Δ vs run of {previousLabel}
                   </p>
                 )}
@@ -345,7 +342,7 @@ export function ComparisonMatrix({
                         <dt
                           className={cn(
                             LABEL_CLASS,
-                            "text-[var(--text-tertiary)] min-[480px]:w-[6.5rem] min-[480px]:shrink-0",
+                            "text-fg-tertiary min-[480px]:w-[6.5rem] min-[480px]:shrink-0",
                           )}
                         >
                           {ROW_LABEL[row]}

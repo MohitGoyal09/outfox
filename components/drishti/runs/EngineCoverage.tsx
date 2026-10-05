@@ -10,8 +10,7 @@ import {
   SkeletonRegion,
   TONE_COLOR,
   VALUE_CLASS,
-  iconProps,
-} from "@/components/drishti";
+  iconProps, SectionHeader } from "@/components/drishti";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { cn } from "@/lib/utils";
 import { ENGINE_STATUS_WORD, engineCellTone } from "./labels";
@@ -40,15 +39,15 @@ function StatusCell({ cell }: { cell: EngineCell }) {
             VALUE_CLASS,
             "text-[12px] leading-[1.3]",
             cell.status === "ok"
-              ? "text-[var(--text-primary)]"
-              : "text-[var(--text-secondary)]",
+              ? "text-fg"
+              : "text-fg-secondary",
           )}
         >
           {ENGINE_STATUS_WORD[cell.status]}
         </span>
       </span>
       {cell.status !== "ok" && cell.reason !== null ? (
-        <span className="max-w-[46ch] text-[12px] leading-[1.45] text-[var(--text-tertiary)]">
+        <span className="max-w-[46ch] text-[12px] leading-[1.45] text-fg-tertiary">
           {cell.reason}
         </span>
       ) : null}
@@ -89,7 +88,7 @@ export function EngineCoverage({
       <Panel interactive={false} className={cn("p-5", className)} ariaLabel="Engine coverage">
         <div
           role="alert"
-          className="flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-[var(--danger)]"
+          className="flex flex-wrap items-center gap-3 text-[12.5px] leading-[1.5] text-danger"
         >
           <span>{error}</span>
           {onRetry ? (
@@ -110,9 +109,7 @@ export function EngineCoverage({
   return (
     <Panel interactive={false} className={cn("overflow-hidden", className)} ariaLabel="Engine coverage">
       <div className="border-b border-border px-5 py-4">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-          Engine coverage
-        </h3>
+        <SectionHeader as="h3" title="Engine coverage" />
       </div>
       <div className="p-5">
 
@@ -133,15 +130,15 @@ export function EngineCoverage({
                 Engine status per rival. An engine that failed and an engine that was unavailable are named separately.
               </caption>
               <thead>
-                <tr className="border-b border-[var(--border)]">
-                  <th scope="col" className="whitespace-nowrap pb-2 text-[12px] font-medium text-[var(--text-tertiary)]">
+                <tr className="border-b border-border">
+                  <th scope="col" className="whitespace-nowrap pb-2 text-[12px] font-medium text-fg-tertiary">
                     Engine
                   </th>
                   {brands.map((brand) => (
                     <th
                       key={brand.id}
                       scope="col"
-                      className="pb-2 pl-4 text-[12.5px] font-medium text-[var(--text-primary)]"
+                      className="pb-2 pl-4 text-[12.5px] font-medium text-fg"
                     >
                       {brand.name}
                     </th>
@@ -150,10 +147,10 @@ export function EngineCoverage({
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.engine} className="border-b border-[var(--border)] last:border-b-0">
+                  <tr key={row.engine} className="border-b border-border last:border-b-0">
                     <th
                       scope="row"
-                      className="py-3 pr-4 align-top text-[12.5px] font-medium text-[var(--text-primary)]"
+                      className="py-3 pr-4 align-top text-[12.5px] font-medium text-fg"
                     >
                       <span className="inline-flex items-center gap-2">
                         <PlatformLogo engine={row.engine} className="size-3.5" />
@@ -162,7 +159,7 @@ export function EngineCoverage({
                       <span
                         className={cn(
                           VALUE_CLASS,
-                          "mt-1 block text-[11px] text-[var(--text-tertiary)]",
+                          "mt-1 block text-xs text-fg-tertiary",
                         )}
                       >
                         {row.okCount} of {row.cells.length} returned
@@ -183,21 +180,21 @@ export function EngineCoverage({
             {rows.map((row) => (
               <li
                 key={row.engine}
-                className="border-t border-[var(--border)] pt-3 first:border-t-0 first:pt-0"
+                className="border-t border-border pt-3 first:border-t-0 first:pt-0"
               >
                 <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-                  <p className="inline-flex items-center gap-2 text-[13px] font-medium text-[var(--text-primary)]">
+                  <p className="inline-flex items-center gap-2 text-[13px] font-medium text-fg">
                     <PlatformLogo engine={row.engine} className="size-3.5" />
                     {row.label}
                   </p>
-                  <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
+                  <span className={cn(VALUE_CLASS, "text-xs text-fg-tertiary")}>
                     {row.okCount} of {row.cells.length} returned
                   </span>
                 </div>
                 <ul className="mt-2 flex flex-col gap-2">
                   {row.cells.map((cell) => (
                     <li key={cell.brandId} className="flex flex-col gap-1">
-                      <span className="text-[12px] leading-[1.3] text-[var(--text-tertiary)]">
+                      <span className="text-[12px] leading-[1.3] text-fg-tertiary">
                         {cell.brandName}
                       </span>
                       <StatusCell cell={cell} />

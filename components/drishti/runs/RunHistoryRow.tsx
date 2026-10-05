@@ -59,7 +59,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
               <span
                 className={cn(
                   VALUE_CLASS,
-                  "text-[12px] text-[var(--text-secondary)]",
+                  "text-[12px] text-fg-secondary",
                 )}
               >
                 {formatRunDate(run.requestedAt)}
@@ -67,32 +67,32 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
               <span className="text-[15px] font-semibold tracking-[-0.02em] text-foreground">
                 {cohortLabel(run.brandIds, names)}
               </span>
-              <ArrowRight className="size-4 text-muted-foreground opacity-0 transition-opacity group-hover:opacity-100" />
+              <ArrowRight className="size-4 text-fg-tertiary opacity-0 transition-opacity group-hover:opacity-100" />
             </div>
 
             <div className="mt-2 flex flex-wrap items-center gap-x-2.5 gap-y-1">
               <span
                 className={cn(
                   VALUE_CLASS,
-                    "text-[11px] text-muted-foreground",
+                    "text-xs text-fg-tertiary",
                 )}
               >
                 {formatCount(run.requestCount)} {run.requestCount === 1 ? "search" : "searches"}
               </span>
-              <span aria-hidden="true" className="text-[var(--text-tertiary)]">
+              <span aria-hidden="true" className="text-fg-tertiary">
                 {READOUT_SEPARATOR}
               </span>
               <span
                 className={cn(
                   VALUE_CLASS,
-                    "text-[11px] text-muted-foreground",
+                    "text-xs text-fg-tertiary",
                 )}
               >
                 {run.llmRequestCount === undefined
                   ? "model calls not reported"
                   : `${formatCount(run.llmRequestCount)} ${run.llmRequestCount === 1 ? "model call" : "model calls"}`}
               </span>
-              <span aria-hidden="true" className="text-[var(--text-tertiary)]">
+              <span aria-hidden="true" className="text-fg-tertiary">
                 {READOUT_SEPARATOR}
               </span>
               {costText === null ? (
@@ -101,12 +101,12 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
                 <span
                   className={cn(
                     VALUE_CLASS,
-                    "text-[11px]",
+                    "text-xs",
                     provenance === "exact" || provenance === "mixed"
-                      ? "text-[var(--ok)]"
+                      ? "text-ok"
                       : provenance === "estimated"
-                        ? "text-[var(--warn)]"
-                        : "text-[var(--text-secondary)]",
+                        ? "text-warn"
+                        : "text-fg-secondary",
                   )}
                 >
                   {costText}
@@ -115,14 +115,14 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
 
               {snapshots === undefined ? (
                 <>
-                  <span aria-hidden="true" className="text-[var(--text-tertiary)]">
+                  <span aria-hidden="true" className="text-fg-tertiary">
                     {READOUT_SEPARATOR}
                   </span>
                   <Skeleton variant="stat" width={124} height={12} />
                 </>
               ) : gaps.length === 0 ? null : (
                 <>
-                  <span aria-hidden="true" className="text-[var(--text-tertiary)]">
+                  <span aria-hidden="true" className="text-fg-tertiary">
                     {READOUT_SEPARATOR}
                   </span>
                   {gaps.map((gap) => (
@@ -139,7 +139,7 @@ export function RunHistoryRow({ run, names }: RunHistoryRowProps) {
                       <span
                         className={cn(
                           VALUE_CLASS,
-                          "text-[11px] text-muted-foreground",
+                          "text-xs text-fg-tertiary",
                         )}
                       >
                         {gap.label} {gap.status === "failed" ? "failed" : gap.status === "missing" ? "not recorded" : "unavailable"}

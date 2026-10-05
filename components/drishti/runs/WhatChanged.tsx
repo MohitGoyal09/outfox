@@ -3,7 +3,7 @@
 import { Fragment, type ReactNode } from "react";
 
 import {
-  LABEL_CLASS,
+  SectionHeader,
   Panel,
   Skeleton,
   SkeletonRegion,
@@ -24,9 +24,7 @@ export function WhatChanged({ copy, action, loading = false, className }: WhatCh
   const resolved = copy ?? null;
   return (
     <Panel interactive={false} className={cn("p-6", className)} ariaLabel="What changed">
-      <h2 className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>
-        What changed
-      </h2>
+      <SectionHeader title="What changed" />
 
       {loading || resolved === null ? (
         <SkeletonRegion label="Working out what changed" className="mt-3">
@@ -38,10 +36,10 @@ export function WhatChanged({ copy, action, loading = false, className }: WhatCh
         </SkeletonRegion>
       ) : (
         <>
-          <p className="mt-2 max-w-[48ch] text-xl font-semibold tracking-[-0.03em] text-[var(--text-primary)]">
+          <p className="mt-2 max-w-[48ch] text-xl font-semibold tracking-[-0.03em] text-fg">
             {resolved.headline}
           </p>
-          <p className="type-body measure-prose mt-3 text-[var(--text-secondary)]">
+          <p className="type-body measure-prose mt-3 text-fg-secondary">
             {resolved.body}
           </p>
           <div className="mt-4 flex flex-wrap items-center justify-between gap-x-6 gap-y-3">
@@ -49,14 +47,14 @@ export function WhatChanged({ copy, action, loading = false, className }: WhatCh
               {resolved.facts.map((fact, index) => (
                 <Fragment key={fact}>
                   {index > 0 ? (
-                    <span aria-hidden="true" className="text-[var(--text-tertiary)]">
+                    <span aria-hidden="true" className="text-fg-tertiary">
                       {READOUT_SEPARATOR}
                     </span>
                   ) : null}
                   <span
                     className={cn(
                       VALUE_CLASS,
-                      "text-[12px] text-[var(--text-secondary)]",
+                      "text-[12px] text-fg-secondary",
                     )}
                   >
                     {fact}

@@ -54,7 +54,7 @@ function CitationChips({
               title="This citation does not resolve to a claim stored in this run."
               className={cn(
                 VALUE_CLASS,
-                "mx-0.5 text-[11px] text-[var(--text-tertiary)]",
+                "mx-0.5 text-xs text-fg-tertiary",
               )}
             >
               [{number > 0 ? number : id.slice(0, 6)}]
@@ -78,25 +78,25 @@ function CitationChips({
 
 function RawClaimRow({ line }: { line: RawClaimLine }) {
   return (
-    <li className="border-t border-[var(--border)] pt-2.5 first:border-t-0 first:pt-0">
+    <li className="border-t border-border pt-2.5 first:border-t-0 first:pt-0">
       <div className="flex flex-wrap items-baseline gap-x-2 gap-y-0.5">
         {line.brandName === "" ? null : (
-          <span className={cn(LABEL_CLASS, "text-[var(--text-secondary)]")}>
+          <span className={cn(LABEL_CLASS, "text-fg-secondary")}>
             {line.brandName}
           </span>
         )}
         {line.metric === "" ? null : (
-          <span className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>
+          <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>
             {measureName(line.metric)}
           </span>
         )}
         {line.value === null ? null : (
-          <span className={cn(VALUE_CLASS, "text-[11.5px] text-[var(--text-primary)]")}>
+          <span className={cn(VALUE_CLASS, "text-xs text-fg")}>
             {nameEnumsInText(line.value)}
           </span>
         )}
       </div>
-      <p className="mt-1 text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+      <p className="mt-1 text-[13px] leading-[1.5] text-fg-secondary">
         {nameEnumsInText(line.text)}
       </p>
       {line.href === null ? null : (
@@ -104,7 +104,7 @@ function RawClaimRow({ line }: { line: RawClaimLine }) {
           href={line.href}
           target="_blank"
           rel="noreferrer noopener"
-          className="mt-1.5 inline-flex items-center gap-1 text-[12px] text-[var(--text-primary)] underline decoration-[var(--border-strong)] hover:decoration-[var(--accent)]"
+          className="mt-1.5 inline-flex items-center gap-1 text-[12px] text-fg underline decoration-border-strong hover:decoration-accent"
         >
           Open source
           <ExternalLink {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
@@ -152,7 +152,7 @@ export function BriefView({
     <div className={cn("flex flex-col", className)}>
       <div className="flex flex-wrap items-center gap-2">
         <Chip tone={chip.tone} label={chip.label} />
-        <span className="text-[12px] leading-[1.45] text-[var(--text-tertiary)]">
+        <span className="text-[12px] leading-[1.45] text-fg-tertiary">
           {composition.mode === "template"
             ? "Stored verbatim from the run's claims."
             : "Each sentence cites the claim ids it rests on."}
@@ -162,7 +162,7 @@ export function BriefView({
       {composition.notice === null ? null : (
         <p
           role="status"
-          className="mt-3 flex items-start gap-2 text-[12.5px] leading-[1.5] text-[var(--text-secondary)]"
+          className="mt-3 flex items-start gap-2 text-[12.5px] leading-[1.5] text-fg-secondary"
         >
           <span
             aria-hidden="true"
@@ -178,7 +178,7 @@ export function BriefView({
           {composition.paragraphs.map((segments, index) => (
             <p
               key={index}
-              className="type-body measure-prose text-[var(--text-secondary)]"
+              className="type-body measure-prose text-fg-secondary"
             >
               {segments.map((segment, segmentIndex) =>
                 segment.kind === "text" ? (
@@ -200,7 +200,7 @@ export function BriefView({
         <div className="mt-3 flex flex-col gap-4">
           {composition.sections.map((section) => (
             <section key={section.heading} aria-label={section.heading}>
-              <p className="type-headline text-[var(--text-primary)]">
+              <p className="type-headline text-fg">
                 {section.heading}
               </p>
               <ul className="mt-2 flex flex-col gap-2.5">
@@ -222,7 +222,7 @@ export function BriefView({
                 className="mt-1.5 size-1.5 shrink-0 rounded-full"
                 style={{ backgroundColor: TONE_COLOR.weak }}
               />
-              <span className="text-[12.5px] leading-[1.5] text-[var(--text-secondary)]">
+              <span className="text-[12.5px] leading-[1.5] text-fg-secondary">
                 {line}
               </span>
             </li>

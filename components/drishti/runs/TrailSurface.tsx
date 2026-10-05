@@ -12,8 +12,7 @@ import {
   TrailSkeleton,
   VALUE_CLASS,
   iconProps,
-  type Tone,
-} from "@/components/drishti";
+  type Tone, SectionHeader } from "@/components/drishti";
 import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
 import { cn } from "@/lib/utils";
 import { READOUT_SEPARATOR, engineCellTone } from "./labels";
@@ -124,18 +123,16 @@ export function TrailSurface({
       ariaLabel="The brief and the trail"
     >
       <div className="border-b border-border px-5 py-4">
-        <h3 className="text-sm font-semibold tracking-[-0.01em] text-[var(--text-primary)]">
-          The trail
-        </h3>
+        <SectionHeader as="h3" title="The trail" />
       </div>
       <div className="p-5">
-      <p className="type-body measure-prose mt-1.5 text-[var(--text-secondary)]">
+      <p className="type-body measure-prose mt-1.5 text-fg-secondary">
         The brief and the trail are one surface. Every sentence cites the claims
         it rests on, and picking a citation marks the step below that produced it.
       </p>
 
-      <div className="mt-5 border-t border-[var(--border)] pt-4">
-        <p className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>brief</p>
+      <div className="mt-5 border-t border-border pt-4">
+        <p className={cn(LABEL_CLASS, "text-fg-tertiary")}>brief</p>
         <BriefView
           className="mt-3"
           composition={composition}
@@ -146,10 +143,10 @@ export function TrailSurface({
         />
       </div>
 
-      <div className="mt-5 border-t border-[var(--border)] pt-4">
+      <div className="mt-5 border-t border-border pt-4">
         <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-          <p className={cn(LABEL_CLASS, "text-[var(--text-tertiary)]")}>trail</p>
-          <p className={cn(VALUE_CLASS, "text-[12px] text-[var(--text-secondary)]")}>
+          <p className={cn(LABEL_CLASS, "text-fg-tertiary")}>trail</p>
+          <p className={cn(VALUE_CLASS, "text-[12px] text-fg-secondary")}>
             {loading ? "counting steps" : summary}
           </p>
         </div>
@@ -161,7 +158,7 @@ export function TrailSurface({
                 <span
                   className={cn(
                     LABEL_CLASS,
-                    "w-12 shrink-0 text-[var(--text-tertiary)]",
+                    "w-12 shrink-0 text-fg-tertiary",
                   )}
                 >
                   engine
@@ -182,7 +179,7 @@ export function TrailSurface({
                   </Chip>
                 ))}
                 {options.engines.length === 0 ? (
-                  <span className="text-[12px] text-[var(--text-tertiary)]">
+                  <span className="text-[12px] text-fg-tertiary">
                     No engines recorded claims for this run.
                   </span>
                 ) : null}
@@ -193,7 +190,7 @@ export function TrailSurface({
                   <span
                     className={cn(
                       LABEL_CLASS,
-                      "w-12 shrink-0 text-[var(--text-tertiary)]",
+                      "w-12 shrink-0 text-fg-tertiary",
                     )}
                   >
                     rival

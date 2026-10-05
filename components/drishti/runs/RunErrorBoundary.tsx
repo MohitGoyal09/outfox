@@ -51,7 +51,7 @@ export class RunErrorBoundary extends Component<
         <Panel interactive={false} className="p-5" ariaLabel={`Could not load ${this.props.subject}`}>
           <p
             role="alert"
-            className="flex items-start gap-2 text-[13px] leading-[1.5] text-[var(--danger)]"
+            className="flex items-start gap-2 text-[13px] leading-[1.5] text-danger"
           >
             <CircleAlert
               {...iconProps}
@@ -64,7 +64,7 @@ export class RunErrorBoundary extends Component<
             </span>
           </p>
           {this.state.detail === null ? null : (
-            <p className="mt-2 break-words font-mono text-[11.5px] leading-[1.5] text-[var(--text-tertiary)]">
+            <p className="mt-2 break-words font-mono text-xs leading-[1.5] text-fg-tertiary">
               {this.state.detail}
             </p>
           )}

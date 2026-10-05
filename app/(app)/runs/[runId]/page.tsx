@@ -8,10 +8,11 @@ import { use, useMemo, useState } from "react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import {
-  Button,
   DistributionPanel,
   EmptyState,
   Panel,
+  PillButton,
+  SectionHeader,
   Skeleton,
   TrailSkeleton,
   buttonClasses,
@@ -93,7 +94,7 @@ function BackLink({ href = "/", label = "Overview" }: { href?: string; label?: s
   return (
     <Link
       href={href}
-      className="inline-flex w-fit items-center gap-1.5 text-[12.5px] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+      className="inline-flex w-fit items-center gap-1.5 text-[12.5px] text-fg-secondary hover:text-fg"
     >
       <ArrowLeft {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
       {label}
@@ -124,7 +125,7 @@ function RunUnavailable({
           }
         />
         {detail === undefined ? null : (
-          <p className="mt-2 break-all font-mono text-[11.5px] text-[var(--text-tertiary)]">
+          <p className="mt-2 break-all font-mono text-xs text-fg-tertiary">
             requested id: {detail}
           </p>
         )}
@@ -361,39 +362,32 @@ function RunView({ runId }: { runId: string }) {
         loading={!changeReady}
         action={
           !changeReady ? null : (
-            <Button
-              variant="ghost"
+            <PillButton
+              variant="outline"
               size="sm"
               disabled={actionClaimId === null}
               onClick={() => {
                 if (actionClaimId !== null) focusClaim(actionClaimId, actionBrandId);
               }}
-              iconRight={
-                <ArrowDown {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
-              }
             >
               {change !== null && change.kind === "change"
                 ? "Show these claims in the trail"
                 : "Show the claims in the trail"}
-            </Button>
+              <ArrowDown {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
+            </PillButton>
           )
         }
       />
 
-      <section aria-labelledby="side-by-side-heading" className="flex flex-col gap-4">
-        <div>
-          <h2
-            id="side-by-side-heading"
-            className="type-title text-[var(--text-primary)]"
-          >
-            Side by side
-          </h2>
-          <p className="type-body measure-prose mt-1.5 text-[var(--text-secondary)]">
-            {previousDayMonth === null
+      <section aria-label="Side by side" className="flex flex-col gap-4">
+        <SectionHeader
+          title="Side by side"
+          sub={
+            previousDayMonth === null
               ? "Each rival's mix, as this run recorded it. This is the first recorded comparison for the cohort, so there is no earlier mix to measure against."
-              : `Each rival's mix, with the change against the run of ${previousDayMonth}.`}
-          </p>
-        </div>
+              : `Each rival's mix, with the change against the run of ${previousDayMonth}.`
+          }
+        />
 
         {refs.length === 0 ? (
           <Panel interactive={false} className="p-4">
@@ -407,7 +401,7 @@ function RunView({ runId }: { runId: string }) {
         ) : (
           <>
             <div>
-              <h3 className="type-headline text-[var(--text-primary)]">Hook mix</h3>
+              <SectionHeader as="h3" title="Hook mix" />
               <div className={cn("mt-3", MIX_GRID)}>
                 {refs.map((brand) => (
                   <BrandMixPanel
@@ -423,7 +417,7 @@ function RunView({ runId }: { runId: string }) {
             </div>
 
             <div>
-              <h3 className="type-headline text-[var(--text-primary)]">Funnel mix</h3>
+              <SectionHeader as="h3" title="Funnel mix" />
               <div className={cn("mt-3", MIX_GRID)}>
                 {refs.map((brand) => (
                   <BrandMixPanel
