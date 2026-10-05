@@ -3,21 +3,19 @@
 
 import type { AriaAttributes, ChangeEvent, KeyboardEvent, ReactNode, RefObject } from "react";
 import type { ChatStatus } from "ai";
-import { ArrowUp, CircleAlert, Plus, Square, X } from "lucide-react";
+import { Plus, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Spinner } from "@/components/ui/spinner";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
-import {
-  PromptInput,
-  PromptInputBody,
-  PromptInputFooter,
-  PromptInputSubmit,
-  PromptInputTextarea,
-  PromptInputTools,
-} from "@/components/ai-elements/prompt-input";
+import { PromptInput, PromptInputActions, PromptInputTextarea } from "@/components/ui/prompt-input";
+import { PlatformLogo } from "@/components/drishti/brands/PlatformLogo";
+import { SOURCES } from "@/components/landing/landing-data";
 import { STATE_TRANSITION_CLASS } from "../tokens";
+import { AskSubmitButton } from "./AskSubmitButton";
 
 export type AskContextChip = { id: string; name: string };
+
+const QUIET_BTN =
+  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent";
 
 export function AskComposer({
   value,
@@ -40,6 +38,7 @@ export function AskComposer({
   trailing,
   overlay,
   note,
+  autoFocus,
   className,
 }: {
   value: string;
@@ -62,72 +61,65 @@ export function AskComposer({
   trailing?: ReactNode;
   overlay?: ReactNode;
   note?: ReactNode;
+  autoFocus?: boolean;
   className?: string;
 }) {
-  const generating = status === "submitted" || status === "streaming";
-
-  const icon =
-    status === "submitted" ? (
-      <Spinner className="size-4" />
-    ) : status === "streaming" ? (
-      <Square className="size-3.5" aria-hidden="true" />
-    ) : status === "error" ? (
-      <CircleAlert className="size-4" aria-hidden="true" />
-    ) : (
-      <ArrowUp className="size-4" strokeWidth={3} aria-hidden="true" />
-    );
+  const send = () => {
+    if (canSend && !overCap && !disabled) onSubmit(value);
+  };
+  const sendable = canSend && !overCap;
 
   return (
     <div className={cn("w-full", className)}>
       <div className="relative">
         {overlay}
         <PromptInput
-          onSubmit={(message) => onSubmit(message.text)}
+          onSubmit={send}
+          locked={disabled}
           className={cn(
-            "rounded-2xl border border-border-strong bg-bg-raised shadow-[var(--shadow-sm)]",
+            "overflow-hidden rounded-3xl border border-border-strong bg-bg-raised shadow-[var(--shadow-sm)]",
             "motion-safe:transition-[box-shadow,border-color] motion-safe:duration-150 motion-safe:ease-out",
-            "focus-within:border-border-strong focus-within:shadow-[var(--shadow-md)]",
-            "hover:shadow-[var(--shadow-md)]",
+            "focus-within:border-accent/35 focus-within:shadow-[var(--shadow-md)]",
           )}
         >
-          <PromptInputBody>
+          <div className="flex items-end gap-3 py-2 pl-5 pr-2">
             <PromptInputTextarea
               ref={textareaRef}
               value={value}
               onChange={onChange}
               onKeyDown={onKeyDown}
-              disabled={disabled}
-              rows={3}
+              readOnly={disabled}
+              autoFocus={autoFocus}
+              aria-busy={disabled || undefined}
               placeholder={placeholder}
-              className="max-h-[300px] min-h-[52px] overflow-y-auto bg-transparent px-4 pt-3.5 pb-2 text-[14px] leading-6 text-fg placeholder:text-fg-placeholder"
+              className={cn(
+                "min-w-0 flex-1 self-stretch overflow-y-auto bg-transparent py-2 text-base leading-6 text-fg placeholder:text-fg-tertiary",
+                "motion-safe:transition-opacity motion-safe:duration-150",
+                disabled && "opacity-70",
+              )}
               {...textareaAria}
             />
-          </PromptInputBody>
-          <PromptInputFooter className="items-center gap-2 rounded-b-2xl px-3 pt-0.5 pb-2.5">
-            <PromptInputTools className="min-w-0 flex-wrap gap-1.5">
-              {onMention ? (
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <button
-                      type="button"
-                      onClick={onMention}
-                      aria-label="Reference a brand"
-                      className={cn(
-                        "flex size-8 shrink-0 items-center justify-center rounded-full border border-border bg-bg-inset text-fg-secondary",
-                        STATE_TRANSITION_CLASS,
-                        "hover:border-border-strong hover:bg-bg-raised hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                      )}
-                    >
-                      <Plus className="size-4" aria-hidden="true" />
-                    </button>
-                  </TooltipTrigger>
-                  <TooltipContent side="top">Reference a brand (@)</TooltipContent>
-                </Tooltip>
-              ) : null}
+            <AskSubmitButton status={status} canSend={sendable} onSend={send} onStop={onStop} />
+          </div>
+          <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-border bg-bg-inset px-5 py-2">
+            <PromptInputActions className="min-w-0 flex-wrap gap-x-2 gap-y-1.5">
+              <span className="whitespace-nowrap text-[12px] text-fg-secondary">Ask across</span>
+              <span className="flex items-center gap-1.5" role="group" aria-label="Sources Drishti reads">
+                {SOURCES.map((source) => (
+                  <span
+                    key={source.engine}
+                    title={source.name}
+                    className="flex size-6 items-center justify-center rounded-full border border-border bg-white"
+                  >
+                    <PlatformLogo engine={source.engine} className="size-3.5" />
+                    <span className="sr-only">{source.name}</span>
+                  </span>
+                ))}
+              </span>
               {chips.map((chip) => (
                 <span
                   key={chip.id}
-                  className="inline-flex h-7 items-center gap-1 rounded-full border border-border bg-bg-inset pl-2.5 pr-1 text-[11.5px] text-fg-secondary"
+                  className="inline-flex h-6 items-center gap-0.5 rounded-full border border-border bg-white pl-2.5 pr-0.5 text-[12px] text-fg-secondary"
                 >
                   {chip.name}
                   {onRemoveChip ? (
@@ -138,7 +130,8 @@ export function AskComposer({
                       className={cn(
                         "flex size-5 items-center justify-center rounded-full text-fg-tertiary",
                         STATE_TRANSITION_CLASS,
-                        "hover:bg-bg-raised-2 hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                        "hover:bg-bg-inset hover:text-fg",
+                        QUIET_BTN,
                       )}
                     >
                       <X className="size-3" aria-hidden="true" />
@@ -146,63 +139,51 @@ export function AskComposer({
                   ) : null}
                 </span>
               ))}
-            </PromptInputTools>
-            <div className="flex items-center gap-2.5">
+            </PromptInputActions>
+            <PromptInputActions className="gap-1.5">
+              {overCap ? (
+                <span role="alert" className="font-mono text-[11px] tabular-nums text-danger">
+                  {value.length}/{maxChars}
+                </span>
+              ) : null}
               {onClear ? (
                 <button
                   type="button"
                   onClick={onClear}
                   aria-label="Clear this conversation"
                   className={cn(
-                    "rounded-full px-2.5 py-1 text-[11.5px] font-medium text-fg-tertiary",
+                    "rounded-full px-2 py-1 text-[12px] text-fg-tertiary",
                     STATE_TRANSITION_CLASS,
-                    "hover:bg-bg-inset hover:text-fg-secondary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
+                    "hover:text-fg-secondary",
+                    QUIET_BTN,
                   )}
                 >
                   Clear
                 </button>
               ) : null}
               {trailing}
-              {overCap ? (
-                <span
-                  role="alert"
-                  className="font-mono text-[11px] tabular-nums text-danger"
-                >
-                  {value.length}/{maxChars}
-                </span>
-              ) : null}
-              <Tooltip>
-                <TooltipTrigger asChild>
-                  <span className="inline-flex">
-                    <PromptInputSubmit
-                      status={status}
-                      onStop={onStop}
-                      disabled={generating ? false : !canSend || overCap}
-                      aria-label={generating ? "Stop" : "Send"}
+              {onMention ? (
+                <Tooltip>
+                  <TooltipTrigger asChild>
+                    <button
+                      type="button"
+                      onClick={onMention}
+                      aria-label="Reference a brand"
                       className={cn(
-                        "size-10 rounded-full shadow-[var(--shadow-xs)]",
-                        generating
-                          ? "bg-danger text-white hover:bg-danger/90"
-                          : canSend && !overCap
-                            ? "bg-accent text-accent-ink hover:bg-accent-strong"
-                            : "bg-bg-inset text-fg",
-                        "disabled:pointer-events-auto disabled:cursor-not-allowed disabled:bg-bg-inset disabled:text-fg-secondary disabled:opacity-100",
+                        "flex size-7 items-center justify-center rounded-full text-fg-secondary",
+                        STATE_TRANSITION_CLASS,
+                        "hover:bg-white hover:text-fg",
+                        QUIET_BTN,
                       )}
                     >
-                      {icon}
-                    </PromptInputSubmit>
-                  </span>
-                </TooltipTrigger>
-                <TooltipContent side="top">
-                  {generating
-                    ? "Stop generating"
-                    : canSend && !overCap
-                      ? "Send"
-                      : "Type a question to send"}
-                </TooltipContent>
-              </Tooltip>
-            </div>
-          </PromptInputFooter>
+                      <Plus className="size-4" aria-hidden="true" />
+                    </button>
+                  </TooltipTrigger>
+                  <TooltipContent side="top">Reference a brand (@)</TooltipContent>
+                </Tooltip>
+              ) : null}
+            </PromptInputActions>
+          </div>
         </PromptInput>
       </div>
       {note}

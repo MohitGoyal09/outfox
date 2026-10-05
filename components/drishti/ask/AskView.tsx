@@ -548,8 +548,8 @@ export function AskView({
       {/* The prompt box is a permanent bottom dock: it sits in the same place
           before the first message and after the last, so the eye never hunts
           for it. The conversation scrolls above it. */}
-      <div className="relative z-10 shrink-0 border-t border-border bg-bg px-4 pb-5 pt-4 sm:px-6">
-        <div className="mx-auto w-full max-w-3xl">{composer}</div>
+      <div className="pointer-events-none relative z-10 -mt-8 shrink-0 bg-gradient-to-t from-bg from-70% to-transparent px-4 pb-5 pt-8 sm:px-6">
+        <div className="pointer-events-auto mx-auto w-full max-w-3xl">{composer}</div>
       </div>
 
       <CitationDrawer

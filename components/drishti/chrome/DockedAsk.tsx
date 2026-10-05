@@ -5,7 +5,7 @@ import type { ChangeEvent, KeyboardEvent } from "react";
 import { useQuery } from "convex/react";
 import { usePathname } from "next/navigation";
 import { AnimatePresence } from "motion/react";
-import { ArrowUp, ChevronUp, CircleAlert, Plus, Square, X } from "lucide-react";
+import { ChevronUp, CircleAlert, Plus } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
@@ -20,6 +20,8 @@ import {
   mentionOptionId,
   type MentionBrand,
 } from "@/components/drishti/ask/BrandMentionMenu";
+import { AskComposer } from "@/components/drishti/ask/AskComposer";
+import { AskSubmitButton } from "@/components/drishti/ask/AskSubmitButton";
 import { DockedAskPanel } from "@/components/drishti/chrome/DockedAskPanel";
 import {
   canSubmitAsk,
@@ -31,13 +33,10 @@ import {
 } from "@/components/drishti/chrome/dock-model";
 
 const MENTION_TOKEN_RE = /@([^\s@]*)$/;
+const ASK_MAX_CHARS = 2000;
 const NO_BRAND_IDS: string[] = [];
 
 const mintChatId = () => `chat-${crypto.randomUUID()}`;
-
-const SHELL =
-  "pointer-events-auto flex flex-col items-stretch gap-1 border border-border bg-bg-raised shadow-[var(--shadow-lg)] " +
-  "motion-safe:transition-[max-width,border-radius] motion-safe:duration-300 motion-safe:ease-out";
 
 export function DockedAsk() {
   const pathname = usePathname();
@@ -55,7 +54,7 @@ export function DockedAsk() {
   const [mentionSource, setMentionSource] = useState<"typed" | null>(null);
   const [mentionToken, setMentionToken] = useState("");
   const [highlightedIndex, setHighlightedIndex] = useState(0);
-  const inputRef = useRef<HTMLInputElement>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
 
   const {
     messages,
@@ -204,7 +203,7 @@ export function DockedAsk() {
     inputRef.current?.focus();
   }
 
-  function handleValueChange(event: ChangeEvent<HTMLInputElement>) {
+  function handleValueChange(event: ChangeEvent<HTMLTextAreaElement>) {
     const nextValue = event.target.value;
     setValue(nextValue);
     const cursor = event.target.selectionStart ?? nextValue.length;
@@ -218,7 +217,7 @@ export function DockedAsk() {
     }
   }
 
-  function handleInputKeyDown(event: KeyboardEvent<HTMLInputElement>) {
+  function handleInputKeyDown(event: KeyboardEvent<HTMLTextAreaElement>) {
     if (mentionMenuOpen) {
       if (event.key === "ArrowDown") {
         event.preventDefault();
@@ -256,6 +255,16 @@ export function DockedAsk() {
     }
     setExpanded(false);
     setValue("");
+  }
+
+  function openMentionPicker() {
+    const needsSpace = value !== "" && !/\s$/.test(value);
+    setValue(`${value}${needsSpace ? " " : ""}@`);
+    setExpanded(true);
+    setMentionSource("typed");
+    setMentionToken("");
+    setHighlightedIndex(0);
+    requestAnimationFrame(() => inputRef.current?.focus());
   }
 
   function handleSubmit() {
@@ -331,113 +340,109 @@ export function DockedAsk() {
           ) : null}
         </AnimatePresence>
 
-        <div className="relative">
-          {mentionMenuOpen && expanded ? (
-            <BrandMentionMenu
-              id={listboxId}
-              brands={visibleMentionBrands}
-              highlightedIndex={safeHighlightedIndex}
-              onSelect={selectMentionBrand}
-            />
-          ) : null}
-          <form
-            onSubmit={(event) => {
-              event.preventDefault();
-              handleSubmit();
+        {expanded ? (
+          <div
+            onBlur={(event) => {
+              if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
+              if (!canSubmitAsk(value) && !mentionMenuOpen) setExpanded(false);
             }}
-            className={cn(SHELL, "w-full p-2 pl-3", panelOpen ? "rounded-b-3xl rounded-t-none" : "rounded-3xl")}
           >
-            {chipLabel !== null ? (
-              <div className="flex flex-wrap gap-1.5 px-1">
-                <PageChip label={chipLabel} onRemove={() => setDismissedForPath(pathname)} />
-              </div>
-            ) : null}
-
-            <div className="flex items-center gap-2">
-              <span
-                className="grid size-8 shrink-0 place-items-center rounded-full text-fg-secondary"
-                aria-hidden="true"
-              >
-                <Plus className="size-5" strokeWidth={1.75} />
-              </span>
-
-              {expanded ? (
-                <input
-                  autoFocus
-                  ref={inputRef}
-                  value={value}
-                  onChange={handleValueChange}
-                  onKeyDown={handleInputKeyDown}
-                  onBlur={() => {
-                    if (!canSubmitAsk(value)) setExpanded(false);
-                  }}
-                  autoComplete="off"
-                  role="combobox"
-                  aria-autocomplete="list"
-                  aria-expanded={mentionMenuOpen}
-                  aria-controls={mentionMenuOpen ? listboxId : undefined}
-                  aria-activedescendant={
-                    mentionMenuOpen && activeOption !== undefined
-                      ? mentionOptionId(listboxId, activeOption.id)
-                      : undefined
-                  }
-                  placeholder="Ask Drishti"
-                  aria-label="Ask a question about your tracked brands"
-                  className="min-w-0 flex-1 border-0 bg-transparent text-[15px] text-fg placeholder:text-fg-placeholder focus-visible:outline-none"
-                />
-              ) : (
-                <button
-                  type="button"
-                  onClick={() => setExpanded(true)}
-                  onFocus={() => setExpanded(true)}
-                  className="min-w-0 flex-1 cursor-text text-left text-[15px] text-fg-secondary focus-visible:outline-none"
-                >
-                  Ask Drishti
-                </button>
-              )}
-
-              {/* Reopen: only once a conversation exists and the panel is folded away. The
-                  badge is the number of questions asked, never a fabricated "new" dot. */}
-              {!panelOpen && hasConversation ? (
-                <button
-                  type="button"
-                  onClick={() => setPanelOpen(true)}
-                  aria-label={`Reopen conversation${turns > 0 ? ` (${turns} turn${turns === 1 ? "" : "s"})` : ""}`}
-                  title="Reopen conversation"
-                  className="relative grid size-8 shrink-0 place-items-center rounded-full text-fg-secondary transition-colors hover:bg-bg-inset hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-                >
-                  <ChevronUp className="size-4" aria-hidden="true" />
-                  {turns > 0 ? (
-                    <span className="absolute -right-0.5 -top-0.5 grid size-3.5 place-items-center rounded-full bg-accent text-[9px] font-medium leading-none text-accent-ink">
-                      {turns}
-                    </span>
-                  ) : null}
-                </button>
-              ) : null}
-
+            <AskComposer
+              autoFocus
+              value={value}
+              onChange={handleValueChange}
+              onKeyDown={handleInputKeyDown}
+              onSubmit={handleSubmit}
+              status={status}
+              onStop={() => {
+                void stop();
+                requestAnimationFrame(() => inputRef.current?.focus());
+              }}
+              disabled={busy}
+              canSend={canSend}
+              overCap={false}
+              maxChars={ASK_MAX_CHARS}
+              placeholder="Ask Drishti"
+              textareaRef={inputRef}
+              textareaAria={{
+                role: "combobox",
+                "aria-label": "Ask a question about your tracked brands",
+                "aria-autocomplete": "list",
+                "aria-expanded": mentionMenuOpen,
+                "aria-controls": mentionMenuOpen ? listboxId : undefined,
+                "aria-activedescendant":
+                  mentionMenuOpen && activeOption !== undefined
+                    ? mentionOptionId(listboxId, activeOption.id)
+                    : undefined,
+              }}
+              chips={chipLabel !== null ? [{ id: "page", name: chipLabel }] : []}
+              onRemoveChip={() => setDismissedForPath(pathname)}
+              onMention={openMentionPicker}
+              overlay={
+                mentionMenuOpen ? (
+                  <BrandMentionMenu
+                    id={listboxId}
+                    brands={visibleMentionBrands}
+                    highlightedIndex={safeHighlightedIndex}
+                    onSelect={selectMentionBrand}
+                  />
+                ) : null
+              }
+            />
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "flex h-11 items-center gap-1 border border-border-strong bg-bg-raised py-0.5 pl-1 pr-0.5 shadow-[var(--shadow-sm)]",
+              "motion-safe:transition-[box-shadow,border-color] motion-safe:duration-150",
+              "focus-within:border-accent/35 focus-within:shadow-[var(--shadow-md)]",
+              panelOpen ? "rounded-b-3xl rounded-t-none" : "rounded-full",
+            )}
+          >
+            <button
+              type="button"
+              onClick={openMentionPicker}
+              aria-label="Reference a brand"
+              title="Reference a brand (@)"
+              className="grid size-9 shrink-0 place-items-center rounded-full text-fg-secondary transition-colors hover:bg-bg-inset hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              <Plus className="size-4" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              onClick={() => setExpanded(true)}
+              onFocus={() => setExpanded(true)}
+              className="h-full min-w-0 flex-1 cursor-text text-left text-base text-fg-tertiary focus-visible:outline-none"
+            >
+              Ask Drishti
+            </button>
+            {/* Reopen: only once a conversation exists and the panel is folded away. The
+                badge is the number of questions asked, never a fabricated "new" dot. */}
+            {!panelOpen && hasConversation ? (
               <button
-                type={busy ? "button" : "submit"}
-                onClick={busy ? () => void stop() : undefined}
-                disabled={!busy && !canSend}
-                aria-label={busy ? "Stop generating" : "Send"}
-                className={cn(
-                  "grid size-11 shrink-0 place-items-center rounded-full",
-                  "motion-safe:transition-colors motion-safe:duration-150",
-                  "focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent",
-                  busy || canSend
-                    ? "bg-accent text-accent-ink hover:bg-accent-strong"
-                    : "cursor-not-allowed bg-bg-inset text-fg-tertiary",
-                )}
+                type="button"
+                onClick={() => setPanelOpen(true)}
+                aria-label={`Reopen conversation${turns > 0 ? ` (${turns} turn${turns === 1 ? "" : "s"})` : ""}`}
+                title="Reopen conversation"
+                className="relative grid size-8 shrink-0 place-items-center rounded-full text-fg-secondary transition-colors hover:bg-bg-inset hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
               >
-                {busy ? (
-                  <Square className="size-3.5" aria-hidden="true" />
-                ) : (
-                  <ArrowUp className="size-5" strokeWidth={2} aria-hidden="true" />
-                )}
+                <ChevronUp className="size-4" aria-hidden="true" />
+                {turns > 0 ? (
+                  <span className="absolute -right-0.5 -top-0.5 grid size-3.5 place-items-center rounded-full bg-accent text-[9px] font-medium leading-none text-accent-ink">
+                    {turns}
+                  </span>
+                ) : null}
               </button>
-            </div>
-          </form>
-        </div>
+            ) : null}
+            <AskSubmitButton
+              status={status}
+              canSend={false}
+              onSend={() => setExpanded(true)}
+              onStop={() => void stop()}
+              size={36}
+            />
+          </div>
+        )}
       </div>
 
       <CitationDrawer
@@ -452,22 +457,5 @@ export function DockedAsk() {
         }}
       />
     </div>
-  );
-}
-
-function PageChip({ label, onRemove }: { label: string; onRemove: () => void }) {
-  return (
-    <span className="inline-flex h-6 items-center gap-1 rounded-full border border-border bg-bg-inset pl-2.5 pr-1 text-xs text-fg-secondary">
-      {label}
-      <button
-        type="button"
-        onClick={onRemove}
-        aria-label={`Remove ${label} context`}
-        title={`Remove ${label} context`}
-        className="flex size-4 items-center justify-center rounded-full text-fg-tertiary transition-colors hover:bg-bg-raised hover:text-fg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-      >
-        <X className="size-3" aria-hidden="true" />
-      </button>
-    </span>
   );
 }
