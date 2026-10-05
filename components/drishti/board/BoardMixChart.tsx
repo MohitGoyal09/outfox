@@ -7,6 +7,7 @@ import { cn } from "@/lib/utils";
 import { ChartContainer, ChartTooltip, ChartTooltipContent, type ChartConfig } from "@/components/ui/chart";
 import { EmptyState } from "../EmptyState";
 import { hookName } from "../labels";
+import { SectionHeader } from "../SectionHeader";
 import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { HOOK_COLOR, VALUE_CLASS, iconProps } from "../tokens";
@@ -48,14 +49,9 @@ export function BoardMixChart({
   return (
     <Panel interactive={false} className="flex flex-col" ariaLabel="Hook mix">
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
-        <div className="min-w-0">
-          <h3 className="type-headline text-fg">Hook mix</h3>
-          <p className="mt-1 type-caption text-fg-secondary">
-            How much evidence each hook has in this check.
-          </p>
-        </div>
+        <SectionHeader as="h3" title="Hook mix" sub="How much evidence each hook has in this check." />
         {loading ? null : (
-          <span className={cn(VALUE_CLASS, "text-[11px] tabular-nums text-fg-tertiary")}>
+          <span className={cn(VALUE_CLASS, "text-xs tabular-nums text-fg-tertiary")}>
             {Intl.NumberFormat("en-US").format(total)} with a clear hook · {data.length}{" "}
             {data.length === 1 ? "hook" : "hooks"}
           </span>

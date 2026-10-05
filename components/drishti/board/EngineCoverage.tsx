@@ -3,6 +3,7 @@ import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
+import { SectionHeader } from "../SectionHeader";
 import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { sourceName } from "../labels";
@@ -37,12 +38,11 @@ export function EngineCoverage({
   return (
     <Panel interactive={false} className={cn("flex flex-col", className)} ariaLabel="What we checked">
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
-        <div className="min-w-0">
-          <h3 className="type-headline text-fg">What we checked</h3>
-          <p className="mt-1 type-caption text-fg-secondary">
-            Which sources returned data for each rival. A gap is named, never counted as zero.
-          </p>
-        </div>
+        <SectionHeader
+          as="h3"
+          title="What we checked"
+          sub="Which sources returned data for each rival. A gap is named, never counted as zero."
+        />
         {loading ? null : (
           <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
             {checks - gaps.length}/{checks} source checks returned

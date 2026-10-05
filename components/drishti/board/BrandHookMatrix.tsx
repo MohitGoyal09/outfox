@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { hookName } from "../labels";
+import { SectionHeader } from "../SectionHeader";
 import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { FOCUS_RING_CLASS, HOOK_COLOR, LABEL_CLASS, VALUE_CLASS, formatSharePct, isHookType } from "../tokens";
@@ -59,11 +60,11 @@ export function BrandHookMatrix({
   return (
     <Panel interactive={false} className={cn("flex min-w-0 flex-col", className)} ariaLabel="Hook mix by brand">
       <header className="border-b border-border px-5 py-4">
-        <h3 className="type-headline text-fg">Hook mix by brand</h3>
-        <p className="mt-1 type-caption text-fg-secondary">
-          Shares are of each brand&apos;s tagged findings with a clear hook, a sample, not all evidence. Shares are
-          hidden under {MIN_HOOK_SAMPLE}.
-        </p>
+        <SectionHeader
+          as="h3"
+          title="Hook mix by brand"
+          sub={`Shares are of each brand's tagged findings with a clear hook, a sample, not all evidence. Shares are hidden under ${MIN_HOOK_SAMPLE}.`}
+        />
       </header>
 
       {callouts.length > 0 ? (
@@ -135,7 +136,7 @@ function MatrixRow({ row, hooks, span }: { row: HookMatrixRow; hooks: string[]; 
       >
         {row.name}
         {row.isOwn ? (
-          <span className="ml-1.5 rounded-sm bg-[var(--bg-inset)] px-1 py-px text-[10.5px] font-normal text-fg-secondary">
+          <span className="ml-1.5 rounded-sm bg-bg-inset px-1 py-px text-xs font-normal text-fg-secondary">
             You
           </span>
         ) : null}
@@ -152,7 +153,7 @@ function MatrixRow({ row, hooks, span }: { row: HookMatrixRow; hooks: string[]; 
           <td className={cn(VALUE_CLASS, "py-2 pl-2 pr-5 text-right align-middle text-fg")}>
             {Intl.NumberFormat("en-US").format(row.clearTotal)}
             {row.enoughSample ? null : (
-              <span className="block font-sans text-[11px] font-normal text-fg-tertiary">
+              <span className="block font-sans text-xs font-normal text-fg-tertiary">
                 Too few to share ({Intl.NumberFormat("en-US").format(row.clearTotal)})
               </span>
             )}
@@ -184,7 +185,7 @@ function HookCell({ row, hook }: { row: HookMatrixRow; hook: string }) {
         ) : (
           <>
             <span className={cn(VALUE_CLASS, "text-fg")}>{formatSharePct(Math.round(share))}</span>
-            <span className={cn(VALUE_CLASS, "ml-1 text-[11px] text-fg-tertiary")}>{Intl.NumberFormat("en-US").format(count)}</span>
+            <span className={cn(VALUE_CLASS, "ml-1 text-xs text-fg-tertiary")}>{Intl.NumberFormat("en-US").format(count)}</span>
           </>
         )}
       </Link>

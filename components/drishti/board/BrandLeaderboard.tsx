@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/table";
 import { EmptyState } from "../EmptyState";
 import { hookName } from "../labels";
+import { SectionHeader } from "../SectionHeader";
 import { Panel } from "../Panel";
 import { SkeletonRows } from "../Skeleton";
 import { HOOK_COLOR, LABEL_CLASS, VALUE_CLASS, iconProps, type HookType } from "../tokens";
@@ -34,10 +35,7 @@ export function BrandLeaderboard({
   return (
     <Panel interactive={false} className={cn("flex flex-col", className)} ariaLabel="Evidence volume">
       <header className="flex flex-wrap items-start justify-between gap-3 border-b border-border px-5 py-4">
-        <div className="min-w-0">
-          <h3 className="type-headline text-fg">Evidence volume</h3>
-          <p className="mt-1 type-caption text-fg-secondary">{LEADERBOARD_RULE_LINE}</p>
-        </div>
+        <SectionHeader as="h3" title="Evidence volume" sub={LEADERBOARD_RULE_LINE} />
         {loading ? null : (
           <Badge variant="outline" className={cn(VALUE_CLASS, "font-normal")}>
             {rows.length} {rows.length === 1 ? "brand" : "brands"} ·{" "}

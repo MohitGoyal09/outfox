@@ -248,7 +248,7 @@ export function DistributionPanel({
           {title}
         </h3>
         {summaryLabel ? (
-          <span className={cn(VALUE_CLASS, "text-[11px] text-[var(--text-tertiary)]")}>
+          <span className={cn(VALUE_CLASS, "text-xs text-[var(--text-tertiary)]")}>
             {summaryLabel}
           </span>
         ) : null}
@@ -366,7 +366,7 @@ export function DistributionPanel({
                     <span
                       className={cn(
                         VALUE_CLASS,
-                        "w-14 shrink-0 text-[11px] text-[var(--text-tertiary)]",
+                        "w-14 shrink-0 text-xs text-[var(--text-tertiary)]",
                         COLUMN,
                       )}
                     >
@@ -421,7 +421,7 @@ export function DistributionPanel({
               <span
                 className={cn(
                   VALUE_CLASS,
-                  "shrink-0 text-[10.5px] text-[var(--text-tertiary)]",
+                  "shrink-0 text-xs text-[var(--text-tertiary)]",
                 )}
               >
                 {total} {totalLabel}

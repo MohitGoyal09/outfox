@@ -4,17 +4,19 @@ import { useMemo } from "react";
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
-import { BarChart3, ChevronDown } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { api } from "@/convex/_generated/api";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { buttonClasses } from "../Button";
 import { DistributionPanel } from "../DistributionPanel";
 import { EmptyState } from "../EmptyState";
 import { stageName } from "../labels";
 import { Panel } from "../Panel";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
-import { StatReadout } from "../StatReadout";
+import { StatTile } from "../StatReadout";
+import { PageHeader } from "../PageHeader";
+import { Notice } from "../Notice";
+import { pillClasses } from "../PillButton";
 import { VALUE_CLASS, iconProps } from "../tokens";
 import { formatStamp } from "../cohorts/cohorts-model";
 import { useAllRuns } from "../cohorts/useAllRuns";
@@ -287,6 +289,12 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
   const ownBrandInView = ownBrandId !== null && brandIds.includes(ownBrandId);
   const ownBrandNotInView = ownBrand != null && ownBrandId !== null && !ownBrandInView;
   const rivalCountInView = brandIds.length - (ownBrandInView ? 1 : 0);
+  const offTopicVisible = hiddenOffTopic > 0;
+  const hasCaveats =
+    offTopicVisible || ownBrandNotInView || coverageLine !== null || isPartial;
+  const caveatTitle = isPartial
+    ? "Some sources could not be checked. A gap is never counted as a zero."
+    : "A few notes on what this read covers.";
   const summaryStats: {
     label: string;
     value: string | number;
@@ -322,25 +330,24 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
 
   return (
     <div className="flex flex-col gap-5">
-      <header className="flex flex-col gap-1.5 border-b border-border pb-4">
-        <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-2">
-          <h1 className="type-display text-fg">Signals</h1>
-          {checkedLine !== null ? (
-            <div className="flex items-center gap-2 text-[13px] text-fg-secondary">
-              <span className={cn(VALUE_CLASS, "font-normal")}>{checkedLine}</span>
+      <PageHeader
+        eyebrow="Signals"
+        title="What the evidence says, pooled"
+        sub={BOARD_HONESTY_LINE}
+        meta={
+          checkedLine !== null ? (
+            <>
+              <span className={cn(VALUE_CLASS, "text-xs font-normal text-fg-secondary")}>{checkedLine}</span>
               {cohortBrands.length > 0 ? (
                 <Popover>
                   <PopoverTrigger asChild>
-                    <button
-                      type="button"
-                      className="inline-flex items-center gap-1 rounded-md border border-border bg-bg-raised px-2 py-1 text-[12px] font-medium text-fg hover:bg-bg-raised-2"
-                    >
+                    <button type="button" className={pillClasses("outline", "sm")}>
                       Per brand
                       <ChevronDown {...iconProps} size={12} aria-hidden="true" />
                     </button>
                   </PopoverTrigger>
-                  <PopoverContent align="end" className="w-80">
-                    <p className="mb-1.5 text-[12px] text-fg-secondary">
+                  <PopoverContent align="start" className="w-80">
+                    <p className="mb-1.5 text-xs text-fg-secondary">
                       Each brand is read at its own latest check.
                     </p>
                     <ul aria-label="Brands in view" className="flex flex-col gap-1">
@@ -349,13 +356,13 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
                           <span className="font-medium text-fg">
                             {brand.name}
                             {brand.isOwn ? (
-                              <span className="ml-1.5 rounded-sm bg-[var(--bg-inset)] px-1 py-px text-[10.5px] font-normal text-fg-secondary">
+                              <span className="ml-1.5 rounded-sm bg-bg-inset px-1 py-px text-xs font-normal text-fg-secondary">
                                 You
                               </span>
                             ) : null}
                           </span>
                           {checkedAtDiffers ? (
-                            <span className={cn(VALUE_CLASS, "text-[11px] font-normal text-[var(--text-tertiary)]")}>
+                            <span className={cn(VALUE_CLASS, "text-xs font-normal text-fg-tertiary")}>
                               {formatStamp(brand.checkedAt)}
                             </span>
                           ) : null}
@@ -365,36 +372,43 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
                   </PopoverContent>
                 </Popover>
               ) : null}
-            </div>
+            </>
           ) : (
             <span className="text-[13px] font-medium text-fg-secondary">No brands tracked yet</span>
-          )}
-        </div>
-        <p className="max-w-[68ch] type-body text-fg-secondary">{BOARD_HONESTY_LINE}</p>
-        <OffTopicNotice
-          hiddenCount={hiddenOffTopic}
-          subject="the brand they were found for"
-          showing={showOffTopic}
-          onToggle={toggleOffTopic}
-        />
-        {ownBrandNotInView ? (
-          <p className="max-w-[68ch] type-caption text-fg-secondary">
-            {ownBrand?.name} is your brand but has no finished check yet, so there is nothing to compare.
-          </p>
-        ) : null}
-        {coverageLine !== null ? (
-          <p className="max-w-[68ch] type-caption text-fg-secondary">{coverageLine}</p>
-        ) : null}
-        {isPartial ? (
-          <p className="max-w-[68ch] type-caption text-fg-secondary">
-            {anyPartial ? "Partial check. " : ""}
-            {gaps.length > 0
-              ? `${gaps.length} ${gaps.length === 1 ? "source" : "sources"} could not be checked, named per rival below. `
-              : "Some sources could not be checked. "}
-            A gap is never counted as a zero.
-          </p>
-        ) : null}
-      </header>
+          )
+        }
+      />
+
+      {hasCaveats ? (
+        <Notice
+          tone={isPartial ? "warn" : "info"}
+          title={caveatTitle}
+        >
+          {offTopicVisible ? (
+            <OffTopicNotice
+              hiddenCount={hiddenOffTopic}
+              subject="the brand they were found for"
+              showing={showOffTopic}
+              onToggle={toggleOffTopic}
+            />
+          ) : null}
+          {ownBrandNotInView ? (
+            <p>
+              {ownBrand?.name} is your brand but has no finished check yet, so there is nothing to compare.
+            </p>
+          ) : null}
+          {coverageLine !== null ? <p>{coverageLine}</p> : null}
+          {isPartial ? (
+            <p>
+              {anyPartial ? "Partial check. " : ""}
+              {gaps.length > 0
+                ? `${gaps.length} ${gaps.length === 1 ? "source" : "sources"} could not be checked, named per rival below. `
+                : "Some sources could not be checked. "}
+              A gap is never counted as a zero.
+            </p>
+          ) : null}
+        </Notice>
+      ) : null}
 
       {singleBrand ? (
         <p className="max-w-[68ch] type-caption text-fg-secondary">
@@ -408,7 +422,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         <div className="grid gap-2.5 sm:grid-cols-3" aria-label="Board summary">
           {summaryStats.map((stat) => (
             <Panel key={stat.label} interactive={false} className="p-3.5">
-              <StatReadout
+              <StatTile
                 label={stat.label}
                 value={stat.value}
                 hint={stat.hint}
@@ -425,11 +439,10 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
         <BoardSkeleton />
       ) : !hasAnyCheck ? (
         <EmptyState
-          icon={<BarChart3 {...iconProps} size={20} />}
           title="No finished checks yet."
           description={EMPTY_DESCRIPTION}
           action={
-            <Link href="/brands" className={buttonClasses({ variant: "ghost", size: "sm" })}>
+            <Link href="/brands" className={pillClasses("ink", "sm")}>
               Browse brands
             </Link>
           }
