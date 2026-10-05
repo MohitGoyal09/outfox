@@ -99,7 +99,7 @@ export function DataTable<T>({
                   {columns.map((col, i) => (
                     <TableCell
                       key={col.id}
-                      className={cn("px-4 py-3.5", col.className, col.hideOnMobile && "max-md:hidden")}
+                      className={cn("px-4 py-3.5", col.className, "max-md:w-auto max-md:p-0", col.hideOnMobile && "max-md:hidden")}
                     >
                       {i === 0 ? (
                         <SkeletonRegion label="Loading rows">
@@ -145,7 +145,7 @@ export function DataTable<T>({
                         col.kind === "primary" && "max-md:w-full max-md:pr-10",
                         col.kind === "action" && "w-12 text-right max-md:absolute max-md:right-2 max-md:top-2.5",
                         col.className,
-                        "max-md:p-0 max-md:text-left",
+                        "max-md:w-auto max-md:p-0 max-md:text-left",
                         col.kind === "primary" && "max-md:pr-10",
                         col.hideOnMobile && "max-md:hidden",
                       )}

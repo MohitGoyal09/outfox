@@ -1,16 +1,15 @@
 "use client";
 
 import { useMemo, useRef, useState } from "react";
-import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { ConvexError } from "convex/values";
 import { toast } from "sonner";
-import { ArrowRight, MessageSquare, MoreHorizontal, Pencil, Plus, Search, Trash2 } from "lucide-react";
+import { MoreHorizontal, Pencil, Search, Trash2 } from "lucide-react";
 import { api } from "@/convex/_generated/api";
-import { cn } from "@/lib/utils";
-import { EmptyState } from "../EmptyState";
-import { SkeletonRows } from "../Skeleton";
+import { DataTable, type DataTableColumn } from "../DataTable";
+import { PageHeader } from "../PageHeader";
+import { PillButton } from "../PillButton";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -29,9 +28,8 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { iconProps } from "../tokens";
 import { RelativeTime } from "../RelativeTime";
-import { groupThreadsByActivity, type ThreadSummary } from "./chat-groups";
+import type { ThreadSummary } from "./chat-groups";
 
 export function ChatsView() {
   const router = useRouter();
@@ -48,8 +46,6 @@ export function ChatsView() {
     return list.filter((thread) => thread.title.toLowerCase().includes(needle));
   }, [threads, query]);
 
-  const groups = useMemo(() => groupThreadsByActivity(filtered, new Date()), [filtered]);
-
   async function confirmDelete() {
     if (pendingDelete === null) return;
     try {
@@ -62,90 +58,88 @@ export function ChatsView() {
     }
   }
 
-  if (threads === undefined) {
-    return (
-      <div className="grid gap-3">
-        <SkeletonRows count={4} variant="row" height={64} />
-      </div>
-    );
-  }
-
-  if (threads.length === 0) {
-    return (
-      <EmptyState
-        bounded
-        icon={<MessageSquare {...iconProps} size={16} />}
-        title="No chats yet."
-        description="Ask Drishti anything about your tracked brands and the conversation will show up here."
-        action={
-          <Button
-            size="sm"
-            className="gap-1.5"
-            onClick={() => router.push(`/ask?chat=chat-${crypto.randomUUID()}`)}
-          >
-            <Plus className="size-3.5" aria-hidden />
-            New chat
-          </Button>
-        }
-      />
-    );
-  }
+  const newChat = () => router.push(`/ask?chat=chat-${crypto.randomUUID()}`);
+  const columns: DataTableColumn<ThreadSummary>[] = [
+    {
+      id: "title",
+      header: "Chat",
+      kind: "primary",
+      cell: (thread) => (
+        <ChatTitle
+          thread={thread}
+          isRenaming={renamingKey === thread.threadKey}
+          onStopRename={() => setRenamingKey(null)}
+        />
+      ),
+    },
+    {
+      id: "updated",
+      header: "Updated",
+      className: "w-44",
+      cell: (thread) => (
+        <RelativeTime iso={thread.lastMessageAt} className="font-mono text-xs tabular-nums text-fg-secondary" />
+      ),
+    },
+    {
+      id: "menu",
+      header: "Actions",
+      kind: "action",
+      cell: (thread) => (
+        <ChatMenu
+          thread={thread}
+          onRename={() => setRenamingKey(thread.threadKey)}
+          onDelete={() => setPendingDelete(thread)}
+        />
+      ),
+    },
+  ];
+  const loading = threads === undefined;
+  const total = threads?.length ?? 0;
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-        <div className="relative min-w-0 flex-1">
-          <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-          <Input
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder="Search chats"
-            className="h-10 pl-9"
-            aria-label="Search chats"
-          />
-        </div>
-        <Button
-          size="sm"
-          className="gap-1.5 sm:h-10"
-          onClick={() => router.push(`/ask?chat=chat-${crypto.randomUUID()}`)}
-        >
-          <Plus className="size-3.5" aria-hidden />
-          New chat
-        </Button>
-      </div>
-      <p className="font-mono text-xs tabular-nums text-muted-foreground" role="status">
-        {filtered.length === threads.length
-          ? `${threads.length} ${threads.length === 1 ? "chat" : "chats"}`
-          : `${filtered.length} of ${threads.length} chats`}
-      </p>
-      {filtered.length === 0 ? (
-        <EmptyState
-          bounded
-          icon={<Search {...iconProps} size={16} />}
-          title="No chats match."
-          description={`Nothing titled like "${query.trim()}". Try a different word.`}
+    <div className="flex flex-col">
+      <PageHeader
+        eyebrow={loading ? "Chats" : `Chats · ${total}`}
+        title="Chat history"
+        sub="Every conversation, newest activity first. Search by title to jump back in."
+        actions={<PillButton onClick={newChat}>New chat</PillButton>}
+      />
+      <div className="flex flex-col gap-4">
+        {total > 0 ? (
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-fg-tertiary" aria-hidden />
+            <Input
+              value={query}
+              onChange={(event) => setQuery(event.target.value)}
+              placeholder="Search chats"
+              className="h-10 rounded-full pl-9"
+              aria-label="Search chats"
+            />
+          </div>
+        ) : null}
+        <DataTable
+          label="Chats"
+          columns={columns}
+          rows={filtered}
+          rowKey={(thread) => thread.threadKey}
+          loading={loading}
+          onRowClick={(thread) =>
+            renamingKey === null && router.push(`/ask?chat=${encodeURIComponent(thread.threadKey)}`)
+          }
+          empty={
+            total === 0
+              ? {
+                  title: "No chats yet.",
+                  description: "Ask Drishti anything about your tracked brands and the conversation will show up here.",
+                  action: <PillButton size="sm" onClick={newChat}>New chat</PillButton>,
+                }
+              : {
+                  title: "No chats match.",
+                  description: `Nothing titled like "${query.trim()}". Try a different word.`,
+                }
+          }
         />
-      ) : (
-        groups.map((group) => (
-          <section key={group.label} aria-label={group.label} className="flex flex-col gap-2">
-            <h2 className="text-[12px] font-medium text-fg-secondary">
-              {group.label}
-            </h2>
-            <ul className="flex flex-col gap-2">
-              {group.threads.map((thread) => (
-                <ChatRow
-                  key={thread.threadKey}
-                  thread={thread}
-                  isRenaming={renamingKey === thread.threadKey}
-                  onStartRename={() => setRenamingKey(thread.threadKey)}
-                  onStopRename={() => setRenamingKey(null)}
-                  onDelete={() => setPendingDelete(thread)}
-                />
-              ))}
-            </ul>
-          </section>
-        ))
-      )}
+      </div>
       <AlertDialog
         open={pendingDelete !== null}
         onOpenChange={(open) => {
@@ -182,30 +176,26 @@ function errorMessage(error: unknown, fallback: string): string {
   return fallback;
 }
 
-function ChatRow({
+function ChatTitle({
   thread,
   isRenaming,
-  onStartRename,
   onStopRename,
-  onDelete,
 }: {
   thread: ThreadSummary;
   isRenaming: boolean;
-  onStartRename: () => void;
   onStopRename: () => void;
-  onDelete: () => void;
 }) {
+  if (!isRenaming) {
+    return <span className="block truncate text-[15px] font-medium tracking-[-0.01em] text-fg">{thread.title}</span>;
+  }
+  return <RenameField thread={thread} onStopRename={onStopRename} />;
+}
+
+function RenameField({ thread, onStopRename }: { thread: ThreadSummary; onStopRename: () => void }) {
   const renameThread = useMutation(api.threads.renameThread);
   const [draft, setDraft] = useState(thread.title);
   const [error, setError] = useState<string | null>(null);
   const finished = useRef(false);
-
-  function begin() {
-    finished.current = false;
-    setDraft(thread.title);
-    setError(null);
-    onStartRename();
-  }
 
   async function save() {
     if (finished.current) return;
@@ -224,92 +214,66 @@ function ChatRow({
     }
   }
 
-  const rowClass = cn(
-    "group relative flex min-w-0 flex-1 items-center rounded-lg border border-border bg-bg-raised shadow-xs",
-    "transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:shadow-sm",
-  );
-  const icon = (
-    <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-bg-inset text-fg-secondary transition-colors duration-150 ease-out group-hover:bg-bg-raised-2 group-hover:text-fg">
-      <MessageSquare aria-hidden className="size-4" />
+  return (
+    <span className="block min-w-0">
+      <Input
+        autoFocus
+        value={draft}
+        aria-label="Chat name"
+        aria-invalid={error !== null}
+        onFocus={(event) => event.currentTarget.select()}
+        onChange={(event) => {
+          setDraft(event.target.value);
+          setError(null);
+        }}
+        onBlur={() => void save()}
+        onKeyDown={(event) => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            void save();
+          } else if (event.key === "Escape") {
+            event.preventDefault();
+            finished.current = true;
+            onStopRename();
+          }
+        }}
+        className="h-8 text-[14px] font-medium"
+      />
+      {error !== null ? (
+        <span role="alert" className="mt-1 block text-xs text-destructive">
+          {error}
+        </span>
+      ) : null}
     </span>
   );
+}
 
+function ChatMenu({
+  thread,
+  onRename,
+  onDelete,
+}: {
+  thread: ThreadSummary;
+  onRename: () => void;
+  onDelete: () => void;
+}) {
   return (
-    <li className={rowClass}>
-      {isRenaming ? (
-        <div className="flex min-w-0 flex-1 items-center gap-3 p-4 pr-14">
-          {icon}
-          <span className="min-w-0 flex-1">
-            <Input
-              autoFocus
-              value={draft}
-              aria-label="Chat name"
-              aria-invalid={error !== null}
-              onFocus={(event) => event.currentTarget.select()}
-              onChange={(event) => {
-                setDraft(event.target.value);
-                setError(null);
-              }}
-              onBlur={() => void save()}
-              onKeyDown={(event) => {
-                if (event.key === "Enter") {
-                  event.preventDefault();
-                  void save();
-                } else if (event.key === "Escape") {
-                  event.preventDefault();
-                  finished.current = true;
-                  onStopRename();
-                }
-              }}
-              className="h-8 text-[14px] font-medium"
-            />
-            {error !== null ? (
-              <span role="alert" className="mt-1 block text-xs text-destructive">
-                {error}
-              </span>
-            ) : null}
-          </span>
-        </div>
-      ) : (
-        <Link
-          href={`/ask?chat=${encodeURIComponent(thread.threadKey)}`}
-          className="flex min-w-0 flex-1 items-center gap-3 rounded-lg p-4 pr-14 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-offset-2"
-        >
-          {icon}
-          <span className="min-w-0 flex-1">
-            <span className="block truncate text-[14px] font-medium text-fg">{thread.title}</span>
-            <RelativeTime
-              iso={thread.lastMessageAt}
-              className="mt-0.5 block font-mono text-[11px] tabular-nums text-muted-foreground"
-            />
-          </span>
-          <ArrowRight
-            aria-hidden
-            className="size-4 shrink-0 text-muted-foreground opacity-0 transition-opacity duration-150 ease-out group-hover:opacity-100"
-          />
-        </Link>
-      )}
-      <DropdownMenu>
-        <DropdownMenuTrigger asChild>
-          <Button
-            variant="ghost"
-            size="icon"
-            className="absolute right-2 top-1/2 -translate-y-1/2"
-            aria-label={`Chat options for ${thread.title}`}>
-            <MoreHorizontal aria-hidden className="size-4" />
-          </Button>
-        </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" onCloseAutoFocus={(event) => event.preventDefault()}>
-          <DropdownMenuItem onSelect={begin}>
-            <Pencil aria-hidden className="size-4" />
-            Rename
-          </DropdownMenuItem>
-          <DropdownMenuItem variant="destructive" onSelect={onDelete}>
-            <Trash2 aria-hidden className="size-4" />
-            Delete
-          </DropdownMenuItem>
-        </DropdownMenuContent>
-      </DropdownMenu>
-    </li>
+    <DropdownMenu>
+      <DropdownMenuTrigger asChild>
+        <Button variant="ghost" size="icon" aria-label={`Chat options for ${thread.title}`}>
+          <MoreHorizontal aria-hidden className="size-4" />
+        </Button>
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="end" onCloseAutoFocus={(event) => event.preventDefault()}>
+        <DropdownMenuItem onSelect={onRename}>
+          <Pencil aria-hidden className="size-4" />
+          Rename
+        </DropdownMenuItem>
+        <DropdownMenuItem variant="destructive" onSelect={onDelete}>
+          <Trash2 aria-hidden className="size-4" />
+          Delete
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }

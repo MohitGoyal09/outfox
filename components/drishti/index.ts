@@ -132,3 +132,6 @@ export type {
   StepStatus,
   Tone,
 } from "./tokens";
+
+export { DataTable } from "./DataTable";
+export type { DataTableColumn, DataTableProps } from "./DataTable";
