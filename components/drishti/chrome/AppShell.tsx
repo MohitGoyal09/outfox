@@ -16,7 +16,7 @@ export function AppShell({ children }: { children: ReactNode }) {
         Skip to content
       </a>
       <Sidebar />
-      <div className="flex min-h-svh w-full min-w-0 flex-1 flex-col bg-bg">
+      <div className="app-canvas flex min-h-svh w-full min-w-0 flex-1 flex-col">
         {/* The header is a fixed 64px bar, level with the sidebar's own header,
             so the rail and the top bar share one horizontal rule. */}
         <header className="sticky top-0 z-30 border-b border-border/80 bg-bg/90 backdrop-blur supports-[backdrop-filter]:bg-bg/80">

@@ -8,28 +8,28 @@
  * ------------------------------------------------------------------ */
 :root {
   /* ground + neutrals */
-  --bg: #f6f7f4;
+  --bg: #ffffff;
   --bg-inset: #f1f3f0;
   --bg-raised: #ffffff;
   --bg-raised-2: #f8fafc;
-  --border: #e4e7ec;
-  --border-strong: #cbd2dc;
-  --text-primary: #17191d;
-  --text-secondary: #667085;
-  --text-tertiary: #5b6472;
+  --border: #e8e8ea;
+  --border-strong: #d4d4d8;
+  --text-primary: #111113;
+  --text-secondary: #52545c; /* 7.6:1 on white */
+  --text-tertiary: #6b6e76; /* 5.0:1 on white */
 
   /* Placeholder neutral. Byte-identical to `--text-secondary` today; kept as
      its own token so placeholder color can diverge from secondary text
      later without hunting down every consumer. */
-  --text-placeholder: #667085;
+  --text-placeholder: #6b6e76;
 
   /* identity — Precision Monochrome. Controls and chrome are near-black; the
      only colour on the page is data (hook/funnel scales) and status. */
-  --accent: #15171b;
+  --accent: #111113;
   --accent-strong: #000000;
   --accent-ink: #ffffff;
-  --accent-dim: rgba(21, 23, 27, 0.12);
-  --accent-selection: rgba(21, 23, 27, 0.14);
+  --accent-dim: rgba(17, 17, 19, 0.1);
+  --accent-selection: rgba(17, 17, 19, 0.14);
 
   /* status — Drishti engine + run state */
   --ok: #059669;
@@ -44,13 +44,13 @@
 
   /* shell — a white rail with ink text against the warm canvas. */
   --sidebar: #ffffff;
-  --sidebar-foreground: #17191b;
-  --sidebar-primary: #15171b;
+  --sidebar-foreground: #111113;
+  --sidebar-primary: #111113;
   --sidebar-primary-foreground: #ffffff;
   --sidebar-accent: #f2f3f1;
   --sidebar-accent-foreground: #101215;
-  --sidebar-border: #e6e7e4;
-  --sidebar-ring: #15171b;
+  --sidebar-border: #e8e8ea;
+  --sidebar-ring: #111113;
 
   /* hookType — 9 discrete values, fixed categorical scale */
   --hook-discount-offer: #f2a63b;
@@ -205,7 +205,7 @@
   --color-secondary: var(--bg-raised-2);
   --color-secondary-foreground: var(--text-primary);
   --color-muted: var(--bg-inset);
-  --color-muted-foreground: var(--text-secondary);
+  --color-muted-foreground: var(--text-secondary); /* same value as fg-secondary: one text vocabulary */
   --color-accent-foreground: var(--accent-ink);
   --color-destructive: var(--danger);
   --color-destructive-foreground: var(--text-primary);
@@ -216,7 +216,7 @@
    * soft translucent ink ring. The old transparent ring left keyboard focus
    * invisible on every shadcn button, input, tab and menu item.
    */
-  --color-ring: rgba(21, 23, 27, 0.28);
+  --color-ring: rgba(17, 17, 19, 0.28);
 
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
@@ -394,6 +394,13 @@
   }
 }
 
+/* App canvas: white ground with the landing's faint dot grid. Apply to the shell's page area only, never inside cards. */
+.app-canvas {
+  background-color: var(--bg);
+  background-image: radial-gradient(circle at 1px 1px, rgb(17 17 19 / 0.07) 1px, transparent 1.3px);
+  background-size: 20px 20px;
+}
+
 /* Keep the desktop icon rail genuinely icon-only. The shadcn utility variant
  * handles this in normal builds; these attribute guards also cover nested
  * group scopes so labels can never bleed into the 56px rail. */
@@ -424,6 +431,17 @@
   line-height: 1.24;
   letter-spacing: -0.01em;
   font-optical-sizing: auto;
+}
+
+/* App page title: tight, solid ink. Used by PageHeader. */
+@utility type-page {
+  font-family: var(--font-display);
+  font-size: 2rem;
+  font-weight: 560;
+  line-height: 1.1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  text-wrap: balance;
 }
 
 @utility type-title {
