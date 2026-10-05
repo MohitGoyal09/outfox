@@ -616,7 +616,22 @@ html[data-authed] .auth-splash {
   --accent-strong: #ffffff;
   --accent-ink: #111113;
   --danger: #f4a3a3;
+  --accent-dim: rgba(244, 244, 245, 0.16);
   color: var(--text-primary);
+}
+
+/* Form feedback: an invalid control nudges sideways once; a failed submit button shakes. */
+@keyframes field-nudge {
+  0%, 100% { translate: 0; }
+  30% { translate: -3px; }
+  65% { translate: 3px; }
+}
+@keyframes field-shake {
+  0%, 100% { translate: 0; }
+  20% { translate: -5px; }
+  40% { translate: 5px; }
+  60% { translate: -3px; }
+  80% { translate: 3px; }
 }
 
 /* ---- Landing motion helpers (components/aceternity) ---- */
