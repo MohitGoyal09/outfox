@@ -13,6 +13,7 @@ import { CreditsChip } from "@/components/drishti/chrome/CreditsChip";
 import { NAV } from "@/components/drishti/chrome/Sidebar";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { pillClasses } from "@/components/drishti/PillButton";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
 import {
   Command,
@@ -27,6 +28,7 @@ import {
 } from "@/components/ui/command";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { iconProps } from "@/components/drishti";
+import { cn } from "@/lib/utils";
 
 const subscribeNever = () => () => {};
 function readModKey(): "⌘" | "Ctrl" {
@@ -81,7 +83,7 @@ export function Masthead() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border bg-bg-raised text-fg-secondary shadow-xs transition-[border-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:shadow-sm sm:hidden"
+          className="flex size-9 shrink-0 items-center justify-center rounded-sm border border-border-strong bg-bg-raised text-fg-secondary transition-[border-color,box-shadow] duration-150 ease-out hover:border-fg/40 focus-visible:border-fg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-accent-dim sm:hidden"
           aria-label="Search"
         >
           <Search {...iconProps} aria-hidden className="size-4" />
@@ -89,7 +91,7 @@ export function Masthead() {
         <button
           type="button"
           onClick={() => setOpen(true)}
-          className="group hidden h-10 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-sm border border-border bg-bg-raised px-3 text-left text-sm text-fg-tertiary shadow-xs transition-[border-color,background-color,box-shadow] duration-150 ease-out hover:border-border-strong hover:bg-bg-raised hover:shadow-sm sm:flex"
+          className="group hidden h-10 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-sm border border-border-strong bg-bg-raised px-3 text-left text-sm text-fg-tertiary transition-[border-color,box-shadow] duration-150 ease-out hover:border-fg/40 focus-visible:border-fg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-accent-dim sm:flex"
           aria-label="Search brands and pages, or ask Drishti"
         >
           <Search {...iconProps} aria-hidden className="size-4 shrink-0 text-fg-secondary" />
@@ -108,16 +110,14 @@ export function Masthead() {
               constraint (PRODUCT.md's 250-searches/month plan) is in view
               right where someone is about to spend one. */}
           <CreditsChip />
-          <Button
-            asChild
-            size="sm"
-            className="hidden h-9 shrink-0 rounded-sm bg-accent px-3.5 text-accent-ink hover:bg-accent-strong sm:inline-flex"
+          <Link
+            href={addBrandHref}
+            scroll={false}
+            className={cn(pillClasses("ink", "sm"), "hidden shrink-0 sm:inline-flex")}
           >
-            <Link href={addBrandHref} scroll={false}>
-              <Plus {...iconProps} aria-hidden className="size-4" />
-              Add brand
-            </Link>
-          </Button>
+            <Plus {...iconProps} aria-hidden className="size-4" />
+            Add brand
+          </Link>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
@@ -170,7 +170,7 @@ export function Masthead() {
             </CommandGroup>
             <CommandSeparator />
             <CommandGroup heading="Tracked brands">
-              {brands.slice(0, 8).map((brand) => <CommandItem key={brand._id} value={`${brand.name} ${brand.domain}`} onSelect={() => { setOpen(false); router.push(`/brands/${brand._id}`); }}><span className="flex size-5 items-center justify-center rounded bg-accent-dim text-[10px] font-semibold text-accent">{brand.name.slice(0, 1).toUpperCase()}</span><span>{brand.name}</span></CommandItem>)}
+              {brands.slice(0, 8).map((brand) => <CommandItem key={brand._id} value={`${brand.name} ${brand.domain}`} onSelect={() => { setOpen(false); router.push(`/brands/${brand._id}`); }}><span className="flex size-5 items-center justify-center rounded bg-bg-inset text-[10px] font-semibold text-fg">{brand.name.slice(0, 1).toUpperCase()}</span><span>{brand.name}</span></CommandItem>)}
             </CommandGroup>
             {query.trim() !== "" ? (
               <>

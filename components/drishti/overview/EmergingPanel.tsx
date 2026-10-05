@@ -1,8 +1,6 @@
 "use client";
 
-import { TrendingUp } from "lucide-react";
-
-import { Chip, EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
+import { Chip, EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 
 import { ActionLink } from "./ActionLink";
@@ -33,8 +31,6 @@ export function EmergingPanel({ loading, coveredBrandCount, emerging }: Emerging
     <Card
       title="Emerging"
       description="The pooled hook pattern across brands with a finished check."
-      icon={<TrendingUp {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-      className="h-full"
       trailing={
         <ActionLink href="/signals" size="sm">
           See Signals
@@ -47,7 +43,6 @@ export function EmergingPanel({ loading, coveredBrandCount, emerging }: Emerging
         <EmptyState
           size="sm"
           bounded
-          icon={<TrendingUp {...iconProps} size={16} aria-hidden="true" />}
           title="No brand has a finished check yet"
           description="Emerging pools the tagged findings from every brand's own most recent finished check. Once at least one brand has one, the strongest pattern across them is named here."
         />

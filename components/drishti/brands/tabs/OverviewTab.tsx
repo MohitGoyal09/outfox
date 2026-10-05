@@ -10,6 +10,11 @@ import { checkedStateLabel, sameSource } from "@/components/drishti/labels";
 import { isContentClaim, tagsForClaim, type ClaimDoc, type EngineCoverageRow, type SnapshotDoc } from "../brand-model";
 import { sourceColor, type FunnelStage } from "../../tokens";
 import { MetricInfo } from "../../MetricInfo";
+import { SectionHeader } from "../../SectionHeader";
+import { StatTile } from "../../StatReadout";
+import { pillClasses } from "../../PillButton";
+import { SimilarBrandsPanel } from "../SimilarBrandsPanel";
+import type { Id } from "@/convex/_generated/dataModel";
 import { DeltaTag, FunnelPanel, HookChart, SummaryPanel } from "../EvidencePanels";
 import { PlatformLogo } from "../PlatformLogo";
 import { SourceFreshness } from "../SourceFreshness";
@@ -41,7 +46,7 @@ function EngineCoverageList({ rows, latestClaims, previousClaims }: { rows: Engi
               {row.status === "ok" && row.reason ? <span className="text-warn">(partial)</span> : null}
             </span>
             <span className="font-mono tabular-nums text-muted-foreground">{row.status === "ok" ? Intl.NumberFormat("en-US").format(count) : checkedStateLabel(row.status)}</span>
-            <span className="font-mono text-[11px] text-muted-foreground">
+            <span className="font-mono text-xs text-muted-foreground">
               {row.status === "ok" && total ? `${Math.round((count / total) * 100)}%` : "-"}
             </span>
             <DeltaTag delta={delta} />
@@ -96,17 +101,19 @@ function NewestFindings({
   const activeFilters = isDefaultBrandFilters(filters) ? null : describeActiveBrandFilters(filters);
   return (
     <section aria-label="Newest evidence" className="space-y-3">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <h2 className="type-headline text-fg">Newest evidence</h2>
-        {activeFilters ? (
-          <p className="text-xs text-muted-foreground">
-            Filtered to {activeFilters}.{" "}
-            <button type="button" onClick={resetFilters} className="text-accent hover:underline">
-              Clear
-            </button>
-          </p>
-        ) : null}
-      </div>
+      <SectionHeader
+        title="Newest evidence"
+        sub={
+          activeFilters ? (
+            <>
+              Filtered to {activeFilters}.{" "}
+              <button type="button" onClick={resetFilters} className="text-accent hover:underline">
+                Clear
+              </button>
+            </>
+          ) : undefined
+        }
+      />
       <EvidenceGrid
         claims={matching}
         youtubeSnapshot={youtubeSnapshot}
@@ -118,7 +125,7 @@ function NewestFindings({
         emptyMessage="No findings to show for this check."
         pageLabel="Overview"
       />
-      <Link href={evidenceHref} className="inline-flex h-8 items-center rounded-md border border-border px-3 text-sm font-medium text-accent hover:bg-muted">
+      <Link href={evidenceHref} className={pillClasses("outline", "sm")}>
         See all {Intl.NumberFormat("en-US").format(evidenceCardCount(matching))} in Evidence
       </Link>
     </section>
@@ -142,7 +149,11 @@ export function OverviewTab({
   youtubeSnapshot,
   newsSnapshot,
   googleSnapshot,
+  findingsCount,
+  brandId,
 }: {
+  findingsCount: number;
+  brandId: Id<"brands">;
   latestClaims: ClaimDoc[];
   previousClaims: ClaimDoc[] | null;
   coverage: EngineCoverageRow[];
@@ -164,6 +175,13 @@ export function OverviewTab({
   const handleSelectFunnel = (stage: FunnelStage) => setFilter("funnel", filters.funnel === stage ? "all" : stage);
   return (
     <div className="space-y-6">
+      <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
+        <div className="grid grid-cols-2 gap-x-10 gap-y-3">
+          <StatTile label="Findings" value={findingsCount} hint="in the latest check" />
+          <StatTile label="Tagged" value={tags.length > 0 ? tags.length : "Not tagged"} hint={tags.length > 0 ? "findings with a hook and stage" : "tagging has not run"} />
+        </div>
+        <SimilarBrandsPanel brandId={brandId} />
+      </div>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         <SummaryPanel
           title={

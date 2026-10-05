@@ -8,6 +8,7 @@ import { Tag } from "lucide-react";
 import { BrandProfile } from "@/components/drishti/brands/BrandProfile";
 import { QueryBoundary } from "@/components/drishti/cohorts/QueryBoundary";
 import { EmptyState } from "@/components/drishti/EmptyState";
+import { pillClasses } from "@/components/drishti/PillButton";
 import { iconProps } from "@/components/drishti/tokens";
 import type { Id } from "@/convex/_generated/dataModel";
 
@@ -29,10 +30,7 @@ export default function BrandProfilePage({
         title="This brand address is not valid."
         description="A brand profile lives at /brands/ followed by the brand's id. Open the brand list and pick a tracked rival from there."
         action={
-          <Link
-            href="/brands"
-            className="inline-flex h-8 items-center rounded-sm border border-border-strong px-3 text-[13px] text-fg hover:bg-bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
-          >
+          <Link href="/brands" className={pillClasses("outline", "sm")}>
             All brands
           </Link>
         }

@@ -17,30 +17,25 @@ import {
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { sameSource, sourceName, uniqueSources } from "@/components/drishti/labels";
 import { RelativeTime } from "../RelativeTime";
-import { Panel } from "../Panel";
+import { Chip } from "../Chip";
+import type { DataTableColumn } from "../DataTable";
 import { BrandMark } from "./BrandMark";
 import { PlatformLogo } from "./PlatformLogo";
 import { categoryLabel } from "./add-brand-model";
 import { statusLabel } from "./status-labels";
 import { FETCH_ENGINES, STALE_CHECK_DAYS, type BrandDoc, type FetchEngine } from "./brand-model";
 
-function StatusBadge({ status }: { status: string }) {
-  const ready = status === "ready";
+function StatusChip({ status }: { status: string }) {
   return (
-    <span
-      className={cn(
-        "inline-flex h-6 items-center rounded-full border px-2.5 text-[11px] font-medium",
-        ready ? "border-ok/30 bg-ok/10 text-ok" : "border-warn/30 bg-warn/10 text-warn",
-      )}
-    >
+    <Chip variant="status" tone={status === "ready" ? "ok" : "warn"}>
       {statusLabel(status)}
-    </span>
+    </Chip>
   );
 }
 
 function SourceMarks({ engines }: { engines: Set<FetchEngine> }) {
   return (
-    <ul className="relative z-10 flex items-center gap-1.5" aria-label="Evidence sources">
+    <ul className="flex items-center gap-1.5" aria-label="Evidence sources">
       {uniqueSources(FETCH_ENGINES).map((engine) => {
         const on = [...engines].some((have) => sameSource(have, engine));
         const text = `${sourceName(engine)}: ${on ? "has evidence" : "no evidence yet"}`;
@@ -91,7 +86,7 @@ function RowMenu({ brand, own }: { brand: BrandDoc; own: boolean }) {
           type="button"
           variant="ghost"
           size="icon"
-          className="relative z-10 size-8"
+          className="size-8"
           aria-label={`More actions for ${brand.name}`}
         >
           <MoreHorizontal className="size-4" aria-hidden />
@@ -106,74 +101,86 @@ function RowMenu({ brand, own }: { brand: BrandDoc; own: boolean }) {
   );
 }
 
-export type BrandRowProps = {
+export type BrandRowData = {
   brand: BrandDoc;
-  own?: boolean;
+  own: boolean;
   claimCount: number | undefined;
   latestCheckAt: string | undefined;
   engines: Set<FetchEngine>;
 };
 
-export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engines }: BrandRowProps) {
+const STALE_MS = STALE_CHECK_DAYS * 24 * 60 * 60 * 1000;
+
+function LatestCheck({ at }: { at: string | undefined }) {
   const [now] = useState(() => Date.now());
-  const stale = Boolean(latestCheckAt) && now - Date.parse(latestCheckAt as string) > STALE_CHECK_DAYS * 24 * 60 * 60 * 1000;
+  if (!at) return <span className="text-xs text-fg-tertiary">None yet</span>;
+  if (now - Date.parse(at) <= STALE_MS) return null;
   return (
-    <Panel
-      interactive
-      padded={false}
-      className={cn("group relative", own && "border-accent/35 bg-accent/[0.03]")}
-      ariaLabel={brand.name}
-    >
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 md:min-h-16 md:grid-cols-[minmax(0,1fr)_88px_auto_150px_96px_32px] md:py-2">
-        <div className="flex min-w-0 items-center gap-3">
-          <BrandMark name={brand.name} domain={brand.domain} className="size-10 rounded-xl" />
-          <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <h3 className="truncate text-[15px] font-semibold tracking-[-0.015em] text-fg">
-                <Link
-                  href={`/brands/${brand._id}`}
-                  className="after:absolute after:inset-0 after:content-[''] focus-visible:outline-none"
-                >
-                  {brand.name}
-                </Link>
-              </h3>
-              {own ? (
-                <span className="shrink-0 rounded-full bg-fg px-2 py-0.5 text-[10px] font-medium text-bg-raised">
-                  Your brand
-                </span>
-              ) : null}
-            </div>
-            <p className="truncate text-xs text-muted-foreground">
-              {brand.domain} · {categoryLabel(brand.vertical)}
-            </p>
-          </div>
-        </div>
-        <div className="flex justify-end md:order-last">
-          <RowMenu brand={brand} own={own} />
-        </div>
-        <div className="col-span-2 flex flex-wrap items-center gap-x-4 gap-y-2 md:contents">
-          <span className="text-xs text-muted-foreground">
-            <span className="font-mono text-sm font-medium tabular-nums text-fg">{claimCount === undefined ? "-" : claimCount.toLocaleString("en-US")}</span>{" "}
-            stored findings
-          </span>
-          <SourceMarks engines={engines} />
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
-            {!latestCheckAt ? (
-              <>
-                Latest check <span className="text-fg">none yet</span>
-              </>
-            ) : stale ? (
-              <>
-                <span className="rounded-full border border-warn/30 bg-warn/10 px-2 py-0.5 text-[10px] font-medium text-warn">Stale</span>{" "}
-                <RelativeTime iso={latestCheckAt} className="relative z-10 font-mono tabular-nums text-fg" />
-              </>
-            ) : null}
-          </span>
-          <span className="md:justify-self-start">
-            <StatusBadge status={brand.profileStatus} />
-          </span>
-        </div>
-      </div>
-    </Panel>
+    <span className="inline-flex items-center gap-2">
+      <Chip variant="status" tone="warn">Stale</Chip>
+      <RelativeTime iso={at} className="font-mono text-xs tabular-nums text-fg-secondary" />
+    </span>
   );
 }
+
+export const brandColumns: DataTableColumn<BrandRowData>[] = [
+  {
+    id: "brand",
+    header: "Brand",
+    kind: "primary",
+    cell: ({ brand, own }) => (
+      <div className="flex min-w-0 items-center gap-3">
+        <BrandMark name={brand.name} domain={brand.domain} className="size-9" />
+        <div className="min-w-0">
+          <div className="flex items-center gap-2">
+            <Link
+              href={`/brands/${brand._id}`}
+              className="truncate text-[15px] font-semibold tracking-[-0.015em] text-fg hover:underline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+            >
+              {brand.name}
+            </Link>
+            {own ? (
+              <Chip variant="you" size="sm" className="shrink-0 font-mono">
+                You
+              </Chip>
+            ) : null}
+          </div>
+          <p className="truncate text-xs text-fg-secondary">
+            {brand.domain} · {categoryLabel(brand.vertical)}
+          </p>
+        </div>
+      </div>
+    ),
+  },
+  {
+    id: "status",
+    header: "Status",
+    className: "w-36",
+    cell: ({ brand }) => <StatusChip status={brand.profileStatus} />,
+  },
+  {
+    id: "findings",
+    header: "Findings",
+    kind: "numeric",
+    className: "w-28",
+    cell: ({ claimCount }) => (claimCount === undefined ? "-" : claimCount.toLocaleString("en-US")),
+  },
+  {
+    id: "latest",
+    header: "Latest check",
+    className: "w-48",
+    cell: ({ latestCheckAt }) => <LatestCheck at={latestCheckAt} />,
+  },
+  {
+    id: "sources",
+    header: "Sources",
+    className: "w-40",
+    cell: ({ engines }) => <SourceMarks engines={engines} />,
+  },
+  {
+    id: "menu",
+    header: "Actions",
+    kind: "action",
+    cell: ({ brand, own }) => <RowMenu brand={brand} own={own} />,
+  },
+];

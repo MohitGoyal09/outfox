@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowRight, LayoutGrid, MessageSquare } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 
 import { EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
@@ -35,8 +35,6 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardIte
     <section aria-label="Pick up where you left off" className="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <Card
         title="Recent chats"
-        icon={<MessageSquare {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-        className="h-full"
       >
         {loading ? (
           <ListSkeleton />
@@ -44,7 +42,6 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardIte
           <EmptyState
             size="sm"
             bounded
-            icon={<MessageSquare {...iconProps} size={16} aria-hidden="true" />}
             title="No chats yet"
             description="Ask Drishti a question about a tracked brand, and the conversation appears here so you can pick it back up."
             action={
@@ -66,7 +63,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardIte
                   className="flex items-center justify-between gap-3 rounded-md px-1 py-1 type-body text-fg transition-colors duration-150 ease-out hover:bg-bg-inset"
                 >
                   <span className="min-w-0 truncate">{thread.title}</span>
-                  <span className={cn(VALUE_CLASS, "shrink-0 text-[11px] text-fg-tertiary")}>
+                  <span className={cn(VALUE_CLASS, "shrink-0 text-xs text-fg-secondary")}>
                     <RelativeTime iso={thread.lastMessageAt} />
                   </span>
                 </Link>
@@ -78,8 +75,6 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardIte
 
       <Card
         title="Boards"
-        icon={<LayoutGrid {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-        className="h-full"
       >
         {loading ? (
           <ListSkeleton />
@@ -87,7 +82,6 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardIte
           <EmptyState
             size="sm"
             bounded
-            icon={<LayoutGrid {...iconProps} size={16} aria-hidden="true" />}
             title="No boards yet"
             description="Save a piece of evidence to a board while you browse a brand, and your swipe files appear here."
             action={
@@ -105,7 +99,7 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardIte
             <div className="min-w-0">
               <p className="type-body truncate text-fg">{boards[0].name}</p>
               {boardItemCountLabel(newestBoardItemCount) ? (
-                <p className={cn(VALUE_CLASS, "mt-0.5 text-[11px] text-fg-tertiary")}>{boardItemCountLabel(newestBoardItemCount)}</p>
+                <p className={cn(VALUE_CLASS, "mt-0.5 text-xs text-fg-secondary")}>{boardItemCountLabel(newestBoardItemCount)}</p>
               ) : null}
             </div>
             <Link

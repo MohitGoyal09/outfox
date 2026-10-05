@@ -2,50 +2,24 @@
 
 import type { ReactNode } from "react";
 
-import { Panel, type PanelTag } from "@/components/drishti";
+import { SectionHeader } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 
 export type CardProps = {
   title: string;
   description?: ReactNode;
   trailing?: ReactNode;
-  icon?: ReactNode;
   children: ReactNode;
-  as?: PanelTag;
   ariaLabel?: string;
   className?: string;
-  bodyClassName?: string;
-  unframed?: boolean;
+  lead?: boolean;
 };
 
-export function Card({
-  title,
-  description,
-  trailing,
-  children,
-  as = "section",
-  ariaLabel,
-  className,
-  bodyClassName,
-  unframed = false,
-}: CardProps) {
-  const inner = (
-    <>
-      <Panel.Header title={title} description={description} trailing={trailing} />
-      <Panel.Body className={bodyClassName}>{children}</Panel.Body>
-    </>
-  );
-  if (unframed) {
-    const Frame = as;
-    return (
-      <Frame aria-label={ariaLabel ?? title} className={cn("block", className)}>
-        {inner}
-      </Frame>
-    );
-  }
+export function Card({ title, description, trailing, children, ariaLabel, className, lead = false }: CardProps) {
   return (
-    <Panel as={as} ariaLabel={ariaLabel ?? title} className={className}>
-      {inner}
-    </Panel>
+    <section aria-label={ariaLabel ?? title} className={cn(!lead && "border-t border-border pt-6", className)}>
+      <SectionHeader title={title} sub={description} trailing={trailing} />
+      <div className="mt-4">{children}</div>
+    </section>
   );
 }

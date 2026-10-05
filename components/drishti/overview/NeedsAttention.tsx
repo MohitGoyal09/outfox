@@ -1,8 +1,6 @@
 "use client";
 
-import { TriangleAlert } from "lucide-react";
-
-import { Chip, LABEL_CLASS, iconProps, type Tone } from "@/components/drishti";
+import { Chip, LABEL_CLASS, type Tone } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 
 import { ActionLink } from "./ActionLink";
@@ -32,8 +30,7 @@ export function NeedsAttention({ rows }: NeedsAttentionProps) {
     <Card
       title="Needs attention"
       description={`${rows.length} ${pluralize(rows.length, "brand")} need a look.`}
-      icon={<TriangleAlert {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-      className="h-full border-[color-mix(in_srgb,var(--warn)_30%,var(--border))]"
+      lead
     >
       <ul className="flex flex-col divide-y divide-border">
         {rows.map((row) => (

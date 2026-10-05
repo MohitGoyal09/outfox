@@ -24,7 +24,7 @@ export function BrandMark({
   return (
     <span
       className={cn(
-        "relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-full border border-border text-sm font-semibold text-white",
+        "relative grid size-12 shrink-0 place-items-center overflow-hidden rounded-[8px] border border-border text-sm font-semibold text-white",
         className,
       )}
       style={{ backgroundColor: categoricalColorFor(name) }}

@@ -19,7 +19,7 @@ export function WhatChanged({ feed }: WhatChangedProps) {
   const rows = [...feed.changes].sort((a, b) => Number(a.isQuiet === true) - Number(b.isQuiet === true));
 
   return (
-    <Card title="What changed since your last check" className="h-full">
+    <Card title="What changed since your last check">
       {move !== null ? (
         <p className="type-body mb-3 max-w-[64ch] border-b border-border pb-3 font-medium text-fg">
           {move.sentence}
@@ -41,7 +41,7 @@ export function WhatChanged({ feed }: WhatChangedProps) {
               key={change.brandId}
               className={cn(
                 "flex flex-col gap-2 py-3 first:pt-0 last:pb-0 sm:flex-row sm:items-center sm:justify-between sm:gap-4",
-                change.isOwnBrand && "border-l-2 border-l-accent pl-3",
+                change.isOwnBrand && "border-l-2 border-l-border-strong pl-3",
               )}
             >
               <p className="type-body max-w-[64ch] text-fg">{change.sentence}</p>

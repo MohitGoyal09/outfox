@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowRight, Quote } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 import { EmptyState, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
 import type { ClaimDoc } from "@/components/drishti/brands/brand-model";
@@ -54,7 +54,7 @@ export function NewestEvidence({
       ) : null}
       <Link
         href="/feed"
-        className="inline-flex items-center gap-1 text-[12px] font-medium text-fg-secondary transition-colors duration-150 ease-out hover:text-fg hover:underline"
+        className="inline-flex items-center gap-1 text-[13px] font-medium text-fg-secondary transition-colors duration-150 ease-out hover:text-fg hover:underline"
       >
         View all
         <ArrowRight {...iconProps} size={12} aria-hidden="true" className="size-3" />
@@ -67,10 +67,7 @@ export function NewestEvidence({
       title="Newest evidence"
       description="The freshest stored findings, each linked to its exact source."
       trailing={trailing}
-      icon={<Quote {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-      bodyClassName="py-4"
-      className="h-full"
-      unframed
+      lead
     >
       {!loading && hasBrands ? (
         <div className="mb-3">
@@ -88,7 +85,6 @@ export function NewestEvidence({
         <EmptyState
           size="sm"
           bounded
-          icon={<Quote {...iconProps} size={16} aria-hidden="true" />}
           title="No brands to show evidence for yet"
           description="Add a tracked brand, and its newest findings appear here with the exact source they came from."
         />
@@ -100,7 +96,7 @@ export function NewestEvidence({
           description="Every finding keeps the exact text a source returned. When the first one arrives for any tracked brand, it is listed here word for word, with a working link to its source."
         />
       ) : (
-        <div className="grid gap-3 sm:grid-cols-2">
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {feed.items.map((item) => (
             <FeedCard
               key={item.id}

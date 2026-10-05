@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { ArrowLeft, ArrowRight, BarChart3, CheckCircle2, Clock3, Compass, Globe2, LayoutGrid, Link2, Layers, MapPin, Sparkles, Tag, Users } from "lucide-react";
 import { useCallback, useMemo, useState } from "react";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useQuery } from "convex/react";
@@ -9,11 +8,10 @@ import { useQuery } from "convex/react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { cn } from "@/lib/utils";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { EmptyState } from "../EmptyState";
-import { Panel } from "../Panel";
+import { PageHeader } from "../PageHeader";
+import { PillButton, pillClasses } from "../PillButton";
 import { Skeleton, SkeletonRegion } from "../Skeleton";
 import { useAllRuns } from "../cohorts/useAllRuns";
 import { categoryLabel } from "./add-brand-model";
@@ -32,9 +30,7 @@ import {
   type ClaimDoc,
   type RunHistoryRow,
 } from "./brand-model";
-import { BrandMark } from "./BrandMark";
 import { OwnBrandToggle } from "./OwnBrandToggle";
-import { SimilarBrandsPanel } from "./SimilarBrandsPanel";
 import { shortDate } from "./format";
 import { useBrandFilters } from "./filters/useBrandFilters";
 import { OverviewTab } from "./tabs/OverviewTab";
@@ -49,12 +45,12 @@ import { InsightsTab } from "./tabs/InsightsTab";
 export type BrandProfileProps = { brandId: Id<"brands">; className?: string };
 
 const tabs = [
-  ["overview", "Overview", LayoutGrid],
-  ["insights", "Insights", Sparkles],
-  ["position", "Position", Compass],
-  ["placement", "Placement", MapPin],
-  ["people", "People", Users],
-  ["evidence", "Evidence", Layers],
+  ["overview", "Overview"],
+  ["insights", "Insights"],
+  ["position", "Position"],
+  ["placement", "Placement"],
+  ["people", "People"],
+  ["evidence", "Evidence"],
 ] as const;
 
 type TabValue = (typeof tabs)[number][0];
@@ -62,16 +58,6 @@ const DEFAULT_TAB: TabValue = "overview";
 
 function isTabValue(value: string | null): value is TabValue {
   return value !== null && tabs.some(([tabId]) => tabId === value);
-}
-
-function statusBadge(status: string) {
-  const good = status === "ok" || status === "complete" || status === "ready";
-  return (
-    <Badge variant="outline" className={cn("h-6 rounded-full px-2.5 text-[11px] font-medium", good ? "border-ok/30 bg-ok/10 text-ok" : "border-warn/30 bg-warn/10 text-warn")}>
-      {good ? <CheckCircle2 className="mr-1 size-3" /> : <Clock3 className="mr-1 size-3" />}
-      {statusLabel(status)}
-    </Badge>
-  );
 }
 
 function ShareButton() {
@@ -85,10 +71,9 @@ function ShareButton() {
     }
   }
   return (
-    <Button variant="outline" size="sm" className="h-8 gap-1.5" title="Copy link to this page" onClick={() => void copyLink()}>
-      <Link2 className="size-3.5" />
-      {copied ? "Copied" : "Copy link"}
-    </Button>
+    <PillButton variant="outline" size="sm" title="Copy link to this page" onClick={() => void copyLink()}>
+      {copied ? "Copied" : "Share"}
+    </PillButton>
   );
 }
 
@@ -181,9 +166,9 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
         title="This brand no longer exists."
         description="The profile address is valid, but the tracked brand was not found. Return to Brands and choose another profile."
         action={
-          <Button asChild variant="outline">
-            <Link href="/brands">Back to brands</Link>
-          </Button>
+          <Link href="/brands" className={pillClasses("outline")}>
+            Back to brands
+          </Link>
         }
       />
     );
@@ -219,79 +204,42 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
 
   return (
     <div className={cn("flex min-w-0 flex-col gap-0", className)}>
-      <div className="mb-3 flex items-center justify-between">
-        <Link href="/brands" className="inline-flex items-center gap-1.5 text-xs text-muted-foreground hover:text-foreground">
-          <ArrowLeft className="size-3.5" />
-          All brands
-        </Link>
-      </div>
-      <header className="pb-5">
-        <Panel interactive={false} className="p-5" ariaLabel="Brand identity">
-          <div className="flex flex-wrap items-start justify-between gap-5">
-            <div className="flex min-w-0 items-center gap-3">
-              <BrandMark name={brand.name} domain={brand.domain} className="size-14" />
-              <div className="min-w-0">
-                <div className="flex flex-wrap items-center gap-2">
-                  <h1 className="type-display truncate text-fg">{brand.name}</h1>
-                  {statusBadge(brand.profileStatus)}
-                  {brand.isOwnBrand === true ? (
-                    <Badge variant="outline" className="h-6 rounded-full border-accent/35 bg-accent/[0.08] px-2.5 text-[11px] font-medium text-accent">
-                      Your brand
-                    </Badge>
-                  ) : null}
-                </div>
-                <p className="mt-1 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-                  <span>{categoryLabel(brand.vertical)}</span>
-                  <span aria-hidden>·</span>
-                  <span className="inline-flex items-center gap-1">
-                    <Globe2 className="size-3.5" />
-                    {brand.domain}
-                  </span>
-                  <span aria-hidden>·</span>
-                  <span>Last updated {shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}</span>
-                </p>
-              </div>
-            </div>
-            <div className="flex items-center gap-2">
-              <OwnBrandToggle brandId={brandId} isOwn={brand.isOwnBrand === true} size="sm" className="h-8" />
-              <ShareButton />
-              {latestRun ? (
-                <Button asChild size="sm" className="h-8 gap-1.5">
-                  <Link href={`/runs/${latestRun._id}`}>
-                    Latest check <ArrowRight className="size-3.5" />
-                  </Link>
-                </Button>
-              ) : null}
-            </div>
-          </div>
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <Badge variant="outline" className="h-7 rounded-full border-accent/25 bg-accent/[0.06] px-2.5 text-accent">
-              <BarChart3 className="mr-1.5 size-3.5" />
-              {Intl.NumberFormat("en-US").format(signals.length)} findings
-            </Badge>
-            <Badge variant="outline" className="h-7 rounded-full px-2.5 text-muted-foreground">
-              <Tag className="mr-1.5 size-3.5" />
-              {/* `tags.length === 0` means no tag row exists for this run at
-                  all -- tagging never touched it, the same "absent" the
-                  engine coverage rows call `not_run` -- not that tagging ran
-                  and found nothing (PRODUCT.md principle 2). A run that IS
-                  tagged always has at least one tag-bearing claim, even one
-                  the tagger marked `not_applicable`, so a real zero-finding
-                  run can never land here. */}
-              {tags.length > 0
-                ? `${Intl.NumberFormat("en-US").format(tags.length)} tagged finding${tags.length === 1 ? "" : "s"}`
-                : "Not tagged"}
-            </Badge>
-            <SimilarBrandsPanel brandId={brandId} />
-          </div>
-        </Panel>
-      </header>
+      <PageHeader
+        variant="entity"
+        eyebrow={
+          <>
+            <Link href="/brands" className="hover:text-fg">
+              Brands
+            </Link>{" "}
+            / {brand.name}
+          </>
+        }
+        title={brand.name}
+        meta={[
+          brand.domain,
+          categoryLabel(brand.vertical),
+          `Last check ${shortDate(latestRun?.requestedAt ?? brand.lastRefreshedAt)}`,
+          ...(brand.profileStatus === "ready"
+            ? []
+            : [`Profile ${statusLabel(brand.profileStatus).toLowerCase()}`]),
+        ].join(" · ")}
+        actions={
+          <>
+            {latestRun ? (
+              <Link href={`/runs/${latestRun._id}`} className={pillClasses("ink", "sm")}>
+                Latest check
+              </Link>
+            ) : null}
+            <ShareButton />
+            <OwnBrandToggle brandId={brandId} isOwn={brand.isOwnBrand === true} size="sm" className={pillClasses("outline", "sm")} />
+          </>
+        }
+      />
       <Tabs value={tab} onValueChange={setTab} className="gap-0">
-        <div className="overflow-x-auto border-b border-border">
-          <TabsList variant="line" className="h-12 min-w-max gap-1 rounded-none border-0 p-0">
-            {tabs.map(([value, label, Icon]) => (
-              <TabsTrigger key={value} value={value} className="h-12 gap-1.5 rounded-none px-3 text-xs data-[state=active]:font-semibold data-[state=active]:text-accent after:bg-accent">
-                <Icon className="size-3.5" aria-hidden="true" />
+        <div className="overflow-x-auto">
+          <TabsList variant="ink" className="min-w-max">
+            {tabs.map(([value, label]) => (
+              <TabsTrigger key={value} value={value}>
                 {label}
               </TabsTrigger>
             ))}
@@ -330,6 +278,8 @@ export function BrandProfile({ brandId, className }: BrandProfileProps) {
                 youtubeSnapshot={latestYoutubeVideoSnapshot}
                 newsSnapshot={latestGoogleNewsSnapshot}
                 googleSnapshot={latestGoogleSnapshot}
+                findingsCount={signals.length}
+                brandId={brandId}
               />
             </TabsContent>
             <TabsContent value="insights" className="mt-0 py-5">
