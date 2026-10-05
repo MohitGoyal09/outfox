@@ -30,7 +30,10 @@ export function Providers({ children }: { children: React.ReactNode }) {
   );
 }
 
-const PUBLIC_PATH_PREFIXES = ["/share/board/"];
+const PUBLIC_PATH_PREFIXES = [
+  "/share/board/",
+  ...(process.env.NODE_ENV === "production" ? [] : ["/dev/"]),
+];
 const SIGN_IN_PATH = "/signin";
 
 function AuthGate({ children }: { children: React.ReactNode }) {
