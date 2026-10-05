@@ -150,7 +150,7 @@ function DateRangeControl({
           value={filters.from ?? ""}
           max={filters.to ?? undefined}
           onChange={(event) => setFilter("from", event.target.value === "" ? null : event.target.value)}
-          className="w-[112px] appearance-none bg-transparent font-mono text-[11px] tabular-nums text-foreground outline-none [&::-webkit-calendar-picker-indicator]:opacity-60"
+          className="w-[112px] appearance-none bg-transparent font-mono text-xs tabular-nums text-foreground outline-none [&::-webkit-calendar-picker-indicator]:opacity-60"
         />
         <span aria-hidden className="text-muted-foreground/60">
           –
@@ -162,7 +162,7 @@ function DateRangeControl({
           value={filters.to ?? ""}
           min={filters.from ?? undefined}
           onChange={(event) => setFilter("to", event.target.value === "" ? null : event.target.value)}
-          className="w-[112px] appearance-none bg-transparent font-mono text-[11px] tabular-nums text-foreground outline-none [&::-webkit-calendar-picker-indicator]:opacity-60"
+          className="w-[112px] appearance-none bg-transparent font-mono text-xs tabular-nums text-foreground outline-none [&::-webkit-calendar-picker-indicator]:opacity-60"
         />
       </label>
       ) : null}

@@ -28,7 +28,7 @@ export function SimilarBrandsPanel({ brandId }: { brandId: Id<"brands"> }) {
         </Badge>
       </PopoverTrigger>
       <PopoverContent align="end" className="w-64">
-        <p className="mb-2 px-0.5 text-[11px] leading-4 text-muted-foreground">
+        <p className="mb-2 px-0.5 text-xs leading-4 text-muted-foreground">
           Other tracked brands in the same vertical, a real shared field, never a similarity score.
         </p>
         <ul className="flex flex-col gap-0.5">
