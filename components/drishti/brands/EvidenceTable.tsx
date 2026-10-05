@@ -5,7 +5,6 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from "lucide-react";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { cn } from "@/lib/utils";
 import { hookName, sourceName, stageName } from "../labels";
-import { RelativeTime } from "../RelativeTime";
 import { displayClaimText } from "./format";
 import { PlatformLogo } from "./PlatformLogo";
 import { formatRowValue, sortEvidenceRows, type EvidenceRow, type EvidenceRowKey } from "./evidence-table-model";
@@ -59,7 +58,6 @@ export function EvidenceTable({ rows }: { rows: EvidenceRow[] }) {
             <TableHead className="sticky top-0 z-10 bg-bg-raised text-xs text-fg-secondary">Hook</TableHead>
             <TableHead className="sticky top-0 z-10 bg-bg-raised text-xs text-fg-secondary">Stage</TableHead>
             <SortHead label="Value" sortKey="value" sort={sort} onSort={onSort} />
-            <SortHead label="Fetched" sortKey="fetchedAt" sort={sort} onSort={onSort} />
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -84,9 +82,6 @@ export function EvidenceTable({ rows }: { rows: EvidenceRow[] }) {
               <TableCell className="px-3">{row.hook ? hookName(row.hook) : NOT_TAGGED}</TableCell>
               <TableCell className="px-3">{row.stage ? stageName(row.stage) : NOT_TAGGED}</TableCell>
               <TableCell className="px-3 tabular-nums">{formatRowValue(row)}</TableCell>
-              <TableCell className="px-3 text-fg-secondary">
-                <RelativeTime iso={row.fetchedAt} />
-              </TableCell>
             </TableRow>
           ))}
         </TableBody>

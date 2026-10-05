@@ -94,6 +94,7 @@ function PriceLadderCard({ claims, points }: { claims: ClaimDoc[]; points: Retur
   const claimTextById = useMemo(() => new Map(claims.map((claim) => [String(claim._id), claim.text])), [claims]);
   const min = points[0].price;
   const max = points[points.length - 1].price;
+  const asOf = points.reduce((latest, point) => (point.fetchedAt > latest ? point.fetchedAt : latest), points[0].fetchedAt);
   return (
     <Panel interactive={false} className="overflow-hidden">
       <div className="border-b border-border px-4 py-3">
@@ -107,15 +108,14 @@ function PriceLadderCard({ claims, points }: { claims: ClaimDoc[]; points: Retur
                 definition="The lowest and highest product-listing prices captured so far. Each price is a point-in-time observation from a real listing, not the brand's current price."
               />
               <span>
-                : <span className="text-fg">{min}</span>–<span className="text-fg">{max}</span> {points[0].unit ?? ""} across {points.length} listing{points.length === 1 ? "" : "s"}
+                : <span className="text-fg">{min}</span>–<span className="text-fg">{max}</span> {points[0].unit ?? ""} across {points.length} listing{points.length === 1 ? "" : "s"}, as of {shortDate(asOf)}
               </span>
             </p>
             <ul className="space-y-1.5">
               {points.map((point) => (
-                <li key={point.claimId} className="grid grid-cols-[1fr_auto_auto] items-center gap-3 text-[11px]">
+                <li key={point.claimId} className="grid grid-cols-[1fr_auto] items-center gap-3 text-[11px]">
                   <span className="truncate text-muted-foreground">{sellerLabel(point, claimTextById)}</span>
                   <span className="font-mono tabular-nums text-fg">{point.price}{point.unit ? ` ${point.unit}` : ""}</span>
-                  <span className="font-mono text-[10px] text-muted-foreground">as of {shortDate(point.fetchedAt)}</span>
                 </li>
               ))}
             </ul>

@@ -20,7 +20,7 @@ import { isHttpUrl, MAX_EDGE_LABEL, MAX_FRAME_TITLE, MAX_NOTE_TEXT, MIN_SIZE, NO
 import { displayClaimText, shortDate } from "../brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { sourceName } from "../labels";
-import { VALUE_CLASS, iconProps, sourceColor } from "../tokens";
+import { iconProps, sourceColor } from "../tokens";
 import { fromNodeId, type FlowClaim } from "./canvas-flow";
 import { adLine, CardBrand, CardTags, CardThumb, tagsMayWrap } from "./claim-card-parts";
 
@@ -103,7 +103,6 @@ export function EvidenceNode({ data, selected }: NodeProps) {
           >
             <PlatformLogo engine={claim.sourceEngine} className="size-3" />
           </span>
-          <span className={VALUE_CLASS}>{shortDate(claim.fetchedAt)}</span>
         </span>
       </div>
       <CardThumb claim={claim} className="h-[88px]" />

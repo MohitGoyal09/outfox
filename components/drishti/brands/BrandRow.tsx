@@ -22,7 +22,7 @@ import { BrandMark } from "./BrandMark";
 import { PlatformLogo } from "./PlatformLogo";
 import { categoryLabel } from "./add-brand-model";
 import { statusLabel } from "./status-labels";
-import { FETCH_ENGINES, type BrandDoc, type FetchEngine } from "./brand-model";
+import { FETCH_ENGINES, STALE_CHECK_DAYS, type BrandDoc, type FetchEngine } from "./brand-model";
 
 function StatusBadge({ status }: { status: string }) {
   const ready = status === "ready";
@@ -115,6 +115,8 @@ export type BrandRowProps = {
 };
 
 export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engines }: BrandRowProps) {
+  const [now] = useState(() => Date.now());
+  const stale = Boolean(latestCheckAt) && now - Date.parse(latestCheckAt as string) > STALE_CHECK_DAYS * 24 * 60 * 60 * 1000;
   return (
     <Panel
       interactive
@@ -122,7 +124,7 @@ export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engine
       className={cn("group relative", own && "border-accent/35 bg-accent/[0.03]")}
       ariaLabel={brand.name}
     >
-      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 md:min-h-16 md:grid-cols-[minmax(0,1fr)_88px_auto_150px_104px_96px_32px] md:py-2">
+      <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-4 gap-y-2 px-4 py-3 md:min-h-16 md:grid-cols-[minmax(0,1fr)_88px_auto_150px_96px_32px] md:py-2">
         <div className="flex min-w-0 items-center gap-3">
           <BrandMark name={brand.name} domain={brand.domain} className="size-10 rounded-xl" />
           <div className="min-w-0">
@@ -156,20 +158,16 @@ export function BrandRow({ brand, own = false, claimCount, latestCheckAt, engine
           </span>
           <SourceMarks engines={engines} />
           <span className="whitespace-nowrap text-xs text-muted-foreground">
-            Latest check{" "}
-            {latestCheckAt ? (
-              <RelativeTime iso={latestCheckAt} className="relative z-10 font-mono tabular-nums text-fg" />
-            ) : (
-              <span className="text-fg">none yet</span>
-            )}
-          </span>
-          <span className="whitespace-nowrap text-xs text-muted-foreground">
-            Added{" "}
-            {brand.createdAt ? (
-              <RelativeTime iso={brand.createdAt} className="relative z-10 font-mono tabular-nums text-fg" />
-            ) : (
-              "-"
-            )}
+            {!latestCheckAt ? (
+              <>
+                Latest check <span className="text-fg">none yet</span>
+              </>
+            ) : stale ? (
+              <>
+                <span className="rounded-full border border-warn/30 bg-warn/10 px-2 py-0.5 text-[10px] font-medium text-warn">Stale</span>{" "}
+                <RelativeTime iso={latestCheckAt} className="relative z-10 font-mono tabular-nums text-fg" />
+              </>
+            ) : null}
           </span>
           <span className="md:justify-self-start">
             <StatusBadge status={brand.profileStatus} />

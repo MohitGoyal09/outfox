@@ -34,7 +34,7 @@ import { NotFoundInCheck } from "../NotFoundInCheck";
 import { adFormatName } from "@/components/drishti/labels";
 import { splitOwnStore } from "../panel-rules";
 import { matchesBrandFilters, type BrandFilters } from "../filters/filters-model";
-import { isGarbledDescriptionLinkAnchor, isVideoTimestampAnchor, parseListingVendor, shortDate } from "../format";
+import { isGarbledDescriptionLinkAnchor, isVideoTimestampAnchor, parseListingVendor } from "../format";
 import { PlatformLogo } from "../PlatformLogo";
 
 export function retailerVendorRanking(claims: ClaimDoc[]): { label: string; count: number }[] {
@@ -236,7 +236,7 @@ export function PlacementTab({
       {catalogPanels.length > 0 ? <div className={`grid gap-4 ${catalogPanels.length === 2 ? "lg:grid-cols-2" : ""}`}>{catalogPanels}</div> : null}
       {shortsCount > 0 || youtubeAdCount > 0 ? (
         <p className="font-mono text-[11px] text-muted-foreground">
-          {shortsCount} YouTube Shorts result{shortsCount === 1 ? "" : "s"} · {youtubeAdCount} YouTube ad result{youtubeAdCount === 1 ? "" : "s"} stamped {shortDate(filtered[0]?.fetchedAt)}
+          {shortsCount} YouTube Shorts result{shortsCount === 1 ? "" : "s"} · {youtubeAdCount} YouTube ad result{youtubeAdCount === 1 ? "" : "s"}
         </p>
       ) : null}
       <NotFoundInCheck items={notFound} />

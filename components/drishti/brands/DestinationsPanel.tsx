@@ -4,7 +4,6 @@ import { useMemo } from "react";
 import { ExternalLink, Globe2, Link2 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { shortDate } from "./format";
 import { sourceName } from "@/components/drishti/labels";
 import { EmptyState } from "../EmptyState";
 import { MetricInfo } from "../MetricInfo";
@@ -13,7 +12,7 @@ import { iconProps } from "../tokens";
 import { signalClaims, type ClaimDoc } from "./brand-model";
 import { isYoutubeVideoUrl } from "./panel-rules";
 
-type Destination = { key: string; url: string; count: number; firstSeen: string; lastSeen: string; engines: string[] };
+type Destination = { key: string; url: string; count: number; engines: string[] };
 
 function normalizeUrl(value: string): string | null {
   try { const url = new URL(value); if (!/^https?:$/.test(url.protocol)) return null; return url.toString(); } catch { return null; }
@@ -40,14 +39,10 @@ export function destinationRows(claims: ClaimDoc[]): { rows: Destination[]; arti
     if (collectionArtifactLabel(parsed) !== null) { artifactCount += 1; continue; }
     const key = `${parsed.hostname}${parsed.pathname}`.replace(/\/$/, "");
     const existing = map.get(key);
-    if (existing) { existing.count += 1; existing.firstSeen = existing.firstSeen < claim.fetchedAt ? existing.firstSeen : claim.fetchedAt; existing.lastSeen = existing.lastSeen > claim.fetchedAt ? existing.lastSeen : claim.fetchedAt; if (!existing.engines.includes(claim.sourceEngine)) existing.engines.push(claim.sourceEngine); }
-    else map.set(key, { key, url, count: 1, firstSeen: claim.fetchedAt, lastSeen: claim.fetchedAt, engines: [claim.sourceEngine] });
+    if (existing) { existing.count += 1; if (!existing.engines.includes(claim.sourceEngine)) existing.engines.push(claim.sourceEngine); }
+    else map.set(key, { key, url, count: 1, engines: [claim.sourceEngine] });
   }
   return { rows: [...map.values()].sort((a, b) => b.count - a.count || a.key.localeCompare(b.key)), artifactCount };
-}
-
-function seenLabel(first: string, last: string): string {
-  return first.slice(0, 10) === last.slice(0, 10) ? shortDate(first) : `${shortDate(first)} to ${shortDate(last)}`;
 }
 
 export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
@@ -108,12 +103,6 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
                     </TableHead>
                     <TableHead>
                       <MetricInfo
-                        label="Seen"
-                        definition="The first and last dates we captured a finding for this destination."
-                      />
-                    </TableHead>
-                    <TableHead>
-                      <MetricInfo
                         label="Sources"
                         definition="Which engines contributed findings that link to this destination."
                       />
@@ -131,9 +120,6 @@ export function DestinationsPanel({ claims }: { claims: ClaimDoc[] }) {
                         </a>
                       </TableCell>
                       <TableCell className="font-mono text-xs tabular-nums">{row.count}</TableCell>
-                      <TableCell className="whitespace-nowrap font-mono text-[11px] tabular-nums text-muted-foreground">
-                        {seenLabel(row.firstSeen, row.lastSeen)}
-                      </TableCell>
                       <TableCell>
                         <div className="flex max-w-[180px] flex-wrap gap-1">
                           {row.engines.map((engine) => (

@@ -7,12 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Panel } from "../Panel";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { tagBearingClaims, type YoutubeRawVideoInfo, type YoutubeVideoGroup } from "./brand-model";
-import { shortDate } from "./format";
 import { hookName } from "@/components/drishti/labels";
-
-function latestFetched(group: YoutubeVideoGroup): string {
-  return group.claims.reduce((latest, claim) => (claim.fetchedAt > latest ? claim.fetchedAt : latest), "");
-}
 
 function compactCount(value: number): string {
   return new Intl.NumberFormat("en", { notation: "compact", maximumFractionDigits: 1 }).format(value);
@@ -86,9 +81,7 @@ export function YouTubeVideoCard({
             ) : null}
           </div>
         ) : null}
-        <p className="text-[11px] text-muted-foreground">
-          {group.publishedDate ? `Published ${group.publishedDate}` : `Fetched ${shortDate(latestFetched(group))}`}
-        </p>
+        {group.publishedDate ? <p className="text-[11px] text-muted-foreground">Published {group.publishedDate}</p> : null}
         <div className="mt-1 flex flex-wrap items-center gap-1.5">
           {tag?.hookType ? <Badge variant="outline" className="h-6 max-w-[140px] truncate rounded-full px-2 text-[10px] text-muted-foreground">{hookName(tag.hookType)}</Badge> : null}
           {tag?.confidence ? <Badge variant="outline" className="h-6 rounded-full px-2 text-[10px] capitalize text-muted-foreground">{tag.confidence} confidence</Badge> : null}

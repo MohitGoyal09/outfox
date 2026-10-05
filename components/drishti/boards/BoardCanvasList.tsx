@@ -2,12 +2,11 @@
 
 
 import { ArrowUpRight } from "lucide-react";
-import { cn } from "@/lib/utils";
 import { isHttpUrl, NOTE_COLOR_CSS, isNoteColor, nodesInsideFrame } from "@/convex/lib/canvasModel";
-import { displayClaimText, shortDate } from "../brands/format";
+import { displayClaimText } from "../brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { sourceName } from "../labels";
-import { VALUE_CLASS, iconProps } from "../tokens";
+import { iconProps } from "../tokens";
 import { adLine, CardBrand, CardTags, CardThumb } from "./claim-card-parts";
 import { toNodeId, type FlowCanvas, type FlowItem, type FlowNote } from "./canvas-flow";
 import { ITEM_W, ITEM_H } from "@/convex/lib/canvasModel";
@@ -30,7 +29,6 @@ function ItemCard({ item }: { item: FlowItem }) {
       <div className="flex items-center gap-2">
         <PlatformLogo engine={claim.sourceEngine} className="size-4" />
         <span className="text-[12px] font-semibold text-fg">{sourceName(claim.sourceEngine)}</span>
-        <span className={cn(VALUE_CLASS, "ml-auto text-[11px] text-fg-tertiary")}>Fetched {shortDate(claim.fetchedAt)}</span>
       </div>
       <CardThumb claim={claim} className="mt-2 h-32" />
       <p className="mt-2 line-clamp-4 text-[13px] font-medium leading-[1.4] text-fg">{adLine(claim) ?? displayClaimText(claim.text)}</p>

@@ -17,7 +17,7 @@ import { Skeleton, SkeletonRegion } from "../../Skeleton";
 import { HOOK_COLOR, iconProps, type HookType } from "../../tokens";
 import { hookName } from "@/components/drishti/labels";
 import type { ClaimDoc } from "../brand-model";
-import { displayClaimText, shortDate } from "../format";
+import { displayClaimText } from "../format";
 import { DeltaMark } from "../../DeltaMark";
 import { stripEmDashes } from "@/lib/noEmDash";
 import { RelativeTime } from "@/components/drishti/RelativeTime";
@@ -372,7 +372,6 @@ export function InsightsTab({
             <ul className="mt-2 space-y-1.5">
               {earlierVerdicts.map((row) => (
                 <li key={row.id} className="flex items-baseline gap-2.5 rounded-lg border border-border/60 px-3 py-2 text-[12px]">
-                  <span className="shrink-0 font-mono text-muted-foreground">{shortDate(row.generatedAt)}</span>
                   {row.kind === "failed" ? (
                     <span className="min-w-0 truncate text-danger">Check failed{row.reason ? `: ${row.reason}` : ""}</span>
                   ) : (

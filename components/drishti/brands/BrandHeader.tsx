@@ -6,7 +6,6 @@ import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Chip } from "../Chip";
 import { LABEL_CLASS, VALUE_CLASS, iconProps } from "../tokens";
-import { FreshnessStamp } from "../cohorts/FreshnessStamp";
 import { statusLabel } from "./status-labels";
 import { categoryLabel } from "./add-brand-model";
 import {
@@ -16,15 +15,11 @@ import {
 
 export type BrandHeaderProps = {
   brand: BrandDoc;
-  latestAt?: string | null;
-  latestStatus?: string | null;
   className?: string;
 };
 
 export function BrandHeader({
   brand,
-  latestAt = null,
-  latestStatus = null,
   className,
 }: BrandHeaderProps) {
   const aliases = brand.aliases.filter((alias) => alias.trim() !== "");
@@ -57,12 +52,6 @@ export function BrandHeader({
           <Chip
             label={statusLabel(brand.profileStatus)}
             tone={profileStatusTone(brand.profileStatus)}
-          />
-          <FreshnessStamp
-            at={latestAt ?? brand.lastRefreshedAt}
-            {...(latestStatus !== null
-              ? { status: latestStatus, caption: "latest check" }
-              : { caption: "last refreshed" })}
           />
         </div>
       </div>

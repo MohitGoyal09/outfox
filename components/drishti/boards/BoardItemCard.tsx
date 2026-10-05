@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "../Button";
-import { displayClaimText, periodWindow, shortDate } from "../brands/format";
+import { displayClaimText, periodWindow } from "../brands/format";
 import { EngineTag, PlatformLogo } from "../brands/PlatformLogo";
 import { hookName, measureName, sourceName } from "../labels";
 import { VALUE_CLASS, iconProps, sourceColor } from "../tokens";
@@ -27,7 +27,6 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
           This evidence no longer exists. The finding was deleted, or its brand was removed.
         </p>
         <div className="flex items-center justify-between gap-2">
-          <span className={cn(VALUE_CLASS, "text-[11px] text-fg-tertiary")}>Saved {shortDate(item.createdAt)}</span>
           <button
             type="button"
             onClick={() => void onRemove()}
@@ -57,7 +56,6 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
         </span>
         <div className="min-w-0 flex-1">
           <p className="truncate text-[12px] font-semibold text-fg">{sourceName(claim.sourceEngine)}</p>
-          <p className={cn(VALUE_CLASS, "mt-0.5 text-[11px] text-fg-tertiary")}>Saved {shortDate(item.createdAt)}</p>
         </div>
         <button
           type="button"

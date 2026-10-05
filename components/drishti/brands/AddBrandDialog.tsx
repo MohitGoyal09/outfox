@@ -17,7 +17,6 @@ import { Field } from "../onboarding/Field";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
-  formatStamp,
   parseRivalInput,
   profileStatusLabel,
   profileStatusTone,
@@ -517,9 +516,6 @@ function FindStep(props: {
                 label={profileStatusLabel(trackedBrand.profileStatus)}
                 tone={profileStatusTone(trackedBrand.profileStatus)}
               />
-              <span className={cn(VALUE_CLASS, "text-[11.5px] text-fg-tertiary")}>
-                added {formatStamp(trackedBrand.createdAt)}
-              </span>
             </span>
           </span>
           <Link

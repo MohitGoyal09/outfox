@@ -276,6 +276,7 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
     checkedAt: cohortKey === null ? (checkedAtByBrand.get(id) ?? null) : (pinnedRun?.requestedAt ?? null),
   }));
   const stamps = (scope?.brands ?? []).map((brand) => brand.checkedAt).sort();
+  const checkedAtDiffers = new Set(cohortBrands.map((brand) => formatStamp(brand.checkedAt))).size > 1;
   const oldestStamp = stamps[0] ?? null;
   const newestStamp = stamps[stamps.length - 1] ?? null;
   const checkedLine = pinnedRun
@@ -353,9 +354,11 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
                               </span>
                             ) : null}
                           </span>
-                          <span className={cn(VALUE_CLASS, "text-[11px] font-normal text-[var(--text-tertiary)]")}>
-                            {formatStamp(brand.checkedAt)}
-                          </span>
+                          {checkedAtDiffers ? (
+                            <span className={cn(VALUE_CLASS, "text-[11px] font-normal text-[var(--text-tertiary)]")}>
+                              {formatStamp(brand.checkedAt)}
+                            </span>
+                          ) : null}
                         </li>
                       ))}
                     </ul>

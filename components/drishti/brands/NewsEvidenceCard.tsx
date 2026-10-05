@@ -8,7 +8,7 @@ import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EvidenceCard } from "./EvidenceCard";
 import { EngineTag } from "./PlatformLogo";
 import { readGoogleNewsRawItem, type ClaimDoc } from "./brand-model";
-import { displayClaimText, periodWindow, shortDate } from "./format";
+import { displayClaimText, periodWindow } from "./format";
 
 export function NewsEvidenceCard({
   claim,
@@ -23,7 +23,7 @@ export function NewsEvidenceCard({
   const [thumbnailFailed, setThumbnailFailed] = useState(false);
   if (info.thumbnailUrl === null || thumbnailFailed) return <EvidenceCard claim={claim} pageLabel={pageLabel} />;
   const publishedWindow = periodWindow(claim.period);
-  const publishedLabel = publishedWindow !== null ? `Published ${publishedWindow}` : `Fetched ${shortDate(claim.fetchedAt)}`;
+  const publishedLabel = publishedWindow !== null ? `Published ${publishedWindow}` : null;
   return (
     <Panel
       as="article"
@@ -60,7 +60,7 @@ export function NewsEvidenceCard({
         {info.snippet !== null ? <p className="line-clamp-2 text-[11px] leading-5 text-muted-foreground">{info.snippet}</p> : null}
         <div className="flex items-center justify-between gap-2 text-[11px] text-muted-foreground">
           {info.publisherName !== null ? <span className="truncate font-semibold text-foreground">{info.publisherName}</span> : <span />}
-          <span className="font-mono tabular-nums">{publishedLabel}</span>
+          {publishedLabel ? <span className="font-mono tabular-nums">{publishedLabel}</span> : null}
         </div>
         <Button asChild variant="outline" size="sm" className="h-7 w-full justify-center rounded-md text-[11px]">
           <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener">

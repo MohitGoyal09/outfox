@@ -9,7 +9,7 @@ import { Panel } from "../Panel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { adCreativeWindow, adFormatWord, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
-import { displayClaimText, periodWindow, shortDate } from "./format";
+import { displayClaimText, periodWindow } from "./format";
 import { hookName, measureName, sourceName } from "@/components/drishti/labels";
 
 const SOURCE_ACCENT = "var(--text-primary)";
@@ -49,8 +49,6 @@ function CompactAdCard({ claim, format, pageLabel }: { claim: ClaimDoc; format: 
       <PlatformLogo engine={claim.sourceEngine} className="size-4 shrink-0" />
       <p className="min-w-0 flex-1 truncate text-[12px] text-muted-foreground">
         <span className="font-semibold text-foreground">{adFormatWord(format)}</span>
-        {" · Fetched "}
-        {shortDate(claim.fetchedAt)}
         {" · "}
         <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className="text-foreground hover:text-accent hover:underline">
           View in Ads Transparency
@@ -122,7 +120,6 @@ export function EvidenceCard({
           </span>
           <div className="min-w-0">
             <p className="truncate text-[13px] font-bold text-foreground">{raw?.sourceName ?? hostnameOf(claim.evidenceUrl) ?? source}</p>
-            <p className="mt-0.5 text-[11px] text-muted-foreground">Fetched {shortDate(claim.fetchedAt)}</p>
           </div>
         </div>
         <div className="flex flex-col items-end gap-1.5">
