@@ -5,27 +5,16 @@ import { useMutation } from "convex/react";
 import { ConvexError } from "convex/values";
 import { api } from "@/convex/_generated/api";
 import { parseAccessRequest, type FieldErrors } from "@/convex/lib/accessRequestRules";
-import { StatefulButton, type ButtonStatus } from "@/components/aceternity/stateful-button";
+import { Field, FieldGroup, SubmitButton, DrawnCheck, type SubmitStatus } from "@/components/ui/form";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
 const GENERIC_ERROR = "Something went wrong. Try again in a moment.";
 
-function FieldError({ id, message }: { id: string; message?: string }) {
-  return (
-    <p id={id} role="alert" className="text-xs text-destructive">
-      {message}
-    </p>
-  );
-}
-
-export function RequestAccessForm({ onDone, tone = "light" }: { onDone?: () => void; tone?: "light" | "ink" }) {
+export function RequestAccessForm({ onDone }: { onDone?: () => void }) {
   const [errors, setErrors] = useState<FieldErrors>({});
   const [formError, setFormError] = useState<string | null>(null);
-  const [status, setStatus] = useState<ButtonStatus>("idle");
-  const [sent, setSent] = useState(false);
 
   async function onSubmit(e: FormEvent<HTMLFormElement>) {
     const data = new FormData(e.currentTarget);
@@ -47,18 +36,26 @@ export function RequestAccessForm({ onDone, tone = "light" }: { onDone?: () => v
     try {
       await submit({ ...input, note: input.note || undefined, website: input.website || undefined });
       setStatus("success");
-      setTimeout(() => setSent(true), SUCCESS_HOLD_MS);
+      setTimeout(() => setSent(input.email.trim()), SUCCESS_HOLD_MS);
     } catch (err) {
-      setStatus("idle");
+      setStatus("error");
     }
   }
 
-  if (sent) {
+  if (sent !== null) {
     return (
-      <div role="status" className="flex flex-col items-start gap-3">
-        <p className="text-sm text-foreground">Thanks. We will be in touch.</p>
+      <div role="status" className="flex flex-col items-start gap-4">
+        <span className="flex size-11 items-center justify-center rounded-full border border-border-strong text-fg">
+          <DrawnCheck className="size-5" />
+        </span>
+        <div>
+          <p className="text-xl font-semibold tracking-[-0.01em] text-fg">You&apos;re on the list</p>
+          <p className="mt-2 max-w-[38ch] text-[15px] leading-6 text-fg-secondary">
+            We read every request. When your workspace is ready, we will write to .
+          </p>
+        </div>
         {onDone ? (
-          <Button type="button" variant="outline" onClick={onDone}>
+          <Button type="button" variant="outline" className="h-10 border-border-strong px-4 text-[15px]" onClick={onDone}>
             Close
           </Button>
         ) : null}
