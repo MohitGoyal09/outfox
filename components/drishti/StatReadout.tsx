@@ -163,11 +163,13 @@ export function StatTile({
         <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
           <span
             className={cn(
-              "num tracking-[-0.02em]",
-              size === "md"
-                ? "text-[1.75rem] leading-none font-semibold"
-                : "text-[1.25rem] leading-none font-semibold",
-              measured.absent ? "text-fg-tertiary" : "text-fg",
+              "tabular-nums tracking-[-0.02em]",
+              measured.absent
+                ? "text-base leading-none font-normal text-fg-tertiary"
+                : cn(
+                    size === "md" ? "text-[1.75rem]" : "text-[1.25rem]",
+                    "leading-none font-semibold text-fg",
+                  ),
             )}
             style={!measured.absent && tone && tone !== "neutral" ? { color: TONE_COLOR[tone] } : undefined}
           >

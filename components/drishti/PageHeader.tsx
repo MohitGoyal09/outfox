@@ -23,7 +23,7 @@ export function PageHeader({
   const entity = variant === "entity";
   return (
     <header className={cn("flex flex-wrap items-end justify-between gap-x-6 gap-y-4 pb-6", className)}>
-      <div className="min-w-0 flex-1">
+      <div className="min-w-[min(100%,20rem)] flex-1">
         {eyebrow ? (
           <div className="mb-2 font-mono text-xs font-medium uppercase leading-none tracking-[0.04em] text-fg-secondary">
             {eyebrow}
