@@ -342,6 +342,7 @@ export function DockedAsk() {
 
         {expanded ? (
           <div
+            className="pointer-events-auto"
             onBlur={(event) => {
               if (event.currentTarget.contains(event.relatedTarget as Node | null)) return;
               if (!canSubmitAsk(value) && !mentionMenuOpen) setExpanded(false);
@@ -393,7 +394,7 @@ export function DockedAsk() {
         ) : (
           <div
             className={cn(
-              "flex h-11 items-center gap-1 border border-border-strong bg-bg-raised py-0.5 pl-1 pr-0.5 shadow-[var(--shadow-sm)]",
+              "pointer-events-auto flex h-11 items-center gap-1 border border-border-strong bg-bg-raised py-0.5 pl-1 pr-0.5 shadow-[var(--shadow-sm)]",
               "motion-safe:transition-[box-shadow,border-color] motion-safe:duration-150",
               "focus-within:border-accent/35 focus-within:shadow-[var(--shadow-md)]",
               panelOpen ? "rounded-b-3xl rounded-t-none" : "rounded-full",
