@@ -5,7 +5,8 @@ import { useQuery } from "convex/react";
 import { ArrowRight, TriangleAlert } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button, EmptyState, Panel, Trail, iconProps, type TrailStep } from "@/components/drishti";
+import { EmptyState, Panel, PillButton, Trail, iconProps, type TrailStep } from "@/components/drishti";
+import { ThinkingOrb } from "@/components/drishti/ask/ThinkingOrb";
 import { sourceName, hookName } from "@/components/drishti/labels";
 import {
   deriveCheckTrailRows,
@@ -71,7 +72,10 @@ export function Step3FirstCheck({
     return (
       <div className="flex flex-col gap-6">
         <Panel as="section" interactive={false} padded ariaLabel="Starting your check">
-          <p className="text-[14px] leading-[1.5] text-[var(--text-secondary)]">Starting your first check…</p>
+          <p className="flex items-center gap-2.5 text-sm leading-[1.5] text-fg-secondary">
+            <ThinkingOrb size={20} state="thinking" />
+            Starting your first check…
+          </p>
         </Panel>
       </div>
     );
@@ -85,27 +89,34 @@ export function Step3FirstCheck({
     return (
       <div className="flex flex-col gap-6">
         <Panel as="section" interactive={false} padded ariaLabel="Checking your brands">
-          <p className="text-[14px] leading-[1.5] text-[var(--text-primary)]">
+          <p className="flex items-center gap-2.5 text-sm font-medium text-fg">
+            <ThinkingOrb size={20} state="thinking" />
+            Reading sources…
+          </p>
+          <p className="mt-2 text-sm leading-[1.5] text-fg">
             Checking {ownBrandName}
             {competitors.length > 0 ? ` and ${competitors.length} competitor${competitors.length === 1 ? "" : "s"}` : ""}{" "}
             against {SOURCES_CHECKED}.
           </p>
-          <p className="mt-1.5 text-[12.5px] leading-[1.5] text-[var(--text-tertiary)]">
+          <p className="mt-1.5 text-[13px] leading-[1.5] text-fg-tertiary">
             This can take a minute or two. You don&rsquo;t need to wait here.
           </p>
-          {trailSteps.length > 0 ? (
-            <div className="mt-4 border-t border-[var(--border)] pt-4">
+          <div className="mt-4 border-t border-border pt-4">
+            {trailSteps.length > 0 ? (
               <Trail steps={trailSteps} density="inline" />
-            </div>
-          ) : null}
+            ) : (
+              <p className="text-sm text-fg-secondary">Waiting for the first source to report in…</p>
+            )}
+          </div>
         </Panel>
         <div className="flex items-center gap-2">
-          <Button type="button" variant="ghost" onClick={onBack}>
+          <PillButton variant="outline" onClick={onBack}>
             Back
-          </Button>
-          <Button type="button" variant="ghost" onClick={onDone} iconRight={<ArrowRight {...iconProps} size={14} />}>
+          </PillButton>
+          <PillButton variant="outline" onClick={onDone}>
             Skip ahead to your homepage
-          </Button>
+            <ArrowRight {...iconProps} size={14} aria-hidden="true" />
+          </PillButton>
         </div>
       </div>
     );
@@ -141,7 +152,7 @@ export function Step3FirstCheck({
   return (
     <div className="flex flex-col gap-6">
       {showPartialWarning ? (
-        <p className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--warn)]">
+        <p className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-warn">
           <TriangleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
           {zeroCreditsMessage ?? "Some sources couldn't be checked this time. Here's what we did find."}
         </p>
@@ -155,16 +166,16 @@ export function Step3FirstCheck({
 
       {summary === null ? (
         <Panel as="section" interactive={false} padded>
-          <p className="text-[14px] text-[var(--text-secondary)]">Reading the results…</p>
+          <p className="text-sm text-fg-secondary">Reading the results…</p>
         </Panel>
       ) : hasComparisonToShow(summary) ? (
         <Panel as="section" interactive={false} padded ariaLabel="Your first comparison">
-          <p className="mb-3 text-[12px] font-medium text-[var(--text-secondary)]">
+          <p className="mb-3 text-xs font-medium text-fg-secondary">
             What stood out
           </p>
           <ul className="flex flex-col gap-2.5">
             {summary.highlights.map((highlight) => (
-              <li key={highlight.hookType} className="text-[14px] leading-[1.5] text-[var(--text-primary)]">
+              <li key={highlight.hookType} className="text-sm leading-[1.5] text-fg">
                 {highlightSentence(highlight, ownBrandName, hookName(highlight.hookType).toLowerCase())}
               </li>
             ))}
@@ -183,15 +194,16 @@ export function Step3FirstCheck({
       )}
 
       {uncheckedNames.length > 0 ? (
-        <p className="text-[12.5px] leading-[1.5] text-[var(--text-tertiary)]">
+        <p className="text-[13px] leading-[1.5] text-fg-tertiary">
           Not checked yet: {uncheckedNames.join(", ")}.
         </p>
       ) : null}
 
-      <div className="flex items-center gap-2 border-t border-[var(--border)] pt-5">
-        <Button type="button" onClick={onDone} iconRight={<ArrowRight {...iconProps} size={14} />}>
+      <div className="flex items-center gap-2 border-t border-border pt-5">
+        <PillButton onClick={onDone}>
           Go to your homepage
-        </Button>
+          <ArrowRight {...iconProps} size={14} aria-hidden="true" />
+        </PillButton>
       </div>
     </div>
   );
@@ -207,12 +219,13 @@ function Fail({ message, onDone, onBack }: { message: string; onDone: () => void
         description={message}
       />
       <div className="flex items-center gap-2">
-        <Button type="button" variant="ghost" onClick={onBack}>
+        <PillButton variant="outline" onClick={onBack}>
           Back
-        </Button>
-        <Button type="button" onClick={onDone} iconRight={<ArrowRight {...iconProps} size={14} />}>
+        </PillButton>
+        <PillButton onClick={onDone}>
           Go to your homepage
-        </Button>
+          <ArrowRight {...iconProps} size={14} aria-hidden="true" />
+        </PillButton>
       </div>
     </div>
   );

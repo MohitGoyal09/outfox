@@ -2,7 +2,7 @@
 
 
 import { useState, type FormEvent } from "react";
-import { Panel, Button, iconProps } from "@/components/drishti";
+import { Panel, PillButton, iconProps } from "@/components/drishti";
 import { ArrowRight, CircleAlert, Compass } from "lucide-react";
 import { Field } from "./Field";
 import { validateBrandDraft, type BrandDraft, type BrandDraftErrors } from "./onboarding-model";
@@ -34,9 +34,9 @@ export function Step1YourBrand({
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6">
       <Panel as="section" interactive={false} padded ariaLabel="Your brand">
-        <div className="mb-4 flex items-start gap-2.5 rounded-md border border-[var(--border)] bg-[var(--bg-inset)] px-3 py-2.5">
-          <Compass {...iconProps} size={16} aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-[var(--accent)]" />
-          <p className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+        <div className="mb-4 flex items-start gap-2.5 rounded-md border border-border bg-bg-inset px-3 py-2.5">
+          <Compass {...iconProps} size={16} aria-hidden="true" className="mt-0.5 size-4 shrink-0 text-accent" />
+          <p className="text-[13px] leading-[1.5] text-fg-secondary">
             This becomes the baseline every comparison reads against. Every rival you add
             later is measured next to it, not the other way around.
           </p>
@@ -64,20 +64,16 @@ export function Step1YourBrand({
       </Panel>
 
       {submitError !== null ? (
-        <p role="alert" className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--danger)]">
+        <p role="alert" className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-danger">
           <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
           {submitError}
         </p>
       ) : null}
 
-      <Button
-        type="submit"
-        loading={submitting}
-        iconRight={<ArrowRight {...iconProps} size={14} />}
-        className="self-start"
-      >
-        Continue
-      </Button>
+      <PillButton type="submit" disabled={submitting} className="self-start">
+        {submitting ? "Saving…" : "Continue"}
+        {submitting ? null : <ArrowRight {...iconProps} size={14} aria-hidden="true" />}
+      </PillButton>
     </form>
   );
 }

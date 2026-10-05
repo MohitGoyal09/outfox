@@ -6,7 +6,8 @@ import { useAction, useMutation, useQuery } from "convex/react";
 import { ArrowRight, CircleAlert, Loader2, Plus, Search, X } from "lucide-react";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { Button, Chip, EmptyState, FOCUS_RING_CLASS, Panel, iconProps } from "@/components/drishti";
+import { Chip, EmptyState, Panel, PillButton, iconProps } from "@/components/drishti";
+import { Input } from "@/components/ui/input";
 import { Field } from "./Field";
 import {
   MAX_ONBOARDING_COMPETITORS,
@@ -179,7 +180,7 @@ export function Step2Competitors({
     <div className="flex flex-col gap-6">
       {selected.length > 0 ? (
         <Panel as="section" interactive={false} padded ariaLabel="Selected competitors">
-          <p className="mb-2.5 text-[12px] font-medium text-[var(--text-secondary)]">
+          <p className="mb-2.5 text-xs font-medium text-fg-secondary">
             Comparing against {selected.length} of {MAX_ONBOARDING_COMPETITORS}
           </p>
           <ul className="flex flex-wrap gap-2">
@@ -189,7 +190,7 @@ export function Step2Competitors({
                   <span className="inline-flex items-center gap-1.5">
                     {row.name}
                     {row.unconfirmed ? (
-                      <span className="text-[12px] font-medium text-[var(--text-tertiary)]">
+                      <span className="text-xs font-medium text-fg-tertiary">
                         not confirmed
                       </span>
                     ) : null}
@@ -198,7 +199,7 @@ export function Step2Competitors({
                       aria-label={`Remove ${row.name}`}
                       onClick={() => void handleRemove(row)}
                       disabled={removingIds.has(row.id)}
-                      className="rounded-full p-0.5 text-[var(--text-tertiary)] hover:text-[var(--danger)]"
+                      className="rounded-full p-0.5 text-fg-tertiary hover:text-danger"
                     >
                       <X {...iconProps} size={12} aria-hidden="true" className="size-3" />
                     </button>
@@ -208,13 +209,13 @@ export function Step2Competitors({
             ))}
           </ul>
           {unconfirmedNote !== null ? (
-            <p className="mt-2.5 text-[12.5px] leading-[1.5] text-[var(--text-secondary)]">{unconfirmedNote}</p>
+            <p className="mt-2.5 text-[13px] leading-[1.5] text-fg-secondary">{unconfirmedNote}</p>
           ) : null}
         </Panel>
       ) : null}
 
       {atCap ? (
-        <p className="text-[13px] leading-[1.5] text-[var(--text-secondary)]">
+        <p className="text-[13px] leading-[1.5] text-fg-secondary">
           You&rsquo;ve picked {MAX_ONBOARDING_COMPETITORS} competitors, the most a first check
           compares at once, alongside {ownBrandName}. Remove one to swap it for another.
         </p>
@@ -224,20 +225,20 @@ export function Step2Competitors({
             {...iconProps}
             size={14}
             aria-hidden="true"
-            className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-[var(--text-tertiary)]"
+            className="pointer-events-none absolute left-3 top-1/2 size-3.5 -translate-y-1/2 text-fg-tertiary"
           />
-          <input
+          <Input
             value={query}
             onChange={(event) => setQuery(event.target.value)}
             placeholder={`Search ${vertical.toLowerCase()} brands…`}
             aria-label="Search competitors"
-            className={`h-10 w-full rounded-sm border border-[var(--border-strong)] bg-[var(--bg-inset)] pl-9 pr-3 text-[14px] text-[var(--text-primary)] outline-none placeholder:text-[var(--text-placeholder)] focus:border-[var(--border-strong)] ${FOCUS_RING_CLASS}`}
+            className="pl-9"
           />
         </div>
       )}
 
       {followError !== null ? (
-        <p role="alert" className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-[var(--danger)]">
+        <p role="alert" className="flex items-start gap-1.5 text-[13px] leading-[1.5] text-danger">
           <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
           {followError}
         </p>
@@ -247,7 +248,7 @@ export function Step2Competitors({
         isLoading ? (
           <div className="grid gap-2 sm:grid-cols-2">
             {[1, 2, 3, 4].map((row) => (
-              <div key={row} className="h-14 animate-pulse rounded-lg bg-[var(--bg-inset)]" />
+              <div key={row} className="h-14 animate-pulse rounded-lg bg-bg-inset" />
             ))}
           </div>
         ) : catalogEmpty ? (
@@ -271,20 +272,19 @@ export function Step2Competitors({
                 <li key={id}>
                   <Panel interactive={false} padded className="flex items-center justify-between gap-2">
                     <div className="min-w-0">
-                      <p className="truncate text-[13.5px] font-medium text-[var(--text-primary)]">{entry.name}</p>
-                      <p className="truncate text-[12px] text-[var(--text-secondary)]">{entry.domain}</p>
+                      <p className="truncate text-sm font-medium text-fg">{entry.name}</p>
+                      <p className="truncate text-xs text-fg-secondary">{entry.domain}</p>
                     </div>
-                    <Button
-                      type="button"
+                    <PillButton
                       size="sm"
-                      variant="ghost"
+                      variant="outline"
                       disabled={pending}
                       onClick={() => void handleAdd(entry)}
-                      icon={pending ? <Loader2 {...iconProps} size={14} className="animate-spin" /> : <Plus {...iconProps} size={14} />}
                       aria-label={`Add ${entry.name}`}
                     >
+                      {pending ? <Loader2 {...iconProps} size={14} className="animate-spin" aria-hidden="true" /> : <Plus {...iconProps} size={14} aria-hidden="true" />}
                       Add
-                    </Button>
+                    </PillButton>
                   </Panel>
                 </li>
               );
@@ -313,32 +313,33 @@ export function Step2Competitors({
                 error={customErrors.domain}
               />
               {customError !== null ? (
-                <p role="alert" className="text-[13px] leading-[1.5] text-[var(--danger)]">
+                <p role="alert" className="text-[13px] leading-[1.5] text-danger">
                   {customError}
                 </p>
               ) : null}
               <div className="flex gap-2">
-                <Button type="button" size="sm" loading={customSubmitting} onClick={() => void handleAddCustom()}>
-                  Add competitor
-                </Button>
-                <Button type="button" size="sm" variant="ghost" onClick={() => setCustomOpen(false)}>
+                <PillButton size="sm" disabled={customSubmitting} onClick={() => void handleAddCustom()}>
+                  {customSubmitting ? "Adding…" : "Add competitor"}
+                </PillButton>
+                <PillButton size="sm" variant="outline" onClick={() => setCustomOpen(false)}>
                   Cancel
-                </Button>
+                </PillButton>
               </div>
             </div>
           </Panel>
         ) : (
-          <Button type="button" variant="ghost" size="sm" onClick={() => setCustomOpen(true)} icon={<Plus {...iconProps} size={14} />} className="self-start">
+          <PillButton variant="outline" size="sm" onClick={() => setCustomOpen(true)} className="self-start">
+            <Plus {...iconProps} size={14} aria-hidden="true" />
             Add a brand not listed here
-          </Button>
+          </PillButton>
         )
       ) : null}
 
-      <div className="flex flex-col gap-1 border-t border-[var(--border)] pt-5 text-[12.5px] leading-[1.5] text-[var(--text-secondary)]">
+      <div className="flex flex-col gap-1 border-t border-border pt-5 text-[13px] leading-[1.5] text-fg-secondary">
         <p>{ADD_COMPETITOR_COST_NOTE}</p>
         <p>{cost.summary}</p>
         {cost.warning !== null ? (
-          <p className="flex items-start gap-1.5 text-[var(--text-primary)]">
+          <p className="flex items-start gap-1.5 text-fg">
             <CircleAlert {...iconProps} size={14} aria-hidden="true" className="mt-0.5 size-3.5 shrink-0" />
             {cost.warning}
           </p>
@@ -346,17 +347,13 @@ export function Step2Competitors({
       </div>
 
       <div className="flex items-center gap-2">
-        <Button type="button" variant="ghost" onClick={onBack}>
+        <PillButton variant="outline" onClick={onBack}>
           Back
-        </Button>
-        <Button
-          type="button"
-          onClick={onContinue}
-          disabled={cost.blocked}
-          iconRight={<ArrowRight {...iconProps} size={14} />}
-        >
+        </PillButton>
+        <PillButton onClick={onContinue} disabled={cost.blocked}>
           Continue
-        </Button>
+          <ArrowRight {...iconProps} size={14} aria-hidden="true" />
+        </PillButton>
       </div>
     </div>
   );

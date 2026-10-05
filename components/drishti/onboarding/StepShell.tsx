@@ -4,7 +4,7 @@
 import type { ReactNode } from "react";
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
-import { Button, iconProps } from "@/components/drishti";
+import { PageHeader, pillClasses, iconProps } from "@/components/drishti";
 import { cn } from "@/lib/utils";
 import { ONBOARDING_STEP_COUNT, type OnboardingStep } from "./onboarding-model";
 
@@ -22,20 +22,15 @@ export function StepShell({
   children: ReactNode;
 }) {
   return (
-    <main className="flex min-h-dvh flex-col items-center bg-[var(--bg)] px-4 py-10 sm:py-14">
+    <main className="app-canvas flex min-h-dvh flex-col items-center px-4 py-10 sm:py-14">
       <div className="flex w-full max-w-[640px] flex-col gap-8">
-        <header className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between gap-3">
             {onBack ? (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                onClick={onBack}
-                icon={<ArrowLeft {...iconProps} size={14} />}
-              >
+              <button type="button" onClick={onBack} className={pillClasses("outline", "sm")}>
+                <ArrowLeft {...iconProps} size={14} aria-hidden="true" />
                 Back
-              </Button>
+              </button>
             ) : (
               <span />
             )}
@@ -47,10 +42,10 @@ export function StepShell({
                   className={cn(
                     "h-1.5 rounded-full motion-safe:transition-all motion-safe:duration-200",
                     dot === step
-                      ? "w-6 bg-[var(--accent)]"
+                      ? "w-6 bg-accent"
                       : dot < step
-                        ? "w-1.5 bg-[var(--accent)]/50"
-                        : "w-1.5 bg-[var(--border-strong)]",
+                        ? "w-1.5 bg-accent/50"
+                        : "w-1.5 bg-border-strong",
                   )}
                 />
               ))}
@@ -60,23 +55,18 @@ export function StepShell({
                 could finish the flow or close the tab, nothing else. */}
             <Link
               href="/"
-              className="rounded-md px-2 py-1 text-xs text-muted-foreground transition-colors duration-150 ease-out hover:bg-bg-inset hover:text-foreground"
+              className="rounded-md px-2 py-1 text-xs text-fg-secondary transition-colors duration-150 ease-out hover:bg-bg-inset hover:text-fg"
             >
               Back to Drishti
             </Link>
           </div>
-          <div className="flex flex-col gap-2">
-            <p className="font-mono text-[10.5px] font-semibold uppercase tracking-[0.07em] text-[var(--text-tertiary)]">
-              Step {step} of {ONBOARDING_STEP_COUNT}
-            </p>
-            <h1 className="text-[1.75rem] font-semibold tracking-[-0.02em] text-[var(--text-primary)]">
-              {title}
-            </h1>
-            <p className="max-w-[52ch] text-[14px] leading-[1.5] text-[var(--text-secondary)]">
-              {description}
-            </p>
-          </div>
-        </header>
+          <PageHeader
+            eyebrow={`Step ${step} of ${ONBOARDING_STEP_COUNT}`}
+            title={title}
+            sub={description}
+            className="pb-0"
+          />
+        </div>
         {children}
       </div>
     </main>
