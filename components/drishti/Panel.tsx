@@ -8,6 +8,7 @@ import {
   type ReactNode,
 } from "react";
 import { cn } from "@/lib/utils";
+import { SectionHeader } from "./SectionHeader";
 import { STATE_TRANSITION_CLASS } from "./tokens";
 
 export type PanelTag =
@@ -24,6 +25,7 @@ export type PanelProps = {
   as?: PanelTag;
   interactive?: boolean;
   inset?: boolean;
+  tint?: boolean;
   padded?: boolean;
   className?: string;
   ariaLabel?: string;
@@ -35,11 +37,12 @@ export function isNestedPanel(depth: number): boolean {
 
 const PanelDepthContext = createContext(0);
 
-export function Panel({
+function PanelRoot({
   children,
   as = "div",
-  interactive = true,
+  interactive = false,
   inset = false,
+  tint = false,
   padded = false,
   className,
   ariaLabel,
@@ -61,10 +64,10 @@ export function Panel({
       role={ariaLabel ? "group" : undefined}
       className={cn(
         "rounded-lg border border-border shadow-xs",
-        inset ? "bg-bg-inset" : "bg-bg-raised",
+        inset || tint ? "bg-bg-inset" : "bg-bg-raised",
         interactive &&
           cn(
-            "hover:border-border-strong hover:shadow-sm focus-within:border-border-strong",
+            "hover:border-border-strong focus-within:border-border-strong",
             STATE_TRANSITION_CLASS,
           ),
         padded && "p-4",
@@ -77,3 +80,24 @@ export function Panel({
     </Element>
   );
 }
+
+export type PanelHeaderProps = {
+  title: ReactNode;
+  description?: ReactNode;
+  trailing?: ReactNode;
+  className?: string;
+};
+
+function PanelHeader({ title, description, trailing, className }: PanelHeaderProps) {
+  return (
+    <div className={cn("border-b border-border px-5 py-4", className)}>
+      <SectionHeader title={title} sub={description} trailing={trailing} />
+    </div>
+  );
+}
+
+function PanelBody({ children, className }: { children: ReactNode; className?: string }) {
+  return <div className={cn("px-5 py-4", className)}>{children}</div>;
+}
+
+export const Panel = Object.assign(PanelRoot, { Header: PanelHeader, Body: PanelBody });

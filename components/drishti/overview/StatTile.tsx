@@ -2,8 +2,7 @@
 
 import type { ReactNode } from "react";
 
-import { Panel, StatReadout, TONE_COLOR, type Tone } from "@/components/drishti";
-import { cn } from "@/lib/utils";
+import { StatTile as BaseStatTile, type Tone } from "@/components/drishti";
 
 export type StatTileProps = {
   label: string;
@@ -18,55 +17,7 @@ export type StatTileProps = {
   className?: string;
 };
 
-export function StatTile({
-  label,
-  labelInfo,
-  value,
-  unit,
-  tone,
-  accent,
-  hint,
-  icon,
-  loading = false,
-  className,
-}: StatTileProps) {
-  const accentColor =
-    accent !== undefined && accent !== "neutral" ? TONE_COLOR[accent] : null;
-  return (
-    <Panel
-      as="div"
-      interactive={false}
-      className={cn(
-        "h-full rounded-lg p-4 shadow-xs motion-safe:transition-shadow hover:shadow-sm",
-        className,
-      )}
-    >
-      <div className="flex items-start justify-between gap-3">
-        <StatReadout label={label} labelInfo={labelInfo} value={value} unit={unit} tone={tone} size="md" loading={loading} />
-        {icon ? (
-          <span
-            aria-hidden="true"
-            className={cn(
-              "flex size-8 shrink-0 items-center justify-center rounded-sm border bg-bg-inset",
-              accentColor === null && "border-border text-fg-secondary",
-            )}
-            style={
-              accentColor === null
-                ? undefined
-                : {
-                    color: accentColor,
-                    borderColor: `color-mix(in srgb, ${accentColor} 32%, var(--border))`,
-                    backgroundColor: `color-mix(in srgb, ${accentColor} 10%, var(--bg-inset))`,
-                  }
-            }
-          >
-            {icon}
-          </span>
-        ) : null}
-      </div>
-      {hint && !loading ? (
-        <p className="mt-2 text-[11.5px] leading-snug tabular-nums text-fg-secondary">{hint}</p>
-      ) : null}
-    </Panel>
-  );
+export function StatTile({ accent, icon: _icon, tone, ...rest }: StatTileProps) {
+  void _icon;
+  return <BaseStatTile {...rest} tone={tone ?? accent} />;
 }

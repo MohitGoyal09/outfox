@@ -30,6 +30,7 @@ const tabsListVariants = cva(
       variant: {
         default: "bg-muted",
         line: "gap-1 bg-transparent",
+        ink: "h-auto gap-5 rounded-none border-b border-border bg-transparent p-0 text-fg-secondary",
       },
     },
     defaultVariants: {
@@ -66,6 +67,7 @@ function TabsTrigger({
         "group-data-[variant=line]/tabs-list:bg-transparent group-data-[variant=line]/tabs-list:data-active:bg-transparent dark:group-data-[variant=line]/tabs-list:data-active:border-transparent dark:group-data-[variant=line]/tabs-list:data-active:bg-transparent",
         "data-active:bg-background data-active:text-foreground dark:data-active:border-input dark:data-active:bg-input/30 dark:data-active:text-foreground",
         "after:absolute after:bg-foreground after:opacity-0 after:transition-opacity group-data-horizontal/tabs:after:inset-x-0 group-data-horizontal/tabs:after:bottom-[-5px] group-data-horizontal/tabs:after:h-0.5 group-data-vertical/tabs:after:inset-y-0 group-data-vertical/tabs:after:-right-1 group-data-vertical/tabs:after:w-0.5 group-data-[variant=line]/tabs-list:data-active:after:opacity-100",
+        "group-data-[variant=ink]/tabs-list:h-auto group-data-[variant=ink]/tabs-list:flex-none group-data-[variant=ink]/tabs-list:rounded-none group-data-[variant=ink]/tabs-list:border-0 group-data-[variant=ink]/tabs-list:bg-transparent group-data-[variant=ink]/tabs-list:px-0 group-data-[variant=ink]/tabs-list:py-2.5 group-data-[variant=ink]/tabs-list:text-[13.5px] group-data-[variant=ink]/tabs-list:text-fg-secondary group-data-[variant=ink]/tabs-list:shadow-none group-data-[variant=ink]/tabs-list:data-active:bg-transparent group-data-[variant=ink]/tabs-list:data-active:text-fg group-data-[variant=ink]/tabs-list:data-active:shadow-none group-data-[variant=ink]/tabs-list:after:bottom-[-1px] group-data-[variant=ink]/tabs-list:data-active:after:opacity-100 group-data-[variant=ink]/tabs-list:after:bg-accent",
         className
       )}
       {...props}

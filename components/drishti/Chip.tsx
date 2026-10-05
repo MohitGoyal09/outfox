@@ -12,9 +12,12 @@ import {
   iconProps,
   isValidEvidenceHref,
   resolveDotColor,
+  TONE_COLOR,
   type ScaleKind,
   type Tone,
 } from "./tokens";
+
+export type ChipVariant = "neutral" | "status" | "you";
 
 export type ChipProps = {
   label?: string;
@@ -29,6 +32,7 @@ export type ChipProps = {
   loading?: boolean;
   error?: boolean;
   dot?: boolean;
+  variant?: ChipVariant;
   size?: "sm" | "md";
   title?: string;
   className?: string;
@@ -75,6 +79,7 @@ export function Chip({
   loading = false,
   error = false,
   dot = true,
+  variant = "neutral",
   size = "sm",
   title,
   className,
@@ -85,11 +90,15 @@ export function Chip({
 
   const classes = cn(
     LABEL_CLASS,
-    "relative inline-flex items-center gap-1.5 rounded-full border bg-bg-inset whitespace-nowrap",
+    "min-h-5 text-xs relative inline-flex items-center gap-1.5 rounded-full border bg-bg-inset whitespace-nowrap",
     size === "sm" ? "h-5 px-2" : "h-6 px-2.5",
     flags.invalid
       ? "border-danger text-danger"
-      : "border-border text-fg-secondary",
+      : variant === "you"
+        ? "border-accent bg-accent text-accent-ink"
+        : variant === "status" && tone && tone !== "neutral"
+          ? "bg-bg-raised"
+          : "border-border text-fg-secondary",
     flags.interactive &&
       "cursor-pointer hover:border-border-strong hover:bg-bg-raised hover:text-fg",
     flags.interactive && PRESS_CLASS,
@@ -105,6 +114,11 @@ export function Chip({
     className,
   );
 
+  const statusStyle =
+    variant === "status" && tone && tone !== "neutral" && !flags.invalid
+      ? { color: TONE_COLOR[tone], borderColor: `color-mix(in srgb, ${TONE_COLOR[tone]} 40%, var(--border))` }
+      : undefined;
+
   const inner = (
     <>
       {flags.busy ? (
@@ -114,7 +128,7 @@ export function Chip({
           aria-hidden="true"
           className="size-3 animate-spin text-fg-tertiary motion-reduce:animate-none"
         />
-      ) : dot ? (
+      ) : dot && variant !== "you" ? (
         <span
           aria-hidden="true"
           className="size-1.5 shrink-0 rounded-full"
@@ -145,6 +159,7 @@ export function Chip({
         title={title}
         aria-current={flags.selected ? "true" : undefined}
         data-state={state}
+        style={statusStyle}
         className={classes}
       >
         {inner}
@@ -162,6 +177,7 @@ export function Chip({
         aria-busy={flags.busy || undefined}
         onClick={onClick}
         data-state={state}
+        style={statusStyle}
         className={classes}
       >
         {inner}
@@ -170,7 +186,7 @@ export function Chip({
   }
 
   return (
-    <span title={title} data-state={state} className={classes}>
+    <span title={title} data-state={state} style={statusStyle} className={classes}>
       {inner}
     </span>
   );

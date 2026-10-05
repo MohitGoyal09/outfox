@@ -147,12 +147,12 @@ export function StatTile({
     <div
       title={title}
       className={cn(
-        "flex flex-col rounded-lg border border-border bg-bg-raised p-4 shadow-xs",
+        "flex h-full flex-col rounded-lg border border-border bg-bg-raised p-4 shadow-xs",
         className,
       )}
     >
       {hideLabel ? null : (
-        <span className={cn(LABEL_CLASS, "text-fg-secondary")}>
+        <span className="text-[13px] font-medium leading-tight text-fg-secondary">
           {labelInfo ? <MetricInfo label={label} definition={labelInfo} /> : label}
         </span>
       )}
@@ -160,25 +160,25 @@ export function StatTile({
       {loading ? (
         <Skeleton variant="stat" width={88} height={28} className="mt-2.5" />
       ) : (
-        <div className="mt-2.5 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
+        <div className="mt-2 flex flex-wrap items-baseline gap-x-1.5 gap-y-0.5">
           <span
             className={cn(
-              VALUE_CLASS,
+              "num tracking-[-0.02em]",
               size === "md"
                 ? "text-[1.75rem] leading-none font-semibold"
                 : "text-[1.25rem] leading-none font-semibold",
               measured.absent ? "text-fg-tertiary" : "text-fg",
             )}
-            style={!measured.absent && tone ? { color: TONE_COLOR[tone] } : undefined}
+            style={!measured.absent && tone && tone !== "neutral" ? { color: TONE_COLOR[tone] } : undefined}
           >
             {measured.text}
           </span>
           {unit && !measured.absent ? (
-            <span className="text-[12px] leading-none text-fg-secondary">{unit}</span>
+            <span className="text-[13px] leading-none text-fg-secondary">{unit}</span>
           ) : null}
           {delta === null || delta === undefined ? null : (
             <span
-              className={cn(VALUE_CLASS, "ml-auto text-[12px] leading-none")}
+              className={cn(VALUE_CLASS, "ml-auto text-xs leading-none")}
               style={{ color: TONE_COLOR[deltaTone(delta)] }}
             >
               {formatDelta(delta, deltaUnit)}
@@ -187,10 +187,8 @@ export function StatTile({
         </div>
       )}
 
-      {description ? (
-        <span className="mt-1.5 text-[12px] leading-[1.45] text-fg-secondary">
-          {description}
-        </span>
+      {description && !loading ? (
+        <span className="mt-1.5 text-xs leading-[1.45] text-fg-secondary">{description}</span>
       ) : null}
     </div>
   );

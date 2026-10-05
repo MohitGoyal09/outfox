@@ -3,7 +3,19 @@ export { Button, buttonClasses } from "./Button";
 export type { ButtonProps, ButtonSize, ButtonVariant } from "./Button";
 
 export { Chip, chipStateFlags } from "./Chip";
-export type { ChipProps, ChipStateFlags } from "./Chip";
+export type { ChipProps, ChipStateFlags, ChipVariant } from "./Chip";
+
+export { Notice } from "./Notice";
+export type { NoticeProps } from "./Notice";
+
+export { PageHeader } from "./PageHeader";
+export type { PageHeaderProps } from "./PageHeader";
+
+export { PillButton, pillClasses } from "./PillButton";
+export type { PillButtonProps } from "./PillButton";
+
+export { SectionHeader } from "./SectionHeader";
+export type { SectionHeaderProps } from "./SectionHeader";
 
 export {
   DistributionPanel,
@@ -25,7 +37,8 @@ export { EmptyState, composedEmptyState } from "./EmptyState";
 export type { ComposedEmptyState, EmptyStateProps } from "./EmptyState";
 
 export { Panel, isNestedPanel } from "./Panel";
-export type { PanelProps, PanelTag } from "./Panel";
+export type { PanelProps, PanelTag, PanelHeaderProps } from "./Panel";
+export { Panel as Card } from "./Panel";
 
 export {
   SegmentedNav,
@@ -43,8 +56,8 @@ export type {
 export { Skeleton, SkeletonRegion, SkeletonRows, SKELETON_SHAPE, skeletonShape } from "./Skeleton";
 export type { SkeletonProps, SkeletonVariant } from "./Skeleton";
 
-export { StatReadout, statReadoutText } from "./StatReadout";
-export type { StatReadoutProps, StatReadoutText } from "./StatReadout";
+export { StatReadout, StatTile, statReadoutText } from "./StatReadout";
+export type { StatReadoutProps, StatReadoutText, StatTileProps } from "./StatReadout";
 
 export {
   Trail,

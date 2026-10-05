@@ -1,7 +1,7 @@
 
 import type { ReactNode } from "react";
 import { cn } from "@/lib/utils";
-import { DISPLAY_FONT_STACK, isTeachingCopy } from "./tokens";
+import { isTeachingCopy } from "./tokens";
 
 export type EmptyStateProps = {
   title: string;
@@ -45,7 +45,6 @@ export function EmptyState({
   title,
   description,
   action,
-  icon,
   size = "md",
   bounded = false,
   className,
@@ -66,26 +65,16 @@ export function EmptyState({
         "flex flex-col items-center text-center",
         composed.size === "md" ? "gap-3 py-8" : "gap-2 py-4",
         composed.bounded &&
-          "rounded-lg border border-dashed border-[var(--border)] bg-[var(--bg-inset)] px-5 py-12",
+          "rounded-lg border border-dashed border-border-strong bg-bg-inset px-5 py-12",
         className,
       )}
     >
-      {icon ? (
-        <span aria-hidden="true" className="relative mb-1 flex size-10 items-center justify-center">
-          <span className="absolute inset-0 -translate-x-1.5 -rotate-6 rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] opacity-40 shadow-xs" />
-          <span className="absolute inset-0 translate-x-1.5 rotate-6 rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] opacity-40 shadow-xs" />
-          <span className="relative flex size-10 items-center justify-center rounded-xl border border-[var(--border)] bg-[var(--bg-raised)] text-[var(--text-tertiary)] shadow-xs">
-            {icon}
-          </span>
-        </span>
-      ) : null}
       <h3
-        style={{ fontFamily: DISPLAY_FONT_STACK }}
-        className="text-balance text-[15px] font-medium leading-snug text-[var(--text-primary)]"
+        className="type-headline text-balance text-fg"
       >
         {composed.title}
       </h3>
-      <p className="max-w-[46ch] text-balance text-sm text-[var(--text-secondary)]">
+      <p className="max-w-[46ch] text-balance text-sm text-fg-secondary">
         {composed.description}
       </p>
       {composed.hasAction ? (
