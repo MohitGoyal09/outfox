@@ -1,7 +1,7 @@
 "use client";
 
 import { useQuery } from "convex/react";
-import { ArrowRight, BarChart3, Building2, Quote, Radar, Search, TriangleAlert } from "lucide-react";
+import Link from "next/link";
 import { useMemo, useState } from "react";
 
 import { offTopicIds } from "@/components/drishti/brands/topicality";
@@ -9,19 +9,16 @@ import { useBrandFilters } from "@/components/drishti/brands/filters/useBrandFil
 
 import type { Id } from "@/convex/_generated/dataModel";
 import { api } from "@/convex/_generated/api";
-import { EmptyState, Panel, iconProps } from "@/components/drishti";
+import { EmptyState, PageHeader, StatTile, pillClasses } from "@/components/drishti";
 import { useAllRuns } from "@/components/drishti/cohorts/useAllRuns";
 import type { ClaimDoc } from "@/components/drishti/brands/brand-model";
 import type { FeedBrandInfo, FeedThumbnail } from "@/components/drishti/feed/FeedCard";
 
-import { ActionLink } from "./ActionLink";
 import { EmergingPanel } from "./EmergingPanel";
 import { NeedsAttention } from "./NeedsAttention";
 import { NewestEvidence } from "./NewestEvidence";
 import { OverviewErrorBoundary } from "./OverviewErrorBoundary";
 import { PickUpWhereYouLeftOff } from "./PickUpWhereYouLeftOff";
-import { SectionLabel } from "./SectionLabel";
-import { StatTile } from "./StatTile";
 import { WhatChanged } from "./WhatChanged";
 import {
   brandCoverage,
@@ -30,6 +27,8 @@ import {
   composeNeedsAttention,
   composeNewestEvidence,
   composeWhatChanged,
+  pluralize,
+  relativeTime,
   recentBoards,
   recentThreads,
   type BrandLike,
@@ -47,15 +46,7 @@ export function OverviewSurface() {
   );
 }
 
-function greetingWord(hour: number): string {
-  if (hour < 5) return "night";
-  if (hour < 12) return "morning";
-  if (hour < 18) return "afternoon";
-  return "evening";
-}
-
 function OverviewBody() {
-  const [greeting] = useState(() => greetingWord(new Date().getHours()));
   const [nowMs] = useState(() => Date.now());
 
   const brandsQuery = useQuery(api.brands.listBrands);
@@ -249,112 +240,83 @@ function OverviewBody() {
 
   if (brandsQuery !== undefined && brands.length === 0) return <Onboarding />;
 
+  const latestCheckIso = runLikes.reduce<string | null>(
+    (latest, run) => (run.completedAt && (latest === null || run.completedAt > latest) ? run.completedAt : latest),
+    null,
+  );
+  const attentionCount = attentionRows.length;
+  const brandCount = brands.length;
+  const title = panelsLoading
+    ? "Your brands at a glance"
+    : attentionCount > 0
+      ? `${attentionCount} of ${brandCount} ${pluralize(brandCount, "brand")} need a look`
+      : `All ${brandCount} tracked ${pluralize(brandCount, "brand")} look current`;
+  const sub = panelsLoading
+    ? "Reading the newest evidence across your tracked brands."
+    : latestCheckIso
+      ? `Latest check finished ${relativeTime(latestCheckIso, nowMs)}.`
+      : "No check has finished yet.";
+
   return (
-    <div className="flex flex-col gap-8 pb-12">
-      <header className="flex flex-col justify-between gap-5 border-b border-border pb-6 sm:flex-row sm:items-end">
-        <div className="space-y-2">
-          <h1 className="type-display text-fg">{`Good ${greeting}.`}</h1>
-          <p className="type-body max-w-2xl text-fg-secondary">
-            A grounded read of the newest evidence across your tracked brands.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          <ActionLink
-            href="/brands"
-            variant="ghost"
-            size="sm"
-            icon={<Search {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
-          >
-            Browse brands
-          </ActionLink>
-          <ActionLink
-            href="/ask"
-            variant="primary"
-            size="sm"
-            icon={<ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />}
-          >
-            Ask Drishti
-          </ActionLink>
-        </div>
-      </header>
+    <div className="flex flex-col gap-10">
+      <PageHeader
+        eyebrow="Overview"
+        title={title}
+        sub={sub}
+        className="pb-0"
+        actions={
+          <>
+            <Link href="/brands" className={pillClasses("outline", "sm")}>
+              Browse brands
+            </Link>
+            <Link href="/ask" className={pillClasses("ink", "sm")}>
+              Ask Drishti
+            </Link>
+          </>
+        }
+      />
 
-      <section aria-label="At a glance" className="flex flex-col gap-3">
-        <SectionLabel>At a glance</SectionLabel>
-        <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-          <StatTile
-            label="Tracked brands"
-            value={brands.length}
-            loading={brandsLoading}
-            hint={`${coveredBrandCount} with a finished check`}
-            icon={<Building2 {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-          />
-          <StatTile
-            label="All stored findings"
-            labelInfo="Every finding stored for your tracked brands, summed across all of their checks. Signals counts only each brand's latest check, so its number is smaller."
-            value={totalClaimCount}
-            accent="ok"
-            loading={panelsLoading}
-            hint={`across ${brandsWithFindings} of ${brands.length} brands, every check`}
-            icon={<Quote {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-          />
-          <StatTile
-            label="With evidence"
-            value={coveredBrandCount}
-            accent={coveredBrandCount > 0 ? "ok" : "neutral"}
-            loading={panelsLoading}
-            hint={`of ${brands.length} tracked brands`}
-            icon={<BarChart3 {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-          />
-          <StatTile
-            label="Needs attention"
-            value={attentionRows.length}
-            accent={attentionRows.length > 0 ? "warn" : "ok"}
-            loading={panelsLoading}
-            hint={
-              attentionRows.length > 0
-                ? `of ${brands.length} tracked brands`
-                : `all ${brands.length} look current`
-            }
-            icon={<TriangleAlert {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-          />
-        </div>
+      <section aria-label="At a glance" className="grid grid-cols-1 gap-3 sm:grid-cols-3">
+        <StatTile
+          label="Tracked brands"
+          value={brandCount}
+          loading={brandsLoading}
+          hint={`${coveredBrandCount} with a finished check`}
+        />
+        <StatTile
+          label="Stored findings"
+          labelInfo="Every finding stored for your tracked brands, summed across all of their checks. Signals counts only each brand's latest check, so its number is smaller."
+          value={totalClaimCount}
+          loading={panelsLoading}
+          hint={`across ${brandsWithFindings} of ${brandCount} brands`}
+        />
+        <StatTile
+          label="Needs attention"
+          value={attentionCount}
+          tone={attentionCount > 0 ? "warn" : undefined}
+          loading={panelsLoading}
+          hint={attentionCount > 0 ? `of ${brandCount} tracked brands` : "Nothing to fix right now"}
+        />
       </section>
 
-      {/* Needs attention and What changed sit side by side. Either can render
-          nothing; when only one survives it takes the full row. */}
-      {attentionRows.length > 0 || whatChangedFeed !== null ? (
-        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
-          {attentionRows.length > 0 ? (
-            <div className={whatChangedFeed === null ? "lg:col-span-2" : undefined}>
-              <NeedsAttention rows={attentionRows} />
-            </div>
-          ) : null}
-          {whatChangedFeed !== null ? (
-            <div className={attentionRows.length === 0 ? "lg:col-span-2" : undefined}>
-              <WhatChanged feed={whatChangedFeed} />
-            </div>
-          ) : null}
-        </div>
-      ) : null}
+      {attentionCount > 0 ? <NeedsAttention rows={attentionRows} /> : null}
 
-      <section aria-label="Evidence and patterns" className="grid grid-cols-1 gap-4 lg:grid-cols-12">
-        <div className="lg:col-span-8">
-          <NewestEvidence
-            loading={panelsLoading}
-            hasBrands={brands.length > 0}
-            feed={evidenceFeed}
-            claimsById={claimsById}
-            brandById={brandById}
-            thumbnailByClaimId={newestEvidenceThumbnailById}
-            hiddenCount={offTopic.size}
-            showOffTopic={showOffTopic}
-            onToggleOffTopic={() => setHomeFilter("offtopic", showOffTopic ? "hide" : "show")}
-          />
-        </div>
-        <div className="lg:col-span-4">
-          <EmergingPanel loading={panelsLoading} coveredBrandCount={coveredBrandCount} emerging={emerging} />
-        </div>
-      </section>
+      <NewestEvidence
+        loading={panelsLoading}
+        hasBrands={brandCount > 0}
+        feed={evidenceFeed}
+        claimsById={claimsById}
+        brandById={brandById}
+        thumbnailByClaimId={newestEvidenceThumbnailById}
+        hiddenCount={offTopic.size}
+        showOffTopic={showOffTopic}
+        onToggleOffTopic={() => setHomeFilter("offtopic", showOffTopic ? "hide" : "show")}
+      />
+
+      <div className="grid grid-cols-1 gap-x-10 gap-y-10 lg:grid-cols-2">
+        {whatChangedFeed !== null ? <WhatChanged feed={whatChangedFeed} /> : null}
+        <EmergingPanel loading={panelsLoading} coveredBrandCount={coveredBrandCount} emerging={emerging} />
+      </div>
 
       <PickUpWhereYouLeftOff loading={activityLoading} threads={threads} boards={boards} newestBoardItemCount={newestBoardItemCount} nowMs={nowMs} />
     </div>
@@ -363,27 +325,18 @@ function OverviewBody() {
 
 function Onboarding() {
   return (
-    <Panel as="section" interactive={false} padded ariaLabel="Start with your brands" className="mx-auto max-w-3xl rounded-lg p-8 shadow-xs sm:p-12">
+    <div className="mx-auto max-w-3xl pt-8">
+      <PageHeader eyebrow="Overview" title="Start with the brands you want to understand" className="justify-center pb-0 text-center" />
       <EmptyState
         size="md"
-        icon={<Radar {...iconProps} size={20} aria-hidden="true" />}
-        title="Start with the brands you want to understand"
+        title="No brands tracked yet"
         description="Add a brand, then Drishti builds a source-backed profile across Search, YouTube, Trends, and Ads Transparency where data is available."
         action={
-          <>
-            <ActionLink href="/onboarding" variant="primary">
-              Add your first brand
-            </ActionLink>
-            <ActionLink
-              href="/ask"
-              variant="ghost"
-              icon={<ArrowRight {...iconProps} size={16} aria-hidden="true" className="size-4" />}
-            >
-              Ask Drishti
-            </ActionLink>
-          </>
+          <Link href="/onboarding" className={pillClasses("ink")}>
+            Add your first brand
+          </Link>
         }
       />
-    </Panel>
+    </div>
   );
 }
