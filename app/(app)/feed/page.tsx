@@ -4,10 +4,9 @@
 import { useMemo, useState } from "react";
 import Link from "next/link";
 import { useQuery } from "convex/react";
-import { Rss } from "lucide-react";
 
 import { api } from "@/convex/_generated/api";
-import { EmptyState, Panel, Skeleton, SkeletonRegion, VALUE_CLASS, iconProps } from "@/components/drishti";
+import { EmptyState, PageHeader, Panel, Skeleton, SkeletonRegion, VALUE_CLASS, pillClasses } from "@/components/drishti";
 import { QueryBoundary } from "@/components/drishti/cohorts/QueryBoundary";
 import {
   isContentClaim,
@@ -56,16 +55,11 @@ export function FeedSkeleton() {
 export default function FeedPage() {
   return (
     <div className="flex flex-col gap-6 pb-12">
-      <header className="flex flex-col gap-2 border-b border-border pb-6">
-        <h1 className="type-display flex items-center gap-2.5 text-fg">
-          <Rss {...iconProps} size={22} aria-hidden="true" className="size-6" />
-          Feed
-        </h1>
-        <p className="type-body max-w-2xl text-fg-secondary">
-          Recent evidence across every tracked brand, newest first. Filter it the same way you would one
-          brand&rsquo;s Evidence tab, plus which brand it belongs to.
-        </p>
-      </header>
+      <PageHeader
+        eyebrow="Feed"
+        title="Recent evidence, newest first"
+        sub="Every tracked brand in one stream. Filter it like a brand's Evidence tab, plus which brand it belongs to."
+      />
       <QueryBoundary label="The feed">
         <FeedBody />
       </QueryBoundary>
@@ -152,16 +146,15 @@ function FeedBody() {
     return (
       <Panel as="section" interactive={false} padded ariaLabel="Start tracking a brand" className="rounded-lg p-8 shadow-xs">
         <EmptyState
-          icon={<Rss {...iconProps} size={20} aria-hidden="true" />}
           title="No brands to show a feed for yet"
           description="Add a tracked brand, and its evidence appears here the moment the first check completes."
           action={
             <Link
               href={addBrandHref}
               scroll={false}
-              className="inline-flex h-8 items-center rounded-sm border border-border-strong px-3 text-[13px] text-fg hover:bg-bg-raised focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-accent"
+              className={pillClasses("ink", "sm")}
             >
-              Add a brand
+              Track a brand
             </Link>
           }
         />
@@ -173,9 +166,13 @@ function FeedBody() {
     return (
       <Panel as="section" interactive={false} padded ariaLabel="No evidence yet" className="rounded-lg p-8 shadow-xs">
         <EmptyState
-          icon={<Rss {...iconProps} size={20} aria-hidden="true" />}
           title="No findings yet for your tracked brands"
           description={`${brands.length === 1 ? "Your tracked brand has" : `All ${brands.length} tracked brands have`} no stored evidence yet. Run a check from a brand's profile, and its findings show up here.`}
+          action={
+            <Link href="/brands" className={pillClasses("outline", "sm")}>
+              Open brands
+            </Link>
+          }
         />
       </Panel>
     );

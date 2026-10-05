@@ -33,7 +33,7 @@ function BrandAttribution({ brand }: { brand: FeedBrandInfo }) {
   return (
     <div className="flex min-w-0 items-center gap-1.5 px-0.5">
       <BrandMark name={brand.name} domain={brand.domain} className="size-4 shrink-0 rounded-sm text-[8px]" />
-      <span className="truncate text-[11px] font-medium text-fg-secondary">{brand.name}</span>
+      <span className="truncate text-xs font-medium text-fg-secondary">{brand.name}</span>
       {brand.isOwnBrand ? <Chip label="Your brand" dot={false} /> : null}
     </div>
   );
