@@ -255,7 +255,7 @@ export function Step2Competitors({
           <EmptyState
             size="sm"
             title={`No catalog brands in ${vertical} yet`}
-            description="Add competitors by name and website instead, Drishti still runs the same check against them."
+            description="Add competitors by name and website instead, Outfox still runs the same check against them."
           />
         ) : noMatches ? (
           <EmptyState

@@ -363,7 +363,7 @@ export function DockedAsk() {
               canSend={canSend}
               overCap={false}
               maxChars={ASK_MAX_CHARS}
-              placeholder="Ask Drishti"
+              placeholder="Ask Outfox"
               textareaRef={inputRef}
               textareaAria={{
                 role: "combobox",
@@ -415,7 +415,7 @@ export function DockedAsk() {
               onFocus={() => setExpanded(true)}
               className="h-full min-w-0 flex-1 cursor-text text-left text-base text-fg-tertiary focus-visible:outline-none"
             >
-              Ask Drishti
+              Ask Outfox
             </button>
             {/* Reopen: only once a conversation exists and the panel is folded away. The
                 badge is the number of questions asked, never a fabricated "new" dot. */}

@@ -87,10 +87,10 @@ export function SharedBoardView({ token }: { token: string }) {
   return (
     <div className="flex h-dvh flex-col bg-bg text-fg">
       <header className="flex h-14 shrink-0 items-center gap-3 border-b border-border bg-bg-raised px-4">
-        <span className="text-[13px] font-semibold">Drishti · shared board</span>
+        <span className="text-[13px] font-semibold">Outfox · shared board</span>
         {canvas ? <h1 className="truncate text-[13px] text-fg-secondary">{canvas.name}</h1> : null}
         <Link href="/" className="focus-ring ml-auto rounded-sm text-[12px] font-medium text-fg-secondary hover:text-fg">
-          Made with Drishti
+          Made with Outfox
         </Link>
       </header>
       <main className="min-h-0 flex-1">

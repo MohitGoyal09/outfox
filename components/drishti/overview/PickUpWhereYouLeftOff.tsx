@@ -43,13 +43,13 @@ export function PickUpWhereYouLeftOff({ loading, threads, boards, newestBoardIte
             size="sm"
             bounded
             title="No chats yet"
-            description="Ask Drishti a question about a tracked brand, and the conversation appears here so you can pick it back up."
+            description="Ask Outfox a question about a tracked brand, and the conversation appears here so you can pick it back up."
             action={
               <Link
                 href="/ask"
                 className="inline-flex items-center gap-1.5 rounded-sm text-[13px] text-accent transition-colors duration-150 ease-out hover:underline"
               >
-                Ask Drishti
+                Ask Outfox
                 <ArrowRight {...iconProps} size={14} aria-hidden="true" className="size-3.5" />
               </Link>
             }

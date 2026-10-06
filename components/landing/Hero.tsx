@@ -21,7 +21,7 @@ export function Hero() {
           </h1>
           <CycleLine className="relative mt-2 text-[1.0625rem] leading-[1.4] text-fg sm:text-[1.1875rem]" />
           <p className="l-lead mt-1 max-w-[34ch] text-balance sm:max-w-[52ch] lg:max-w-none">
-            Drishti watches their ads, videos, search and news, tags every hook, and backs every insight with its source.
+            Outfox watches their ads, videos, search and news, tags every hook, and backs every insight with its source.
           </p>
           
           

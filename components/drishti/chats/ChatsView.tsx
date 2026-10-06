@@ -130,7 +130,7 @@ export function ChatsView() {
             total === 0
               ? {
                   title: "No chats yet.",
-                  description: "Ask Drishti anything about your tracked brands and the conversation will show up here.",
+                  description: "Ask Outfox anything about your tracked brands and the conversation will show up here.",
                   action: <PillButton size="sm" onClick={newChat}>New chat</PillButton>,
                 }
               : {

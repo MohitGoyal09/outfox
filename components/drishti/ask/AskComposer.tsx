@@ -104,7 +104,7 @@ export function AskComposer({
           <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1.5 border-t border-border bg-bg-inset px-5 py-2">
             <PromptInputActions className="min-w-0 flex-wrap gap-x-2 gap-y-1.5">
               <span className="whitespace-nowrap text-[12px] text-fg-secondary">Ask across</span>
-              <span className="flex items-center gap-1.5" role="group" aria-label="Sources Drishti reads">
+              <span className="flex items-center gap-1.5" role="group" aria-label="Sources Outfox reads">
                 {SOURCES.map((source) => (
                   <span
                     key={source.engine}

@@ -270,7 +270,7 @@ function OverviewBody() {
               Browse brands
             </Link>
             <Link href="/ask" className={pillClasses("ink", "sm")}>
-              Ask Drishti
+              Ask Outfox
             </Link>
           </>
         }
@@ -330,7 +330,7 @@ function Onboarding() {
       <EmptyState
         size="md"
         title="No brands tracked yet"
-        description="Add a brand, then Drishti builds a source-backed profile across Search, YouTube, Trends, and Ads Transparency where data is available."
+        description="Add a brand, then Outfox builds a source-backed profile across Search, YouTube, Trends, and Ads Transparency where data is available."
         action={
           <Link href="/onboarding" className={pillClasses("ink")}>
             Add your first brand

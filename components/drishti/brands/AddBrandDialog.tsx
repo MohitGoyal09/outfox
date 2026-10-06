@@ -199,7 +199,7 @@ function WizardBody({ onAddAnother }: { onAddAnother: () => void }) {
         <div>
           <DialogTitle className="text-[1.05rem] font-semibold leading-[1.3] text-fg">Add a brand</DialogTitle>
           <DialogDescription className="mt-1 text-[13px] leading-[1.5] text-fg-secondary">
-            Drishti builds a source-backed profile for it. Nothing is saved until the last step.
+            Outfox builds a source-backed profile for it. Nothing is saved until the last step.
           </DialogDescription>
         </div>
         <StepHeader step={done ? 3 : step} />
@@ -442,8 +442,8 @@ function FindStep(props: {
           {props.catalogLoaded ? (
             <p className="text-[12.5px] text-fg-secondary">
               {catalogMatch !== null
-                ? "This brand is in the Drishti catalog."
-                : "Not in the Drishti catalog. You can still add it."}
+                ? "This brand is in the Outfox catalog."
+                : "Not in the Outfox catalog. You can still add it."}
             </p>
           ) : null}
           {catalogMatch === null && catalogSuggestion !== null ? (
@@ -594,7 +594,7 @@ function SuccessPanel({ name, brandId }: { name: string; brandId: string | null 
         {name} added
       </h3>
       <p className="max-w-[44ch] text-[13px] leading-[1.5] text-fg-secondary">
-        It is in your tracked brands. {brandId === null ? "" : "Open its profile to see what Drishti found."}
+        It is in your tracked brands. {brandId === null ? "" : "Open its profile to see what Outfox found."}
       </p>
     </div>
   );

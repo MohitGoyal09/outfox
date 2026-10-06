@@ -31,7 +31,7 @@
   --accent-dim: rgba(17, 17, 19, 0.1);
   --accent-selection: rgba(17, 17, 19, 0.14);
 
-  /* status — Drishti engine + run state */
+  /* status — Outfox engine + run state */
   --ok: #059669;
   --warn: #b45309;
   --weak: #b45309;

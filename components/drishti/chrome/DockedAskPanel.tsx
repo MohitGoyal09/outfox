@@ -37,7 +37,7 @@ export function DockedAskPanel({
   return (
     <motion.div
       role="region"
-      aria-label="Drishti's answer"
+      aria-label="Outfox's answer"
       initial={reducedMotion ? false : { opacity: 0, y: 12, scale: 0.98 }}
       animate={{ opacity: 1, y: 0, scale: 1 }}
       exit={reducedMotion ? { opacity: 0 } : { opacity: 0, y: 12, scale: 0.98 }}
@@ -48,7 +48,7 @@ export function DockedAskPanel({
       )}
     >
       <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border px-4 py-2.5">
-        <span className="text-xs font-medium text-fg-secondary">Drishti</span>
+        <span className="text-xs font-medium text-fg-secondary">Outfox</span>
         <div className="flex items-center gap-1">
           {chatId !== null ? (
             <Link

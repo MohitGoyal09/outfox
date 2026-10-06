@@ -57,7 +57,7 @@ export function StepShell({
               href="/"
               className="rounded-md px-2 py-1 text-xs text-fg-secondary transition-colors duration-150 ease-out hover:bg-bg-inset hover:text-fg"
             >
-              Back to Drishti
+              Back to Outfox
             </Link>
           </div>
           <PageHeader

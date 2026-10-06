@@ -102,13 +102,13 @@ export function Sidebar() {
             <Link
               href="/"
               className="flex h-full min-w-0 flex-1 items-center gap-3 overflow-hidden rounded-md transition-opacity duration-150 ease-out hover:opacity-85 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-sidebar-ring"
-              aria-label="Drishti home"
+              aria-label="Outfox home"
             >
               <span className="flex size-9 shrink-0 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
                 <DrishtiMark size={22} />
               </span>
               <span className="flex min-w-0 flex-col">
-                <span className="truncate text-[15px] font-semibold tracking-[-0.02em]">Drishti</span>
+                <span className="truncate text-[15px] font-semibold tracking-[-0.02em]">Outfox</span>
                 <span className="truncate text-xs font-medium text-fg-secondary">
                   Evidence atlas
                 </span>

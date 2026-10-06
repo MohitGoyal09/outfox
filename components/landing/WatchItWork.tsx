@@ -64,3 +64,23 @@ function SourceStep({ engine, name, t, i }: { engine: string; name: string; t: n
     </li>
   );
 }
+
+export function WatchItWork() {
+  const reduce = useReducedMotion() ?? false;
+  const inView = useInView(ref, { amount: 0.45 });
+  const [tRaw, setT] = useState(0);
+
+  useEffect(() => {
+    if (reduce || !inView) return;
+    const c = animate(0, END, { duration: END / 1000, ease: "linear", onUpdate: (v) => setT(v) });
+    return () => {
+      c.stop();
+      setT(0);
+    };
+  }, [inView, reduce]);
+  const t = reduce ? END : tRaw;
+
+  const typed = PROMPT.slice(0, Math.max(0, Math.min(PROMPT.length, Math.floor((t - TYPE_START) / TYPE_MS) + 1)));
+  const typing = t >= TYPE_START && typed.length < PROMPT.length;
+  const sourcesOn = t >= SRC_START - 200;
+}

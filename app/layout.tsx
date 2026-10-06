@@ -19,19 +19,19 @@ const geistMono = Geist_Mono({
 
 const AUTHED_HINT = `try{for(var k in localStorage)if(k.indexOf("__convexAuthJWT_")===0||k.indexOf("__convexAuthRefreshToken_")===0){document.documentElement.dataset.authed="1";break}}catch(e){}`;
 
-const TITLE = "Drishti: competitor research for Indian D2C beauty brands";
+const TITLE = "Outfox: see every move your competitors make";
 const DESCRIPTION =
-  "Competitor research for Indian D2C skincare and beauty brands. Reads public Google, YouTube and news data and links every number to its source.";
+  "Competitor research for marketing teams. Watches rivals' ads, YouTube, search and news, tags every hook, and links every number to its public source.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: TITLE, template: "%s · Drishti" },
+  title: { default: TITLE, template: "%s · Outfox" },
   description: DESCRIPTION,
-  applicationName: "Drishti",
+  applicationName: "Outfox",
   alternates: { canonical: "/" },
   openGraph: {
     type: "website",
-    siteName: "Drishti",
+    siteName: "Outfox",
     url: "/",
     title: TITLE,
     description: DESCRIPTION,

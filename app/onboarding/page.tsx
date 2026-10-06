@@ -91,7 +91,7 @@ export default function OnboardingPage() {
       <StepShell
         step={2}
         title="Who do you compete with?"
-        description={`Pick up to 5 ${ownBrand.vertical.toLowerCase()} brands. Drishti follows each one right away and checks it properly once you continue.`}
+        description={`Pick up to 5 ${ownBrand.vertical.toLowerCase()} brands. Outfox follows each one right away and checks it properly once you continue.`}
         onBack={() => setStep(1)}
       >
         <Step2Competitors
@@ -112,7 +112,7 @@ export default function OnboardingPage() {
     <StepShell
       step={3}
       title="Your first check"
-      description="What Drishti found comparing you to the competitors you just picked."
+      description="What Outfox found comparing you to the competitors you just picked."
       onBack={() => setStep(2)}
     >
       <Step3FirstCheck

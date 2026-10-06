@@ -129,7 +129,7 @@ export function SignIn() {
           <span className="flex size-9 items-center justify-center rounded-md bg-accent text-accent-ink">
             <DrishtiMark size={22} />
           </span>
-          <p className="font-semibold tracking-tight">Drishti</p>
+          <p className="font-semibold tracking-tight">Outfox</p>
         </div>
         <h1 className="text-[1.75rem] font-semibold leading-[1.15] tracking-[-0.03em]">
           {isResetting ? "Reset your password" : mode === "signIn" ? "Welcome back" : "Create your account"}

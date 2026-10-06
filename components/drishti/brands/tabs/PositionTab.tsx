@@ -48,7 +48,7 @@ function AiOverviewPanel({ blocks, hiddenCount }: { blocks: ClaimDoc[]; hiddenCo
       <Panel.Header title="Google AI Overview" />
       <div className="p-4">
         <Notice title="Google's synthesis, not ours" className="mb-3">
-          Google&apos;s own generated summary of this brand, not a primary source and not Drishti&apos;s analysis. Every line below links to the page Google actually cited.
+          Google&apos;s own generated summary of this brand, not a primary source and not Outfox&apos;s analysis. Every line below links to the page Google actually cited.
         </Notice>
           <ul className="space-y-2.5">
             {blocks.map((claim) => (

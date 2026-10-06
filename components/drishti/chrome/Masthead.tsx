@@ -92,10 +92,10 @@ export function Masthead() {
           type="button"
           onClick={() => setOpen(true)}
           className="group hidden h-10 w-full min-w-0 max-w-[520px] items-center gap-2.5 rounded-sm border border-border-strong bg-bg-raised px-3 text-left text-sm text-fg-tertiary transition-[border-color,box-shadow] duration-150 ease-out hover:border-fg/40 focus-visible:border-fg focus-visible:outline-none focus-visible:ring-3 focus-visible:ring-accent-dim sm:flex"
-          aria-label="Search brands and pages, or ask Drishti"
+          aria-label="Search brands and pages, or ask Outfox"
         >
           <Search {...iconProps} aria-hidden className="size-4 shrink-0 text-fg-secondary" />
-          <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Drishti…</span>
+          <span className="min-w-0 flex-1 truncate">Search brands and pages, or ask Outfox…</span>
           {mod ? (
             <KbdGroup className="ml-auto shrink-0">
               <Kbd>{mod}</Kbd>
@@ -147,8 +147,8 @@ export function Masthead() {
           setOpen(next);
           if (!next) setQuery("");
         }}
-        title="Search Drishti"
-        description="Jump to a tracked brand or a page, or ask Drishti a question."
+        title="Search Outfox"
+        description="Jump to a tracked brand or a page, or ask Outfox a question."
       >
         <Command
           onKeyDown={(event) => {
@@ -161,7 +161,7 @@ export function Masthead() {
           <CommandInput
             value={query}
             onValueChange={setQuery}
-            placeholder="Search brands and pages, or ask Drishti…"
+            placeholder="Search brands and pages, or ask Outfox…"
           />
           <CommandList>
             <CommandEmpty>No matching brand or page.</CommandEmpty>
@@ -175,14 +175,14 @@ export function Masthead() {
             {query.trim() !== "" ? (
               <>
                 <CommandSeparator />
-                <CommandGroup heading="Ask Drishti">
+                <CommandGroup heading="Ask Outfox">
                   {/* `value` is the typed query itself, so this item always
                       matches cmdk's own filter no matter what was typed --
                       it is the fallback that replaces the former dead-end
                       "No matching research surface" state. */}
                   <CommandItem value={query} onSelect={() => navigateToAsk(query)}>
                     <MessageSquare {...iconProps} className="size-4" />
-                    <span className="truncate">Ask Drishti: &ldquo;{query.trim()}&rdquo;</span>
+                    <span className="truncate">Ask Outfox: &ldquo;{query.trim()}&rdquo;</span>
                     {mod ? <CommandShortcut>{mod === "⌘" ? "⌘↵" : "Ctrl ↵"}</CommandShortcut> : null}
                   </CommandItem>
                 </CommandGroup>

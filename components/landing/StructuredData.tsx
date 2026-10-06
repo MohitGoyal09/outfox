@@ -4,10 +4,10 @@ import { FAQS } from "./Faq";
 const GRAPH = {
   "@context": "https://schema.org",
   "@graph": [
-    { "@type": "Organization", "@id": `${SITE_URL}/#org`, name: "Drishti", url: SITE_URL },
+    { "@type": "Organization", "@id": `${SITE_URL}/#org`, name: "Outfox", url: SITE_URL },
     {
       "@type": "SoftwareApplication",
-      name: "Drishti",
+      name: "Outfox",
       url: SITE_URL,
       applicationCategory: "BusinessApplication",
       operatingSystem: "Web",

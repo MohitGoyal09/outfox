@@ -31,7 +31,7 @@ export default function UiHarness() {
           <PageHeader
             eyebrow="Brands"
             title="Tracked brands"
-            sub="Every competitor Drishti is watching, with the freshest evidence first."
+            sub="Every competitor Outfox is watching, with the freshest evidence first."
             actions={
               <>
                 <PillButton variant="outline">Export</PillButton>
