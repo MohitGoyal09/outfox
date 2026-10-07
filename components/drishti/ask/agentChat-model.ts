@@ -102,15 +102,10 @@ export type SourceRowView = {
   fetchedAt: string | null;
 };
 
-export type ClaimTextById = Map<string, { text: string; fetchedAt: string }>;
-
-export function sourceRowsOf(
-  messages: PartsHolder[],
-  claimsById: ClaimTextById,
-): SourceRowView[] {
-  const byUrl = new Map<string, SourceRowView>();
-  return [...byUrl.values()];
-}
+export type ClaimTextById = Map<
+  string,
+  { text: string; fetchedAt: string; sourceEngine?: string; taggedClaimId?: unknown }
+>;
 
 export function formatFetchedAt(iso: string | null): string {
   if (iso === null) return "date unknown";
