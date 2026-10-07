@@ -338,3 +338,5 @@ const EMPTY_COPY_BANS: readonly string[] = [
 export function isTeachingCopy(copy: string): boolean {
   return !EMPTY_COPY_BANS.includes(copy.trim().toLowerCase());
 }
+
+export const CLEAR_OVERLAY_CLASS = "bg-transparent supports-backdrop-filter:backdrop-blur-none";

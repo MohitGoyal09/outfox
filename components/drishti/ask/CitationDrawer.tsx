@@ -17,7 +17,7 @@ import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import type { BoardItemContext } from "../boards/boards-model";
 import { displayClaimText, displayValue } from "../brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
-import { LABEL_CLASS, isValidEvidenceHref } from "../tokens";
+import { CLEAR_OVERLAY_CLASS, LABEL_CLASS, isValidEvidenceHref } from "../tokens";
 import { formatFetchedAt } from "./agentChat-model";
 import { engineLabel } from "./ask-model";
 
@@ -51,7 +51,7 @@ export function CitationDrawer({
     question !== null && question !== "" ? { question, ...(threadKey !== "" ? { threadKey } : {}) } : undefined;
   return (
     <Sheet open={open} onOpenChange={onOpenChange}>
-      <SheetContent className="bg-bg-raised">
+      <SheetContent className="bg-bg-raised" overlayClassName={CLEAR_OVERLAY_CLASS}>
         <SheetHeader>
           <div className="flex items-center justify-between gap-2">
             <SheetTitle className="text-fg">Evidence</SheetTitle>

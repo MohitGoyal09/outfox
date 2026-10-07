@@ -16,7 +16,7 @@ import { sourceKey, sourceName } from "@/components/drishti/labels";
 import { displayClaimText } from "@/components/drishti/brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
-import { LABEL_CLASS, VALUE_CLASS } from "../tokens";
+import { CLEAR_OVERLAY_CLASS, LABEL_CLASS, VALUE_CLASS } from "../tokens";
 import { formatFetchedAt, hostnameOf } from "./agentChat-model";
 import type { ClaimTextById, SourceRowView } from "./agentChat-model";
 
@@ -122,7 +122,7 @@ export function SourcesDrawer({ rows, claimsById }: { rows: SourceRowView[]; cla
       <SheetTrigger className="inline-flex items-center gap-1.5 rounded-sm border border-border bg-bg-raised px-3 py-1.5 text-xs font-medium text-fg-secondary transition-colors duration-150 ease-out hover:border-border-strong hover:bg-bg-inset hover:text-fg">
         {`Used ${rows.length} source${rows.length === 1 ? "" : "s"}`}
       </SheetTrigger>
-      <SheetContent className="bg-bg-raised">
+      <SheetContent className="bg-bg-raised" overlayClassName={CLEAR_OVERLAY_CLASS}>
         <SheetHeader>
           <SheetTitle className="text-fg">Sources</SheetTitle>
           <SheetDescription>Every page this answer&rsquo;s findings are grounded in.</SheetDescription>

@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
 import { SaveAllToBoardButton } from "../boards/SaveAllToBoardButton";
 import type { BoardItemContext } from "../boards/boards-model";
 import { PlatformLogo } from "../brands/PlatformLogo";
-import { STATE_TRANSITION_CLASS } from "../tokens";
+import { CLEAR_OVERLAY_CLASS, STATE_TRANSITION_CLASS } from "../tokens";
 import type { ClaimTextById, SourceRowView } from "./agentChat-model";
 import { SourcesDrawerContent } from "./SourcesDrawer";
 
@@ -70,7 +70,7 @@ export function AnswerSourcesPanel({
         </span>
         <ChevronDown aria-hidden="true" className="size-3 text-fg-tertiary" />
       </SheetTrigger>
-      <SheetContent className="bg-bg-raised">
+      <SheetContent className="bg-bg-raised" overlayClassName={CLEAR_OVERLAY_CLASS}>
         <SheetHeader>
           <SheetTitle className="text-fg">Sources</SheetTitle>
           <SheetDescription>Every finding this answer cited, grouped by source.</SheetDescription>
