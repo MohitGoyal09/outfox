@@ -146,7 +146,7 @@ export function DataTable<T>({
                         col.kind === "action" && "w-12 text-right max-md:absolute max-md:right-2 max-md:top-2.5",
                         col.className,
                         "max-md:w-auto max-md:p-0 max-md:text-left",
-                        col.kind === "primary" && "max-md:pr-10",
+                        col.kind === "primary" && "max-md:w-full max-md:min-w-0 max-md:pr-10",
                         col.hideOnMobile && "max-md:hidden",
                       )}
                     >
