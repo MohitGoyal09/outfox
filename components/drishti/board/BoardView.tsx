@@ -398,14 +398,8 @@ export function BoardView({ cohortKey }: { cohortKey: string | null }) {
             </p>
           ) : null}
           {coverageLine !== null ? <p>{coverageLine}</p> : null}
-          {isPartial ? (
-            <p>
-              {anyPartial ? "Partial check. " : ""}
-              {gaps.length > 0
-                ? `${gaps.length} ${gaps.length === 1 ? "source" : "sources"} could not be checked, named per rival below. `
-                : "Some sources could not be checked. "}
-              A gap is never counted as a zero.
-            </p>
+          {isPartial && gaps.length > 0 ? (
+            <p>{`${gaps.length} ${gaps.length === 1 ? "source" : "sources"} could not be checked, named per rival below.`}</p>
           ) : null}
         </Notice>
       ) : null}
