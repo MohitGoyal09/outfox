@@ -95,6 +95,7 @@ export const ShaderOrb = ({
       try {
         await renderer.ready;
       } catch (error: unknown) {
+        if ((error as { code?: unknown } | null)?.code === "VGPU-RING1-UNSUPPORTED") return;
         console.error(`[orbkit] ${variant.key} failed to start:`, error);
       }
     };
