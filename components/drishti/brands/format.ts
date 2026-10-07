@@ -16,6 +16,13 @@ export function decodeClaimEntities(text: string): string {
   if (!text.includes("&")) return text;
 }
 
+export function displayClaimText(text: string): string {
+  const match = text.match(/^(?:Organic|News) result "([\s\S]*?)"([\s\S]*)$/);
+  const body = match ? `${match[1]}${match[2]}` : text;
+  const named = nameEnumsInText(decodeClaimEntities(body.replace(/\s+in trends-chunk-\d+/g, "").replace(/\s*trends-chunk-\d+/g, "")));
+  return named.replace(/\b(\d{5,})(?= total results)/g, (digits) => compactCount(Number(digits)));
+}
+
 export function parseRelatedVideoViews(text: string): number | null {
   if (match === null) return null;
   const value = Number(match[1]);

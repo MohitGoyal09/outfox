@@ -9,7 +9,7 @@ import { Panel } from "../Panel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { adCreativeWindow, adFormatWord, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
-import { displayClaimText, periodWindow } from "./format";
+import { displayClaimText, displayValue, periodWindow } from "./format";
 import { pickThumbnail } from "@/convex/lib/cardModel";
 import { hookName, measureName, sourceName } from "@/components/drishti/labels";
 
@@ -158,7 +158,7 @@ export function EvidenceCard({
             {claim.value !== undefined
               ? claim.unit === "rank"
                 ? ` · ranked #${String(claim.value)}`
-                : ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}`
+                : ` · ${displayValue(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}`
               : ""}
           </p>
         ) : null}

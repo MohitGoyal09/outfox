@@ -8,7 +8,7 @@ import { cn } from "@/lib/utils";
 import type { api } from "@/convex/_generated/api";
 import { Badge } from "@/components/ui/badge";
 import { buttonClasses } from "../Button";
-import { displayClaimText, periodWindow } from "../brands/format";
+import { displayClaimText, displayValue, periodWindow } from "../brands/format";
 import { EngineTag, PlatformLogo } from "../brands/PlatformLogo";
 import { hookName, measureName, sourceName } from "../labels";
 import { VALUE_CLASS, iconProps, sourceColor } from "../tokens";
@@ -82,7 +82,7 @@ export function BoardItemCard({ item, onRemove }: { item: BoardItem; onRemove: (
       {claim.metric ? (
         <p className={cn(VALUE_CLASS, "mt-2 text-[11px] text-fg-tertiary")}>
           {measureName(claim.metric)}
-          {claim.value !== undefined ? ` · ${String(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}
+          {claim.value !== undefined ? ` · ${displayValue(claim.value)}${claim.unit ? ` ${claim.unit}` : ""}` : ""}
           {windowLabel ? ` · ${windowLabel}` : ""}
         </p>
       ) : null}

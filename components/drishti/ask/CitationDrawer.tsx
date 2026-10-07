@@ -15,7 +15,7 @@ import { measureName } from "@/components/drishti/labels";
 import type { Id } from "@/convex/_generated/dataModel";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import type { BoardItemContext } from "../boards/boards-model";
-import { displayClaimText } from "../brands/format";
+import { displayClaimText, displayValue } from "../brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { LABEL_CLASS, isValidEvidenceHref } from "../tokens";
 import { formatFetchedAt } from "./agentChat-model";
@@ -81,7 +81,7 @@ export function CitationDrawer({
               <div className="flex items-center gap-2">
                 <span className={cn(LABEL_CLASS, "text-fg-tertiary")}>Value</span>
                 <span className="font-mono tabular-nums text-sm text-fg">
-                  {claim.value}
+                  {displayValue(claim.value)}
                   {claim.unit !== undefined ? ` ${measureName(claim.unit)}` : ""}
                 </span>
               </div>
