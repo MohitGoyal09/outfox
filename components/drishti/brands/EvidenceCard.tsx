@@ -10,6 +10,7 @@ import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { EngineTag, PlatformLogo } from "./PlatformLogo";
 import { adCreativeWindow, adFormatWord, hostnameOf, type ClaimDoc, type GoogleOrganicRawItem } from "./brand-model";
 import { displayClaimText, periodWindow } from "./format";
+import { pickThumbnail } from "@/convex/lib/cardModel";
 import { hookName, measureName, sourceName } from "@/components/drishti/labels";
 
 const SOURCE_ACCENT = "var(--text-primary)";
@@ -76,6 +77,8 @@ export function EvidenceCard({
   const [faviconFailed, setFaviconFailed] = useState(false);
   const favicon = faviconFailed ? null : (raw?.faviconUrl ?? null);
   const isAdsCreative = claim.metric === "ads_transparency_creative";
+  const [thumbnailFailed, setThumbnailFailed] = useState(false);
+  const videoThumbnail = !isAdsCreative && !thumbnailFailed ? pickThumbnail(claim) : null;
   const adWindow = isAdsCreative ? adCreativeWindow(claim) : null;
   const runWindowLabel = isAdsCreative ? periodWindow(claim.period) : null;
   const trendPeriodLabel = lane.largeStat ? periodWindow(claim.period) : null;
@@ -134,6 +137,9 @@ export function EvidenceCard({
         <a href={claim.evidenceUrl} target="_blank" rel="noreferrer noopener" className={cn("line-clamp-3 text-[15px] font-semibold leading-5 text-foreground hover:text-accent", lane.titleClass)}>{isAdsCreative && isPlaceholderAdText(claim.text) ? adFormatWord(adWindow?.format ?? "") : displayClaimText(claim.text)}</a>
         {isAdsCreative && claim.image ? (
           <img src={claim.image} alt="Ad creative" loading="lazy" className="mt-2 max-h-48 w-full rounded-md border border-border object-contain" />
+        ) : null}
+        {videoThumbnail !== null ? (
+          <img src={videoThumbnail} alt="Video thumbnail" loading="lazy" onError={() => setThumbnailFailed(true)} className="mt-2 aspect-video w-full rounded-md border border-border object-cover" />
         ) : null}
         {raw?.snippet ? <p className="mt-1.5 line-clamp-2 text-[12px] leading-5 text-muted-foreground">{raw.snippet}</p> : null}
         {lane.largeStat && claim.value !== undefined ? (

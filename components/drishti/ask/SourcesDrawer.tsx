@@ -13,6 +13,7 @@ import {
 import { cn } from "@/lib/utils";
 import type { Id } from "@/convex/_generated/dataModel";
 import { sourceKey, sourceName } from "@/components/drishti/labels";
+import { displayClaimText } from "@/components/drishti/brands/format";
 import { PlatformLogo } from "../brands/PlatformLogo";
 import { SaveToBoardButton } from "../boards/SaveToBoardButton";
 import { LABEL_CLASS, VALUE_CLASS } from "../tokens";
@@ -55,7 +56,7 @@ function SourceRow({ row, isStoredClaim }: { row: SourceRowView; isStoredClaim: 
       >
         <div className="flex items-start justify-between gap-2">
           <p className="line-clamp-2 min-w-0 flex-1 text-[13px] leading-[1.45] text-fg">
-            {row.text !== "" ? row.text : "This citation isn't part of what's currently in view."}
+            {row.text !== "" ? displayClaimText(row.text) : "This citation isn't part of what's currently in view."}
           </p>
           <ExternalLink
             className="mt-0.5 size-3 shrink-0 text-fg-tertiary opacity-0 group-hover:opacity-100"
