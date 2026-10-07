@@ -1,4 +1,6 @@
 
+import { sameSource, sourceKey } from "../../convex/lib/feedFilter";
+
 const SOURCE_NAMES: Readonly<Record<string, string>> = {
   google: "Google Search",
   google_news: "Google News",
@@ -9,9 +11,7 @@ const SOURCE_NAMES: Readonly<Record<string, string>> = {
   llm_tag: "Content tag",
 };
 
-export function sameSource(a: string, b: string): boolean {
-  return sourceKey(a) === sourceKey(b);
-}
+export { sourceKey, sameSource };
 
 export function uniqueSources<T extends string>(engines: readonly T[]): T[] {
   return engines.filter((engine) => {

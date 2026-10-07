@@ -18,6 +18,7 @@ import {
 import { gridSortOptionsFrom } from "@/components/drishti/brands/EvidenceGrid";
 import {
   engineOptionsFrom,
+  fetchedAtBounds,
   evidencePageLabel,
   freshnessOptionsFrom,
   funnelOptionsFrom,
@@ -76,8 +77,22 @@ function FeedBody() {
   const brandsLoading = brandsQuery === undefined;
   const brandIds = useMemo(() => brands.map((brand) => brand._id), [brands]);
 
-  const feedQuery = useQuery(api.claims.overviewFeed, brandIds.length > 0 ? { brandIds } : "skip");
-  const feedLoading = brandIds.length > 0 && feedQuery === undefined;
+  const { filters, setFilter, resetFilters } = useFeedFilters();
+  const feedArgs = useMemo(() => {
+    const scopedIds =
+      filters.brand === "all" ? brandIds : brandIds.filter((id) => String(id) === filters.brand);
+    return {
+      brandIds: scopedIds,
+      ...(filters.engine !== "all" ? { engine: filters.engine } : {}),
+      ...(filters.hook !== "all" ? { hook: filters.hook } : {}),
+      ...(filters.funnel !== "all" ? { funnel: filters.funnel } : {}),
+      ...fetchedAtBounds(filters, nowMs),
+    };
+  }, [brandIds, filters, nowMs]);
+
+  const feedQuery = useQuery(api.claims.overviewFeed, brandIds.length > 0 ? feedArgs : "skip");
+  const optionsQuery = useQuery(api.claims.overviewFeed, brandIds.length > 0 ? { brandIds } : "skip");
+  const feedLoading = brandIds.length > 0 && (feedQuery === undefined || optionsQuery === undefined);
 
   const evidenceSummaryQuery = useQuery(
     api.claims.evidenceSummaryByBrands,
@@ -90,9 +105,24 @@ function FeedBody() {
   );
   const allClaims: ClaimDoc[] = useMemo(() => (feedQuery ?? []).flatMap((entry) => entry.recent), [feedQuery]);
   const recentCount = useMemo(() => allClaims.filter(isSignalClaim).length, [allClaims]);
+  const matchingCount = useMemo(
+    () => (feedQuery ?? []).reduce((sum, entry) => sum + entry.matchingCount, 0),
+    [feedQuery],
+  );
 
   const contentClaims = useMemo(() => allClaims.filter(isContentClaim), [allClaims]);
-  const tags = useMemo(() => tagBearingClaims(allClaims), [allClaims]);
+  const tags = useMemo(
+    () => tagBearingClaims((feedQuery ?? []).flatMap((entry) => [...entry.recent, ...entry.tags])),
+    [feedQuery],
+  );
+  const optionClaims = useMemo(
+    () => (optionsQuery ?? []).flatMap((entry) => entry.recent).filter(isContentClaim),
+    [optionsQuery],
+  );
+  const optionTags = useMemo(
+    () => tagBearingClaims((optionsQuery ?? []).flatMap((entry) => [...entry.recent, ...entry.tags])),
+    [optionsQuery],
+  );
 
   const brandNameById = useMemo(
     () => Object.fromEntries(brands.map((brand) => [String(brand._id), brand.name])),
@@ -108,8 +138,6 @@ function FeedBody() {
       ),
     [brands],
   );
-
-  const { filters, setFilter, resetFilters } = useFeedFilters();
 
   const matching = useMemo(
     () =>
@@ -131,11 +159,11 @@ function FeedBody() {
     [matching, offTopicClaims, showOffTopic],
   );
 
-  const brandOptions = useMemo(() => brandOptionsFrom(contentClaims, brands), [contentClaims, brands]);
-  const engineOptions = useMemo(() => engineOptionsFrom(contentClaims), [contentClaims]);
-  const hookOptions = useMemo(() => hookOptionsFrom(tags), [tags]);
-  const funnelOptions = useMemo(() => funnelOptionsFrom(tags), [tags]);
-  const freshnessOptions = useMemo(() => freshnessOptionsFrom(contentClaims, nowMs), [contentClaims, nowMs]);
+  const brandOptions = useMemo(() => brandOptionsFrom(optionClaims, brands), [optionClaims, brands]);
+  const engineOptions = useMemo(() => engineOptionsFrom(optionClaims), [optionClaims]);
+  const hookOptions = useMemo(() => hookOptionsFrom(optionTags), [optionTags]);
+  const funnelOptions = useMemo(() => funnelOptionsFrom(optionTags), [optionTags]);
+  const freshnessOptions = useMemo(() => freshnessOptionsFrom(optionClaims, nowMs), [optionClaims, nowMs]);
   const sortOptions = useMemo(() => gridSortOptionsFrom(filtered), [filtered]);
 
   const loading = brandsLoading || feedLoading || evidenceSummaryLoading;
@@ -162,7 +190,7 @@ function FeedBody() {
     );
   }
 
-  if (contentClaims.length === 0) {
+  if (optionClaims.length === 0) {
     return (
       <Panel as="section" interactive={false} padded ariaLabel="No evidence yet" className="rounded-lg p-8 shadow-xs">
         <EmptyState
@@ -186,7 +214,7 @@ function FeedBody() {
     <div className="flex flex-col gap-4">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <p className={cn(VALUE_CLASS, "text-[13px] text-fg-secondary")}>
-          {feedCountLine({ shown: filtered.length, matching: matching.length, recent: recentCount, total: totalCount, brands: brands.length })}
+          {feedCountLine({ shown: filtered.length, matching: matchingCount, recent: recentCount, total: totalCount, brands: brands.length })}
         </p>
       </div>
       <FeedFilterBar
